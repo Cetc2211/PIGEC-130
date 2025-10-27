@@ -1,9 +1,8 @@
-
 'use server';
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import { questionnaires } from '@/lib/data';
+import { getQuestionnaire, saveCustomQuestionnaire } from '@/lib/data';
 import { saveResult } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
@@ -18,7 +17,7 @@ export async function submitEvaluation(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const questionnaire = questionnaires.find((q) => q.id === questionnaireId);
+  const questionnaire = getQuestionnaire(questionnaireId);
   if (!questionnaire) {
     return { message: 'Error: Questionnaire not found.' };
   }
@@ -78,3 +77,74 @@ export async function generateReportAction(resultId: string, evaluationData: str
     return { success: false, report: 'Failed to generate report.' };
   }
 }
+
+export type CreateQuestionnaireState = {
+    message: string;
+    success: boolean;
+    errors?: Record<string, any>;
+    questionnaireId?: string;
+};
+
+const interpretationSchema = z.object({
+    from: z.number(),
+    to: z.number(),
+    severity: z.enum(['Low', 'Mild', 'Moderate', 'High']),
+    summary: z.string().min(1, 'Summary is required'),
+});
+
+const formSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().min(1, 'Description is required'),
+  questions: z.array(z.object({ text: z.string().min(1, 'Question text cannot be empty') })).min(1, 'At least one question is required'),
+  likertScale: z.array(z.object({ label: z.string().min(1, 'Scale label cannot be empty'), value: z.number() })).min(2, 'At least two scale options are required'),
+  interpretations: z.array(interpretationSchema).min(1, 'At least one interpretation rule is required'),
+});
+
+
+export async function createQuestionnaireAction(
+  prevState: CreateQuestionnaireState,
+  formData: FormData
+): Promise<CreateQuestionnaireState> {
+  try {
+    const data = JSON.parse(formData.get('jsonData') as string);
+    const parsed = formSchema.safeParse(data);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: 'Validation failed. Check the fields.',
+        errors: parsed.error.flatten(),
+      };
+    }
+
+    const { name, description, questions, likertScale, interpretations } = parsed.data;
+
+    const newQuestionnaire = saveCustomQuestionnaire({
+      name,
+      description,
+      questions: questions.map((q, i) => ({ ...q, id: `q${i+1}` })),
+      likertScale,
+      interpretations: (score: number) => {
+        const rule = interpretations.find(i => score >= i.from && score <= i.to);
+        if (rule) {
+          return { severity: rule.severity, summary: rule.summary };
+        }
+        return { severity: 'Low', summary: 'Score is out of defined interpretation range.' };
+      }
+    });
+
+    revalidatePath('/');
+    return { 
+        success: true, 
+        message: 'Questionnaire created successfully!',
+        questionnaireId: newQuestionnaire.id,
+    };
+
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || 'An unexpected error occurred.',
+    };
+  }
+}
+

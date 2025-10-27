@@ -14,6 +14,7 @@ export type Questionnaire = {
   description: string;
   questions: Question[];
   likertScale: LikertScaleOption[];
+  interpretations?: (score: number) => Interpretation;
 };
 
 export type Interpretation = {
@@ -87,7 +88,6 @@ export const questionnaires: Questionnaire[] = [
   }
 ];
 
-
 const interpretations: Record<string, (score: number) => Interpretation> = {
     'gad-7': (score: number): Interpretation => {
         if (score <= 4) return { severity: 'Low', summary: 'Minimal anxiety. Symptoms are likely transient and not causing significant distress.' };
@@ -103,6 +103,9 @@ const interpretations: Record<string, (score: number) => Interpretation> = {
         return { severity: 'High', summary: 'Severe depression. Immediate intervention and treatment are necessary.' };
     },
     'psc-10': (score: number): Interpretation => {
+        // Note: For PSS-10, questions 4, 5, 7, and 8 are reverse scored.
+        // This simple interpretation function does not account for reverse scoring and is for demonstration.
+        // A complete implementation would handle this based on the raw answers.
         if (score <= 13) return { severity: 'Low', summary: 'Low perceived stress. Indicates good coping mechanisms and resilience.' };
         if (score <= 26) return { severity: 'Moderate', summary: 'Moderate perceived stress. Experiencing some difficulties in managing life stressors.' };
         return { severity: 'High', summary: 'High perceived stress. Indicates significant difficulty in coping with life events, may require support.' };
@@ -110,9 +113,38 @@ const interpretations: Record<string, (score: number) => Interpretation> = {
 }
 
 export function getInterpretation(questionnaireId: string, score: number): Interpretation {
+    const customQuestionnaire = getCustomQuestionnaire(questionnaireId);
+    if(customQuestionnaire && customQuestionnaire.interpretations) {
+        return customQuestionnaire.interpretations(score);
+    }
+    
     const interpretFunc = interpretations[questionnaireId];
     if (interpretFunc) {
         return interpretFunc(score);
     }
+
     return { severity: 'Low', summary: 'No interpretation rules found for this scale.' };
+}
+
+
+// In-memory store for custom questionnaires
+const customQuestionnaires: Map<string, Questionnaire> = new Map();
+
+export function saveCustomQuestionnaire(questionnaire: Omit<Questionnaire, 'id'>): Questionnaire {
+  const id = `custom-${customQuestionnaires.size + 1}-${Date.now()}`;
+  const newQuestionnaire = { ...questionnaire, id };
+  customQuestionnaires.set(id, newQuestionnaire);
+  return newQuestionnaire;
+}
+
+export function getAllQuestionnaires(): Questionnaire[] {
+  return [...questionnaires, ...Array.from(customQuestionnaires.values())];
+}
+
+export function getQuestionnaire(id: string): Questionnaire | undefined {
+    return getAllQuestionnaires().find(q => q.id === id);
+}
+
+function getCustomQuestionnaire(id: string): Questionnaire | undefined {
+    return customQuestionnaires.get(id);
 }

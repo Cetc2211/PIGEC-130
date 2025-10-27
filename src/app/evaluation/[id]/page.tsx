@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { questionnaires } from "@/lib/data";
+import { getQuestionnaire } from "@/lib/data";
 import { QuestionnaireForm } from "@/components/questionnaire-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
@@ -11,7 +11,7 @@ type EvaluationPageProps = {
 };
 
 export default function EvaluationPage({ params }: EvaluationPageProps) {
-  const questionnaire = questionnaires.find((q) => q.id === params.id);
+  const questionnaire = getQuestionnaire(params.id);
 
   if (!questionnaire) {
     notFound();

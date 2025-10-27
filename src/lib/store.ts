@@ -1,6 +1,8 @@
 // NOTE: This is an in-memory store for demonstration purposes.
 // Data will be lost on server restart.
 
+import { getAllQuestionnaires } from "./data";
+
 export type EvaluationResult = {
   id: string;
   questionnaireId: string;
@@ -15,7 +17,7 @@ export type EvaluationResult = {
 const resultsStore: Map<string, EvaluationResult> = new Map();
 
 export const saveResult = (result: Omit<EvaluationResult, 'id'>): EvaluationResult => {
-  const id = (resultsStore.size + 1).toString();
+  const id = `res-${resultsStore.size + 1}-${Date.now()}`;
   const newResult: EvaluationResult = { ...result, id };
   resultsStore.set(id, newResult);
   return newResult;
@@ -24,3 +26,7 @@ export const saveResult = (result: Omit<EvaluationResult, 'id'>): EvaluationResu
 export const getResult = (id: string): EvaluationResult | undefined => {
   return resultsStore.get(id);
 };
+
+export function getAllResults(): EvaluationResult[] {
+  return Array.from(resultsStore.values());
+}
