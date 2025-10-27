@@ -12,8 +12,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateEvaluationReportInputSchema = z.object({
-  evaluationResults: z.string().describe('The evaluation results in JSON format.'),
-  scaleName: z.string().describe('The name of the evaluation scale used.'),
+  evaluationResults: z.string().describe('Los resultados de la evaluación en formato JSON.'),
+  scaleName: z.string().describe('El nombre de la escala de evaluación utilizada.'),
 });
 
 export type GenerateEvaluationReportInput = z.infer<
@@ -21,7 +21,7 @@ export type GenerateEvaluationReportInput = z.infer<
 >;
 
 const GenerateEvaluationReportOutputSchema = z.object({
-  report: z.string().describe('The generated evaluation report with visualizations.'),
+  report: z.string().describe('El informe de evaluación generado con visualizaciones.'),
 });
 
 export type GenerateEvaluationReportOutput = z.infer<
@@ -38,17 +38,17 @@ const prompt = ai.definePrompt({
   name: 'generateEvaluationReportPrompt',
   input: {schema: GenerateEvaluationReportInputSchema},
   output: {schema: GenerateEvaluationReportOutputSchema},
-  prompt: `You are an expert psychologist specializing in interpreting evaluation results.
+  prompt: `Eres un psicólogo experto en la interpretación de resultados de evaluaciones.
 
-You will use the evaluation results and the scale name to generate a comprehensive report.
-The report should include:
-- A summary of key findings.
-- Appropriate chart visualizations in markdown format (e.g., bar chart, pie chart, line chart) based on the data.
+Utilizarás los resultados de la evaluación y el nombre de la escala para generar un informe completo.
+El informe debe incluir:
+- Un resumen de los hallazgos clave.
+- Visualizaciones de gráficos apropiadas en formato markdown (por ejemplo, gráfico de barras, gráfico circular, gráfico de líneas) basadas en los datos.
 
-Scale Name: {{{scaleName}}}
-Evaluation Results: {{{evaluationResults}}}
+Nombre de la escala: {{{scaleName}}}
+Resultados de la evaluación: {{{evaluationResults}}}
 
-Ensure the report is easy to understand and share with clients.
+Asegúrate de que el informe sea fácil de entender y de compartir con los clientes.
 `,
 });
 

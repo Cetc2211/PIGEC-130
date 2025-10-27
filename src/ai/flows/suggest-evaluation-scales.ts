@@ -14,7 +14,7 @@ import {z} from 'genkit';
 const SuggestEvaluationScalesInputSchema = z.object({
   clientDescription: z
     .string()
-    .describe("A description of the client's situation or presenting problem."),
+    .describe("Una descripción de la situación o el problema principal del cliente."),
 });
 export type SuggestEvaluationScalesInput = z.infer<
   typeof SuggestEvaluationScalesInputSchema
@@ -23,7 +23,7 @@ export type SuggestEvaluationScalesInput = z.infer<
 const SuggestEvaluationScalesOutputSchema = z.object({
   suggestedScales: z
     .array(z.string())
-    .describe('A list of suggested evaluation scales relevant to the client description.'),
+    .describe('Una lista de escalas de evaluación sugeridas relevantes para la descripción del cliente.'),
 });
 export type SuggestEvaluationScalesOutput = z.infer<
   typeof SuggestEvaluationScalesOutputSchema
@@ -39,11 +39,11 @@ const prompt = ai.definePrompt({
   name: 'suggestEvaluationScalesPrompt',
   input: {schema: SuggestEvaluationScalesInputSchema},
   output: {schema: SuggestEvaluationScalesOutputSchema},
-  prompt: `You are an expert psychologist. Based on the following description of a client's situation, suggest a list of relevant evaluation scales.
+  prompt: `Eres un psicólogo experto. Basado en la siguiente descripción de la situación de un cliente, sugiere una lista de escalas de evaluación relevantes.
 
-Client Description: {{{clientDescription}}}
+Descripción del cliente: {{{clientDescription}}}
 
-Suggested Evaluation Scales:`,
+Escalas de evaluación sugeridas:`,
 });
 
 const suggestEvaluationScalesFlow = ai.defineFlow(

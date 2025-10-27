@@ -33,9 +33,9 @@ export default function ResultPage({ params }: ResultsPageProps) {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <header className="mb-8">
-        <h1 className="font-headline text-3xl font-bold tracking-tight">Evaluation Result</h1>
+        <h1 className="font-headline text-3xl font-bold tracking-tight">Resultado de la Evaluación</h1>
         <p className="text-muted-foreground">
-          Submitted on {new Date(result.submittedAt).toLocaleString()}
+          Enviado el {new Date(result.submittedAt).toLocaleString()}
         </p>
       </header>
 
@@ -44,7 +44,7 @@ export default function ResultPage({ params }: ResultsPageProps) {
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline">{result.questionnaireName}</CardTitle>
-                    <CardDescription>Score Summary</CardDescription>
+                    <CardDescription>Resumen de Puntuación</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-baseline gap-2">
@@ -53,9 +53,9 @@ export default function ResultPage({ params }: ResultsPageProps) {
                     </div>
                     <Progress value={percentage} aria-label={`${percentage.toFixed(0)}%`} />
                     <div>
-                        <h3 className="font-semibold mb-2">Interpretation</h3>
-                        <Badge variant={interpretation.severity === 'High' ? 'destructive' : 'secondary'}>
-                            {interpretation.severity} Severity
+                        <h3 className="font-semibold mb-2">Interpretación</h3>
+                        <Badge variant={interpretation.severity === 'Alta' ? 'destructive' : 'secondary'}>
+                            Severidad {interpretation.severity}
                         </Badge>
                         <p className="text-sm text-muted-foreground mt-2">{interpretation.summary}</p>
                     </div>
@@ -66,8 +66,8 @@ export default function ResultPage({ params }: ResultsPageProps) {
         <div className="lg:col-span-2">
             <Card className="min-h-[300px]">
                 <CardHeader>
-                    <CardTitle className="font-headline">Automated Report</CardTitle>
-                    <CardDescription>AI-generated insights and visualizations of the results.</CardDescription>
+                    <CardTitle className="font-headline">Informe Automatizado</CardTitle>
+                    <CardDescription>Análisis y visualizaciones de los resultados generados por IA.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ReportGenerator resultId={params.resultId} evaluationData={evaluationDataForAI} />

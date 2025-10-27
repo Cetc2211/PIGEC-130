@@ -20,7 +20,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-      {pending ? 'Submitting...' : 'Submit Evaluation'}
+      {pending ? 'Enviando...' : 'Enviar Evaluación'}
     </Button>
   );
 }
@@ -33,7 +33,7 @@ export function QuestionnaireForm({ questionnaire }: QuestionnaireFormProps) {
   useEffect(() => {
     if (state.message && state.errors) {
        toast({
-        title: 'Validation Error',
+        title: 'Error de Validación',
         description: state.message,
         variant: 'destructive'
       });

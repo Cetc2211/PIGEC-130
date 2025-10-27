@@ -6,11 +6,11 @@ import { Home, Users, FileText, Settings, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: Home },
-  { href: '/create-evaluation', label: 'Create Evaluation', icon: PlusCircle },
-  { href: '/patients', label: 'Patients', icon: Users, disabled: true },
-  { href: '/reports', label: 'Reports', icon: FileText, disabled: true },
-  { href: '/settings', label: 'Settings', icon: Settings, disabled: true },
+  { href: '/', label: 'Panel', icon: Home },
+  { href: '/create-evaluation', label: 'Crear Evaluación', icon: PlusCircle },
+  { href: '/patients', label: 'Pacientes', icon: Users, disabled: true },
+  { href: '/reports', label: 'Informes', icon: FileText, disabled: true },
+  { href: '/settings', label: 'Ajustes', icon: Settings, disabled: true },
 ];
 
 export function SidebarNav() {

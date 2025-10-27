@@ -19,12 +19,12 @@ export async function submitEvaluation(
 ): Promise<FormState> {
   const questionnaire = getQuestionnaire(questionnaireId);
   if (!questionnaire) {
-    return { message: 'Error: Questionnaire not found.' };
+    return { message: 'Error: Cuestionario no encontrado.' };
   }
 
   const schemaFields: Record<string, any> = {};
   questionnaire.questions.forEach((q) => {
-    schemaFields[q.id] = z.string({ required_error: 'Please select an answer.' });
+    schemaFields[q.id] = z.string({ required_error: 'Por favor, selecciona una respuesta.' });
   });
   const schema = z.object(schemaFields);
 
@@ -32,7 +32,7 @@ export async function submitEvaluation(
 
   if (!parsed.success) {
     return {
-      message: 'Please answer all questions before submitting.',
+      message: 'Por favor, responde todas las preguntas antes de enviar.',
       errors: parsed.error.flatten().fieldErrors,
     };
   }
@@ -74,7 +74,7 @@ export async function generateReportAction(resultId: string, evaluationData: str
     return { success: true, report: aiResult.report };
   } catch (error) {
     console.error(error);
-    return { success: false, report: 'Failed to generate report.' };
+    return { success: false, report: 'No se pudo generar el informe.' };
   }
 }
 
@@ -88,16 +88,16 @@ export type CreateQuestionnaireState = {
 const interpretationSchema = z.object({
     from: z.number(),
     to: z.number(),
-    severity: z.enum(['Low', 'Mild', 'Moderate', 'High']),
-    summary: z.string().min(1, 'Summary is required'),
+    severity: z.enum(['Baja', 'Leve', 'Moderada', 'Alta']),
+    summary: z.string().min(1, 'El resumen es obligatorio'),
 });
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().min(1, 'Description is required'),
-  questions: z.array(z.object({ text: z.string().min(1, 'Question text cannot be empty') })).min(1, 'At least one question is required'),
-  likertScale: z.array(z.object({ label: z.string().min(1, 'Scale label cannot be empty'), value: z.number() })).min(2, 'At least two scale options are required'),
-  interpretations: z.array(interpretationSchema).min(1, 'At least one interpretation rule is required'),
+  name: z.string().min(1, 'El nombre es obligatorio'),
+  description: z.string().min(1, 'La descripción es obligatoria'),
+  questions: z.array(z.object({ text: z.string().min(1, 'El texto de la pregunta no puede estar vacío') })).min(1, 'Se requiere al menos una pregunta'),
+  likertScale: z.array(z.object({ label: z.string().min(1, 'La etiqueta de la escala no puede estar vacía'), value: z.number() })).min(2, 'Se requieren al menos dos opciones de escala'),
+  interpretations: z.array(interpretationSchema).min(1, 'Se requiere al menos una regla de interpretación'),
 });
 
 
@@ -112,7 +112,7 @@ export async function createQuestionnaireAction(
     if (!parsed.success) {
       return {
         success: false,
-        message: 'Validation failed. Check the fields.',
+        message: 'Validación fallida. Revisa los campos.',
         errors: parsed.error.flatten(),
       };
     }
@@ -129,22 +129,21 @@ export async function createQuestionnaireAction(
         if (rule) {
           return { severity: rule.severity, summary: rule.summary };
         }
-        return { severity: 'Low', summary: 'Score is out of defined interpretation range.' };
+        return { severity: 'Baja', summary: 'La puntuación está fuera del rango de interpretación definido.' };
       }
     });
 
     revalidatePath('/');
     return { 
         success: true, 
-        message: 'Questionnaire created successfully!',
+        message: '¡Cuestionario creado con éxito!',
         questionnaireId: newQuestionnaire.id,
     };
 
   } catch (error: any) {
     return {
       success: false,
-      message: error.message || 'An unexpected error occurred.',
+      message: error.message || 'Ocurrió un error inesperado.',
     };
   }
 }
-

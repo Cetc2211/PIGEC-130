@@ -38,8 +38,8 @@ export function QuestionnaireList({ questionnaires }: QuestionnaireListProps) {
     navigator.clipboard.writeText(link).then(() => {
       setIsCopied(true);
       toast({
-        title: "Link Copied!",
-        description: "The evaluation link has been copied to your clipboard.",
+        title: "¡Enlace Copiado!",
+        description: "El enlace de la evaluación ha sido copiado a tu portapapeles.",
       });
       setTimeout(() => setIsCopied(false), 2000);
     });
@@ -55,12 +55,12 @@ export function QuestionnaireList({ questionnaires }: QuestionnaireListProps) {
               <CardDescription>{q.description}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
-              <div className="text-sm text-muted-foreground">{q.questions.length} questions</div>
+              <div className="text-sm text-muted-foreground">{q.questions.length} preguntas</div>
             </CardContent>
             <CardFooter>
               <Button onClick={() => handleGenerateLink(q)} className="w-full">
                 <LinkIcon className="mr-2 h-4 w-4" />
-                Generate Link
+                Generar Enlace
               </Button>
             </CardFooter>
           </Card>
@@ -70,15 +70,15 @@ export function QuestionnaireList({ questionnaires }: QuestionnaireListProps) {
       <Dialog open={!!selectedQuestionnaire} onOpenChange={handleCloseDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="font-headline">Share Evaluation Link</DialogTitle>
+            <DialogTitle className="font-headline">Compartir Enlace de Evaluación</DialogTitle>
             <DialogDescription>
-              Share this unique link with your client to begin the evaluation.
+              Comparte este enlace único con tu cliente para comenzar la evaluación.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="link" className="text-right">
-                Link
+                Enlace
               </Label>
               <div className="col-span-3 relative">
                 <Input

@@ -33,7 +33,7 @@ export default function EvaluationPage({ params }: EvaluationPageProps) {
           </CardContent>
         </Card>
          <p className="text-center text-sm text-muted-foreground mt-6">
-            EscalaWeb - Modern psychological evaluations
+            EscalaWeb - Evaluaciones psicológicas modernas
         </p>
       </div>
     </div>

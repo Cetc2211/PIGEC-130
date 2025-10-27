@@ -22,19 +22,19 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 const interpretationSchema = z.object({
     from: z.coerce.number().min(0),
     to: z.coerce.number().min(0),
-    severity: z.enum(['Low', 'Mild', 'Moderate', 'High']),
-    summary: z.string().min(1, 'Summary is required'),
+    severity: z.enum(['Baja', 'Leve', 'Moderada', 'Alta']),
+    summary: z.string().min(1, 'El resumen es obligatorio'),
 }).refine(data => data.to >= data.from, {
-    message: "To value must be greater than or equal to From value",
+    message: "El valor 'Hasta' debe ser mayor o igual que el valor 'Desde'",
     path: ["to"],
 });
 
 const formSchema = z.object({
-  name: z.string().min(3, 'Name must be at least 3 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  questions: z.array(z.object({ text: z.string().min(1, 'Question text cannot be empty') })).min(1, 'At least one question is required'),
-  likertScale: z.array(z.object({ label: z.string().min(1, 'Scale label cannot be empty') })).min(2, 'At least two scale options are required'),
-  interpretations: z.array(interpretationSchema).min(1, 'At least one interpretation rule is required'),
+  name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
+  description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
+  questions: z.array(z.object({ text: z.string().min(1, 'El texto de la pregunta no puede estar vacío') })).min(1, 'Se requiere al menos una pregunta'),
+  likertScale: z.array(z.object({ label: z.string().min(1, 'La etiqueta de la escala no puede estar vacía') })).min(2, 'Se requieren al menos dos opciones de escala'),
+  interpretations: z.array(interpretationSchema).min(1, 'Se requiere al menos una regla de interpretación'),
 });
 
 
@@ -53,9 +53,9 @@ export function CreateEvaluationForm() {
       name: "",
       description: "",
       questions: [{ text: "" }],
-      likertScale: [{ label: "Not at all" }, { label: "Very much" }],
+      likertScale: [{ label: "Para nada" }, { label: "Muchísimo" }],
       interpretations: [
-          { from: 0, to: 5, severity: "Low", summary: "" }
+          { from: 0, to: 5, severity: "Baja", summary: "" }
       ],
     },
   });
@@ -78,7 +78,7 @@ export function CreateEvaluationForm() {
   useEffect(() => {
     if (state.success) {
         toast({
-            title: "Success!",
+            title: "¡Éxito!",
             description: state.message,
         });
         if (state.questionnaireId) {
@@ -116,8 +116,8 @@ export function CreateEvaluationForm() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Basic Information</CardTitle>
-                    <CardDescription>Give your questionnaire a name and a brief description for your clients.</CardDescription>
+                    <CardTitle>Información Básica</CardTitle>
+                    <CardDescription>Dale a tu cuestionario un nombre y una breve descripción para tus clientes.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <FormField
@@ -125,9 +125,9 @@ export function CreateEvaluationForm() {
                         name="name"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Name</FormLabel>
+                                <FormLabel>Nombre</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., Burnout Inventory" {...field} />
+                                    <Input placeholder="p.ej., Inventario de Burnout" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -138,9 +138,9 @@ export function CreateEvaluationForm() {
                         name="description"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Description</FormLabel>
+                                <FormLabel>Descripción</FormLabel>
                                 <FormControl>
-                                    <Textarea placeholder="A short description of what this evaluation measures." {...field} />
+                                    <Textarea placeholder="Una breve descripción de lo que mide esta evaluación." {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -151,8 +151,8 @@ export function CreateEvaluationForm() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Questions</CardTitle>
-                    <CardDescription>Add the questions for your evaluation. You can add as many as you need.</CardDescription>
+                    <CardTitle>Preguntas</CardTitle>
+                    <CardDescription>Añade las preguntas para tu evaluación. Puedes añadir tantas como necesites.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {questions.map((field, index) => (
@@ -163,9 +163,9 @@ export function CreateEvaluationForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <div className="flex items-center gap-2">
-                                        <FormLabel className="flex-shrink-0 mt-2">Q{index + 1}</FormLabel>
+                                        <FormLabel className="flex-shrink-0 mt-2">P{index + 1}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Enter the question text" {...field} />
+                                            <Input placeholder="Introduce el texto de la pregunta" {...field} />
                                         </FormControl>
                                         <Button type="button" variant="ghost" size="icon" onClick={() => removeQuestion(index)} disabled={questions.length <= 1}>
                                             <Trash2 className="h-4 w-4" />
@@ -178,7 +178,7 @@ export function CreateEvaluationForm() {
                     ))}
                     <Button type="button" variant="outline" size="sm" onClick={() => appendQuestion({ text: "" })}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Question
+                        Añadir Pregunta
                     </Button>
                 </CardContent>
             </Card>
@@ -186,8 +186,8 @@ export function CreateEvaluationForm() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Rating Scale (Likert)</CardTitle>
-                        <CardDescription>Define the labels for your rating scale. Values are assigned automatically.</CardDescription>
+                        <CardTitle>Escala de Calificación (Likert)</CardTitle>
+                        <CardDescription>Define las etiquetas para tu escala de calificación. Los valores se asignan automáticamente.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                          {likertScale.map((field, index) => (
@@ -200,7 +200,7 @@ export function CreateEvaluationForm() {
                                         <div className="flex items-center gap-2">
                                             <FormLabel className="mt-2">{index}</FormLabel>
                                             <FormControl>
-                                                <Input placeholder={`e.g., '${index === 0 ? 'Not at all' : 'Very much'}'`} {...field} />
+                                                <Input placeholder={`p.ej., '${index === 0 ? 'Para nada' : 'Muchísimo'}'`} {...field} />
                                             </FormControl>
                                             <Button type="button" variant="ghost" size="icon" onClick={() => removeScale(index)} disabled={likertScale.length <= 2}>
                                                 <Trash2 className="h-4 w-4" />
@@ -213,21 +213,21 @@ export function CreateEvaluationForm() {
                         ))}
                         <Button type="button" variant="outline" size="sm" onClick={() => appendScale({ label: "" })}>
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Add Scale Option
+                            Añadir Opción de Escala
                         </Button>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Interpretation Rules</CardTitle>
-                        <CardDescription>Define how scores are interpreted. Create ranges and provide a summary for each.</CardDescription>
+                        <CardTitle>Reglas de Interpretación</CardTitle>
+                        <CardDescription>Define cómo se interpretan las puntuaciones. Crea rangos y proporciona un resumen para cada uno.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {interpretations.map((field, index) => (
                            <div key={field.id} className="p-4 border rounded-md space-y-4">
                              <div className="flex justify-between items-center">
-                               <h4 className="font-medium">Rule {index + 1}</h4>
+                               <h4 className="font-medium">Regla {index + 1}</h4>
                                <Button type="button" variant="ghost" size="icon" onClick={() => removeInterpretation(index)} disabled={interpretations.length <= 1}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -238,7 +238,7 @@ export function CreateEvaluationForm() {
                                     name={`interpretations.${index}.from`}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>From Score</FormLabel>
+                                            <FormLabel>Puntuación Desde</FormLabel>
                                             <FormControl><Input type="number" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -249,7 +249,7 @@ export function CreateEvaluationForm() {
                                     name={`interpretations.${index}.to`}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>To Score</FormLabel>
+                                            <FormLabel>Puntuación Hasta</FormLabel>
                                             <FormControl><Input type="number" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -261,18 +261,18 @@ export function CreateEvaluationForm() {
                                 name={`interpretations.${index}.severity`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Severity</FormLabel>
+                                        <FormLabel>Severidad</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select severity" />
+                                                    <SelectValue placeholder="Selecciona severidad" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="Low">Low</SelectItem>
-                                                <SelectItem value="Mild">Mild</SelectItem>
-                                                <SelectItem value="Moderate">Moderate</SelectItem>
-                                                <SelectItem value="High">High</SelectItem>
+                                                <SelectItem value="Baja">Baja</SelectItem>
+                                                <SelectItem value="Leve">Leve</SelectItem>
+                                                <SelectItem value="Moderada">Moderada</SelectItem>
+                                                <SelectItem value="Alta">Alta</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -284,24 +284,24 @@ export function CreateEvaluationForm() {
                                 name={`interpretations.${index}.summary`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Summary</FormLabel>
-                                        <FormControl><Textarea placeholder="Provide an interpretation summary for this score range." {...field} /></FormControl>
+                                        <FormLabel>Resumen</FormLabel>
+                                        <FormControl><Textarea placeholder="Proporciona un resumen de interpretación para este rango de puntuación." {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                                />
                            </div>
                         ))}
-                         <Button type="button" variant="outline" size="sm" onClick={() => appendInterpretation({ from: 0, to: 0, severity: "Low", summary: "" })}>
+                         <Button type="button" variant="outline" size="sm" onClick={() => appendInterpretation({ from: 0, to: 0, severity: "Baja", summary: "" })}>
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Add Interpretation Rule
+                            Añadir Regla de Interpretación
                         </Button>
                     </CardContent>
                 </Card>
             </div>
             
             <div className="flex justify-end">
-                <Button type="submit">Create Questionnaire</Button>
+                <Button type="submit">Crear Cuestionario</Button>
             </div>
         </form>
     </Form>
