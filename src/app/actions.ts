@@ -6,6 +6,7 @@ import { getQuestionnaire, saveCustomQuestionnaire } from '@/lib/data';
 import { saveResult } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
+import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
 
 export type FormState = {
   message: string;
@@ -145,5 +146,29 @@ export async function createQuestionnaireAction(
       success: false,
       message: error.message || 'Ocurrió un error inesperado.',
     };
+  }
+}
+
+export async function processPdfAction(formData: FormData) {
+  const file = formData.get('pdf') as File;
+  if (!file || file.size === 0) {
+    return { success: false, error: 'No se ha subido ningún archivo.' };
+  }
+
+  try {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const pdfDataUri = `data:application/pdf;base64,${buffer.toString('base64')}`;
+
+    const result = await createQuestionnaireFromPdf({ pdfDataUri });
+    return { success: true, data: result };
+
+  } catch (error: any) {
+    console.error('Error processing PDF:', error);
+    let errorMessage = 'No se pudo procesar el PDF. Asegúrate de que el formato es correcto e inténtalo de nuevo.';
+    if (error.message.includes('JSON')) {
+        errorMessage = 'La IA no pudo estructurar los datos del PDF. Verifica que el documento contenga un cuestionario claro con preguntas, escala y reglas de interpretación.'
+    }
+    return { success: false, error: errorMessage };
   }
 }
