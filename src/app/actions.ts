@@ -7,6 +7,8 @@ import { saveResult } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
+import { createQuestionnaireFromText } from '@/ai/flows/create-questionnaire-from-text';
+
 
 export type FormState = {
   message: string;
@@ -169,6 +171,25 @@ export async function processPdfAction(formData: FormData) {
     let errorMessage = 'No se pudo procesar el PDF. Asegúrate de que el formato es correcto e inténtalo de nuevo.';
     if (error.message.includes('JSON')) {
         errorMessage = 'La IA no pudo estructurar los datos del PDF. Verifica que el documento contenga un cuestionario claro con preguntas, escala y reglas de interpretación.'
+    }
+    return { success: false, error: errorMessage };
+  }
+}
+
+export async function processTextAction(text: string) {
+  if (!text || text.trim().length < 50) {
+    return { success: false, error: 'El texto es demasiado corto para ser procesado.' };
+  }
+
+  try {
+    const result = await createQuestionnaireFromText({ text });
+    return { success: true, data: result };
+
+  } catch (error: any) {
+    console.error('Error processing text:', error);
+    let errorMessage = 'No se pudo procesar el texto. Asegúrate de que el formato es correcto e inténtalo de nuevo.';
+    if (error.message.includes('JSON')) {
+        errorMessage = 'La IA no pudo estructurar los datos del texto. Verifica que contenga un cuestionario claro con título, preguntas, escala y reglas de interpretación.'
     }
     return { success: false, error: errorMessage };
   }

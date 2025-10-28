@@ -4,7 +4,7 @@ import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useActionState, useState, useTransition, useEffect } from "react";
-import { createQuestionnaireAction, processPdfAction } from "@/app/actions";
+import { createQuestionnaireAction, processPdfAction, processTextAction } from "@/app/actions";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, X, FileUp, Loader2, Wand2 } from "lucide-react";
+import { PlusCircle, Trash2, X, FileUp, Loader2, Wand2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -37,6 +37,53 @@ const formSchema = z.object({
   interpretations: z.array(interpretationSchema).min(1, 'Se requiere al menos una regla de interpretación'),
 });
 
+function TextImporter({ onDataLoaded, onError }: { onDataLoaded: (data: any) => void, onError: (error: string) => void }) {
+    const [isPending, startTransition] = useTransition();
+    const [text, setText] = useState('');
+
+    const handleProcessText = () => {
+        startTransition(async () => {
+            onError(''); // Clear previous errors
+            const result = await processTextAction(text);
+            if (result.success) {
+                onDataLoaded(result.data);
+            } else {
+                onError(result.error || 'Ocurrió un error desconocido.');
+            }
+        });
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Importar desde Texto</CardTitle>
+                <CardDescription>Pega el contenido completo de tu cuestionario en el área de texto y la IA lo estructurará por ti.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <Textarea 
+                    placeholder="Pega aquí el título, descripción, preguntas, escala de calificación y reglas de interpretación de tu prueba..." 
+                    className="min-h-[250px] font-mono text-xs"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    disabled={isPending}
+                />
+                 <Button onClick={handleProcessText} disabled={isPending || !text}>
+                    {isPending ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Procesando...
+                        </>
+                    ) : (
+                        <>
+                            <Wand2 className="mr-2 h-4 w-4" />
+                            Procesar Texto con IA
+                        </>
+                    )}
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
 
 function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => void, onError: (error: string) => void }) {
     const [isPending, startTransition] = useTransition();
@@ -49,6 +96,7 @@ function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => v
             const formData = new FormData();
             formData.append('pdf', file);
             startTransition(async () => {
+                onError(''); // Clear previous errors
                 const result = await processPdfAction(formData);
                 if (result.success) {
                     onDataLoaded(result.data);
@@ -103,7 +151,8 @@ export function CreateEvaluationForm() {
     });
     
     const [isPending, startTransition] = useTransition();
-    const [pdfError, setPdfError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState("manual");
+    const [importError, setImportError] = useState<string | null>(null);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -140,8 +189,8 @@ export function CreateEvaluationForm() {
         }
     }, [state, router, toast]);
     
-    const handlePdfData = (data: any) => {
-        setPdfError(null);
+    const handleDataLoaded = (data: any) => {
+        setImportError(null);
         form.reset({
             name: data.name || '',
             description: data.description || '',
@@ -150,13 +199,14 @@ export function CreateEvaluationForm() {
             interpretations: data.interpretations.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
         });
         toast({
-            title: "¡PDF Procesado!",
-            description: "El formulario ha sido rellenado con los datos del PDF. Revisa y ajusta si es necesario.",
+            title: "¡Datos Procesados!",
+            description: "El formulario ha sido rellenado con los datos importados. Revisa y ajusta si es necesario.",
         });
+        setActiveTab("manual");
     };
 
-    const handlePdfError = (error: string) => {
-        setPdfError(error);
+    const handleImportError = (error: string) => {
+        setImportError(error);
     }
 
     function onSubmit(values: z.infer<typeof formSchema>) {
@@ -170,24 +220,35 @@ export function CreateEvaluationForm() {
     }
 
     return (
-        <Tabs defaultValue="manual" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="manual">Creación Manual</TabsTrigger>
-                <TabsTrigger value="pdf"><Wand2 className="mr-2 h-4 w-4" /> Importar desde PDF</TabsTrigger>
+                <TabsTrigger value="pdf"><FileUp className="mr-2 h-4 w-4" /> Importar desde PDF</TabsTrigger>
+                <TabsTrigger value="text"><FileText className="mr-2 h-4 w-4" /> Importar desde Texto</TabsTrigger>
             </TabsList>
+
+             {(activeTab === 'pdf' || activeTab === 'text') && importError && (
+                <Alert variant="destructive" className="mt-4">
+                    <X className="h-4 w-4" />
+                    <AlertTitle>Error al Importar</AlertTitle>
+                    <AlertDescription>{importError}</AlertDescription>
+                </Alert>
+            )}
+
             <TabsContent value="pdf" className="mt-6">
-                {pdfError && (
-                    <Alert variant="destructive" className="mb-4">
-                        <X className="h-4 w-4" />
-                        <AlertTitle>Error al Procesar PDF</AlertTitle>
-                        <AlertDescription>{pdfError}</AlertDescription>
-                    </Alert>
-                )}
-                <PdfUploader onDataLoaded={handlePdfData} onError={handlePdfError} />
+                <PdfUploader onDataLoaded={handleDataLoaded} onError={handleImportError} />
                  <p className="text-xs text-muted-foreground text-center mt-4">
                     La importación con IA funciona mejor con PDFs que tienen una estructura clara: un título, una descripción, preguntas numeradas, opciones de respuesta consistentes y una tabla o sección de interpretación de puntuaciones.
                 </p>
             </TabsContent>
+            
+            <TabsContent value="text" className="mt-6">
+                <TextImporter onDataLoaded={handleDataLoaded} onError={handleImportError} />
+                 <p className="text-xs text-muted-foreground text-center mt-4">
+                    Asegúrate de que el texto pegado sea claro y esté bien estructurado para que la IA pueda interpretarlo correctamente. Incluye todos los elementos de la prueba.
+                </p>
+            </TabsContent>
+
 
             <TabsContent value="manual" className="mt-6">
                 <Form {...form}>
@@ -354,7 +415,7 @@ export function CreateEvaluationForm() {
                                                         <FormControl>
                                                             <SelectTrigger>
                                                                 <SelectValue placeholder="Selecciona severidad" />
-                                                            </SelectTrigger>
+                                                            </Trigger>
                                                         </FormControl>
                                                         <SelectContent>
                                                             <SelectItem value="Baja">Baja</SelectItem>
