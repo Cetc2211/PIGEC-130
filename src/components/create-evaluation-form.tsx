@@ -3,9 +3,8 @@
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useState, useTransition, useEffect } from "react";
 import { createQuestionnaireAction, processPdfAction } from "@/app/actions";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -118,12 +117,12 @@ export function CreateEvaluationForm() {
         },
     });
 
-    const { fields: questions, append: appendQuestion, remove: removeQuestion, replace: replaceQuestions } = useFieldArray({ control: form.control, name: "questions" });
-    const { fields: likertScale, append: appendScale, remove: removeScale, replace: replaceLikertScale } = useFieldArray({ control: form.control, name: "likertScale" });
-    const { fields: interpretations, append: appendInterpretation, remove: removeInterpretation, replace: replaceInterpretations } = useFieldArray({ control: form.control, name: "interpretations" });
+    const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({ control: form.control, name: "questions" });
+    const { fields: likertScale, append: appendScale, remove: removeScale } = useFieldArray({ control: form.control, name: "likertScale" });
+    const { fields: interpretations, append: appendInterpretation, remove: removeInterpretation } = useFieldArray({ control: form.control, name: "interpretations" });
 
     useEffect(() => {
-        if (state.success) {
+        if (state.success && state.message) {
             toast({
                 title: "¡Éxito!",
                 description: state.message,
@@ -131,7 +130,7 @@ export function CreateEvaluationForm() {
             if (state.questionnaireId) {
                 router.push('/');
             }
-        } else if (state.message && !state.success) {
+        } else if (!state.success && state.message) {
             toast({
                 title: "Error",
                 description: state.message,
@@ -145,9 +144,9 @@ export function CreateEvaluationForm() {
         form.reset({
             name: data.name || '',
             description: data.description || '',
-            questions: data.questions.length > 0 ? data.questions : [{ text: '' }],
-            likertScale: data.likertScale.length > 0 ? data.likertScale : [{label: ''}],
-            interpretations: data.interpretations.length > 0 ? data.interpretations : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
+            questions: data.questions.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text})) : [{ text: '' }],
+            likertScale: data.likertScale.length > 0 ? data.likertScale.map((s: { label: string; }) => ({label: s.label})) : [{label: ''}],
+            interpretations: data.interpretations.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
         });
         toast({
             title: "¡PDF Procesado!",
@@ -171,7 +170,7 @@ export function CreateEvaluationForm() {
         <Tabs defaultValue="manual" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="manual">Creación Manual</TabsTrigger>
-                <TabsTrigger value="pdf"><Wand2 className="mr-2" /> Importar desde PDF</TabsTrigger>
+                <TabsTrigger value="pdf"><Wand2 className="mr-2 h-4 w-4" /> Importar desde PDF</TabsTrigger>
             </TabsList>
             <TabsContent value="pdf" className="mt-6">
                 {pdfError && (
@@ -190,10 +189,10 @@ export function CreateEvaluationForm() {
             <TabsContent value="manual" className="mt-6">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        {state.message && !state.success && (
+                        {state.message && !state.success && state.errors && (
                             <Alert variant="destructive">
                                 <X className="h-4 w-4" />
-                                <AlertTitle>Error</AlertTitle>
+                                <AlertTitle>Error de Validación</AlertTitle>
                                 <AlertDescription>
                                     {state.message}
                                 </AlertDescription>
@@ -387,7 +386,10 @@ export function CreateEvaluationForm() {
                         </div>
                         
                         <div className="flex justify-end">
-                            <Button type="submit">Crear Cuestionario</Button>
+                            <Button type="submit" disabled={form.formState.isSubmitting}>
+                                {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Crear Cuestionario
+                            </Button>
                         </div>
                     </form>
                 </Form>

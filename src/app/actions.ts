@@ -131,7 +131,8 @@ export async function createQuestionnaireAction(
           return { severity: rule.severity, summary: rule.summary };
         }
         return { severity: 'Baja', summary: 'La puntuación está fuera del rango de interpretación definido.' };
-      }
+      },
+      interpretationData: interpretations
     });
 
     revalidatePath('/');

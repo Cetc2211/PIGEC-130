@@ -8,6 +8,19 @@ export type Question = {
   text: string;
 };
 
+export type Interpretation = {
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta';
+    summary: string;
+}
+
+export type InterpretationRule = {
+    from: number;
+    to: number;
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta';
+    summary: string;
+};
+
+
 export type Questionnaire = {
   id: string;
   name: string;
@@ -15,12 +28,9 @@ export type Questionnaire = {
   questions: Question[];
   likertScale: LikertScaleOption[];
   interpretations?: (score: number) => Interpretation;
+  interpretationData?: InterpretationRule[];
 };
 
-export type Interpretation = {
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta';
-    summary: string;
-}
 
 const defaultLikertScale: LikertScaleOption[] = [
   { value: 0, label: 'Para nada' },
