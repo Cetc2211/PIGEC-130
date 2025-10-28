@@ -3,7 +3,7 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { createQuestionnaireAction } from "@/app/actions";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -42,7 +42,7 @@ export function CreateEvaluationForm() {
     const { toast } = useToast();
     const router = useRouter();
     
-    const [state, formAction] = useFormState(createQuestionnaireAction, {
+    const [state, formAction] = useActionState(createQuestionnaireAction, {
         message: "",
         success: false,
     });
@@ -200,7 +200,7 @@ export function CreateEvaluationForm() {
                                         <div className="flex items-center gap-2">
                                             <FormLabel className="mt-2">{index}</FormLabel>
                                             <FormControl>
-                                                <Input placeholder={`p.ej., '${index === 0 ? 'Para nada' : 'Muchísimo'}'`} {...field} />
+                                                <Input placeholder={`p.ej., '${index === 0 ? 'Para nada' : 'Muchísimo'}`} {...field} />
                                             </FormControl>
                                             <Button type="button" variant="ghost" size="icon" onClick={() => removeScale(index)} disabled={likertScale.length <= 2}>
                                                 <Trash2 className="h-4 w-4" />
