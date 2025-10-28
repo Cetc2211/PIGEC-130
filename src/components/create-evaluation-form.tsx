@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useActionState, useState, useTransition, useEffect } from "react";
@@ -102,6 +102,7 @@ function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => v
                     onDataLoaded(result.data);
                 } else {
                     onError(result.error || 'Ocurrió un error desconocido.');
+                    setFileName('');
                 }
             });
         }
@@ -194,9 +195,9 @@ export function CreateEvaluationForm() {
         form.reset({
             name: data.name || '',
             description: data.description || '',
-            questions: data.questions.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text})) : [{ text: '' }],
-            likertScale: data.likertScale.length > 0 ? data.likertScale.map((s: { label: string; }) => ({label: s.label})) : [{label: ''}],
-            interpretations: data.interpretations.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
+            questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text})) : [{ text: '' }],
+            likertScale: data.likertScale?.length > 0 ? data.likertScale.map((s: { label: string; }) => ({label: s.label})) : [{label: ''}],
+            interpretations: data.interpretations?.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
         });
         toast({
             title: "¡Datos Procesados!",
@@ -209,7 +210,7 @@ export function CreateEvaluationForm() {
         setImportError(error);
     }
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    const onSubmit = (values: z.infer<typeof formSchema>) => {
         startTransition(() => {
             const formData = new FormData();
             const valuedLikertScale = values.likertScale.map((s, i) => ({...s, value: i}));
@@ -217,7 +218,7 @@ export function CreateEvaluationForm() {
             formData.append('jsonData', JSON.stringify(data));
             formAction(formData);
         });
-    }
+    };
 
     return (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -415,7 +416,7 @@ export function CreateEvaluationForm() {
                                                         <FormControl>
                                                             <SelectTrigger>
                                                                 <SelectValue placeholder="Selecciona severidad" />
-                                                            </Trigger>
+                                                            </SelectTrigger>
                                                         </FormControl>
                                                         <SelectContent>
                                                             <SelectItem value="Baja">Baja</SelectItem>
