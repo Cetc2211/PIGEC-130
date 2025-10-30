@@ -127,14 +127,7 @@ export async function createQuestionnaireAction(
       description,
       questions: questions.map((q, i) => ({ ...q, id: `q${i+1}` })),
       likertScale,
-      interpretations: (score: number) => {
-        const rule = interpretations.find(i => score >= i.from && score <= i.to);
-        if (rule) {
-          return { severity: rule.severity, summary: rule.summary };
-        }
-        return { severity: 'Baja', summary: 'La puntuación está fuera del rango de interpretación definido.' };
-      },
-      interpretationData: interpretations
+      interpretationData: interpretations,
     });
 
     revalidatePath('/');

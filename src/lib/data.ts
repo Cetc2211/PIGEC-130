@@ -27,8 +27,7 @@ export type Questionnaire = {
   description: string;
   questions: Question[];
   likertScale: LikertScaleOption[];
-  interpretations?: (score: number) => Interpretation;
-  interpretationData?: InterpretationRule[];
+  interpretationData: InterpretationRule[];
 };
 
 
@@ -54,6 +53,12 @@ export const questionnaires: Questionnaire[] = [
       { id: 'q6', text: 'Ponerse fácilmente irritable o enfadado/a' },
       { id: 'q7', text: 'Sentir miedo, como si algo horrible pudiera pasar' },
     ],
+    interpretationData: [
+        { from: 0, to: 4, severity: 'Baja', summary: 'Ansiedad mínima. Es probable que los síntomas sean transitorios y no causen una angustia significativa.' },
+        { from: 5, to: 9, severity: 'Leve', summary: 'Ansiedad leve. Puede experimentar algunos síntomas, pero generalmente son manejables.' },
+        { from: 10, to: 14, severity: 'Moderada', summary: 'Ansiedad moderada. Los síntomas son frecuentes y causan un deterioro notable en el funcionamiento diario.' },
+        { from: 15, to: 21, severity: 'Alta', summary: 'Ansiedad severa. Los síntomas son persistentes, angustiantes e interfieren significativamente con la vida diaria.' },
+    ],
   },
   {
     id: 'phq-9',
@@ -70,6 +75,13 @@ export const questionnaires: Questionnaire[] = [
         { id: 'q7', text: 'Dificultad para concentrarse en cosas, como leer el periódico o ver la televisión' },
         { id: 'q8', text: 'Moverse o hablar tan lento que otras personas podrían haberlo notado. O lo contrario: estar tan inquieto/a o agitado/a que se ha estado moviendo mucho más de lo habitual' },
         { id: 'q9', text: 'Pensamientos de que estaría mejor muerto/a, o de hacerse daño de alguna manera' }
+    ],
+    interpretationData: [
+        { from: 0, to: 4, severity: 'Baja', summary: 'Depresión mínima. Es poco probable que sea clínicamente significativa.' },
+        { from: 5, to: 9, severity: 'Leve', summary: 'Depresión leve. Monitorear los síntomas; considerar tratamiento si persisten.' },
+        { from: 10, to: 14, severity: 'Moderada', summary: 'Depresión moderada. Es probable que se justifique el tratamiento.' },
+        { from: 15, to: 19, severity: 'Moderada', summary: 'Depresión moderadamente severa. Se recomienda encarecidamente el tratamiento activo.' },
+        { from: 20, to: 27, severity: 'Alta', summary: 'Depresión severa. Se necesita intervención y tratamiento inmediatos.' },
     ],
   },
   {
@@ -94,47 +106,16 @@ export const questionnaires: Questionnaire[] = [
         { id: 'q8', text: 'En el último mes, ¿con qué frecuencia ha sentido que estaba al tanto de las cosas?' },
         { id: 'q9', text: 'En el último mes, ¿con qué frecuencia se ha enfadado por cosas que estaban fuera de su control?' },
         { id: 'q10', text: 'En el último mes, ¿con qué frecuencia ha sentido que las dificultades se acumulaban tanto que no podía superarlas?' }
+    ],
+    interpretationData: [
+        // Nota: Para PSS-10, las preguntas 4, 5, 7 y 8 tienen puntuación inversa.
+        // Esta interpretación simple no tiene en cuenta la puntuación inversa. La lógica de puntuación debe manejarlo.
+        { from: 0, to: 13, severity: 'Baja', summary: 'Bajo estrés percibido. Indica buenos mecanismos de afrontamiento y resiliencia.' },
+        { from: 14, to: 26, severity: 'Moderada', summary: 'Estrés percibido moderado. Experimenta algunas dificultades para manejar los estresores de la vida.' },
+        { from: 27, to: 40, severity: 'Alta', summary: 'Alto estrés percibido. Indica una dificultad significativa para hacer frente a los eventos de la vida, puede requerir apoyo.' },
     ]
   }
 ];
-
-const interpretations: Record<string, (score: number) => Interpretation> = {
-    'gad-7': (score: number): Interpretation => {
-        if (score <= 4) return { severity: 'Baja', summary: 'Ansiedad mínima. Es probable que los síntomas sean transitorios y no causen una angustia significativa.' };
-        if (score <= 9) return { severity: 'Leve', summary: 'Ansiedad leve. Puede experimentar algunos síntomas, pero generalmente son manejables.' };
-        if (score <= 14) return { severity: 'Moderada', summary: 'Ansiedad moderada. Los síntomas son frecuentes y causan un deterioro notable en el funcionamiento diario.' };
-        return { severity: 'Alta', summary: 'Ansiedad severa. Los síntomas son persistentes, angustiantes e interfieren significativamente con la vida diaria.' };
-    },
-    'phq-9': (score: number): Interpretation => {
-        if (score <= 4) return { severity: 'Baja', summary: 'Depresión mínima. Es poco probable que sea clínicamente significativa.' };
-        if (score <= 9) return { severity: 'Leve', summary: 'Depresión leve. Monitorear los síntomas; considerar tratamiento si persisten.' };
-        if (score <= 14) return { severity: 'Moderada', summary: 'Depresión moderada. Es probable que se justifique el tratamiento.' };
-        if (score <= 19) return { severity: 'Moderada', summary: 'Depresión moderadamente severa. Se recomienda encarecidamente el tratamiento activo.' };
-        return { severity: 'Alta', summary: 'Depresión severa. Se necesita intervención y tratamiento inmediatos.' };
-    },
-    'psc-10': (score: number): Interpretation => {
-        // Nota: Para PSS-10, las preguntas 4, 5, 7 y 8 tienen puntuación inversa.
-        // Esta función de interpretación simple no tiene en cuenta la puntuación inversa y es para demostración.
-        // Una implementación completa manejaría esto en función de las respuestas sin procesar.
-        if (score <= 13) return { severity: 'Baja', summary: 'Bajo estrés percibido. Indica buenos mecanismos de afrontamiento y resiliencia.' };
-        if (score <= 26) return { severity: 'Moderada', summary: 'Estrés percibido moderado. Experimenta algunas dificultades para manejar los estresores de la vida.' };
-        return { severity: 'Alta', summary: 'Alto estrés percibido. Indica una dificultad significativa para hacer frente a los eventos de la vida, puede requerir apoyo.' };
-    }
-}
-
-export function getInterpretation(questionnaireId: string, score: number): Interpretation {
-    const customQuestionnaire = getCustomQuestionnaire(questionnaireId);
-    if(customQuestionnaire && customQuestionnaire.interpretations) {
-        return customQuestionnaire.interpretations(score);
-    }
-    
-    const interpretFunc = interpretations[questionnaireId];
-    if (interpretFunc) {
-        return interpretFunc(score);
-    }
-
-    return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
-}
 
 
 // Almacenamiento en memoria para cuestionarios personalizados
@@ -155,6 +136,26 @@ export function getQuestionnaire(id: string): Questionnaire | undefined {
     return getAllQuestionnaires().find(q => q.id === id);
 }
 
-function getCustomQuestionnaire(id: string): Questionnaire | undefined {
-    return customQuestionnaires.get(id);
+export function getInterpretation(questionnaireId: string, score: number): Interpretation {
+    const questionnaire = getQuestionnaire(questionnaireId);
+    if (!questionnaire) {
+        return { severity: 'Baja', summary: 'No se encontró el cuestionario.' };
+    }
+    
+    if (questionnaire.interpretationData) {
+        const rule = questionnaire.interpretationData.find(i => score >= i.from && score <= i.to);
+        if (rule) {
+            return { severity: rule.severity, summary: rule.summary };
+        }
+
+        // Handle scores potentially higher than the max "to"
+        const maxRule = questionnaire.interpretationData.reduce((max, r) => r.to > max.to ? r : max, questionnaire.interpretationData[0]);
+        if (score > maxRule.to) {
+            return { severity: maxRule.severity, summary: maxRule.summary };
+        }
+
+        return { severity: 'Baja', summary: 'La puntuación está fuera del rango de interpretación definido.' };
+    }
+
+    return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
