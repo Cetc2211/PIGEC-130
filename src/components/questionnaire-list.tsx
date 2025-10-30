@@ -8,7 +8,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Copy, Link as LinkIcon } from 'lucide-react';
+import { Check, Copy, Link as LinkIcon, Eye } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type QuestionnaireListProps = {
   questionnaires: Questionnaire[];
@@ -18,6 +20,7 @@ export function QuestionnaireList({ questionnaires }: QuestionnaireListProps) {
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<Questionnaire | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleGenerateLink = (questionnaire: Questionnaire) => {
     setSelectedQuestionnaire(questionnaire);
@@ -30,6 +33,7 @@ export function QuestionnaireList({ questionnaires }: QuestionnaireListProps) {
 
   const getEvaluationLink = () => {
     if (!selectedQuestionnaire) return '';
+    // This function can only run on the client, so window is available.
     return `${window.location.origin}/evaluation/${selectedQuestionnaire.id}`;
   };
 
@@ -44,20 +48,30 @@ export function QuestionnaireList({ questionnaires }: QuestionnaireListProps) {
       setTimeout(() => setIsCopied(false), 2000);
     });
   };
+  
+  const handleCardClick = (id: string) => {
+      router.push(`/evaluation/${id}`);
+  }
 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {questionnaires.map((q) => (
-          <Card key={q.id} className="flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            <CardHeader>
-              <CardTitle className="font-headline">{q.name}</CardTitle>
-              <CardDescription>{q.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <div className="text-sm text-muted-foreground">{q.questions.length} preguntas</div>
-            </CardContent>
-            <CardFooter>
+          <Card key={q.id} className="flex flex-col transition-all duration-300 hover:shadow-xl">
+            <div className="flex-grow cursor-pointer" onClick={() => handleCardClick(q.id)}>
+              <CardHeader>
+                <CardTitle className="font-headline">{q.name}</CardTitle>
+                <CardDescription>{q.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground">{q.questions.length} preguntas</div>
+              </CardContent>
+            </div>
+            <CardFooter className="flex justify-between items-center">
+               <Button onClick={() => handleCardClick(q.id)} variant="outline" className="w-full mr-2">
+                <Eye className="mr-2 h-4 w-4" />
+                Ver Prueba
+              </Button>
               <Button onClick={() => handleGenerateLink(q)} className="w-full">
                 <LinkIcon className="mr-2 h-4 w-4" />
                 Generar Enlace
@@ -72,7 +86,7 @@ export function QuestionnaireList({ questionnaires }: QuestionnaireListProps) {
           <DialogHeader>
             <DialogTitle className="font-headline">Compartir Enlace de Evaluación</DialogTitle>
             <DialogDescription>
-              Comparte este enlace único con tu cliente para comenzar la evaluación.
+              Comparte este enlace único con tu cliente para comenzar la evaluación. Este método es para evaluaciones no supervisadas.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
