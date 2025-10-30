@@ -153,6 +153,7 @@ export function CreateEvaluationForm() {
     
     const [activeTab, setActiveTab] = useState("manual");
     const [importError, setImportError] = useState<string | null>(null);
+    const [isTransitioning, startTransition] = useTransition();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -208,11 +209,13 @@ export function CreateEvaluationForm() {
     }
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        const formData = new FormData();
-        const valuedLikertScale = values.likertScale.map((s, i) => ({...s, value: i}));
-        const data = {...values, likertScale: valuedLikertScale };
-        formData.append('jsonData', JSON.stringify(data));
-        formAction(formData);
+        startTransition(() => {
+            const formData = new FormData();
+            const valuedLikertScale = values.likertScale.map((s, i) => ({...s, value: i}));
+            const data = {...values, likertScale: valuedLikertScale };
+            formData.append('jsonData', JSON.stringify(data));
+            formAction(formData);
+        });
     };
 
     return (
@@ -446,8 +449,8 @@ export function CreateEvaluationForm() {
                         </div>
                         
                         <div className="flex justify-end">
-                            <Button type="submit" disabled={isPending}>
-                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            <Button type="submit" disabled={isPending || isTransitioning}>
+                                {isPending || isTransitioning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                 Crear Cuestionario
                             </Button>
                         </div>
@@ -457,3 +460,4 @@ export function CreateEvaluationForm() {
         </Tabs>
     );
 }
+    
