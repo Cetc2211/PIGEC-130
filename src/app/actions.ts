@@ -122,7 +122,7 @@ export async function createQuestionnaireAction(
 
     const { name, description, questions, likertScale, interpretations } = parsed.data;
 
-    const newQuestionnaire = saveCustomQuestionnaire({
+    saveCustomQuestionnaire({
       name,
       description,
       questions: questions.map((q, i) => ({ ...q, id: `q${i+1}` })),
@@ -130,19 +130,15 @@ export async function createQuestionnaireAction(
       interpretationData: interpretations,
     });
 
-    revalidatePath('/');
-    return { 
-        success: true, 
-        message: '¡Cuestionario creado con éxito!',
-        questionnaireId: newQuestionnaire.id,
-    };
-
   } catch (error: any) {
     return {
       success: false,
       message: error.message || 'Ocurrió un error inesperado.',
     };
   }
+  
+  revalidatePath('/');
+  redirect('/');
 }
 
 export async function processPdfAction(formData: FormData) {

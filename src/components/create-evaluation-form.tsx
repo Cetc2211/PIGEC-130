@@ -144,7 +144,6 @@ function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => v
 
 export function CreateEvaluationForm() {
     const { toast } = useToast();
-    const router = useRouter();
     
     const [state, formAction] = useActionState(createQuestionnaireAction, {
         message: "",
@@ -178,9 +177,6 @@ export function CreateEvaluationForm() {
                 title: "¡Éxito!",
                 description: state.message,
             });
-            if (state.questionnaireId) {
-                router.push('/');
-            }
         } else if (!state.success && state.message) {
             toast({
                 title: "Error",
@@ -188,7 +184,7 @@ export function CreateEvaluationForm() {
                 variant: "destructive"
             })
         }
-    }, [state, router, toast]);
+    }, [state, toast]);
     
     const handleDataLoaded = (data: any) => {
         setImportError(null);
