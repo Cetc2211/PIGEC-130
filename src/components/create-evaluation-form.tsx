@@ -144,13 +144,13 @@ function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => v
 
 export function CreateEvaluationForm() {
     const { toast } = useToast();
+    const router = useRouter();
     
-    const [state, formAction] = useActionState(createQuestionnaireAction, {
+    const [state, formAction, isPending] = useActionState(createQuestionnaireAction, {
         message: "",
         success: false,
     });
     
-    const [isPending, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState("manual");
     const [importError, setImportError] = useState<string | null>(null);
 
@@ -172,11 +172,12 @@ export function CreateEvaluationForm() {
     const { fields: interpretations, append: appendInterpretation, remove: removeInterpretation } = useFieldArray({ control: form.control, name: "interpretations" });
 
     useEffect(() => {
-        if (state.success && state.message) {
+        if (state.success && state.questionnaireId) {
             toast({
                 title: "¡Éxito!",
                 description: state.message,
             });
+            router.push('/');
         } else if (!state.success && state.message) {
             toast({
                 title: "Error",
@@ -184,7 +185,7 @@ export function CreateEvaluationForm() {
                 variant: "destructive"
             })
         }
-    }, [state, toast]);
+    }, [state, toast, router]);
     
     const handleDataLoaded = (data: any) => {
         setImportError(null);
@@ -207,13 +208,11 @@ export function CreateEvaluationForm() {
     }
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        startTransition(() => {
-            const formData = new FormData();
-            const valuedLikertScale = values.likertScale.map((s, i) => ({...s, value: i}));
-            const data = {...values, likertScale: valuedLikertScale };
-            formData.append('jsonData', JSON.stringify(data));
-            formAction(formData);
-        });
+        const formData = new FormData();
+        const valuedLikertScale = values.likertScale.map((s, i) => ({...s, value: i}));
+        const data = {...values, likertScale: valuedLikertScale };
+        formData.append('jsonData', JSON.stringify(data));
+        formAction(formData);
     };
 
     return (
