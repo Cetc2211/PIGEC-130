@@ -1,7 +1,8 @@
 'use client';
 
 import type { Questionnaire } from '@/lib/data';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { submitEvaluation } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -26,7 +27,7 @@ function SubmitButton() {
 }
 
 export function QuestionnaireForm({ questionnaire }: QuestionnaireFormProps) {
-  const [state, formAction] = useFormState(submitEvaluation.bind(null, questionnaire.id), { message: '' });
+  const [state, formAction] = useActionState(submitEvaluation.bind(null, questionnaire.id), { message: '' });
   const form = useForm();
   const { toast } = useToast();
 
