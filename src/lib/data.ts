@@ -25,6 +25,8 @@ export type Questionnaire = {
   id: string;
   name: string;
   description: string;
+  category: string;
+  subcategory: string;
   questions: Question[];
   likertScale: LikertScaleOption[];
   interpretationData: InterpretationRule[];
@@ -43,6 +45,8 @@ export const questionnaires: Questionnaire[] = [
     id: 'gad-7',
     name: 'Ansiedad GAD-7',
     description: 'Una herramienta de 7 preguntas para la detección del Trastorno de Ansiedad Generalizada.',
+    category: 'Estado de Ánimo',
+    subcategory: 'Ansiedad',
     likertScale: defaultLikertScale,
     questions: [
       { id: 'q1', text: 'Sentirse nervioso/a, ansioso/a o con los nervios de punta' },
@@ -64,6 +68,8 @@ export const questionnaires: Questionnaire[] = [
     id: 'phq-9',
     name: 'Depresión PHQ-9',
     description: 'Una herramienta de 9 preguntas para detectar la depresión y monitorear su gravedad.',
+    category: 'Estado de Ánimo',
+    subcategory: 'Depresión',
     likertScale: defaultLikertScale,
     questions: [
         { id: 'q1', text: 'Poco interés o placer en hacer las cosas' },
@@ -88,6 +94,8 @@ export const questionnaires: Questionnaire[] = [
     id: 'psc-10',
     name: 'Estrés Percibido PSS-10',
     description: 'Una escala de 10 ítems que mide el grado en que las situaciones de la vida se evalúan como estresantes.',
+    category: 'Estado de Ánimo',
+    subcategory: 'Estrés',
     likertScale: [
         { value: 0, label: 'Nunca' },
         { value: 1, label: 'Casi nunca' },

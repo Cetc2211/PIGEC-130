@@ -3,8 +3,8 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useTransition } from "react";
-import { createQuestionnaireAction, processPdfAction, processTextAction, type CreateQuestionnaireState } from "@/app/actions";
+import { useState, useTransition, useEffect } from "react";
+import { createQuestionnaireAction, processPdfAction, processTextAction } from "@/app/actions";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,8 @@ const interpretationSchema = z.object({
 const formSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
+  category: z.string().min(1, 'La categoría es obligatoria'),
+  subcategory: z.string().min(1, 'La subcategoría es obligatoria'),
   questions: z.array(z.object({ text: z.string().min(1, 'El texto de la pregunta no puede estar vacío') })).min(1, 'Se requiere al menos una pregunta'),
   likertScale: z.array(z.object({ label: z.string().min(1, 'La etiqueta de la escala no puede estar vacía') })).min(2, 'Se requieren al menos dos opciones de escala'),
   interpretations: z.array(interpretationSchema).min(1, 'Se requiere al menos una regla de interpretación'),
@@ -147,7 +149,7 @@ export function CreateEvaluationForm() {
     const router = useRouter();
     
     const [isPending, startTransition] = useTransition();
-    const [formState, setFormState] = useState<CreateQuestionnaireState | null>(null);
+    const [actionResult, setActionResult] = useState<{ success: boolean; message: string; questionnaireId?: string; errors?: any; } | null>(null);
     
     const [activeTab, setActiveTab] = useState("manual");
     const [importError, setImportError] = useState<string | null>(null);
@@ -157,6 +159,8 @@ export function CreateEvaluationForm() {
         defaultValues: {
             name: "",
             description: "",
+            category: "",
+            subcategory: "",
             questions: [{ text: "" }],
             likertScale: [{ label: "Para nada" }, { label: "Muchísimo" }],
             interpretations: [
@@ -164,6 +168,24 @@ export function CreateEvaluationForm() {
             ],
         },
     });
+
+    useEffect(() => {
+        if (!actionResult) return;
+
+        if (actionResult.success && actionResult.questionnaireId) {
+            toast({
+                title: "¡Éxito!",
+                description: actionResult.message,
+            });
+            router.push('/');
+        } else if (!actionResult.success) {
+            toast({
+                title: "Error",
+                description: actionResult.message,
+                variant: "destructive"
+            });
+        }
+    }, [actionResult, router, toast]);
 
     const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({ control: form.control, name: "questions" });
     const { fields: likertScale, append: appendScale, remove: removeScale } = useFieldArray({ control: form.control, name: "likertScale" });
@@ -174,6 +196,8 @@ export function CreateEvaluationForm() {
         form.reset({
             name: data.name || '',
             description: data.description || '',
+            category: data.category || '',
+            subcategory: data.subcategory || '',
             questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text})) : [{ text: '' }],
             likertScale: data.likertScale?.length > 0 ? data.likertScale.map((s: { label: string; }) => ({label: s.label})) : [{label: ''}],
             interpretations: data.interpretations?.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
@@ -195,23 +219,8 @@ export function CreateEvaluationForm() {
             const valuedLikertScale = values.likertScale.map((s, i) => ({...s, value: i}));
             const data = {...values, likertScale: valuedLikertScale };
             formData.append('jsonData', JSON.stringify(data));
-            
             const result = await createQuestionnaireAction(formData);
-            setFormState(result);
-
-            if (result.success) {
-                toast({
-                    title: "¡Éxito!",
-                    description: result.message,
-                });
-                router.push('/');
-            } else {
-                 toast({
-                    title: "Error",
-                    description: result.message,
-                    variant: "destructive"
-                });
-            }
+            setActionResult(result);
         });
     };
 
@@ -249,12 +258,12 @@ export function CreateEvaluationForm() {
             <TabsContent value="manual" className="mt-6">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        {formState && !formState.success && formState.errors && (
+                         {actionResult && !actionResult.success && actionResult.errors && (
                             <Alert variant="destructive">
                                 <X className="h-4 w-4" />
                                 <AlertTitle>Error de Validación</AlertTitle>
                                 <AlertDescription>
-                                    {formState.message}
+                                    {actionResult.message}
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -262,7 +271,7 @@ export function CreateEvaluationForm() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Información Básica</CardTitle>
-                                <CardDescription>Dale a tu cuestionario un nombre y una breve descripción para tus clientes.</CardDescription>
+                                <CardDescription>Dale a tu cuestionario un nombre, una descripción y una categoría para organizarlo.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <FormField
@@ -291,6 +300,36 @@ export function CreateEvaluationForm() {
                                         </FormItem>
                                     )}
                                 />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <FormField
+                                        control={form.control}
+                                        name="category"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Categoría Principal</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="p.ej., Estado de Ánimo" {...field} />
+                                                </FormControl>
+                                                <FormDescription>La carpeta principal donde se guardará.</FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                     <FormField
+                                        control={form.control}
+                                        name="subcategory"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Subcategoría</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="p.ej., Ansiedad" {...field} />
+                                                </FormControl>
+                                                 <FormDescription>La subcarpeta dentro de la categoría principal.</FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
                             </CardContent>
                         </Card>
 

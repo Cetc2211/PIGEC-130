@@ -98,6 +98,8 @@ const interpretationSchema = z.object({
 const formSchema = z.object({
   name: z.string().min(1, 'El nombre es obligatorio'),
   description: z.string().min(1, 'La descripción es obligatoria'),
+  category: z.string().min(1, 'La categoría es obligatoria'),
+  subcategory: z.string().min(1, 'La subcategoría es obligatoria'),
   questions: z.array(z.object({ text: z.string().min(1, 'El texto de la pregunta no puede estar vacío') })).min(1, 'Se requiere al menos una pregunta'),
   likertScale: z.array(z.object({ label: z.string().min(1, 'La etiqueta de la escala no puede estar vacía'), value: z.number() })).min(2, 'Se requieren al menos dos opciones de escala'),
   interpretations: z.array(interpretationSchema).min(1, 'Se requiere al menos una regla de interpretación'),
@@ -119,11 +121,13 @@ export async function createQuestionnaireAction(
       };
     }
 
-    const { name, description, questions, likertScale, interpretations } = parsed.data;
+    const { name, description, category, subcategory, questions, likertScale, interpretations } = parsed.data;
 
     const newQuestionnaire = saveCustomQuestionnaire({
       name,
       description,
+      category,
+      subcategory,
       questions: questions.map((q, i) => ({ ...q, id: `q${i+1}` })),
       likertScale,
       interpretationData: interpretations,
