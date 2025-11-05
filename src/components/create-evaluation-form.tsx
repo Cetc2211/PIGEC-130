@@ -3,8 +3,8 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useActionState, useState, useTransition, useEffect } from "react";
-import { createQuestionnaireAction, processPdfAction, processTextAction } from "@/app/actions";
+import { useState, useTransition } from "react";
+import { createQuestionnaireAction, processPdfAction, processTextAction, type CreateQuestionnaireState } from "@/app/actions";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -146,14 +146,11 @@ export function CreateEvaluationForm() {
     const { toast } = useToast();
     const router = useRouter();
     
-    const [state, formAction, isPending] = useActionState(createQuestionnaireAction, {
-        message: "",
-        success: false,
-    });
+    const [isPending, startTransition] = useTransition();
+    const [formState, setFormState] = useState<CreateQuestionnaireState | null>(null);
     
     const [activeTab, setActiveTab] = useState("manual");
     const [importError, setImportError] = useState<string | null>(null);
-    const [isTransitioning, startTransition] = useTransition();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -171,22 +168,6 @@ export function CreateEvaluationForm() {
     const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({ control: form.control, name: "questions" });
     const { fields: likertScale, append: appendScale, remove: removeScale } = useFieldArray({ control: form.control, name: "likertScale" });
     const { fields: interpretations, append: appendInterpretation, remove: removeInterpretation } = useFieldArray({ control: form.control, name: "interpretations" });
-
-    useEffect(() => {
-        if (state.success && state.questionnaireId) {
-            toast({
-                title: "¡Éxito!",
-                description: state.message,
-            });
-            router.push('/');
-        } else if (!state.success && state.message) {
-            toast({
-                title: "Error",
-                description: state.message,
-                variant: "destructive"
-            })
-        }
-    }, [state, toast, router]);
     
     const handleDataLoaded = (data: any) => {
         setImportError(null);
@@ -209,12 +190,28 @@ export function CreateEvaluationForm() {
     }
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        startTransition(() => {
+        startTransition(async () => {
             const formData = new FormData();
             const valuedLikertScale = values.likertScale.map((s, i) => ({...s, value: i}));
             const data = {...values, likertScale: valuedLikertScale };
             formData.append('jsonData', JSON.stringify(data));
-            formAction(formData);
+            
+            const result = await createQuestionnaireAction(formData);
+            setFormState(result);
+
+            if (result.success) {
+                toast({
+                    title: "¡Éxito!",
+                    description: result.message,
+                });
+                router.push('/');
+            } else {
+                 toast({
+                    title: "Error",
+                    description: result.message,
+                    variant: "destructive"
+                });
+            }
         });
     };
 
@@ -252,12 +249,12 @@ export function CreateEvaluationForm() {
             <TabsContent value="manual" className="mt-6">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        {state.message && !state.success && state.errors && (
+                        {formState && !formState.success && formState.errors && (
                             <Alert variant="destructive">
                                 <X className="h-4 w-4" />
                                 <AlertTitle>Error de Validación</AlertTitle>
                                 <AlertDescription>
-                                    {state.message}
+                                    {formState.message}
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -449,8 +446,8 @@ export function CreateEvaluationForm() {
                         </div>
                         
                         <div className="flex justify-end">
-                            <Button type="submit" disabled={isPending || isTransitioning}>
-                                {isPending || isTransitioning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            <Button type="submit" disabled={isPending}>
+                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                 Crear Cuestionario
                             </Button>
                         </div>
@@ -460,4 +457,3 @@ export function CreateEvaluationForm() {
         </Tabs>
     );
 }
-    
