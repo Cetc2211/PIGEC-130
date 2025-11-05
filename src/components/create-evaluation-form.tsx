@@ -3,7 +3,7 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useActionState } from "react";
 import { createQuestionnaireAction, processPdfAction, processTextAction } from "@/app/actions";
 import { useRouter } from "next/navigation";
 
@@ -40,11 +40,11 @@ const formSchema = z.object({
 });
 
 function TextImporter({ onDataLoaded, onError }: { onDataLoaded: (data: any) => void, onError: (error: string) => void }) {
-    const [isPending, startTransition] = useTransition();
+    const [isAiPending, startAiTransition] = useTransition();
     const [text, setText] = useState('');
 
     const handleProcessText = () => {
-        startTransition(async () => {
+        startAiTransition(async () => {
             onError(''); // Clear previous errors
             const result = await processTextAction(text);
             if (result.success) {
@@ -67,10 +67,10 @@ function TextImporter({ onDataLoaded, onError }: { onDataLoaded: (data: any) => 
                     className="min-h-[250px] font-mono text-xs"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    disabled={isPending}
+                    disabled={isAiPending}
                 />
-                 <Button onClick={handleProcessText} disabled={isPending || !text}>
-                    {isPending ? (
+                 <Button onClick={handleProcessText} disabled={isAiPending || !text}>
+                    {isAiPending ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Procesando...
@@ -88,7 +88,7 @@ function TextImporter({ onDataLoaded, onError }: { onDataLoaded: (data: any) => 
 }
 
 function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => void, onError: (error: string) => void }) {
-    const [isPending, startTransition] = useTransition();
+    const [isAiPending, startAiTransition] = useTransition();
     const [fileName, setFileName] = useState('');
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +97,7 @@ function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => v
             setFileName(file.name);
             const formData = new FormData();
             formData.append('pdf', file);
-            startTransition(async () => {
+            startAiTransition(async () => {
                 onError(''); // Clear previous errors
                 const result = await processPdfAction(formData);
                 if (result.success) {
@@ -121,7 +121,7 @@ function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => v
                     <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/80">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                             <FileUp className="w-8 h-8 mb-4 text-muted-foreground" />
-                            {isPending ? (
+                            {isAiPending ? (
                                 <>
                                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                                     <p className="mt-2 text-sm text-muted-foreground">Procesando PDF...</p>
@@ -136,7 +136,7 @@ function PdfUploader({ onDataLoaded, onError }: { onDataLoaded: (data: any) => v
                                 </>
                             )}
                         </div>
-                        <input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept="application/pdf" disabled={isPending} />
+                        <input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept="application/pdf" disabled={isAiPending} />
                     </label>
                 </div>
             </CardContent>
@@ -148,9 +148,9 @@ export function CreateEvaluationForm() {
     const { toast } = useToast();
     const router = useRouter();
     
+    const [state, formAction] = useActionState(createQuestionnaireAction, { success: false, message: "" });
     const [isPending, startTransition] = useTransition();
-    const [actionResult, setActionResult] = useState<{ success: boolean; message: string; questionnaireId?: string; errors?: any; } | null>(null);
-    
+
     const [activeTab, setActiveTab] = useState("manual");
     const [importError, setImportError] = useState<string | null>(null);
 
@@ -162,30 +162,33 @@ export function CreateEvaluationForm() {
             category: "",
             subcategory: "",
             questions: [{ text: "" }],
-            likertScale: [{ label: "Para nada" }, { label: "Muchísimo" }],
+            likertScale: [
+                { label: "Nunca" },
+                { label: "Pocas veces" },
+                { label: "Muchas veces" },
+                { label: "Siempre" }
+            ],
             interpretations: [
-                { from: 0, to: 5, severity: "Baja", summary: "" }
+                { from: 0, to: 0, severity: "Baja", summary: "" }
             ],
         },
     });
 
     useEffect(() => {
-        if (!actionResult) return;
-
-        if (actionResult.success && actionResult.questionnaireId) {
+        if (state?.success && state.questionnaireId) {
             toast({
                 title: "¡Éxito!",
-                description: actionResult.message,
+                description: state.message,
             });
             router.push('/');
-        } else if (!actionResult.success) {
-            toast({
-                title: "Error",
-                description: actionResult.message,
+        } else if (state && !state.success && state.message) {
+             toast({
+                title: "Error al crear el cuestionario",
+                description: state.message,
                 variant: "destructive"
             });
         }
-    }, [actionResult, router, toast]);
+    }, [state, router, toast]);
 
     const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({ control: form.control, name: "questions" });
     const { fields: likertScale, append: appendScale, remove: removeScale } = useFieldArray({ control: form.control, name: "likertScale" });
@@ -196,8 +199,8 @@ export function CreateEvaluationForm() {
         form.reset({
             name: data.name || '',
             description: data.description || '',
-            category: data.category || '',
-            subcategory: data.subcategory || '',
+            category: '', // Let user set category
+            subcategory: '', // Let user set subcategory
             questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text})) : [{ text: '' }],
             likertScale: data.likertScale?.length > 0 ? data.likertScale.map((s: { label: string; }) => ({label: s.label})) : [{label: ''}],
             interpretations: data.interpretations?.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
@@ -212,15 +215,14 @@ export function CreateEvaluationForm() {
     const handleImportError = (error: string) => {
         setImportError(error);
     }
-
-    const onSubmit = (values: z.infer<typeof formSchema>) => {
-        startTransition(async () => {
+    
+    const handleSubmit = (values: z.infer<typeof formSchema>) => {
+        startTransition(() => {
             const formData = new FormData();
             const valuedLikertScale = values.likertScale.map((s, i) => ({...s, value: i}));
             const data = {...values, likertScale: valuedLikertScale };
             formData.append('jsonData', JSON.stringify(data));
-            const result = await createQuestionnaireAction(formData);
-            setActionResult(result);
+            formAction(formData);
         });
     };
 
@@ -257,13 +259,18 @@ export function CreateEvaluationForm() {
 
             <TabsContent value="manual" className="mt-6">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                         {actionResult && !actionResult.success && actionResult.errors && (
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+                         {state && !state.success && state.errors && (
                             <Alert variant="destructive">
                                 <X className="h-4 w-4" />
                                 <AlertTitle>Error de Validación</AlertTitle>
                                 <AlertDescription>
-                                    {actionResult.message}
+                                    {state.message}
+                                    <ul className="list-disc pl-5 mt-2">
+                                    {Object.entries(state.errors.fieldErrors).map(([field, errors]) => (
+                                        <li key={field}>{`${field}: ${(errors as string[]).join(', ')}`}</li>
+                                    ))}
+                                    </ul>
                                 </AlertDescription>
                             </Alert>
                         )}
