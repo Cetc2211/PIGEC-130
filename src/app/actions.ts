@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { getQuestionnaire, saveCustomQuestionnaire } from '@/lib/data';
-import { saveResult } from '@/lib/store';
+import { savePatient, saveResult } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
@@ -192,4 +192,56 @@ export async function processTextAction(text: string) {
     }
     return { success: false, error: errorMessage };
   }
+}
+
+
+export type AddPatientState = {
+    message: string;
+    success: boolean;
+    errors?: Record<string, any>;
+    patientId?: string;
+};
+
+const addPatientFormSchema = z.object({
+  name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
+  dateOfBirth: z.string().min(1, 'La fecha de nacimiento es obligatoria.'),
+});
+
+export async function addPatientAction(
+    prevState: AddPatientState,
+    formData: FormData
+): Promise<AddPatientState> {
+    try {
+        const parsed = addPatientFormSchema.safeParse({
+            name: formData.get('name'),
+            dateOfBirth: formData.get('dateOfBirth'),
+        });
+
+        if (!parsed.success) {
+            return {
+                success: false,
+                message: 'Validación fallida.',
+                errors: parsed.error.flatten().fieldErrors,
+            };
+        }
+
+        const newPatient = savePatient({
+            name: parsed.data.name,
+            dateOfBirth: new Date(parsed.data.dateOfBirth),
+        });
+
+        revalidatePath('/patients');
+
+        return {
+            success: true,
+            message: `¡Paciente "${newPatient.name}" añadido con éxito!`,
+            patientId: newPatient.id,
+        };
+
+    } catch (error: any) {
+        return {
+            success: false,
+            message: error.message || 'Ocurrió un error inesperado al añadir el paciente.',
+        };
+    }
 }
