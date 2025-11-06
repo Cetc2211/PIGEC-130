@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from './ui/sidebar';
@@ -8,7 +8,7 @@ import Link from 'next/link';
 const navItems = [
   { href: '/', label: 'Panel', icon: Home },
   { href: '/create-evaluation', label: 'Crear Evaluación', icon: PlusCircle },
-  { href: '/patients', label: 'Pacientes', icon: Users, disabled: true },
+  { href: '/patients', label: 'Pacientes', icon: Users },
   { href: '/reports', label: 'Informes', icon: FileText, disabled: true },
   { href: '/settings', label: 'Ajustes', icon: Settings, disabled: true },
 ];
