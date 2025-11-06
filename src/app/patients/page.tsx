@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Users } from "lucide-react";
 
 export default function PatientsPage() {
   return (
