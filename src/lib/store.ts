@@ -1,5 +1,5 @@
 // NOTE: This is an in-memory store for demonstration purposes.
-// Data will be lost on server restart.
+// Data will be lost on server restart unless pre-filled.
 
 import { format } from 'date-fns';
 
@@ -54,6 +54,69 @@ export type Assignment = {
 const resultsStore: Map<string, EvaluationResult> = new Map();
 const patientsStore: Map<string, Patient> = new Map();
 const assignedQuestionnairesStore: Map<string, Assignment[]> = new Map();
+
+
+// --- Data Persistence Simulation ---
+// To avoid losing data on every server restart during development,
+// we pre-fill the stores with some default data.
+
+const generateRecordIdForSeed = (date: Date, index: number) => {
+    const sequence = (index + 1).toString().padStart(5, '0');
+    const datePart = format(date, 'dd/MM/yy');
+    return `CBTA/130/${sequence}/${datePart}`;
+}
+
+const seedData = () => {
+    const now = new Date();
+    
+    // Clear stores to prevent duplication on hot-reloads in dev
+    if (patientsStore.size > 0 || assignedQuestionnairesStore.size > 0) {
+        return;
+    }
+
+    const initialPatients = [
+        { name: "Ana Sofía López", semester: "1", group: "A", email: "ana.lopez@example.com" },
+        { name: "Carlos Mendoza", semester: "1", group: "A", email: "carlos.mendoza@example.com" },
+        { name: "Beatriz Jiménez", semester: "1", group: "A", email: "beatriz.jimenez@example.com" },
+        { name: "David Ruiz", semester: "3", group: "B", email: "david.ruiz@example.com" },
+        { name: "Elena Torres", semester: "3", group: "B", email: "elena.torres@example.com" },
+    ];
+
+    const createdPatients: Patient[] = [];
+
+    initialPatients.forEach((p, index) => {
+        const id = `pat-${index + 1}-${now.getTime()}`;
+        const recordId = generateRecordIdForSeed(now, index);
+        const newPatient: Patient = {
+            ...p,
+            id,
+            recordId,
+            createdAt: now,
+        };
+        patientsStore.set(id, newPatient);
+        createdPatients.push(newPatient);
+    });
+
+    // Assign a test to Ana Sofía López
+    const ana = createdPatients.find(p => p.name === "Ana Sofía López");
+    if (ana) {
+        const assignment: Assignment = {
+            assignmentId: `asg-seed-1`,
+            patientId: ana.id,
+            questionnaireId: 'gad-7',
+            assignedAt: now,
+        };
+        assignedQuestionnairesStore.set(ana.id, [assignment]);
+    }
+
+    console.log('✅ In-memory store seeded with test data.');
+};
+
+// Initialize with seed data
+seedData();
+
+
+// --- Store Functions ---
 
 
 export const saveResult = (result: Omit<EvaluationResult, 'id'>): EvaluationResult => {
