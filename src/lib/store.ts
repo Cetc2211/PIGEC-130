@@ -16,11 +16,31 @@ export type EvaluationResult = {
 export type Patient = {
   id: string;
   recordId: string;
+  // Basic info from bulk add
   name: string;
   semester: string;
   group: string;
   createdAt: Date;
+  // Detailed profile info
+  dob?: string; // Date of birth
+  age?: number;
+  sex?: 'M' | 'F' | 'Otro';
+  otherSex?: string;
+  maritalStatus?: string;
+  curp?: string;
+  nss?: string;
+  address?: string;
+  neighborhood?: string;
+  postalCode?: string;
+  municipality?: string;
+  homePhone?: string;
+  mobilePhone?: string;
+  email?: string;
+  emergencyContactName?: string;
+  emergencyContactRelationship?: string;
+  emergencyContactPhone?: string;
 };
+
 
 export type Assignment = {
     assignmentId: string;
@@ -71,7 +91,7 @@ export const savePatient = (patientData: Omit<Patient, 'id' | 'createdAt' | 'rec
   return newPatient;
 };
 
-export const savePatientsBatch = (patientsData: Omit<Patient, 'id' | 'createdAt' | 'recordId'>[]): number => {
+export const savePatientsBatch = (patientsData: Omit<Patient, 'id' | 'createdAt' | 'recordId' | 'dob'>[]): number => {
     const now = new Date();
     let createdCount = 0;
     
