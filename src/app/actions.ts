@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { getQuestionnaire, saveCustomQuestionnaire } from '@/lib/data';
-import { savePatient, saveResult, savePatientsBatch } from '@/lib/store';
+import { savePatient, saveResult, savePatientsBatch, assignQuestionnaireToPatient } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
@@ -310,4 +310,34 @@ export async function bulkAddPatientsAction(
             message: error.message || "Ocurrió un error inesperado al añadir los pacientes.",
         };
     }
+}
+
+export type AssignQuestionnaireState = {
+  success: boolean;
+  message: string;
+};
+
+export async function assignQuestionnaireAction(
+  patientId: string,
+  questionnaireId: string
+): Promise<AssignQuestionnaireState> {
+  if (!patientId || !questionnaireId) {
+    return {
+      success: false,
+      message: 'Faltan el ID del paciente o del cuestionario.',
+    };
+  }
+  try {
+    assignQuestionnaireToPatient(patientId, questionnaireId);
+    revalidatePath('/patients');
+    return {
+      success: true,
+      message: 'Cuestionario asignado con éxito.',
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: 'No se pudo asignar el cuestionario.',
+    };
+  }
 }

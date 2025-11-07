@@ -22,9 +22,18 @@ export type Patient = {
   createdAt: Date;
 };
 
+export type Assignment = {
+    assignmentId: string;
+    patientId: string;
+    questionnaireId: string;
+    assignedAt: Date;
+};
+
+
 // Using a Map to store results. In a real app, this would be a database.
 const resultsStore: Map<string, EvaluationResult> = new Map();
 const patientsStore: Map<string, Patient> = new Map();
+const assignedQuestionnairesStore: Map<string, Assignment[]> = new Map();
 
 
 export const saveResult = (result: Omit<EvaluationResult, 'id'>): EvaluationResult => {
@@ -90,3 +99,28 @@ export const getPatient = (id: string): Patient | undefined => {
 export const getAllPatients = (): Patient[] => {
     return Array.from(patientsStore.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
+
+
+// Assignment functions
+export const assignQuestionnaireToPatient = (patientId: string, questionnaireId: string): Assignment => {
+    const assignmentId = `asg-${Date.now()}-${Math.random()}`;
+    const newAssignment: Assignment = {
+        assignmentId,
+        patientId,
+        questionnaireId,
+        assignedAt: new Date(),
+    };
+
+    const existingAssignments = assignedQuestionnairesStore.get(patientId) || [];
+    assignedQuestionnairesStore.set(patientId, [...existingAssignments, newAssignment]);
+    
+    return newAssignment;
+};
+
+export const getAssignedQuestionnairesForPatient = (patientId: string): Assignment[] => {
+    return assignedQuestionnairesStore.get(patientId) || [];
+};
+
+export const getAllAssignedQuestionnaires = (): Assignment[] => {
+    return Array.from(assignedQuestionnairesStore.values()).flat();
+};

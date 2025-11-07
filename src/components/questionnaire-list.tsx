@@ -1,26 +1,28 @@
 'use client';
 
 import type { Questionnaire } from '@/lib/data';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Folder, FolderOpen, Plus, Search, User } from 'lucide-react';
+import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import type { Patient } from '@/lib/store';
 import { ScrollArea } from './ui/scroll-area';
+import { assignQuestionnaireAction } from '@/app/actions';
 
 type AssignEvaluationDialogProps = {
     questionnaire: Questionnaire;
     patients: Patient[];
     onClose: () => void;
-    onAssign: (patientId: string) => void;
 };
 
-function AssignEvaluationDialog({ questionnaire, patients, onClose, onAssign }: AssignEvaluationDialogProps) {
+function AssignEvaluationDialog({ questionnaire, patients, onClose }: AssignEvaluationDialogProps) {
+    const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
@@ -32,8 +34,23 @@ function AssignEvaluationDialog({ questionnaire, patients, onClose, onAssign }: 
     }, [patients, searchTerm]);
 
     const handleAssignClick = () => {
-        if (selectedPatient) {
-            onAssign(selectedPatient.id);
+        if (selectedPatient && questionnaire) {
+            startTransition(async () => {
+                const result = await assignQuestionnaireAction(selectedPatient.id, questionnaire.id);
+                if (result.success) {
+                    toast({
+                        title: "¡Evaluación Asignada!",
+                        description: `"${questionnaire.name}" ha sido añadida al expediente de ${selectedPatient.name}.`,
+                    });
+                    onClose();
+                } else {
+                    toast({
+                        title: "Error",
+                        description: result.message,
+                        variant: "destructive",
+                    });
+                }
+            });
         }
     };
     
@@ -79,9 +96,13 @@ function AssignEvaluationDialog({ questionnaire, patients, onClose, onAssign }: 
                     </ScrollArea>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancelar</Button>
-                    <Button onClick={handleAssignClick} disabled={!selectedPatient}>
-                        <Plus className="mr-2 h-4 w-4" />
+                    <Button variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
+                    <Button onClick={handleAssignClick} disabled={!selectedPatient || isPending}>
+                         {isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                         ) : (
+                            <Plus className="mr-2 h-4 w-4" />
+                         )}
                         Asignar a Expediente
                     </Button>
                 </DialogFooter>
@@ -97,7 +118,6 @@ type QuestionnaireListProps = {
 
 export function QuestionnaireList({ groupedQuestionnaires, patients }: QuestionnaireListProps) {
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<Questionnaire | null>(null);
-  const { toast } = useToast();
   const router = useRouter();
 
   const handleAssignClick = (questionnaire: Questionnaire) => {
@@ -106,18 +126,6 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
   
   const handleCloseDialog = () => {
     setSelectedQuestionnaire(null);
-  };
-
-  const handleAssignToPatient = (patientId: string) => {
-      if (!selectedQuestionnaire) return;
-      const patient = patients.find(p => p.id === patientId);
-      // En una aplicación real, aquí harías una llamada a una server action para guardar la asignación
-      console.log(`Asignando "${selectedQuestionnaire.name}" a "${patient?.name}" (ID: ${patientId})`);
-      toast({
-          title: "¡Evaluación Asignada!",
-          description: `"${selectedQuestionnaire.name}" ha sido añadida al expediente de ${patient?.name}.`,
-      });
-      handleCloseDialog();
   };
 
   const handleCardClick = (id: string) => {
@@ -191,7 +199,6 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
             questionnaire={selectedQuestionnaire} 
             patients={patients}
             onClose={handleCloseDialog}
-            onAssign={handleAssignToPatient}
         />
       )}
     </>

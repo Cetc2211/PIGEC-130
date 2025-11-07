@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { User, Users, FileText, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import type { Patient } from '@/lib/store';
+import type { Patient, Assignment } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { BulkAddPatientsForm } from './bulk-add-patients-form';
@@ -12,7 +12,7 @@ import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
 
 
-function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Patient[]> }) {
+function PatientList({ patientsByGroup, assignmentsByPatient }: { patientsByGroup: Record<string, Patient[]>, assignmentsByPatient: Record<string, Assignment[]> }) {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -44,7 +44,9 @@ function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Pati
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 pl-4 pr-4">
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {patients.map(patient => (
+                            {patients.map(patient => {
+                                const patientAssignments = assignmentsByPatient[patient.id] || [];
+                                return (
                                 <Card key={patient.id} className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col">
                                     <CardHeader>
                                         <div className="flex items-start justify-between">
@@ -65,11 +67,11 @@ function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Pati
                                     <CardContent className="space-y-3 text-sm flex-grow">
                                         <div className="flex items-center gap-2 pt-2 text-muted-foreground">
                                             <FileText className="h-4 w-4" />
-                                            <span>0 Evaluaciones asignadas</span>
+                                            <span>{patientAssignments.length} Evaluaciones asignadas</span>
                                         </div>
                                     </CardContent>
                                 </Card>
-                            ))}
+                            )})}
                         </div>
                     </AccordionContent>
                 </AccordionItem>
@@ -78,7 +80,7 @@ function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Pati
     );
 }
 
-export function PatientPageClient({ patients }: { patients: Patient[] }) {
+export function PatientPageClient({ patients, assignments }: { patients: Patient[], assignments: Assignment[] }) {
     const [isBulkAddOpen, setIsBulkAddOpen] = useState(false);
 
     const patientsByGroup = useMemo(() => {
@@ -91,6 +93,17 @@ export function PatientPageClient({ patients }: { patients: Patient[] }) {
             return acc;
         }, {} as Record<string, Patient[]>);
     }, [patients]);
+
+    const assignmentsByPatient = useMemo(() => {
+        return assignments.reduce((acc, assignment) => {
+            const key = assignment.patientId;
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+            acc[key].push(assignment);
+            return acc;
+        }, {} as Record<string, Assignment[]>);
+    }, [assignments]);
     
     const openBulkAddModal = () => {
         setIsBulkAddOpen(true);
@@ -113,7 +126,7 @@ export function PatientPageClient({ patients }: { patients: Patient[] }) {
         </Button>
       </header>
       <main className="flex-1 overflow-auto p-4 sm:p-6">
-        <PatientList patientsByGroup={patientsByGroup} />
+        <PatientList patientsByGroup={patientsByGroup} assignmentsByPatient={assignmentsByPatient} />
       </main>
 
        <Dialog open={isBulkAddOpen} onOpenChange={setIsBulkAddOpen}>
