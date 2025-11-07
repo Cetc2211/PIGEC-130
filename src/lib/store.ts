@@ -1,7 +1,7 @@
 // NOTE: This is an in-memory store for demonstration purposes.
 // Data will be lost on server restart.
 
-import { getAllQuestionnaires } from "./data";
+import { format } from 'date-fns';
 
 export type EvaluationResult = {
   id: string;
@@ -15,8 +15,11 @@ export type EvaluationResult = {
 
 export type Patient = {
   id: string;
+  recordId: string;
   name: string;
   dateOfBirth: Date;
+  semester: string;
+  group: string;
   createdAt: Date;
 };
 
@@ -42,9 +45,16 @@ export function getAllResults(): EvaluationResult[] {
 
 
 // Patient store functions
-export const savePatient = (patient: Omit<Patient, 'id' | 'createdAt'>): Patient => {
+export const savePatient = (patient: Omit<Patient, 'id' | 'createdAt' | 'recordId'>): Patient => {
   const id = `pat-${patientsStore.size + 1}-${Date.now()}`;
-  const newPatient: Patient = { ...patient, id, createdAt: new Date() };
+  const now = new Date();
+  
+  // Generate recordId
+  const sequence = (patientsStore.size + 1).toString().padStart(5, '0');
+  const datePart = format(now, 'dd/MM/yy');
+  const recordId = `CBTA/130/${sequence}/${datePart}`;
+
+  const newPatient: Patient = { ...patient, id, recordId, createdAt: now };
   patientsStore.set(id, newPatient);
   return newPatient;
 };

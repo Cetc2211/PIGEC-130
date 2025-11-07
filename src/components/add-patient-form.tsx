@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useTransition } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,8 @@ const addPatientFormSchema = z.object({
   dateOfBirth: z.date({
     required_error: 'La fecha de nacimiento es obligatoria.',
   }),
+  semester: z.string().min(1, 'El semestre es obligatorio.'),
+  group: z.string().min(1, 'El grupo es obligatorio.'),
 });
 
 type AddPatientFormProps = {
@@ -38,6 +40,8 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
     resolver: zodResolver(addPatientFormSchema),
     defaultValues: {
       name: '',
+      semester: '',
+      group: '',
     },
   });
 
@@ -62,6 +66,8 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
     const formData = new FormData();
     formData.append('name', values.name);
     formData.append('dateOfBirth', values.dateOfBirth.toISOString());
+    formData.append('semester', values.semester);
+    formData.append('group', values.group);
     formAction(formData);
   };
 
@@ -81,6 +87,34 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
             </FormItem>
           )}
         />
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="semester"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Semestre</FormLabel>
+                <FormControl>
+                  <Input placeholder="p.ej., 2" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="group"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Grupo</FormLabel>
+                <FormControl>
+                  <Input placeholder="p.ej., A" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name="dateOfBirth"

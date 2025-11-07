@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Users, FileText, Calendar } from "lucide-react";
+import { PlusCircle, User, Users, FileText, Calendar, BookOpen, UserCheck, Hash } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AddPatientForm } from '@/components/add-patient-form';
 import { getAllPatients, Patient } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 function PatientList({ patients }: { patients: Patient[] }) {
@@ -23,24 +24,35 @@ function PatientList({ patients }: { patients: Patient[] }) {
     }
 
     return (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {patients.map(patient => (
-                <Card key={patient.id} className="cursor-pointer hover:shadow-lg transition-shadow">
+                <Card key={patient.id} className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 font-headline">
-                            <Users className="h-5 w-5 text-primary" />
-                            {patient.name}
-                        </CardTitle>
+                        <div className="flex items-start justify-between">
+                            <CardTitle className="flex items-center gap-2 font-headline text-lg">
+                                <User className="h-5 w-5 text-primary" />
+                                {patient.name}
+                            </CardTitle>
+                             <Badge variant="secondary">{patient.recordId}</Badge>
+                        </div>
                         <CardDescription>
-                            Creado el {format(patient.createdAt, "dd/MM/yyyy")}
+                            Registrado el {format(patient.createdAt, "dd/MM/yyyy")}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
+                    <CardContent className="space-y-3 text-sm flex-grow">
+                        <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <span>{format(patient.dateOfBirth, "dd/MM/yyyy")}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-muted-foreground" />
+                            <span>{patient.semester}º Semestre</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span>Grupo {patient.group}</span>
+                        </div>
+                         <div className="flex items-center gap-2 pt-2 text-muted-foreground">
                             <FileText className="h-4 w-4" />
                             <span>0 Evaluaciones asignadas</span>
                         </div>
