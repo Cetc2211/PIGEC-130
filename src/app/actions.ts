@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { getQuestionnaire, saveCustomQuestionnaire } from '@/lib/data';
-import { savePatient, saveResult, savePatientsBatch, assignQuestionnaireToPatient } from '@/lib/store';
+import { savePatient, saveResult, savePatientsBatch, assignQuestionnaireToPatient, updatePatient } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
@@ -351,4 +351,66 @@ export async function assignQuestionnaireAction(
       message: 'No se pudo asignar el cuestionario.',
     };
   }
+}
+
+export type UpdatePatientState = {
+    message: string;
+    success: boolean;
+    errors?: Record<string, any>;
+};
+
+const profileFormSchema = z.object({
+  name: z.string().optional(),
+  dob: z.string().optional(),
+  age: z.coerce.number().optional(),
+  sex: z.enum(['M', 'F', 'Otro']).optional(),
+  otherSex: z.string().optional(),
+  maritalStatus: z.string().optional(),
+  curp: z.string().optional(),
+  nss: z.string().optional(),
+  address: z.string().optional(),
+  neighborhood: z.string().optional(),
+  postalCode: z.string().optional(),
+  municipality: z.string().optional(),
+  homePhone: z.string().optional(),
+  mobilePhone: z.string().optional(),
+  email: z.string().email('Email inválido').optional().or(z.literal('')),
+  emergencyContactName: z.string().optional(),
+  emergencyContactRelationship: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+});
+
+
+export async function updatePatientAction(
+    patientId: string,
+    prevState: UpdatePatientState,
+    formData: FormData
+): Promise<UpdatePatientState> {
+    try {
+        const data = Object.fromEntries(formData.entries());
+        const parsed = profileFormSchema.safeParse(data);
+
+        if (!parsed.success) {
+            return {
+                success: false,
+                message: 'Validación fallida.',
+                errors: parsed.error.flatten().fieldErrors,
+            };
+        }
+
+        updatePatient(patientId, parsed.data);
+        
+        revalidatePath(`/patients/${patientId}`);
+
+        return {
+            success: true,
+            message: '¡Ficha de identificación guardada con éxito!',
+        };
+
+    } catch (error: any) {
+        return {
+            success: false,
+            message: error.message || 'Ocurrió un error inesperado al guardar.',
+        };
+    }
 }

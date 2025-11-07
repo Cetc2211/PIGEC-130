@@ -26,8 +26,13 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
 
   const assignments = getAssignedQuestionnairesForPatient(params.patientId);
   const assignedQuestionnaires = assignments.map(assignment => {
-    return getQuestionnaire(assignment.questionnaireId);
+    const questionnaire = getQuestionnaire(assignment.questionnaireId);
+    // Remove the assignment if the result is already submitted
+    const results = getAllResultsForPatient(params.patientId);
+    const isSubmitted = results.some(r => r.questionnaireId === assignment.questionnaireId);
+    return isSubmitted ? null : questionnaire;
   }).filter(Boolean);
+
 
   const results = getAllResultsForPatient(params.patientId);
 
@@ -74,7 +79,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No hay evaluaciones asignadas.</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No hay evaluaciones pendientes.</p>
               )}
             </CardContent>
           </Card>

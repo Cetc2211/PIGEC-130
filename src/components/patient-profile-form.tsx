@@ -9,8 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Save } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { Textarea } from './ui/textarea';
+import { useActionState, useEffect } from 'react';
+import { updatePatientAction } from '@/app/actions';
+import { useToast } from '@/hooks/use-toast';
 
 const profileFormSchema = z.object({
   name: z.string().optional(),
@@ -27,7 +30,7 @@ const profileFormSchema = z.object({
   municipality: z.string().optional(),
   homePhone: z.string().optional(),
   mobilePhone: z.string().optional(),
-  email: z.string().email('Email inválido').optional(),
+  email: z.string().email('Email inválido').optional().or(z.literal('')),
   emergencyContactName: z.string().optional(),
   emergencyContactRelationship: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
@@ -38,34 +41,53 @@ type PatientProfileFormProps = {
 };
 
 export function PatientProfileForm({ patient }: PatientProfileFormProps) {
+  const { toast } = useToast();
+  const updatePatientWithId = updatePatientAction.bind(null, patient.id);
+  const [state, formAction, isPending] = useActionState(updatePatientWithId, {
+    success: false,
+    message: '',
+  });
+
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: patient.name ?? null,
-      email: patient.email ?? null,
-      dob: patient.dob ?? null,
-      age: patient.age ?? null,
-      curp: patient.curp ?? null,
-      nss: patient.nss ?? null,
-      sex: patient.sex ?? null,
-      otherSex: patient.otherSex ?? null,
-      maritalStatus: patient.maritalStatus ?? null,
-      address: patient.address ?? null,
-      neighborhood: patient.neighborhood ?? null,
-      postalCode: patient.postalCode ?? null,
-      municipality: patient.municipality ?? null,
-      homePhone: patient.homePhone ?? null,
-      mobilePhone: patient.mobilePhone ?? null,
-      emergencyContactName: patient.emergencyContactName ?? null,
-      emergencyContactRelationship: patient.emergencyContactRelationship ?? null,
-      emergencyContactPhone: patient.emergencyContactPhone ?? null,
+      name: patient.name ?? "",
+      email: patient.email ?? "",
+      dob: patient.dob ?? "",
+      age: patient.age ?? 0,
+      curp: patient.curp ?? "",
+      nss: patient.nss ?? "",
+      sex: patient.sex ?? undefined,
+      otherSex: patient.otherSex ?? "",
+      maritalStatus: patient.maritalStatus ?? "",
+      address: patient.address ?? "",
+      neighborhood: patient.neighborhood ?? "",
+      postalCode: patient.postalCode ?? "",
+      municipality: patient.municipality ?? "",
+      homePhone: patient.homePhone ?? "",
+      mobilePhone: patient.mobilePhone ?? "",
+      emergencyContactName: patient.emergencyContactName ?? "",
+      emergencyContactRelationship: patient.emergencyContactRelationship ?? "",
+      emergencyContactPhone: patient.emergencyContactPhone ?? "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof profileFormSchema>) => {
-    // TODO: Implement save action
-    console.log(values);
-  };
+  useEffect(() => {
+    if (state.message) {
+      if (state.success) {
+        toast({
+          title: "Éxito",
+          description: state.message,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: state.message,
+          variant: 'destructive'
+        });
+      }
+    }
+  }, [state, toast]);
   
   const sexValue = form.watch('sex');
 
@@ -79,7 +101,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form action={formAction} className="space-y-6">
             <h3 className="text-lg font-semibold border-b pb-2">Datos Personales</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -88,7 +110,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nombre completo</FormLabel>
-                    <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -99,7 +121,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
-                    <FormControl><Input type="email" placeholder="ejemplo@correo.com" {...field} value={field.value ?? ''} /></FormControl>
+                    <FormControl><Input type="email" placeholder="ejemplo@correo.com" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -112,7 +134,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Fecha de nacimiento</FormLabel>
-                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+                    <FormControl><Input type="date" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -123,7 +145,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Edad</FormLabel>
-                    <FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl>
+                    <FormControl><Input type="number" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -134,7 +156,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>CURP</FormLabel>
-                    <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -145,7 +167,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>NSS</FormLabel>
-                    <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -161,7 +183,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                         <FormControl>
                         <RadioGroup
                             onValueChange={field.onChange}
-                            value={field.value ?? ''}
+                            defaultValue={field.value}
                             className="flex space-x-4"
                         >
                             <FormItem className="flex items-center space-x-2">
@@ -188,7 +210,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                         name="otherSex"
                         render={({ field }) => (
                         <FormItem>
-                            <FormControl><Input placeholder="Especificar..." {...field} value={field.value ?? ''} /></FormControl>
+                            <FormControl><Input placeholder="Especificar..." {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                         )}
@@ -200,7 +222,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Estado civil</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -214,7 +236,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Domicilio (Calle y Número)</FormLabel>
-                    <FormControl><Textarea placeholder="Av. Siempre Viva 742" {...field} value={field.value ?? ''} /></FormControl>
+                    <FormControl><Textarea placeholder="Av. Siempre Viva 742" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -226,7 +248,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Colonia</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -237,7 +259,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>CP</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -248,7 +270,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Municipio</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -261,7 +283,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Teléfono de Casa</FormLabel>
-                        <FormControl><Input type="tel" {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input type="tel" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -272,7 +294,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Teléfono Celular</FormLabel>
-                        <FormControl><Input type="tel" {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input type="tel" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -287,7 +309,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Avisar a</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -298,7 +320,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Parentesco</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -309,7 +331,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Teléfono</FormLabel>
-                        <FormControl><Input type="tel" {...field} value={field.value ?? ''} /></FormControl>
+                        <FormControl><Input type="tel" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -317,8 +339,12 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
             </div>
 
             <div className="flex justify-end pt-4">
-                <Button type="submit">
-                    <Save className="mr-2 h-4 w-4" />
+                <Button type="submit" disabled={isPending}>
+                    {isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 h-4 w-4" />
+                    )}
                     Guardar Cambios
                 </Button>
             </div>
