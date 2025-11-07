@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { getQuestionnaire, saveCustomQuestionnaire } from '@/lib/data';
-import { savePatient, saveResult } from '@/lib/store';
+import { savePatient, saveResult, savePatientsBatch } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
@@ -245,6 +245,69 @@ export async function addPatientAction(
         return {
             success: false,
             message: error.message || 'Ocurrió un error inesperado al añadir el paciente.',
+        };
+    }
+}
+
+export type BulkAddPatientsState = {
+    message: string;
+    success: boolean;
+    errors?: Record<string, any>;
+    count?: number;
+}
+
+const bulkAddPatientsSchema = z.object({
+    semester: z.string().min(1, "El semestre es obligatorio."),
+    group: z.string().min(1, "El grupo es obligatorio."),
+    names: z.string().min(3, "La lista de nombres no puede estar vacía."),
+});
+
+export async function bulkAddPatientsAction(
+    prevState: BulkAddPatientsState,
+    formData: FormData
+): Promise<BulkAddPatientsState> {
+    try {
+        const parsed = bulkAddPatientsSchema.safeParse({
+            semester: formData.get('semester'),
+            group: formData.get('group'),
+            names: formData.get('names'),
+        });
+
+        if (!parsed.success) {
+            return {
+                success: false,
+                message: "Validación fallida.",
+                errors: parsed.error.flatten().fieldErrors,
+            };
+        }
+
+        const { semester, group, names } = parsed.data;
+        const nameList = names.split('\n').map(name => name.trim()).filter(name => name.length > 0);
+
+        if (nameList.length === 0) {
+            return {
+                success: false,
+                message: "Validación fallida.",
+                errors: { names: ["La lista de nombres no puede estar vacía."] },
+            };
+        }
+        
+        const newPatients = nameList.map(name => ({ name, semester, group }));
+        
+        const createdCount = savePatientsBatch(newPatients);
+
+        revalidatePath('/patients');
+
+        return {
+            success: true,
+            message: `Se han creado ${createdCount} expedientes con éxito en el grupo ${semester} - ${group}.`,
+            count: createdCount,
+        };
+
+    } catch(error: any) {
+        return {
+            success: false,
+            message: error.message || "Ocurrió un error inesperado al añadir los pacientes.",
         };
     }
 }

@@ -44,19 +44,44 @@ export function getAllResults(): EvaluationResult[] {
 
 
 // Patient store functions
-export const savePatient = (patient: Omit<Patient, 'id' | 'createdAt' | 'recordId'>): Patient => {
+const generateRecordId = (date: Date) => {
+    // This function needs to be aware of the total number of patients
+    const totalPatients = patientsStore.size;
+    const sequence = (totalPatients + 1).toString().padStart(5, '0');
+    const datePart = format(date, 'dd/MM/yy');
+    return `CBTA/130/${sequence}/${datePart}`;
+}
+
+export const savePatient = (patientData: Omit<Patient, 'id' | 'createdAt' | 'recordId'>): Patient => {
   const id = `pat-${patientsStore.size + 1}-${Date.now()}`;
   const now = new Date();
-  
-  // Generate recordId
-  const sequence = (patientsStore.size + 1).toString().padStart(5, '0');
-  const datePart = format(now, 'dd/MM/yy');
-  const recordId = `CBTA/130/${sequence}/${datePart}`;
+  const recordId = generateRecordId(now);
 
-  const newPatient: Patient = { ...patient, id, recordId, createdAt: now };
+  const newPatient: Patient = { ...patientData, id, recordId, createdAt: now };
   patientsStore.set(id, newPatient);
   return newPatient;
 };
+
+export const savePatientsBatch = (patientsData: Omit<Patient, 'id' | 'createdAt' | 'recordId'>[]): number => {
+    const now = new Date();
+    let createdCount = 0;
+    
+    patientsData.forEach(patientData => {
+        // The recordId needs to be generated inside the loop to get the correct sequence.
+        const totalPatients = patientsStore.size;
+        const sequence = (totalPatients + 1).toString().padStart(5, '0');
+        const datePart = format(now, 'dd/MM/yy');
+        const recordId = `CBTA/130/${sequence}/${datePart}`;
+
+        const id = `pat-${totalPatients + 1}-${Date.now()}-${Math.random()}`;
+        const newPatient: Patient = { ...patientData, id, recordId, createdAt: now };
+        patientsStore.set(id, newPatient);
+        createdCount++;
+    });
+
+    return createdCount;
+};
+
 
 export const getPatient = (id: string): Patient | undefined => {
     return patientsStore.get(id);

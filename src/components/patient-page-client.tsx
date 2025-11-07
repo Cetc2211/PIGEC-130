@@ -1,107 +1,124 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, User, Users, FileText, BookOpen } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { AddPatientForm } from '@/components/add-patient-form';
+import { PlusCircle, User, Users, FileText, BookOpen, UserPlus, FolderPlus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import type { Patient } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { Skeleton } from './ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { Input } from './ui/input';
+import { BulkAddPatientsForm } from './bulk-add-patients-form';
 
-function PatientList({ patients }: { patients: Patient[] }) {
-    const [isClient, setIsClient] = useState(false);
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    if (patients.length === 0) {
+function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Patient[]> }) {
+    
+    if (Object.keys(patientsByGroup).length === 0) {
         return (
             <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[400px]">
                 <Users className="h-16 w-16 text-muted-foreground mb-4" />
-                <h2 className="text-xl font-semibold">No hay pacientes todavía</h2>
+                <h2 className="text-xl font-semibold">No hay grupos ni pacientes todavía</h2>
                 <p className="text-muted-foreground mt-2 max-w-sm">
-                    Haz clic en "Añadir Nuevo Paciente" para crear el primer expediente y empezar a asignar evaluaciones.
+                    Haz clic en "Crear Nuevo Grupo" para empezar a organizar a tus estudiantes y crear sus expedientes.
                 </p>
             </div>
         );
     }
 
     return (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {patients.map(patient => (
-                <Card key={patient.id} className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col">
-                    <CardHeader>
-                        <div className="flex items-start justify-between">
-                            <CardTitle className="flex items-center gap-2 font-headline text-lg">
-                                <User className="h-5 w-5 text-primary" />
-                                {patient.name}
-                            </CardTitle>
-                             <Badge variant="outline">{patient.recordId}</Badge>
+        <Accordion type="multiple" className="w-full space-y-4">
+            {Object.entries(patientsByGroup).map(([groupKey, patients]) => (
+                 <AccordionItem value={groupKey} key={groupKey} className="border-none">
+                    <AccordionTrigger className="p-4 bg-muted/50 rounded-lg hover:bg-muted">
+                        <div className="flex items-center gap-3">
+                            <Users className="h-6 w-6 text-primary" />
+                            <h2 className="text-xl font-headline font-semibold">{groupKey}</h2>
+                            <Badge variant="outline">{patients.length} Estudiantes</Badge>
                         </div>
-                        <CardDescription>
-                             {isClient ? (
-                                `Registrado el ${format(new Date(patient.createdAt), "dd/MM/yyyy")}`
-                            ) : (
-                                <Skeleton className="h-4 w-24" />
-                            )}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm flex-grow">
-                        <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4 text-muted-foreground" />
-                            <span>{patient.semester}º Semestre</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 pl-4 pr-4">
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {patients.map(patient => (
+                                <Card key={patient.id} className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col">
+                                    <CardHeader>
+                                        <div className="flex items-start justify-between">
+                                            <CardTitle className="flex items-center gap-2 font-headline text-lg">
+                                                <User className="h-5 w-5 text-primary" />
+                                                {patient.name}
+                                            </CardTitle>
+                                            <Badge variant="outline">{patient.recordId}</Badge>
+                                        </div>
+                                         <CardDescription>
+                                            Registrado el {new Date(patient.createdAt).toLocaleDateString()}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3 text-sm flex-grow">
+                                        <div className="flex items-center gap-2 pt-2 text-muted-foreground">
+                                            <FileText className="h-4 w-4" />
+                                            <span>0 Evaluaciones asignadas</span>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span>Grupo {patient.group}</span>
-                        </div>
-                         <div className="flex items-center gap-2 pt-2 text-muted-foreground">
-                            <FileText className="h-4 w-4" />
-                            <span>0 Evaluaciones asignadas</span>
-                        </div>
-                    </CardContent>
-                </Card>
+                    </AccordionContent>
+                </AccordionItem>
             ))}
-        </div>
+        </Accordion>
     );
 }
 
 export function PatientPageClient({ patients }: { patients: Patient[] }) {
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isBulkAddOpen, setIsBulkAddOpen] = useState(false);
+    const [currentGroup, setCurrentGroup] = useState<{semester: string, group: string} | null>(null);
+
+    const patientsByGroup = useMemo(() => {
+        return patients.reduce((acc, patient) => {
+            const key = `${patient.semester}º Semestre - Grupo ${patient.group}`;
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+            acc[key].push(patient);
+            return acc;
+        }, {} as Record<string, Patient[]>);
+    }, [patients]);
+    
+    const openBulkAddModal = () => {
+        // En una implementación más compleja, aquí se podría seleccionar/crear un grupo.
+        // Por ahora, lo hardcodeamos para la demo.
+        setCurrentGroup({ semester: '1', group: 'A' }); 
+        setIsBulkAddOpen(true);
+    }
     
     return (
     <div className="flex flex-col h-full">
       <header className="p-4 sm:p-6 border-b flex justify-between items-center">
         <div>
             <h1 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight">
-            Gestión de Pacientes
+            Gestión de Pacientes por Grupos
             </h1>
             <p className="text-muted-foreground mt-1">
-            Crea, busca y administra los expedientes de tus pacientes.
+            Crea grupos y añade estudiantes en bloque para generar sus expedientes.
             </p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Añadir Nuevo Paciente
+        <Button onClick={openBulkAddModal}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Añadir Estudiantes en Bloque
         </Button>
       </header>
       <main className="flex-1 overflow-auto p-4 sm:p-6">
-        <PatientList patients={patients} />
+        <PatientList patientsByGroup={patientsByGroup} />
       </main>
 
-       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+       <Dialog open={isBulkAddOpen} onOpenChange={setIsBulkAddOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Añadir Nuevo Paciente</DialogTitle>
+                    <DialogTitle>Añadir Nuevos Estudiantes en Bloque</DialogTitle>
                     <DialogDescription>
-                        Introduce los detalles del nuevo paciente para crear su expediente.
+                        Define el semestre y grupo, luego pega una lista de nombres. Se creará un expediente para cada estudiante.
                     </DialogDescription>
                 </DialogHeader>
-                <AddPatientForm onFinished={() => setIsDialogOpen(false)} />
+                <BulkAddPatientsForm onFinished={() => setIsBulkAddOpen(false)} />
             </DialogContent>
         </Dialog>
     </div>

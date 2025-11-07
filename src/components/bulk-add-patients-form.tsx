@@ -6,35 +6,36 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 
-import { addPatientAction } from '@/app/actions';
+import { bulkAddPatientsAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 
-const addPatientFormSchema = z.object({
-  name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
+const bulkAddPatientsSchema = z.object({
   semester: z.string().min(1, 'El semestre es obligatorio.'),
   group: z.string().min(1, 'El grupo es obligatorio.'),
+  names: z.string().min(3, 'Debes pegar al menos un nombre en la lista.'),
 });
 
-type AddPatientFormProps = {
+type BulkAddPatientsFormProps = {
   onFinished: () => void;
 };
 
-export function AddPatientForm({ onFinished }: AddPatientFormProps) {
+export function BulkAddPatientsForm({ onFinished }: BulkAddPatientsFormProps) {
   const { toast } = useToast();
-  const [state, formAction, isPending] = useActionState(addPatientAction, {
+  const [state, formAction, isPending] = useActionState(bulkAddPatientsAction, {
     success: false,
     message: '',
   });
 
-  const form = useForm<z.infer<typeof addPatientFormSchema>>({
-    resolver: zodResolver(addPatientFormSchema),
+  const form = useForm<z.infer<typeof bulkAddPatientsSchema>>({
+    resolver: zodResolver(bulkAddPatientsSchema),
     defaultValues: {
-      name: '',
       semester: '',
       group: '',
+      names: '',
     },
   });
 
@@ -58,20 +59,7 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
   return (
     <Form {...form}>
       <form action={formAction} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nombre Completo</FormLabel>
-              <FormControl>
-                <Input placeholder="p.ej., Juan Pérez" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="semester"
@@ -79,7 +67,7 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
               <FormItem>
                 <FormLabel>Semestre</FormLabel>
                 <FormControl>
-                  <Input placeholder="p.ej., 2" {...field} />
+                  <Input placeholder="p.ej., 1" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -99,10 +87,30 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
             )}
           />
         </div>
+        <FormField
+          control={form.control}
+          name="names"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lista de Nombres de Estudiantes</FormLabel>
+              <FormControl>
+                <Textarea 
+                    placeholder="Pega aquí la lista de nombres, un nombre por cada línea." 
+                    className="min-h-[150px]"
+                    {...field}
+                />
+              </FormControl>
+               <FormDescription>
+                Copia y pega una columna de nombres desde una hoja de cálculo o un documento de texto.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="flex justify-end">
           <Button type="submit" disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Añadir Paciente
+            Añadir Estudiantes
           </Button>
         </div>
       </form>
