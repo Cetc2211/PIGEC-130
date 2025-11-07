@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { User, Users, FileText, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -9,10 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { BulkAddPatientsForm } from './bulk-add-patients-form';
 import { Badge } from './ui/badge';
+import { Skeleton } from './ui/skeleton';
 
 
 function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Patient[]> }) {
-    
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     if (Object.keys(patientsByGroup).length === 0) {
         return (
             <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[400px]">
@@ -49,7 +55,11 @@ function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Pati
                                             <Badge variant="outline">{patient.recordId}</Badge>
                                         </div>
                                          <CardDescription>
-                                            Registrado el {new Date(patient.createdAt).toLocaleDateString()}
+                                            {isClient ? (
+                                                `Registrado el ${new Date(patient.createdAt).toLocaleDateString()}`
+                                            ) : (
+                                                <Skeleton className="h-4 w-24" />
+                                            )}
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-3 text-sm flex-grow">
