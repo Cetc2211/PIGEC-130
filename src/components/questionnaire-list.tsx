@@ -1,53 +1,122 @@
 'use client';
 
 import type { Questionnaire } from '@/lib/data';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Copy, Link as LinkIcon, Eye, Folder, FolderOpen } from 'lucide-react';
+import { Eye, Folder, FolderOpen, Plus, Search, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import type { Patient } from '@/lib/store';
+import { ScrollArea } from './ui/scroll-area';
+
+type AssignEvaluationDialogProps = {
+    questionnaire: Questionnaire;
+    patients: Patient[];
+    onClose: () => void;
+    onAssign: (patientId: string) => void;
+};
+
+function AssignEvaluationDialog({ questionnaire, patients, onClose, onAssign }: AssignEvaluationDialogProps) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+
+    const filteredPatients = useMemo(() => {
+        return patients.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [patients, searchTerm]);
+
+    const handleAssignClick = () => {
+        if (selectedPatient) {
+            onAssign(selectedPatient.id);
+        }
+    };
+    
+    return (
+        <Dialog open={true} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="font-headline">Asignar "{questionnaire.name}"</DialogTitle>
+                    <DialogDescription>
+                        Busca y selecciona el paciente al que deseas asignar esta evaluación.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-4 py-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Buscar paciente por nombre..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                    <ScrollArea className="h-[200px] border rounded-md">
+                         <div className="p-2 space-y-1">
+                            {filteredPatients.length > 0 ? (
+                                filteredPatients.map(patient => (
+                                    <button
+                                        key={patient.id}
+                                        onClick={() => setSelectedPatient(patient)}
+                                        className={`w-full text-left p-2 rounded-md transition-colors flex items-center gap-3 ${selectedPatient?.id === patient.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                                    >
+                                        <User className="h-4 w-4" />
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium">{patient.name}</span>
+                                            <span className={`text-xs ${selectedPatient?.id === patient.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{patient.recordId}</span>
+                                        </div>
+                                    </button>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center p-4">No se encontraron pacientes.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Cancelar</Button>
+                    <Button onClick={handleAssignClick} disabled={!selectedPatient}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Asignar a Expediente
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 type QuestionnaireListProps = {
   groupedQuestionnaires: Record<string, Record<string, Questionnaire[]>>;
+  patients: Patient[];
 };
 
-export function QuestionnaireList({ groupedQuestionnaires }: QuestionnaireListProps) {
+export function QuestionnaireList({ groupedQuestionnaires, patients }: QuestionnaireListProps) {
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<Questionnaire | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleGenerateLink = (questionnaire: Questionnaire) => {
+  const handleAssignClick = (questionnaire: Questionnaire) => {
     setSelectedQuestionnaire(questionnaire);
-    setIsCopied(false);
   };
-
+  
   const handleCloseDialog = () => {
     setSelectedQuestionnaire(null);
   };
 
-  const getEvaluationLink = () => {
-    if (!selectedQuestionnaire) return '';
-    return `${window.location.origin}/evaluation/${selectedQuestionnaire.id}`;
+  const handleAssignToPatient = (patientId: string) => {
+      if (!selectedQuestionnaire) return;
+      const patient = patients.find(p => p.id === patientId);
+      // En una aplicación real, aquí harías una llamada a una server action para guardar la asignación
+      console.log(`Asignando "${selectedQuestionnaire.name}" a "${patient?.name}" (ID: ${patientId})`);
+      toast({
+          title: "¡Evaluación Asignada!",
+          description: `"${selectedQuestionnaire.name}" ha sido añadida al expediente de ${patient?.name}.`,
+      });
+      handleCloseDialog();
   };
 
-  const handleCopy = () => {
-    const link = getEvaluationLink();
-    navigator.clipboard.writeText(link).then(() => {
-      setIsCopied(true);
-      toast({
-        title: "¡Enlace Copiado!",
-        description: "El enlace de la evaluación ha sido copiado a tu portapapeles.",
-      });
-      setTimeout(() => setIsCopied(false), 2000);
-    });
-  };
-  
   const handleCardClick = (id: string) => {
       router.push(`/evaluation/${id}`);
   }
@@ -97,9 +166,9 @@ export function QuestionnaireList({ groupedQuestionnaires }: QuestionnaireListPr
                                 <Eye className="mr-2 h-4 w-4" />
                                 Revisar
                               </Button>
-                              <Button onClick={() => handleGenerateLink(q)} variant="secondary" className="w-full">
-                                <LinkIcon className="mr-2 h-4 w-4" />
-                                Enlace
+                              <Button onClick={() => handleAssignClick(q)} variant="secondary" className="w-full">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Asignar
                               </Button>
                             </CardFooter>
                           </Card>
@@ -114,34 +183,14 @@ export function QuestionnaireList({ groupedQuestionnaires }: QuestionnaireListPr
         ))}
       </Accordion>
 
-      <Dialog open={!!selectedQuestionnaire} onOpenChange={handleCloseDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="font-headline">Compartir Enlace de Evaluación</DialogTitle>
-            <DialogDescription>
-              Comparte este enlace único con tu cliente para comenzar la evaluación no supervisada.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="link" className="text-right">
-                Enlace
-              </Label>
-              <div className="col-span-3 relative">
-                <Input
-                  id="link"
-                  value={getEvaluationLink()}
-                  readOnly
-                  className="pr-10"
-                />
-                <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={handleCopy}>
-                    {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {selectedQuestionnaire && (
+        <AssignEvaluationDialog 
+            questionnaire={selectedQuestionnaire} 
+            patients={patients}
+            onClose={handleCloseDialog}
+            onAssign={handleAssignToPatient}
+        />
+      )}
     </>
   );
 }

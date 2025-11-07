@@ -1,8 +1,10 @@
 import { QuestionnaireList } from "@/components/questionnaire-list";
 import { getAllQuestionnaires, Questionnaire } from "@/lib/data";
+import { getAllPatients } from "@/lib/store";
 
 export default function DashboardPage() {
   const questionnaires = getAllQuestionnaires();
+  const patients = getAllPatients();
 
   const groupedQuestionnaires = questionnaires.reduce((acc, q) => {
     const category = q.category || "Sin Categoría";
@@ -27,11 +29,11 @@ export default function DashboardPage() {
           Biblioteca de Evaluaciones
         </h1>
         <p className="text-muted-foreground mt-1">
-          Explora, revisa y selecciona las pruebas psicológicas para tus pacientes.
+          Explora, asigna y selecciona las pruebas psicológicas para tus pacientes.
         </p>
       </header>
       <main className="flex-1 overflow-auto p-4 sm:p-6">
-        <QuestionnaireList groupedQuestionnaires={groupedQuestionnaires} />
+        <QuestionnaireList groupedQuestionnaires={groupedQuestionnaires} patients={patients} />
       </main>
     </div>
   );
