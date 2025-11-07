@@ -41,8 +41,24 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-        ...patient,
-        sex: patient.sex || undefined,
+      name: patient.name ?? null,
+      email: patient.email ?? null,
+      dob: patient.dob ?? null,
+      age: patient.age ?? null,
+      curp: patient.curp ?? null,
+      nss: patient.nss ?? null,
+      sex: patient.sex ?? null,
+      otherSex: patient.otherSex ?? null,
+      maritalStatus: patient.maritalStatus ?? null,
+      address: patient.address ?? null,
+      neighborhood: patient.neighborhood ?? null,
+      postalCode: patient.postalCode ?? null,
+      municipality: patient.municipality ?? null,
+      homePhone: patient.homePhone ?? null,
+      mobilePhone: patient.mobilePhone ?? null,
+      emergencyContactName: patient.emergencyContactName ?? null,
+      emergencyContactRelationship: patient.emergencyContactRelationship ?? null,
+      emergencyContactPhone: patient.emergencyContactPhone ?? null,
     },
   });
 
@@ -72,7 +88,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nombre completo</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -83,7 +99,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
-                    <FormControl><Input type="email" placeholder="ejemplo@correo.com" {...field} /></FormControl>
+                    <FormControl><Input type="email" placeholder="ejemplo@correo.com" {...field} value={field.value ?? ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -96,7 +112,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Fecha de nacimiento</FormLabel>
-                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -107,7 +123,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Edad</FormLabel>
-                    <FormControl><Input type="number" {...field} /></FormControl>
+                    <FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -118,7 +134,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>CURP</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -129,7 +145,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>NSS</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -145,7 +161,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                         <FormControl>
                         <RadioGroup
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value ?? ''}
                             className="flex space-x-4"
                         >
                             <FormItem className="flex items-center space-x-2">
@@ -172,7 +188,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                         name="otherSex"
                         render={({ field }) => (
                         <FormItem>
-                            <FormControl><Input placeholder="Especificar..." {...field} /></FormControl>
+                            <FormControl><Input placeholder="Especificar..." {...field} value={field.value ?? ''} /></FormControl>
                             <FormMessage />
                         </FormItem>
                         )}
@@ -184,7 +200,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Estado civil</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -198,7 +214,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Domicilio (Calle y Número)</FormLabel>
-                    <FormControl><Textarea placeholder="Av. Siempre Viva 742" {...field} /></FormControl>
+                    <FormControl><Textarea placeholder="Av. Siempre Viva 742" {...field} value={field.value ?? ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -210,7 +226,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Colonia</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -221,7 +237,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>CP</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -232,7 +248,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Municipio</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -245,7 +261,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Teléfono de Casa</FormLabel>
-                        <FormControl><Input type="tel" {...field} /></FormControl>
+                        <FormControl><Input type="tel" {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -256,7 +272,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Teléfono Celular</FormLabel>
-                        <FormControl><Input type="tel" {...field} /></FormControl>
+                        <FormControl><Input type="tel" {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -271,7 +287,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Avisar a</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -282,7 +298,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Parentesco</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -293,7 +309,7 @@ export function PatientProfileForm({ patient }: PatientProfileFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Teléfono</FormLabel>
-                        <FormControl><Input type="tel" {...field} /></FormControl>
+                        <FormControl><Input type="tel" {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
