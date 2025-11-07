@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, User, Users, FileText, Calendar, BookOpen, UserCheck, Hash } from "lucide-react";
+import { PlusCircle, User, Users, FileText, BookOpen } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AddPatientForm } from '@/components/add-patient-form';
 import { getAllPatients, Patient } from '@/lib/store';
@@ -33,17 +33,13 @@ function PatientList({ patients }: { patients: Patient[] }) {
                                 <User className="h-5 w-5 text-primary" />
                                 {patient.name}
                             </CardTitle>
-                             <Badge variant="secondary">{patient.recordId}</Badge>
+                             <Badge variant="outline">{patient.recordId}</Badge>
                         </div>
                         <CardDescription>
                             Registrado el {format(patient.createdAt, "dd/MM/yyyy")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm flex-grow">
-                        <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span>{format(patient.dateOfBirth, "dd/MM/yyyy")}</span>
-                        </div>
                         <div className="flex items-center gap-2">
                             <BookOpen className="h-4 w-4 text-muted-foreground" />
                             <span>{patient.semester}º Semestre</span>

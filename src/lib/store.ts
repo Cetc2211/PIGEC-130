@@ -17,7 +17,6 @@ export type Patient = {
   id: string;
   recordId: string;
   name: string;
-  dateOfBirth: Date;
   semester: string;
   group: string;
   createdAt: Date;

@@ -204,7 +204,6 @@ export type AddPatientState = {
 
 const addPatientFormSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
-  dateOfBirth: z.string().min(1, 'La fecha de nacimiento es obligatoria.'),
   semester: z.string().min(1, 'El semestre es obligatorio.'),
   group: z.string().min(1, 'El grupo es obligatorio.'),
 });
@@ -216,7 +215,6 @@ export async function addPatientAction(
     try {
         const parsed = addPatientFormSchema.safeParse({
             name: formData.get('name'),
-            dateOfBirth: formData.get('dateOfBirth'),
             semester: formData.get('semester'),
             group: formData.get('group'),
         });
@@ -231,7 +229,6 @@ export async function addPatientAction(
 
         const newPatient = savePatient({
             name: parsed.data.name,
-            dateOfBirth: new Date(parsed.data.dateOfBirth),
             semester: parsed.data.semester,
             group: parsed.data.group,
         });
