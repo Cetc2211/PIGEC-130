@@ -1,0 +1,60 @@
+
+{
+  "patients": [
+    {
+      "id": "pat-seed-1",
+      "recordId": "CBTA/130/00001/01/01/24",
+      "name": "Ana Sofía López",
+      "semester": "1",
+      "group": "A",
+      "email": "ana.lopez@example.com",
+      "createdAt": "2024-01-01T10:00:00.000Z"
+    },
+    {
+      "id": "pat-seed-2",
+      "recordId": "CBTA/130/00002/01/01/24",
+      "name": "Carlos Mendoza",
+      "semester": "1",
+      "group": "A",
+      "email": "carlos.mendoza@example.com",
+      "createdAt": "2024-01-01T10:01:00.000Z"
+    },
+    {
+      "id": "pat-seed-3",
+      "recordId": "CBTA/130/00003/01/01/24",
+      "name": "Beatriz Jiménez",
+      "semester": "1",
+      "group": "A",
+      "email": "beatriz.jimenez@example.com",
+      "createdAt": "2024-01-01T10:02:00.000Z"
+    },
+    {
+      "id": "pat-seed-4",
+      "recordId": "CBTA/130/00004/01/01/24",
+      "name": "David Ruiz",
+      "semester": "3",
+      "group": "B",
+      "email": "david.ruiz@example.com",
+      "createdAt": "2024-01-01T10:03:00.000Z"
+    },
+    {
+      "id": "pat-seed-5",
+      "recordId": "CBTA/130/00005/01/01/24",
+      "name": "Elena Torres",
+      "semester": "3",
+      "group": "B",
+      "email": "elena.torres@example.com",
+      "createdAt": "2024-01-01T10:04:00.000Z"
+    }
+  ],
+  "assignments": {
+    "pat-seed-1": [
+      {
+        "assignmentId": "asg-seed-1",
+        "patientId": "pat-seed-1",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2024-01-01T11:00:00.000Z"
+      }
+    ]
+  }
+}

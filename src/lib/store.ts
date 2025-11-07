@@ -1,10 +1,12 @@
-// NOTE: This is an in-memory store for demonstration purposes.
-// Data will be lost on server restart unless pre-filled.
+// NOTE: This now uses a static JSON file for initial data to ensure persistence
+// across server reloads in development. Write operations are still in-memory.
 
 import { format } from 'date-fns';
+import initialData from './db.json';
 
 export type EvaluationResult = {
   id: string;
+  patientId?: string; // Patient ID is now optional
   questionnaireId: string;
   questionnaireName: string;
   score: number;
@@ -20,7 +22,7 @@ export type Patient = {
   name: string;
   semester: string;
   group: string;
-  createdAt: Date;
+  createdAt: Date | string;
   // Detailed profile info
   dob?: string; // Date of birth
   age?: number;
@@ -46,83 +48,34 @@ export type Assignment = {
     assignmentId: string;
     patientId: string;
     questionnaireId: string;
-    assignedAt: Date;
+    assignedAt: Date | string;
 };
 
-
-// Using a Map to store results. In a real app, this would be a database.
+// In-memory stores that will be hydrated from the JSON file.
+// Write operations will modify these in-memory maps.
+let patientsStore: Map<string, Patient> = new Map(initialData.patients.map(p => [p.id, { ...p, createdAt: new Date(p.createdAt) }]));
+let assignedQuestionnairesStore: Map<string, Assignment[]> = new Map(
+    Object.entries(initialData.assignments).map(([patientId, assignments]) => [
+        patientId,
+        (assignments as any[]).map(a => ({ ...a, assignedAt: new Date(a.assignedAt) }))
+    ])
+);
 const resultsStore: Map<string, EvaluationResult> = new Map();
-const patientsStore: Map<string, Patient> = new Map();
-const assignedQuestionnairesStore: Map<string, Assignment[]> = new Map();
-
-
-// --- Data Persistence Simulation ---
-// To avoid losing data on every server restart during development,
-// we pre-fill the stores with some default data.
-
-const generateRecordIdForSeed = (date: Date, index: number) => {
-    const sequence = (index + 1).toString().padStart(5, '0');
-    const datePart = format(date, 'dd/MM/yy');
-    return `CBTA/130/${sequence}/${datePart}`;
-}
-
-const seedData = () => {
-    const now = new Date();
-    
-    // Clear stores to prevent duplication on hot-reloads in dev
-    if (patientsStore.size > 0 || assignedQuestionnairesStore.size > 0) {
-        return;
-    }
-
-    const initialPatients = [
-        { name: "Ana Sofía López", semester: "1", group: "A", email: "ana.lopez@example.com" },
-        { name: "Carlos Mendoza", semester: "1", group: "A", email: "carlos.mendoza@example.com" },
-        { name: "Beatriz Jiménez", semester: "1", group: "A", email: "beatriz.jimenez@example.com" },
-        { name: "David Ruiz", semester: "3", group: "B", email: "david.ruiz@example.com" },
-        { name: "Elena Torres", semester: "3", group: "B", email: "elena.torres@example.com" },
-    ];
-
-    const createdPatients: Patient[] = [];
-
-    initialPatients.forEach((p, index) => {
-        const id = `pat-${index + 1}-${now.getTime()}`;
-        const recordId = generateRecordIdForSeed(now, index);
-        const newPatient: Patient = {
-            ...p,
-            id,
-            recordId,
-            createdAt: now,
-        };
-        patientsStore.set(id, newPatient);
-        createdPatients.push(newPatient);
-    });
-
-    // Assign a test to Ana Sofía López
-    const ana = createdPatients.find(p => p.name === "Ana Sofía López");
-    if (ana) {
-        const assignment: Assignment = {
-            assignmentId: `asg-seed-1`,
-            patientId: ana.id,
-            questionnaireId: 'gad-7',
-            assignedAt: now,
-        };
-        assignedQuestionnairesStore.set(ana.id, [assignment]);
-    }
-
-    console.log('✅ In-memory store seeded with test data.');
-};
-
-// Initialize with seed data
-seedData();
 
 
 // --- Store Functions ---
-
 
 export const saveResult = (result: Omit<EvaluationResult, 'id'>): EvaluationResult => {
   const id = `res-${resultsStore.size + 1}-${Date.now()}`;
   const newResult: EvaluationResult = { ...result, id };
   resultsStore.set(id, newResult);
+  
+  // If the result belongs to a patient, add it to the in-memory results
+  if (result.patientId) {
+      const patientResults = Array.from(resultsStore.values()).filter(r => r.patientId === result.patientId);
+      // In a real DB, you'd just save it. Here we don't need to do much more.
+  }
+
   return newResult;
 };
 
@@ -130,14 +83,12 @@ export const getResult = (id: string): EvaluationResult | undefined => {
   return resultsStore.get(id);
 };
 
-export function getAllResults(): EvaluationResult[] {
-  return Array.from(resultsStore.values());
+export function getAllResultsForPatient(patientId: string): EvaluationResult[] {
+    return Array.from(resultsStore.values()).filter(r => r.patientId === patientId);
 }
-
 
 // Patient store functions
 const generateRecordId = (date: Date) => {
-    // This function needs to be aware of the total number of patients
     const totalPatients = patientsStore.size;
     const sequence = (totalPatients + 1).toString().padStart(5, '0');
     const datePart = format(date, 'dd/MM/yy');
@@ -150,7 +101,7 @@ export const savePatient = (patientData: Omit<Patient, 'id' | 'createdAt' | 'rec
   const recordId = generateRecordId(now);
 
   const newPatient: Patient = { ...patientData, id, recordId, createdAt: now };
-  patientsStore.set(id, newPatient);
+  patientsStore.set(id, newPatient); // Save to in-memory store
   return newPatient;
 };
 
@@ -159,7 +110,6 @@ export const savePatientsBatch = (patientsData: Omit<Patient, 'id' | 'createdAt'
     let createdCount = 0;
     
     patientsData.forEach(patientData => {
-        // The recordId needs to be generated inside the loop to get the correct sequence.
         const totalPatients = patientsStore.size;
         const sequence = (totalPatients + 1).toString().padStart(5, '0');
         const datePart = format(now, 'dd/MM/yy');
@@ -176,11 +126,20 @@ export const savePatientsBatch = (patientsData: Omit<Patient, 'id' | 'createdAt'
 
 
 export const getPatient = (id: string): Patient | undefined => {
+    // Re-initialize from JSON on every call in dev to ensure data is fresh
+    if (process.env.NODE_ENV === 'development') {
+        patientsStore = new Map(initialData.patients.map(p => [p.id, { ...p, createdAt: new Date(p.createdAt) }]));
+    }
     return patientsStore.get(id);
 };
 
 export const getAllPatients = (): Patient[] => {
-    return Array.from(patientsStore.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    // Re-initialize from JSON on every call in dev to ensure data is fresh
+    if (process.env.NODE_ENV === 'development') {
+        patientsStore = new Map(initialData.patients.map(p => [p.id, { ...p, createdAt: new Date(p.createdAt) }]));
+    }
+    const patients = Array.from(patientsStore.values());
+    return patients.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 
@@ -201,9 +160,27 @@ export const assignQuestionnaireToPatient = (patientId: string, questionnaireId:
 };
 
 export const getAssignedQuestionnairesForPatient = (patientId: string): Assignment[] => {
+    // Re-initialize from JSON on every call in dev to ensure data is fresh
+    if (process.env.NODE_ENV === 'development') {
+         assignedQuestionnairesStore = new Map(
+            Object.entries(initialData.assignments).map(([pId, assignments]) => [
+                pId,
+                (assignments as any[]).map(a => ({ ...a, assignedAt: new Date(a.assignedAt) }))
+            ])
+        );
+    }
     return assignedQuestionnairesStore.get(patientId) || [];
 };
 
 export const getAllAssignedQuestionnaires = (): Assignment[] => {
+    // Re-initialize from JSON on every call in dev to ensure data is fresh
+    if (process.env.NODE_ENV === 'development') {
+         assignedQuestionnairesStore = new Map(
+            Object.entries(initialData.assignments).map(([pId, assignments]) => [
+                pId,
+                (assignments as any[]).map(a => ({ ...a, assignedAt: new Date(a.assignedAt) }))
+            ])
+        );
+    }
     return Array.from(assignedQuestionnairesStore.values()).flat();
 };

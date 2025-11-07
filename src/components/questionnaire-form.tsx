@@ -5,16 +5,15 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { submitEvaluation } from '@/app/actions';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useForm } from 'react-hook-form';
-import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Terminal } from 'lucide-react';
 
 type QuestionnaireFormProps = {
   questionnaire: Questionnaire;
+  patientId?: string;
 };
 
 function SubmitButton() {
@@ -26,9 +25,10 @@ function SubmitButton() {
   );
 }
 
-export function QuestionnaireForm({ questionnaire }: QuestionnaireFormProps) {
-  const [state, formAction] = useActionState(submitEvaluation.bind(null, questionnaire.id), { message: '' });
-  const form = useForm();
+export function QuestionnaireForm({ questionnaire, patientId }: QuestionnaireFormProps) {
+  // Bind the patientId to the server action
+  const submitEvaluationWithContext = submitEvaluation.bind(null, questionnaire.id, patientId || null);
+  const [state, formAction] = useActionState(submitEvaluationWithContext, { message: '' });
   const { toast } = useToast();
 
   useEffect(() => {

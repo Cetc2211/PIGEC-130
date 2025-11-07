@@ -8,10 +8,14 @@ type EvaluationPageProps = {
   params: {
     id: string;
   };
+  searchParams?: {
+    patient?: string;
+  };
 };
 
-export default function EvaluationPage({ params }: EvaluationPageProps) {
+export default function EvaluationPage({ params, searchParams }: EvaluationPageProps) {
   const questionnaire = getQuestionnaire(params.id);
+  const patientId = searchParams?.patient;
 
   if (!questionnaire) {
     notFound();
@@ -29,7 +33,7 @@ export default function EvaluationPage({ params }: EvaluationPageProps) {
             <CardDescription>{questionnaire.description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <QuestionnaireForm questionnaire={questionnaire} />
+            <QuestionnaireForm questionnaire={questionnaire} patientId={patientId} />
           </CardContent>
         </Card>
          <p className="text-center text-sm text-muted-foreground mt-6">

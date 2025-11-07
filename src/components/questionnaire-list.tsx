@@ -1,7 +1,7 @@
 'use client';
 
 import type { Questionnaire } from '@/lib/data';
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useActionState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -22,7 +22,8 @@ type AssignEvaluationDialogProps = {
 
 function AssignEvaluationDialog({ questionnaire, patients, onClose }: AssignEvaluationDialogProps) {
     const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
+    const [state, formAction, isPending] = useActionState(assignQuestionnaireAction, { success: false, message: "" });
+    
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
@@ -33,79 +34,79 @@ function AssignEvaluationDialog({ questionnaire, patients, onClose }: AssignEval
         return patients.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [patients, searchTerm]);
 
-    const handleAssignClick = () => {
-        if (selectedPatient && questionnaire) {
-            startTransition(async () => {
-                const result = await assignQuestionnaireAction(selectedPatient.id, questionnaire.id);
-                if (result.success) {
-                    toast({
-                        title: "¡Evaluación Asignada!",
-                        description: `"${questionnaire.name}" ha sido añadida al expediente de ${selectedPatient.name}.`,
-                    });
-                    onClose();
-                } else {
-                    toast({
-                        title: "Error",
-                        description: result.message,
-                        variant: "destructive",
-                    });
-                }
+    useEffect(() => {
+        if (state.success) {
+            toast({
+                title: "¡Evaluación Asignada!",
+                description: `"${questionnaire.name}" ha sido añadida al expediente de ${selectedPatient?.name}.`,
+            });
+            onClose();
+        } else if (state.message && !state.success) {
+             toast({
+                title: "Error",
+                description: state.message,
+                variant: "destructive",
             });
         }
-    };
+    }, [state, questionnaire.name, selectedPatient?.name, onClose, toast]);
     
     return (
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle className="font-headline">Asignar "{questionnaire.name}"</DialogTitle>
-                    <DialogDescription>
-                        Busca y selecciona el paciente al que deseas asignar esta evaluación.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col gap-4 py-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Buscar paciente por nombre..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
-                    <ScrollArea className="h-[200px] border rounded-md">
-                         <div className="p-2 space-y-1">
-                            {filteredPatients.length > 0 ? (
-                                filteredPatients.map(patient => (
-                                    <button
-                                        key={patient.id}
-                                        onClick={() => setSelectedPatient(patient)}
-                                        className={`w-full text-left p-2 rounded-md transition-colors flex items-center gap-3 ${selectedPatient?.id === patient.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-                                    >
-                                        <User className="h-4 w-4" />
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-medium">{patient.name}</span>
-                                            <span className={`text-xs ${selectedPatient?.id === patient.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{patient.recordId}</span>
-                                        </div>
-                                    </button>
-                                ))
-                            ) : (
-                                <p className="text-sm text-muted-foreground text-center p-4">No se encontraron pacientes.</p>
-                            )}
+                <form action={formAction}>
+                    <input type="hidden" name="questionnaireId" value={questionnaire.id} />
+                    <input type="hidden" name="patientId" value={selectedPatient?.id || ''} />
+                    <DialogHeader>
+                        <DialogTitle className="font-headline">Asignar "{questionnaire.name}"</DialogTitle>
+                        <DialogDescription>
+                            Busca y selecciona el paciente al que deseas asignar esta evaluación.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Buscar paciente por nombre..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10"
+                            />
                         </div>
-                    </ScrollArea>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
-                    <Button onClick={handleAssignClick} disabled={!selectedPatient || isPending}>
-                         {isPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                         ) : (
-                            <Plus className="mr-2 h-4 w-4" />
-                         )}
-                        Asignar a Expediente
-                    </Button>
-                </DialogFooter>
+                        <ScrollArea className="h-[200px] border rounded-md">
+                            <div className="p-2 space-y-1">
+                                {filteredPatients.length > 0 ? (
+                                    filteredPatients.map(patient => (
+                                        <button
+                                            type="button"
+                                            key={patient.id}
+                                            onClick={() => setSelectedPatient(patient)}
+                                            className={`w-full text-left p-2 rounded-md transition-colors flex items-center gap-3 ${selectedPatient?.id === patient.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                                        >
+                                            <User className="h-4 w-4" />
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium">{patient.name}</span>
+                                                <span className={`text-xs ${selectedPatient?.id === patient.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{patient.recordId}</span>
+                                            </div>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-muted-foreground text-center p-4">No se encontraron pacientes.</p>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
+                        <Button type="submit" disabled={!selectedPatient || isPending}>
+                            {isPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Plus className="mr-2 h-4 w-4" />
+                            )}
+                            Asignar a Expediente
+                        </Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     );

@@ -17,6 +17,7 @@ export type FormState = {
 
 export async function submitEvaluation(
   questionnaireId: string,
+  patientId: string | null, // patientId can be null
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
@@ -59,9 +60,15 @@ export async function submitEvaluation(
     score,
     totalPossibleScore,
     submittedAt: new Date(),
+    patientId: patientId || undefined,
   });
 
-  redirect(`/results/${result.id}`);
+  if (patientId) {
+    revalidatePath(`/patients/${patientId}`);
+    redirect(`/patients/${patientId}`);
+  } else {
+    redirect(`/results/${result.id}`);
+  }
 }
 
 
@@ -318,9 +325,12 @@ export type AssignQuestionnaireState = {
 };
 
 export async function assignQuestionnaireAction(
-  patientId: string,
-  questionnaireId: string
+  prevState: AssignQuestionnaireState,
+  formData: FormData
 ): Promise<AssignQuestionnaireState> {
+  const patientId = formData.get('patientId') as string;
+  const questionnaireId = formData.get('questionnaireId') as string;
+
   if (!patientId || !questionnaireId) {
     return {
       success: false,
@@ -330,6 +340,7 @@ export async function assignQuestionnaireAction(
   try {
     assignQuestionnaireToPatient(patientId, questionnaireId);
     revalidatePath('/patients');
+    revalidatePath(`/patients/${patientId}`);
     return {
       success: true,
       message: 'Cuestionario asignado con éxito.',
