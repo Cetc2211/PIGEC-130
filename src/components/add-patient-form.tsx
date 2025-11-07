@@ -57,7 +57,7 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
   
   return (
     <Form {...form}>
-      <form action={formAction} onSubmit={form.handleSubmit(() => formAction(new FormData(form.control.fields._f.form)))} className="space-y-4">
+      <form action={formAction} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
