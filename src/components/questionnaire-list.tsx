@@ -25,6 +25,9 @@ function AssignEvaluationDialog({ questionnaire, patients, onClose, onAssign }: 
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
     const filteredPatients = useMemo(() => {
+        if (!searchTerm) {
+            return patients;
+        }
         return patients.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [patients, searchTerm]);
 
