@@ -55,17 +55,9 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
     }
   }, [state, onFinished, toast, form]);
   
-  const onSubmit = (values: z.infer<typeof addPatientFormSchema>) => {
-    const formData = new FormData();
-    formData.append('name', values.name);
-    formData.append('semester', values.semester);
-    formData.append('group', values.group);
-    formAction(formData);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form action={formAction} onSubmit={form.handleSubmit(() => formAction(new FormData(form.control.fields._f.form)))} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
