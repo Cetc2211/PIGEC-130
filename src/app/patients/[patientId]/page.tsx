@@ -25,16 +25,17 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
   }
 
   const assignments = getAssignedQuestionnairesForPatient(params.patientId);
-  const assignedQuestionnaires = assignments.map(assignment => {
-    const questionnaire = getQuestionnaire(assignment.questionnaireId);
-    // Remove the assignment if the result is already submitted
-    const results = getAllResultsForPatient(params.patientId);
-    const isSubmitted = results.some(r => r.questionnaireId === assignment.questionnaireId);
-    return isSubmitted ? null : questionnaire;
+  const results = getAllResultsForPatient(params.patientId);
+  const completedQuestionnaireIds = new Set(results.map(r => r.questionnaireId));
+
+  const pendingAssignments = assignments.filter(
+    assignment => !completedQuestionnaireIds.has(assignment.questionnaireId)
+  );
+
+  const assignedQuestionnaires = pendingAssignments.map(assignment => {
+      return getQuestionnaire(assignment.questionnaireId);
   }).filter(Boolean);
 
-
-  const results = getAllResultsForPatient(params.patientId);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
