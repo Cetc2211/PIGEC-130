@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { User, Users, FileText, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -32,7 +33,7 @@ function PatientList({ patientsByGroup, assignmentsByPatient }: { patientsByGrou
     }
 
     return (
-        <Accordion type="multiple" className="w-full space-y-4">
+        <Accordion type="multiple" className="w-full space-y-4" defaultValue={Object.keys(patientsByGroup)}>
             {Object.entries(patientsByGroup).map(([groupKey, patients]) => (
                  <AccordionItem value={groupKey} key={groupKey} className="border-none">
                     <AccordionTrigger className="p-4 bg-muted/50 rounded-lg hover:bg-muted">
@@ -47,30 +48,32 @@ function PatientList({ patientsByGroup, assignmentsByPatient }: { patientsByGrou
                             {patients.map(patient => {
                                 const patientAssignments = assignmentsByPatient[patient.id] || [];
                                 return (
-                                <Card key={patient.id} className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col">
-                                    <CardHeader>
-                                        <div className="flex items-start justify-between">
-                                            <CardTitle className="flex items-center gap-2 font-headline text-lg">
-                                                <User className="h-5 w-5 text-primary" />
-                                                {patient.name}
-                                            </CardTitle>
-                                            <Badge variant="outline">{patient.recordId}</Badge>
-                                        </div>
-                                         <CardDescription>
-                                            {isClient ? (
-                                                `Registrado el ${new Date(patient.createdAt).toLocaleDateString()}`
-                                            ) : (
-                                                <Skeleton className="h-4 w-24" />
-                                            )}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-3 text-sm flex-grow">
-                                        <div className="flex items-center gap-2 pt-2 text-muted-foreground">
-                                            <FileText className="h-4 w-4" />
-                                            <span>{patientAssignments.length} Evaluaciones asignadas</span>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                <Link href={`/patients/${patient.id}`} key={patient.id}>
+                                    <Card className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col h-full">
+                                        <CardHeader>
+                                            <div className="flex items-start justify-between">
+                                                <CardTitle className="flex items-center gap-2 font-headline text-lg">
+                                                    <User className="h-5 w-5 text-primary" />
+                                                    {patient.name}
+                                                </CardTitle>
+                                                <Badge variant="outline">{patient.recordId}</Badge>
+                                            </div>
+                                            <CardDescription>
+                                                {isClient ? (
+                                                    `Registrado el ${new Date(patient.createdAt).toLocaleDateString()}`
+                                                ) : (
+                                                    <Skeleton className="h-4 w-24" />
+                                                )}
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-3 text-sm flex-grow">
+                                            <div className="flex items-center gap-2 pt-2 text-muted-foreground">
+                                                <FileText className="h-4 w-4" />
+                                                <span>{patientAssignments.length} Evaluaciones asignadas</span>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
                             )})}
                         </div>
                     </AccordionContent>
