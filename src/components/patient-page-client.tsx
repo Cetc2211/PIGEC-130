@@ -2,13 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, User, Users, FileText, BookOpen, UserPlus, FolderPlus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { User, Users, FileText, UserPlus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { Patient } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { Input } from './ui/input';
 import { BulkAddPatientsForm } from './bulk-add-patients-form';
+import { Badge } from './ui/badge';
 
 
 function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Patient[]> }) {
@@ -19,7 +19,7 @@ function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Pati
                 <Users className="h-16 w-16 text-muted-foreground mb-4" />
                 <h2 className="text-xl font-semibold">No hay grupos ni pacientes todavía</h2>
                 <p className="text-muted-foreground mt-2 max-w-sm">
-                    Haz clic en "Crear Nuevo Grupo" para empezar a organizar a tus estudiantes y crear sus expedientes.
+                    Haz clic en "Añadir Estudiantes en Bloque" para crear tu primer grupo y añadir expedientes.
                 </p>
             </div>
         );
@@ -70,7 +70,6 @@ function PatientList({ patientsByGroup }: { patientsByGroup: Record<string, Pati
 
 export function PatientPageClient({ patients }: { patients: Patient[] }) {
     const [isBulkAddOpen, setIsBulkAddOpen] = useState(false);
-    const [currentGroup, setCurrentGroup] = useState<{semester: string, group: string} | null>(null);
 
     const patientsByGroup = useMemo(() => {
         return patients.reduce((acc, patient) => {
@@ -84,9 +83,6 @@ export function PatientPageClient({ patients }: { patients: Patient[] }) {
     }, [patients]);
     
     const openBulkAddModal = () => {
-        // En una implementación más compleja, aquí se podría seleccionar/crear un grupo.
-        // Por ahora, lo hardcodeamos para la demo.
-        setCurrentGroup({ semester: '1', group: 'A' }); 
         setIsBulkAddOpen(true);
     }
     
