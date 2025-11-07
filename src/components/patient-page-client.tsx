@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle, User, Users, FileText, BookOpen } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -9,8 +9,15 @@ import type { Patient } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { Skeleton } from './ui/skeleton';
 
 function PatientList({ patients }: { patients: Patient[] }) {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     if (patients.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[400px]">
@@ -36,7 +43,11 @@ function PatientList({ patients }: { patients: Patient[] }) {
                              <Badge variant="outline">{patient.recordId}</Badge>
                         </div>
                         <CardDescription>
-                            Registrado el {format(patient.createdAt, "dd/MM/yyyy")}
+                             {isClient ? (
+                                `Registrado el ${format(new Date(patient.createdAt), "dd/MM/yyyy")}`
+                            ) : (
+                                <Skeleton className="h-4 w-24" />
+                            )}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm flex-grow">
