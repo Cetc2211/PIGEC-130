@@ -47,14 +47,14 @@ const prompt = ai.definePrompt({
   name: 'createQuestionnaireFromTextPrompt',
   input: { schema: CreateQuestionnaireFromTextInputSchema },
   output: { schema: CreateQuestionnaireFromTextOutputSchema },
-  prompt: `Eres un asistente experto en psicología y digitalización de documentos. Tu tarea es analizar el siguiente texto y extraer la estructura completa de una prueba de evaluación psicológica.
+  prompt: `Eres un asistente experto en psicología y digitalización de documentos. Tu tarea es analizar el siguiente texto, que puede ser una prueba de autoevaluación o una guía de observación compleja, y extraer su estructura principal.
 
 Debes identificar los siguientes componentes y devolverlos en formato JSON:
-1.  **name**: El título o nombre oficial de la prueba.
+1.  **name**: El título o nombre oficial del instrumento (p.ej., "GUÍA DE OBSERVACIÓN CONDUCTUAL EN AULA (GOCA)").
 2.  **description**: Un párrafo introductorio o resumen que explique el propósito de la prueba. Si no hay uno explícito, crea uno basado en el título.
-3.  **questions**: La lista de todas las preguntas o ítems que el paciente debe responder. Excluye los encabezados de sección (p.ej., "ÁREA EMOCIONAL").
-4.  **likertScale**: Las opciones de respuesta para las preguntas (la escala de calificación). Asegúrate de que el orden sea correcto, desde la puntuación más baja a la más alta. Por ejemplo: "Nunca", "Pocas veces", "Muchas veces", "Siempre".
-5.  **interpretations**: Las reglas para interpretar la puntuación total. Cada regla debe tener un rango de puntuación ('from', 'to'), un nivel de 'severity' (Baja, Leve, Moderada, Alta) y un 'summary' (la descripción de lo que significa ese rango de puntuación). Si el texto menciona una acción específica para un ítem (ej. "Ítem 15 > 0"), ignóralo y extrae solo las reglas basadas en la puntuación total.
+3.  **questions**: La lista de TODAS las conductas observables o ítems a evaluar, incluso si están divididas en secciones (p.ej., "SECCIÓN I: INDICADORES DE ATENCIÓN", "SECCIÓN II: INDICADORES DE PARTICIPACIÓN", etc.). Extrae solo el texto de la conducta observable (p.ej., "Se distrae fácilmente con ruidos externos"). **Ignora** los encabezados de sección, los datos de identificación, las instrucciones para el observador, los subtotales, y las secciones de "Recomendaciones" u "Observaciones adicionales".
+4.  **likertScale**: Las opciones de respuesta para las preguntas (la escala de calificación). Busca la escala numérica y sus etiquetas (p.ej., "0 = Nunca", "1 = Raramente", etc.) y asegúrate de que el orden sea correcto, desde la puntuación más baja a la más alta.
+5.  **interpretations**: Las reglas para interpretar la **puntuación TOTAL**. Busca una sección como "INTERPRETACIÓN AUTOMÁTICA DE RESULTADOS" y extrae las reglas basadas en el puntaje total (ej. 0-40 puntos), su severidad y su resumen. **Ignora** las interpretaciones por secciones o áreas críticas y enfócate solo en la interpretación del puntaje global de riesgo.
 
 Analiza el contenido del siguiente texto y extrae esta información con la mayor precisión posible.
 
