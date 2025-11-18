@@ -11,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './
 import { BulkAddPatientsForm } from './bulk-add-patients-form';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
+import { SidebarTriggerButton } from './sidebar-trigger-button';
 
 
 function PatientList({ patientsByGroup, assignmentsByPatient }: { patientsByGroup: Record<string, Patient[]>, assignmentsByPatient: Record<string, Assignment[]> }) {
@@ -114,14 +115,17 @@ export function PatientPageClient({ patients, assignments }: { patients: Patient
     
     return (
     <div className="flex flex-col h-full">
-      <header className="p-4 sm:p-6 border-b flex justify-between items-center">
-        <div>
-            <h1 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight">
-            Gestión de Pacientes por Grupos
-            </h1>
-            <p className="text-muted-foreground mt-1">
-            Crea grupos y añade estudiantes en bloque para generar sus expedientes.
-            </p>
+      <header className="p-4 sm:p-6 border-b flex justify-between items-center gap-4">
+        <div className='flex items-center gap-4'>
+            <SidebarTriggerButton />
+            <div>
+                <h1 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight">
+                Gestión de Pacientes por Grupos
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                Crea grupos y añade estudiantes en bloque para generar sus expedientes.
+                </p>
+            </div>
         </div>
         <Button onClick={openBulkAddModal}>
             <UserPlus className="mr-2 h-4 w-4" />

@@ -6,6 +6,7 @@ import { ReportGenerator } from '@/components/report-generator';
 import { Progress } from '@/components/ui/progress';
 import { getInterpretation, getQuestionnaire } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
+import { SidebarTriggerButton } from '@/components/sidebar-trigger-button';
 
 type ResultsPageProps = {
   params: {
@@ -37,11 +38,14 @@ export default function ResultPage({ params }: ResultsPageProps) {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <header className="mb-8">
-        <h1 className="font-headline text-3xl font-bold tracking-tight">Resultado de la Evaluación</h1>
-        <p className="text-muted-foreground">
-          Enviado el {new Date(result.submittedAt).toLocaleString()}
-        </p>
+      <header className="mb-8 flex items-center gap-4">
+        <SidebarTriggerButton />
+        <div>
+          <h1 className="font-headline text-3xl font-bold tracking-tight">Resultado de la Evaluación</h1>
+          <p className="text-muted-foreground">
+            Enviado el {new Date(result.submittedAt).toLocaleString()}
+          </p>
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-3">

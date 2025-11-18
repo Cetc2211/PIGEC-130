@@ -10,6 +10,7 @@ import { FileText, User, ClipboardList, Stethoscope, Pencil } from 'lucide-react
 import { PatientProfileForm } from '@/components/patient-profile-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
+import { SidebarTriggerButton } from '@/components/sidebar-trigger-button';
 
 type PatientProfilePageProps = {
   params: {
@@ -40,6 +41,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <header className="flex items-center gap-4">
+        <SidebarTriggerButton />
         <User className="h-8 w-8 text-primary" />
         <div>
             <h1 className="font-headline text-3xl font-bold tracking-tight">{patient.name}</h1>
