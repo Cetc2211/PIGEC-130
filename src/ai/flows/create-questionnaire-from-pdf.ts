@@ -58,7 +58,7 @@ Debes identificar los siguientes componentes y devolverlos en formato JSON:
 2.  **description**: Un párrafo introductorio o resumen que explique el propósito de la prueba. Si no hay uno explícito, crea uno basado en el título.
 3.  **questions**: La lista de todas las preguntas o ítems que el paciente debe responder. Excluye los encabezados de sección (p.ej., "ÁREA EMOCIONAL").
 4.  **likertScale**: Las opciones de respuesta para las preguntas (la escala de calificación). Asegúrate de que el orden sea correcto, desde la puntuación más baja a la más alta. Por ejemplo: "Nunca", "Pocas veces", "Muchas veces", "Siempre".
-5.  **interpretations**: Las reglas para interpretar la puntuación total. Cada regla debe tener un rango de puntuación ('from', 'to'), un nivel de 'severity' (Baja, Leve, Moderada, Alta) y un 'summary' (la descripción de lo que significa ese rango de puntuación). Si el texto menciona una acción específica para un ítem (ej. "Ítem 15 > 0"), ignóralo y extrae solo las reglas basadas en la puntuación total.
+5.  **interpretations**: Las reglas para interpretar la puntuación total. Cada regla debe tener un rango de puntuación ('from', 'to'), un nivel de 'severity' (Baja, Leve, Moderada, Alta) y un 'summary' (la descripción de lo que significa ese rango de puntuación). Si el texto menciona una acción específica para un ítem (ej. "Ítem 15 > 0"), ignóralo y extrae solo las reglas basadas en la puntuación total. Para rangos abiertos como "121+", usa 121 para el campo 'from' y un número muy alto como 999 para el campo 'to'.
 
 Analiza el contenido del PDF y extrae esta información con la mayor precisión posible.
 
