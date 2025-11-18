@@ -100,6 +100,15 @@ export const saveResult = (result: Omit<EvaluationResult, 'id'>): EvaluationResu
   const newResult: EvaluationResult = { ...result, id };
   resultsStore.set(id, newResult);
   
+  // This is a new change: remove the assignment once the result is saved
+  if (newResult.patientId) {
+    const patientAssignments = assignedQuestionnairesStore.get(newResult.patientId) || [];
+    const updatedAssignments = patientAssignments.filter(
+      (assignment) => assignment.questionnaireId !== newResult.questionnaireId
+    );
+    assignedQuestionnairesStore.set(newResult.patientId, updatedAssignments);
+  }
+  
   return newResult;
 };
 

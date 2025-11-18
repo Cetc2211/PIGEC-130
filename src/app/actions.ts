@@ -45,22 +45,17 @@ export async function submitEvaluation(
   const answers = parsed.data;
   let score = 0;
   const answerValues: Record<string, number | string> = {};
-  let likertQuestionsCount = 0;
-
+  
   for (const question of questionnaire.questions) {
     const questionId = question.id;
     const answer = answers[questionId];
-    if(question.type === 'likert') {
-        const value = parseInt(answer, 10);
-        score += value;
-        answerValues[questionId] = value;
-        likertQuestionsCount++;
-    } else {
-        answerValues[questionId] = answer;
-    }
+    // Since we only have likert now, we always parse to int
+    const value = parseInt(answer, 10);
+    score += value;
+    answerValues[questionId] = value;
   }
 
-  const totalPossibleScore = likertQuestionsCount * (questionnaire.likertScale.length - 1);
+  const totalPossibleScore = questionnaire.questions.length * (questionnaire.likertScale.length - 1);
 
   const result = saveResult({
     questionnaireId: questionnaire.id,
@@ -113,7 +108,6 @@ const interpretationSchema = z.object({
 
 const questionSchema = z.object({ 
     text: z.string().min(1, 'El texto de la pregunta no puede estar vacío'),
-    type: z.enum(['likert', 'open'])
 });
 
 const formSchema = z.object({

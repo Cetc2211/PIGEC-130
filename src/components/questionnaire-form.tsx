@@ -62,29 +62,20 @@ export function QuestionnaireForm({ questionnaire, patientId }: QuestionnaireFor
             {index + 1}. {question.text}
           </legend>
           
-          {question.type === 'likert' ? (
-            <RadioGroup
-              name={question.id}
-              required
-              className="flex flex-wrap gap-4 pt-2"
-            >
-              {questionnaire.likertScale.map((option) => (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
-                  <Label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          ) : (
-            <Textarea
-              name={question.id}
-              required
-              placeholder="Escribe tu respuesta aquí..."
-              className="mt-2"
-            />
-          )}
+          <RadioGroup
+            name={question.id}
+            required
+            className="flex flex-wrap gap-4 pt-2"
+          >
+            {questionnaire.likertScale.map((option) => (
+              <div key={option.value} className="flex items-center space-x-2">
+                <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
+                <Label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
 
           {state.errors?.[question.id] && (
             <p className="text-sm font-medium text-destructive">{state.errors[question.id]}</p>

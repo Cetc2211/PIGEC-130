@@ -31,7 +31,6 @@ const interpretationSchema = z.object({
 
 const questionSchema = z.object({
     text: z.string().min(1, 'El texto de la pregunta no puede estar vacío'),
-    type: z.enum(['likert', 'open'], { required_error: 'Debes seleccionar un tipo de pregunta' })
 });
 
 const formSchema = z.object({
@@ -166,7 +165,7 @@ export function CreateEvaluationForm() {
             description: "",
             category: "",
             subcategory: "",
-            questions: [{ text: "", type: "likert" }],
+            questions: [{ text: "" }],
             likertScale: [
                 { label: "Nunca" },
                 { label: "Pocas veces" },
@@ -206,7 +205,7 @@ export function CreateEvaluationForm() {
             description: data.description || '',
             category: '', // Let user set category
             subcategory: '', // Let user set subcategory
-            questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text, type: 'likert'})) : [{ text: '', type: 'likert' }],
+            questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text})) : [{ text: '' }],
             likertScale: data.likertScale?.length > 0 ? data.likertScale.map((s: { label: string; }) => ({label: s.label})) : [{label: ''}],
             interpretations: data.interpretations?.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
         });
@@ -348,7 +347,7 @@ export function CreateEvaluationForm() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Preguntas</CardTitle>
-                                <CardDescription>Añade las preguntas para tu evaluación. Puedes añadir tantos como necesites y elegir su tipo.</CardDescription>
+                                <CardDescription>Añade las preguntas para tu evaluación. Puedes añadir tantos como necesites.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {questions.map((field, index) => (
@@ -368,33 +367,13 @@ export function CreateEvaluationForm() {
                                                     </FormItem>
                                                 )}
                                             />
-                                             <FormField
-                                                control={form.control}
-                                                name={`questions.${index}.type`}
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                            <FormControl>
-                                                                <SelectTrigger className="w-[180px]">
-                                                                    <SelectValue placeholder="Tipo de pregunta" />
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectContent>
-                                                                <SelectItem value="likert">Escala (Likert)</SelectItem>
-                                                                <SelectItem value="open">Texto Abierto</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
                                         </div>
                                         <Button type="button" variant="ghost" size="icon" onClick={() => removeQuestion(index)} disabled={questions.length <= 1}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 ))}
-                                <Button type="button" variant="outline" size="sm" onClick={() => appendQuestion({ text: "", type: "likert" })}>
+                                <Button type="button" variant="outline" size="sm" onClick={() => appendQuestion({ text: "" })}>
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Añadir Pregunta
                                 </Button>
@@ -405,7 +384,7 @@ export function CreateEvaluationForm() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Escala de Calificación (Likert)</CardTitle>
-                                    <CardDescription>Define las etiquetas para tu escala. Esto solo aplica a preguntas de tipo "Escala".</CardDescription>
+                                    <CardDescription>Define las etiquetas para tu escala.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {likertScale.map((field, index) => (
@@ -439,7 +418,7 @@ export function CreateEvaluationForm() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Reglas de Interpretación</CardTitle>
-                                    <CardDescription>Define cómo se interpretan las puntuaciones numéricas de las preguntas de escala.</CardDescription>
+                                    <CardDescription>Define cómo se interpretan las puntuaciones numéricas.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {interpretations.map((field, index) => (

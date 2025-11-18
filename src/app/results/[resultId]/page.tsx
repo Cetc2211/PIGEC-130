@@ -72,7 +72,7 @@ export default function ResultPage({ params }: ResultsPageProps) {
                             </div>
                         </>
                     ) : (
-                        <p className="text-sm text-muted-foreground">Este cuestionario no tiene una puntuación numérica.</p>
+                        <p className="text-sm text-muted-foreground">Este cuestionario es cualitativo y no tiene una puntuación numérica.</p>
                     )}
                 </CardContent>
             </Card>
