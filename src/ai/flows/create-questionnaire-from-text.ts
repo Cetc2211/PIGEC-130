@@ -20,10 +20,10 @@ export type CreateQuestionnaireFromTextInput = z.infer<
 >;
 
 const interpretationSchema = z.object({
-    from: z.coerce.number().min(0).describe("El valor inicial del rango de puntuación."),
-    to: z.coerce.number().min(0).describe("El valor final del rango de puntuación."),
-    severity: z.enum(['Baja', 'Leve', 'Moderada', 'Alta']).describe("El nivel de severidad para este rango."),
-    summary: z.string().min(1).describe("Un resumen de la interpretación para este rango de puntuación."),
+    from: z.coerce.number().min(0).describe("The starting value of the score range."),
+    to: z.coerce.number().min(0).describe("The ending value of the score range."),
+    severity: z.enum(['Baja', 'Leve', 'Moderada', 'Alta']).describe("The severity level for this range."),
+    summary: z.string().min(1).describe("A summary of the interpretation for this score range."),
 });
 
 const CreateQuestionnaireFromTextOutputSchema = z.object({
