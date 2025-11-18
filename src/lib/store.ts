@@ -14,7 +14,7 @@ export type EvaluationResult = {
   questionnaireName: string;
   score: number;
   totalPossibleScore: number;
-  answers: Record<string, number>;
+  answers: Record<string, number | string>;
   submittedAt: Date;
 };
 

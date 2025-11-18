@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ReportGenerator } from '@/components/report-generator';
 import { Progress } from '@/components/ui/progress';
-import { getInterpretation } from '@/lib/data';
+import { getInterpretation, getQuestionnaire } from '@/lib/data';
+import { Separator } from '@/components/ui/separator';
 
 type ResultsPageProps = {
   params: {
@@ -19,14 +20,18 @@ export default function ResultPage({ params }: ResultsPageProps) {
     notFound();
   }
 
-  const percentage = (result.score / result.totalPossibleScore) * 100;
-  const interpretation = getInterpretation(result.questionnaireId, result.score);
+  const questionnaire = getQuestionnaire(result.questionnaireId);
+
+  const hasNumericScore = result.totalPossibleScore > 0;
+  const percentage = hasNumericScore ? (result.score / result.totalPossibleScore) * 100 : 0;
+  const interpretation = hasNumericScore ? getInterpretation(result.questionnaireId, result.score) : null;
 
   const evaluationDataForAI = JSON.stringify({
     questionnaireName: result.questionnaireName,
     score: result.score,
     totalPossibleScore: result.totalPossibleScore,
     interpretation: interpretation,
+    answers: result.answers,
     submittedAt: result.submittedAt.toISOString(),
   });
 
@@ -47,18 +52,41 @@ export default function ResultPage({ params }: ResultsPageProps) {
                     <CardDescription>Resumen de Puntuación</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold">{result.score}</span>
-                        <span className="text-muted-foreground">/ {result.totalPossibleScore}</span>
-                    </div>
-                    <Progress value={percentage} aria-label={`${percentage.toFixed(0)}%`} />
-                    <div>
-                        <h3 className="font-semibold mb-2">Interpretación</h3>
-                        <Badge variant={interpretation.severity === 'Alta' ? 'destructive' : 'secondary'}>
-                            Severidad {interpretation.severity}
-                        </Badge>
-                        <p className="text-sm text-muted-foreground mt-2">{interpretation.summary}</p>
-                    </div>
+                    {hasNumericScore && interpretation ? (
+                        <>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-4xl font-bold">{result.score}</span>
+                                <span className="text-muted-foreground">/ {result.totalPossibleScore}</span>
+                            </div>
+                            <Progress value={percentage} aria-label={`${percentage.toFixed(0)}%`} />
+                            <div>
+                                <h3 className="font-semibold mb-2">Interpretación</h3>
+                                <Badge variant={interpretation.severity === 'Alta' ? 'destructive' : 'secondary'}>
+                                    Severidad {interpretation.severity}
+                                </Badge>
+                                <p className="text-sm text-muted-foreground mt-2">{interpretation.summary}</p>
+                            </div>
+                        </>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">Este cuestionario no tiene una puntuación numérica.</p>
+                    )}
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline">Respuestas</CardTitle>
+                    <CardDescription>Respuestas detalladas a cada pregunta.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {questionnaire?.questions.map((question, index) => (
+                        <div key={question.id}>
+                            <p className="text-sm font-semibold">{index + 1}. {question.text}</p>
+                            <p className="text-sm text-muted-foreground pl-4 border-l-2 ml-2 mt-1 py-1">
+                                {String(result.answers[question.id])}
+                            </p>
+                            {index < questionnaire.questions.length - 1 && <Separator className="mt-4"/>}
+                        </div>
+                    ))}
                 </CardContent>
             </Card>
         </div>

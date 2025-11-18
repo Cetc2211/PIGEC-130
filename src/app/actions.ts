@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import { getQuestionnaire, saveCustomQuestionnaire } from '@/lib/data';
+import { getQuestionnaire, saveCustomQuestionnaire, Question } from '@/lib/data';
 import { savePatient, saveResult, savePatientsBatch, assignQuestionnaireToPatient, updatePatient } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
@@ -26,12 +26,13 @@ export async function submitEvaluation(
     return { message: 'Error: Cuestionario no encontrado.' };
   }
 
-  const schemaFields: Record<string, any> = {};
+  const schemaFields: Record<string, z.ZodType<any, any>> = {};
   questionnaire.questions.forEach((q) => {
-    schemaFields[q.id] = z.string({ required_error: 'Por favor, selecciona una respuesta.' });
+    const fieldSchema = z.string().min(1, 'Por favor, completa este campo.');
+    schemaFields[q.id] = fieldSchema;
   });
   const schema = z.object(schemaFields);
-
+  
   const parsed = schema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!parsed.success) {
@@ -43,15 +44,23 @@ export async function submitEvaluation(
 
   const answers = parsed.data;
   let score = 0;
-  const answerValues: Record<string, number> = {};
+  const answerValues: Record<string, number | string> = {};
+  let likertQuestionsCount = 0;
 
-  for (const questionId in answers) {
-    const value = parseInt(answers[questionId], 10);
-    score += value;
-    answerValues[questionId] = value;
+  for (const question of questionnaire.questions) {
+    const questionId = question.id;
+    const answer = answers[questionId];
+    if(question.type === 'likert') {
+        const value = parseInt(answer, 10);
+        score += value;
+        answerValues[questionId] = value;
+        likertQuestionsCount++;
+    } else {
+        answerValues[questionId] = answer;
+    }
   }
 
-  const totalPossibleScore = questionnaire.questions.length * (questionnaire.likertScale.length - 1);
+  const totalPossibleScore = likertQuestionsCount * (questionnaire.likertScale.length - 1);
 
   const result = saveResult({
     questionnaireId: questionnaire.id,
@@ -102,12 +111,17 @@ const interpretationSchema = z.object({
     summary: z.string().min(1, 'El resumen es obligatorio'),
 });
 
+const questionSchema = z.object({ 
+    text: z.string().min(1, 'El texto de la pregunta no puede estar vacío'),
+    type: z.enum(['likert', 'open'])
+});
+
 const formSchema = z.object({
   name: z.string().min(1, 'El nombre es obligatorio'),
   description: z.string().min(1, 'La descripción es obligatoria'),
   category: z.string().min(1, 'La categoría es obligatoria'),
   subcategory: z.string().min(1, 'La subcategoría es obligatoria'),
-  questions: z.array(z.object({ text: z.string().min(1, 'El texto de la pregunta no puede estar vacío') })).min(1, 'Se requiere al menos una pregunta'),
+  questions: z.array(questionSchema).min(1, 'Se requiere al menos una pregunta'),
   likertScale: z.array(z.object({ label: z.string().min(1, 'La etiqueta de la escala no puede estar vacía'), value: z.number() })).min(2, 'Se requieren al menos dos opciones de escala'),
   interpretations: z.array(interpretationSchema).min(1, 'Se requiere al menos una regla de interpretación'),
 });
@@ -136,7 +150,7 @@ export async function createQuestionnaireAction(
       description,
       category,
       subcategory,
-      questions: questions.map((q, i) => ({ ...q, id: `q${i+1}` })),
+      questions: questions.map((q: any, i: number) => ({ ...q, id: `q${i+1}` })),
       likertScale,
       interpretationData: interpretations,
     });

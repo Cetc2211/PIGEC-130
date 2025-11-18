@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Terminal } from 'lucide-react';
+import { Textarea } from './ui/textarea';
+import { Label } from './ui/label';
 
 type QuestionnaireFormProps = {
   questionnaire: Questionnaire;
@@ -59,20 +61,31 @@ export function QuestionnaireForm({ questionnaire, patientId }: QuestionnaireFor
           <legend className="text-base font-semibold leading-7">
             {index + 1}. {question.text}
           </legend>
-          <RadioGroup
-            name={question.id}
-            required
-            className="flex flex-wrap gap-4 pt-2"
-          >
-            {questionnaire.likertScale.map((option) => (
-              <div key={option.value} className="flex items-center space-x-2">
-                <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
-                <label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
-                  {option.label}
-                </label>
-              </div>
-            ))}
-          </RadioGroup>
+          
+          {question.type === 'likert' ? (
+            <RadioGroup
+              name={question.id}
+              required
+              className="flex flex-wrap gap-4 pt-2"
+            >
+              {questionnaire.likertScale.map((option) => (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
+                  <Label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          ) : (
+            <Textarea
+              name={question.id}
+              required
+              placeholder="Escribe tu respuesta aquí..."
+              className="mt-2"
+            />
+          )}
+
           {state.errors?.[question.id] && (
             <p className="text-sm font-medium text-destructive">{state.errors[question.id]}</p>
           )}

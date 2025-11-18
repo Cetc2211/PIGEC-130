@@ -6,6 +6,7 @@ export type LikertScaleOption = {
 export type Question = {
   id: string;
   text: string;
+  type: 'likert' | 'open';
 };
 
 export type Interpretation = {
@@ -49,13 +50,13 @@ export const questionnaires: Questionnaire[] = [
     subcategory: 'Ansiedad',
     likertScale: defaultLikertScale,
     questions: [
-      { id: 'q1', text: 'Sentirse nervioso/a, ansioso/a o con los nervios de punta' },
-      { id: 'q2', text: 'No poder detener o controlar la preocupación' },
-      { id: 'q3', text: 'Preocuparse demasiado por diferentes cosas' },
-      { id: 'q4', text: 'Dificultad para relajarse' },
-      { id: 'q5', text: 'Estar tan inquieto/a que es difícil quedarse quieto/a' },
-      { id: 'q6', text: 'Ponerse fácilmente irritable o enfadado/a' },
-      { id: 'q7', text: 'Sentir miedo, como si algo horrible pudiera pasar' },
+      { id: 'q1', text: 'Sentirse nervioso/a, ansioso/a o con los nervios de punta', type: 'likert' },
+      { id: 'q2', text: 'No poder detener o controlar la preocupación', type: 'likert' },
+      { id: 'q3', text: 'Preocuparse demasiado por diferentes cosas', type: 'likert' },
+      { id: 'q4', text: 'Dificultad para relajarse', type: 'likert' },
+      { id: 'q5', text: 'Estar tan inquieto/a que es difícil quedarse quieto/a', type: 'likert' },
+      { id: 'q6', text: 'Ponerse fácilmente irritable o enfadado/a', type: 'likert' },
+      { id: 'q7', text: 'Sentir miedo, como si algo horrible pudiera pasar', type: 'likert' },
     ],
     interpretationData: [
         { from: 0, to: 4, severity: 'Baja', summary: 'Ansiedad mínima. Es probable que los síntomas sean transitorios y no causen una angustia significativa.' },
@@ -72,15 +73,15 @@ export const questionnaires: Questionnaire[] = [
     subcategory: 'Depresión',
     likertScale: defaultLikertScale,
     questions: [
-        { id: 'q1', text: 'Poco interés o placer en hacer las cosas' },
-        { id: 'q2', text: 'Sentirse desanimado/a, deprimido/a o sin esperanza' },
-        { id: 'q3', text: 'Problemas para dormir o permanecer dormido/a, o dormir demasiado' },
-        { id: 'q4', text: 'Sentirse cansado/a o con poca energía' },
-        { id: 'q5', text: 'Poco apetito o comer en exceso' },
-        { id: 'q6', text: 'Sentirse mal consigo mismo/a, o que es un fracaso o ha decepcionado a su familia o a usted mismo/a' },
-        { id: 'q7', text: 'Dificultad para concentrarse en cosas, como leer el periódico o ver la televisión' },
-        { id: 'q8', text: 'Moverse o hablar tan lento que otras personas podrían haberlo notado. O lo contrario: estar tan inquieto/a o agitado/a que se ha estado moviendo mucho más de lo habitual' },
-        { id: 'q9', text: 'Pensamientos de que estaría mejor muerto/a, o de hacerse daño de alguna manera' }
+        { id: 'q1', text: 'Poco interés o placer en hacer las cosas', type: 'likert' },
+        { id: 'q2', text: 'Sentirse desanimado/a, deprimido/a o sin esperanza', type: 'likert' },
+        { id: 'q3', text: 'Problemas para dormir o permanecer dormido/a, o dormir demasiado', type: 'likert' },
+        { id: 'q4', text: 'Sentirse cansado/a o con poca energía', type: 'likert' },
+        { id: 'q5', text: 'Poco apetito o comer en exceso', type: 'likert' },
+        { id: 'q6', text: 'Sentirse mal consigo mismo/a, o que es un fracaso o ha decepcionado a su familia o a usted mismo/a', type: 'likert' },
+        { id: 'q7', text: 'Dificultad para concentrarse en cosas, como leer el periódico o ver la televisión', type: 'likert' },
+        { id: 'q8', text: 'Moverse o hablar tan lento que otras personas podrían haberlo notado. O lo contrario: estar tan inquieto/a o agitado/a que se ha estado moviendo mucho más de lo habitual', type: 'likert' },
+        { id: 'q9', text: 'Pensamientos de que estaría mejor muerto/a, o de hacerse daño de alguna manera', type: 'likert' }
     ],
     interpretationData: [
         { from: 0, to: 4, severity: 'Baja', summary: 'Depresión mínima. Es poco probable que sea clínicamente significativa.' },
@@ -104,16 +105,16 @@ export const questionnaires: Questionnaire[] = [
         { value: 4, label: 'Muy a menudo' },
     ],
     questions: [
-        { id: 'q1', text: 'En el último mes, ¿con qué frecuencia ha estado molesto/a por algo que sucedió inesperadamente?' },
-        { id: 'q2', text: 'En el último mes, ¿con qué frecuencia ha sentido que no podía controlar las cosas importantes de su vida?' },
-        { id: 'q3', text: 'En el último mes, ¿con qué frecuencia se ha sentido nervioso/a y estresado/a?' },
-        { id: 'q4', text: 'En el último mes, ¿con qué frecuencia se ha sentido seguro/a de su capacidad para manejar sus problemas personales?' },
-        { id: 'q5', text: 'En el último mes, ¿con qué frecuencia ha sentido que las cosas le iban bien?' },
-        { id: 'q6', text: 'En el último mes, ¿con qué frecuencia ha descubierto que no podía hacer frente a todas las cosas que tenía que hacer?' },
-        { id: 'q7', text: 'En el último mes, ¿con qué frecuencia ha sido capaz de controlar las irritaciones en su vida?' },
-        { id: 'q8', text: 'En el último mes, ¿con qué frecuencia ha sentido que estaba al tanto de las cosas?' },
-        { id: 'q9', text: 'En el último mes, ¿con qué frecuencia se ha enfadado por cosas que estaban fuera de su control?' },
-        { id: 'q10', text: 'En el último mes, ¿con qué frecuencia ha sentido que las dificultades se acumulaban tanto que no podía superarlas?' }
+        { id: 'q1', text: 'En el último mes, ¿con qué frecuencia ha estado molesto/a por algo que sucedió inesperadamente?', type: 'likert' },
+        { id: 'q2', text: 'En el último mes, ¿con qué frecuencia ha sentido que no podía controlar las cosas importantes de su vida?', type: 'likert' },
+        { id: 'q3', text: 'En el último mes, ¿con qué frecuencia se ha sentido nervioso/a y estresado/a?', type: 'likert' },
+        { id: 'q4', text: 'En el último mes, ¿con qué frecuencia se ha sentido seguro/a de su capacidad para manejar sus problemas personales?', type: 'likert' },
+        { id: 'q5', text: 'En el último mes, ¿con qué frecuencia ha sentido que las cosas le iban bien?', type: 'likert' },
+        { id: 'q6', text: 'En el último mes, ¿con qué frecuencia ha descubierto que no podía hacer frente a todas las cosas que tenía que hacer?', type: 'likert' },
+        { id: 'q7', text: 'En el último mes, ¿con qué frecuencia ha sido capaz de controlar las irritaciones en su vida?', type: 'likert' },
+        { id: 'q8', text: 'En el último mes, ¿con qué frecuencia ha sentido que estaba al tanto de las cosas?', type: 'likert' },
+        { id: 'q9', text: 'En el último mes, ¿con qué frecuencia se ha enfadado por cosas que estaban fuera de su control?', type: 'likert' },
+        { id: 'q10', text: 'En el último mes, ¿con qué frecuencia ha sentido que las dificultades se acumulaban tanto que no podía superarlas?', type: 'likert' }
     ],
     interpretationData: [
         // Nota: Para PSS-10, las preguntas 4, 5, 7 y 8 tienen puntuación inversa.

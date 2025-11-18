@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, X, FileUp, Loader2, Wand2, FileText } from "lucide-react";
+import { PlusCircle, Trash2, X, FileUp, Loader2, Wand2, FileText, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -29,12 +29,17 @@ const interpretationSchema = z.object({
     path: ["to"],
 });
 
+const questionSchema = z.object({
+    text: z.string().min(1, 'El texto de la pregunta no puede estar vacío'),
+    type: z.enum(['likert', 'open'], { required_error: 'Debes seleccionar un tipo de pregunta' })
+});
+
 const formSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
   category: z.string().min(1, 'La categoría es obligatoria'),
   subcategory: z.string().min(1, 'La subcategoría es obligatoria'),
-  questions: z.array(z.object({ text: z.string().min(1, 'El texto de la pregunta no puede estar vacío') })).min(1, 'Se requiere al menos una pregunta'),
+  questions: z.array(questionSchema).min(1, 'Se requiere al menos una pregunta'),
   likertScale: z.array(z.object({ label: z.string().min(1, 'La etiqueta de la escala no puede estar vacía') })).min(2, 'Se requieren al menos dos opciones de escala'),
   interpretations: z.array(interpretationSchema).min(1, 'Se requiere al menos una regla de interpretación'),
 });
@@ -161,7 +166,7 @@ export function CreateEvaluationForm() {
             description: "",
             category: "",
             subcategory: "",
-            questions: [{ text: "" }],
+            questions: [{ text: "", type: "likert" }],
             likertScale: [
                 { label: "Nunca" },
                 { label: "Pocas veces" },
@@ -201,7 +206,7 @@ export function CreateEvaluationForm() {
             description: data.description || '',
             category: '', // Let user set category
             subcategory: '', // Let user set subcategory
-            questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text})) : [{ text: '' }],
+            questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text, type: 'likert'})) : [{ text: '', type: 'likert' }],
             likertScale: data.likertScale?.length > 0 ? data.likertScale.map((s: { label: string; }) => ({label: s.label})) : [{label: ''}],
             interpretations: data.interpretations?.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
         });
@@ -343,31 +348,53 @@ export function CreateEvaluationForm() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Preguntas</CardTitle>
-                                <CardDescription>Añade las preguntas para tu evaluación. Puedes añadir tantas como necesites.</CardDescription>
+                                <CardDescription>Añade las preguntas para tu evaluación. Puedes añadir tantos como necesites y elegir su tipo.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {questions.map((field, index) => (
-                                    <FormField
-                                        key={field.id}
-                                        control={form.control}
-                                        name={`questions.${index}.text`}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <div className="flex items-center gap-2">
-                                                    <FormLabel className="flex-shrink-0 mt-2">P{index + 1}</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="Introduce el texto de la pregunta" {...field} />
-                                                    </FormControl>
-                                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeQuestion(index)} disabled={questions.length <= 1}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                    <div key={field.id} className="flex items-start gap-4 p-4 border rounded-md">
+                                        <span className="font-semibold mt-2">P{index + 1}</span>
+                                        <div className="flex-grow space-y-2">
+                                            <FormField
+                                                control={form.control}
+                                                name={`questions.${index}.text`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="sr-only">Texto de la pregunta</FormLabel>
+                                                        <FormControl>
+                                                            <Textarea placeholder="Introduce el texto de la pregunta" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                             <FormField
+                                                control={form.control}
+                                                name={`questions.${index}.type`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="w-[180px]">
+                                                                    <SelectValue placeholder="Tipo de pregunta" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                <SelectItem value="likert">Escala (Likert)</SelectItem>
+                                                                <SelectItem value="open">Texto Abierto</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeQuestion(index)} disabled={questions.length <= 1}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 ))}
-                                <Button type="button" variant="outline" size="sm" onClick={() => appendQuestion({ text: "" })}>
+                                <Button type="button" variant="outline" size="sm" onClick={() => appendQuestion({ text: "", type: "likert" })}>
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Añadir Pregunta
                                 </Button>
@@ -378,7 +405,7 @@ export function CreateEvaluationForm() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Escala de Calificación (Likert)</CardTitle>
-                                    <CardDescription>Define las etiquetas para tu escala de calificación. Los valores se asignan automáticamente.</CardDescription>
+                                    <CardDescription>Define las etiquetas para tu escala. Esto solo aplica a preguntas de tipo "Escala".</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {likertScale.map((field, index) => (
@@ -412,7 +439,7 @@ export function CreateEvaluationForm() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Reglas de Interpretación</CardTitle>
-                                    <CardDescription>Define cómo se interpretan las puntuaciones. Crea rangos y proporciona un resumen para cada uno.</CardDescription>
+                                    <CardDescription>Define cómo se interpretan las puntuaciones numéricas de las preguntas de escala.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {interpretations.map((field, index) => (
