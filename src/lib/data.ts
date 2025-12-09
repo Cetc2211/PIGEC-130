@@ -51,6 +51,92 @@ export type Questionnaire = {
 
 const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: QuestionnaireSection[], questions?: Question[], likertScale?: LikertScaleOption[] }[] = [
   {
+    id: 'hads',
+    name: 'Escala de Ansiedad y Depresión Hospitalaria (HADS)',
+    description: 'Instrumento de 14 ítems para detectar estados de ansiedad y depresión, centrándose en síntomas afectivos y no somáticos.',
+    category: 'Estado de Ánimo',
+    subcategory: 'Ansiedad y Depresión',
+    sections: [
+        {
+            sectionId: 'ansiedad',
+            name: 'Subescala de Ansiedad',
+            instructions: 'Marque la respuesta que mejor describa cómo se ha sentido durante la última semana.',
+            likertScale: [],
+            questions: [
+                { id: "q1", text: "Me siento tenso o nervioso", type: "likert", options: [
+                  { "value": 3, "label": "Casi todo el día" }, { "value": 2, "label": "Gran parte del día" },
+                  { "value": 1, "label": "De vez en cuando" }, { "value": 0, "label": "Nunca" }
+                ]},
+                { id: "q3", text: "Siento una especie de temor como si algo malo fuera a suceder", type: "likert", options: [
+                  { "value": 3, "label": "Sí, y muy intenso" }, { "value": 2, "label": "Sí, pero no muy intenso" },
+                  { "value": 1, "label": "Sí, pero no me preocupa" }, { "value": 0, "label": "No siento nada de eso" }
+                ]},
+                { id: "q5", text: "Tengo la cabeza llena de preocupaciones", type: "likert", options: [
+                  { "value": 3, "label": "Casi todo el día" }, { "value": 2, "label": "Gran parte del día" },
+                  { "value": 1, "label": "De vez en cuando" }, { "value": 0, "label": "Nunca" }
+                ]},
+                { id: "q7", text: "Soy capaz de permanecer sentado tranquilo y relajado", type: "likert", options: [
+                  { "value": 0, "label": "Siempre" }, { "value": 1, "label": "A menudo" },
+                  { "value": 2, "label": "Raras veces" }, { "value": 3, "label": "Nunca" }
+                ]},
+                { id: "q9", text: "Experimento una desagradable sensación de 'nervios y hormigueos' en el estómago", type: "likert", options: [
+                  { "value": 0, "label": "Nunca" }, { "value": 1, "label": "Sólo en algunas ocasiones" },
+                  { "value": 2, "label": "A menudo" }, { "value": 3, "label": "Muy a menudo" }
+                ]},
+                { id: "q11", text: "Me siento inquieto como si no pudiera parar de moverme", type: "likert", options: [
+                  { "value": 3, "label": "Realmente mucho" }, { "value": 2, "label": "Bastante" },
+                  { "value": 1, "label": "No mucho" }, { "value": 0, "label": "En absoluto" }
+                ]},
+                { id: "q13", text: "Experimento de repente sensaciones de gran angustia o temor", type: "likert", options: [
+                  { "value": 3, "label": "Muy a menudo" }, { "value": 2, "label": "Con cierta frecuencia" },
+                  { "value": 1, "label": "Raramente" }, { "value": 0, "label": "Nunca" }
+                ]}
+            ]
+        },
+        {
+            sectionId: 'depresion',
+            name: 'Subescala de Depresión',
+            instructions: 'Marque la respuesta que mejor describa cómo se ha sentido durante la última semana.',
+            likertScale: [],
+            questions: [
+                { id: "q2", text: "Sigo disfrutando de las cosas como siempre", type: "likert", options: [
+                  { "value": 0, "label": "Ciertamente, igual que antes" }, { "value": 1, "label": "No tanto como antes" },
+                  { "value": 2, "label": "Solamente un poco" }, { "value": 3, "label": "Ya no disfruto con nada" }
+                ]},
+                { id: "q4", text: "Soy capaz de reírme y ver el lado gracioso de las cosas", type: "likert", options: [
+                  { "value": 0, "label": "Igual que siempre" }, { "value": 1, "label": "Actualmente, algo menos" },
+                  { "value": 2, "label": "Actualmente, mucho menos" }, { "value": 3, "label": "Actualmente, en absoluto" }
+                ]},
+                { id: "q6", text: "Me siento alegre", type: "likert", options: [
+                  { "value": 3, "label": "Nunca" }, { "value": 2, "label": "Muy pocas veces" },
+                  { "value": 1, "label": "En algunas ocasiones" }, { "value": 0, "label": "Gran parte del día" }
+                ]},
+                { id: "q8", text: "Me siento lento y torpe", type: "likert", options: [
+                  { "value": 3, "label": "Gran parte del día" }, { "value": 2, "label": "A menudo" },
+                  { "value": 1, "label": "A veces" }, { "value": 0, "label": "Nunca" }
+                ]},
+                { id: "q10", text: "He perdido el interés por mi aspecto personal", type: "likert", options: [
+                  { "value": 3, "label": "Completamente" }, { "value": 2, "label": "No me cuido como debería hacerlo" },
+                  { "value": 1, "label": "Es posible que no me cuide como debiera" }, { "value": 0, "label": "Me cuido como siempre" }
+                ]},
+                { id: "q12", text: "Espero las cosas con ilusión", type: "likert", options: [
+                  { "value": 0, "label": "Como siempre" }, { "value": 1, "label": "Algo menos que antes" },
+                  { "value": 2, "label": "Mucho menos que antes" }, { "value": 3, "label": "En absoluto" }
+                ]},
+                { id: "q14", text: "Soy capaz de disfrutar con un buen libro o programa de TV", type: "likert", options: [
+                  { "value": 0, "label": "A menudo" }, { "value": 1, "label": "Algunas veces" },
+                  { "value": 2, "label": "Pocas veces" }, { "value": 3, "label": "Casi nunca" }
+                ]}
+            ]
+        }
+    ],
+    interpretationData: [
+        { from: 0, to: 7, severity: 'Baja', summary: 'Puntuación en rango normal, sin significación clínica.' },
+        { from: 8, to: 10, severity: 'Leve', summary: 'Puntuación límite o dudosa. Sugiere reevaluación o exploración clínica.' },
+        { from: 11, to: 21, severity: 'Alta', summary: 'Puntuación en rango clínico. Se considera un caso probable y se recomienda intervención.' }
+    ]
+  },
+  {
     id: 'idare',
     name: 'Inventario de Ansiedad Rasgo-Estado',
     description: 'Instrumento de 40 ítems que mide dos componentes distintos de la ansiedad: Ansiedad Estado (transitoria) y Ansiedad Rasgo (disposición permanente).',
@@ -437,10 +523,10 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
         { id: 'q19', type: 'likert', text: 'ENGAÑO/OCULTAMIENTO', options: [
           { value: 0, label: 'Reveló ideas abiertamente' }, { value: 1, label: 'Evitó el tema' }, { value: 2, label: 'Engañó, ocultó' }
         ]},
-        { id: 'q20', text: 'INTENTOS PREVIOS', type: 'likert', includeInScore: false, options: [
+        { id: 'q20', type: 'likert', text: 'INTENTOS PREVIOS', includeInScore: false, options: [
           { value: 0, label: 'Ninguno' }, { value: 1, label: 'Uno' }, { value: 2, label: 'Más de uno' }
         ]},
-        { id: 'q21', text: 'INTENCIÓN DE MORIR EN ÚLTIMO INTENTO', type: 'likert', includeInScore: false, options: [
+        { id: 'q21', type: 'likert', text: 'INTENCIÓN DE MORIR EN ÚLTIMO INTENTO', includeInScore: false, options: [
           { value: 0, label: 'Baja' }, { value: 1, label: 'Moderada, ambivalente' }, { value: 2, label: 'Alta' }
         ]}
       ]
@@ -449,7 +535,7 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
       { from: 0, to: 5, severity: 'Baja', summary: 'Riesgo suicida bajo. Los síntomas de ideación son mínimos. Requiere seguimiento regular.' },
       { from: 6, to: 9, severity: 'Moderada', summary: 'Riesgo suicida moderado. La ideación es presente y requiere evaluación semanal e intervención prioritaria.' },
       { from: 10, to: 14, severity: 'Alta', summary: 'Riesgo suicida alto. La ideación es persistente, con planificación. Requiere plan de seguridad e intervención psiquiátrica urgente.' },
-      { from: 15, to: 38, severity: 'Alta', summary: 'Riesgo suicida muy alto. Presencia de planes detallados y capacidad. Requiere intervención de crisis y consideración de hospitalización.' }
+      { from: 15, to: 38, severity: 'Alta', summary: 'Riesgo suicida muy alto. Requiere intervención de crisis y consideración de hospitalización.' }
     ]
   },
   {
@@ -644,7 +730,7 @@ const customQuestionnaires: Map<string, Questionnaire> = new Map();
 function normalizeQuestionnaires(data: any[]): Questionnaire[] {
   return data.map(q => {
     // Si ya tiene el formato de secciones, lo retorna
-    if (q.sections) {
+    if (q.sections && q.sections.length > 0) {
       return q as Questionnaire;
     }
     // Si no, crea una sección por defecto
@@ -656,12 +742,13 @@ function normalizeQuestionnaires(data: any[]): Questionnaire[] {
       questions: q.questions || [],
     };
     // Elimina las propiedades antiguas para evitar duplicados
-    delete q.questions;
-    delete q.likertScale;
-    delete q.instructions;
+    const newQ = {...q};
+    delete newQ.questions;
+    delete newQ.likertScale;
+    delete newQ.instructions;
 
     return {
-      ...q,
+      ...newQ,
       sections: [section],
     };
   });

@@ -29,8 +29,6 @@ export default function ResultPage({ params }: ResultsPageProps) {
   const mainTotalPossible = result.totalPossibleScores[mainScoreId];
 
   const hasNumericScore = mainTotalPossible > 0;
-  const percentage = hasNumericScore ? (mainScore / mainTotalPossible) * 100 : 0;
-  // This needs to be adapted for multi-score interpretations
   const interpretation = hasNumericScore ? getInterpretation(result.questionnaireId, mainScore) : null;
 
   const evaluationDataForAI = JSON.stringify({
@@ -59,35 +57,38 @@ export default function ResultPage({ params }: ResultsPageProps) {
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline">{result.questionnaireName}</CardTitle>
-                    <CardDescription>Resumen de Puntuación</CardDescription>
+                    <CardDescription>Resumen de Puntuaciones</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                     {hasNumericScore ? (
                         <>
-                           {Object.entries(result.scores).map(([sectionId, score]) => {
+                           {Object.entries(result.scores).map(([sectionId, score], index) => {
                                 const total = result.totalPossibleScores[sectionId];
                                 const sectionPercentage = total > 0 ? (score / total) * 100 : 0;
                                 const sectionInterpretation = getInterpretation(result.questionnaireId, score);
-                                const sectionName = questionnaire?.sections.find(s => s.sectionId === sectionId)?.name || sectionId;
+                                const section = questionnaire?.sections.find(s => s.sectionId === sectionId);
+                                const sectionName = section?.name || sectionId;
 
                                 return (
-                                    <div key={sectionId} className="space-y-2">
-                                        <h3 className="font-semibold">{sectionName}</h3>
-                                        <div className="flex items-baseline gap-2">
+                                    <div key={sectionId}>
+                                        <h3 className="font-semibold text-lg">{sectionName}</h3>
+                                        <div className="flex items-baseline gap-2 mt-1">
                                             <span className="text-2xl font-bold">{score}</span>
                                             <span className="text-muted-foreground">/ {total}</span>
                                         </div>
-                                        <Progress value={sectionPercentage} aria-label={`${sectionPercentage.toFixed(0)}%`} />
+                                        <Progress value={sectionPercentage} aria-label={`${sectionPercentage.toFixed(0)}%`} className="mt-2" />
                                          {sectionInterpretation && (
-                                            <div>
-                                                <h4 className="font-medium text-sm mt-2">Interpretación</h4>
-                                                <Badge variant={sectionInterpretation.severity === 'Alta' ? 'destructive' : 'secondary'}>
-                                                    Severidad {sectionInterpretation.severity}
-                                                </Badge>
-                                                <p className="text-xs text-muted-foreground mt-1">{sectionInterpretation.summary}</p>
+                                            <div className="mt-3">
+                                                <h4 className="font-medium text-sm">Interpretación</h4>
+                                                <div className='flex items-center gap-2 mt-1'>
+                                                    <Badge variant={sectionInterpretation.severity === 'Alta' ? 'destructive' : 'secondary'}>
+                                                        Severidad {sectionInterpretation.severity}
+                                                    </Badge>
+                                                    <p className="text-xs text-muted-foreground">{sectionInterpretation.summary}</p>
+                                                </div>
                                             </div>
                                          )}
-                                         <Separator className="mt-4"/>
+                                         {index < Object.keys(result.scores).length - 1 && <Separator className="mt-6"/>}
                                     </div>
                                 );
                            })}
