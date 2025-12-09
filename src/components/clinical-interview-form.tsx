@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useActionState, useEffect } from 'react';
-import { Loader2, Save, AlertCircle, CheckCircle, ChevronDown, User, HeartPulse, BrainCircuit, History, Syringe, MessageSquare, Files } from 'lucide-react';
+import { Loader2, Save, AlertCircle, User, History, Syringe, Files } from 'lucide-react';
 import type { Patient } from '@/lib/store';
 import { saveClinicalInterviewAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -18,7 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Label } from './ui/label';
 
-// Esquema de validación que corresponde a InterviewData de diagnosis.ts
+// Corresponde a InterviewData en diagnosis.ts
 const interviewSchema = z.object({
   patientId: z.string(),
   motivoConsulta: z.string().min(10, 'El motivo de consulta es demasiado corto.'),
@@ -39,6 +39,7 @@ const interviewSchema = z.object({
   impresionCIE11_DSM5: z.string().optional(),
   impresionDiagnosticoDiferencial: z.string().optional(),
 });
+
 
 type ClinicalInterviewFormProps = {
   patient: Patient;
@@ -104,7 +105,6 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                     <input type="hidden" {...form.register('patientId')} />
                     <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3', 'item-4', 'item-5']} className="w-full">
                         
-                        {/* FASE I: Identificación y Queja */}
                         <AccordionItem value="item-1">
                             <AccordionTrigger className='font-semibold'><User className="mr-2" /> Fase I: Motivo de Consulta y Expectativas</AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-4">
@@ -125,7 +125,6 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                             </AccordionContent>
                         </AccordionItem>
 
-                        {/* FASE II: Triage de Seguridad */}
                         <AccordionItem value="item-2">
                              <AccordionTrigger className='font-semibold'><AlertCircle className="mr-2 text-destructive" /> Fase II: Triage de Seguridad y Gravedad</AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-4">
@@ -150,7 +149,6 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                             </AccordionContent>
                         </AccordionItem>
                         
-                        {/* FASE III: Historia Clínica */}
                         <AccordionItem value="item-3">
                              <AccordionTrigger className='font-semibold'><History className="mr-2" /> Fase III: Historia Clínica y Desarrollo</AccordionTrigger>
                             <AccordionContent className="space-y-6 pt-4">
@@ -181,7 +179,7 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                                   <FormField control={form.control} name="dinamicaFamiliar" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Dinámica Familiar</FormLabel>
-                                        <FormControl><Textarea placeholder="Relaciones con padres, hermanos, estructura familiar, etc." {...field} /></FormControl>
+                                        <FormControl><Textarea placeholder="Relaciones con padres, hermanos, estructura familiar, si hay apoyo..." {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}/>
@@ -209,7 +207,6 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                             </AccordionContent>
                         </AccordionItem>
                         
-                         {/* FASE IV: Factores Médicos y Sustancias */}
                         <AccordionItem value="item-4">
                              <AccordionTrigger className='font-semibold'><Syringe className="mr-2" /> Fase IV: Factores Médicos y Uso de Sustancias</AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-4">
@@ -232,7 +229,6 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                             </AccordionContent>
                         </AccordionItem>
                         
-                         {/* FASE V: Impresión Diagnóstica */}
                         <AccordionItem value="item-5">
                              <AccordionTrigger className='font-semibold'><Files className="mr-2" /> Fase V: Impresión Diagnóstica del Clínico</AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-4">
