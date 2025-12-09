@@ -546,6 +546,39 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
     ]
   },
   {
+    id: 'gad-7',
+    name: 'Escala de Ansiedad Generalizada GAD-7',
+    description: 'Una herramienta de 7 preguntas para la detección, cribado y medición de la severidad del Trastorno de Ansiedad Generalizada (TAG).',
+    category: 'Estado de Ánimo',
+    subcategory: 'Ansiedad',
+    sections: [{
+      sectionId: 'main',
+      name: 'Escala de Ansiedad Generalizada GAD-7',
+      instructions: 'Durante las últimas 2 semanas, ¿qué tan seguido le han molestado los siguientes problemas?',
+      likertScale: [
+        { value: 0, label: 'Nunca' },
+        { value: 1, label: 'Varios días' },
+        { value: 2, label: 'Más de la mitad de días' },
+        { value: 3, label: 'Casi todos los días' }
+      ],
+      questions: [
+        { id: 'gad-7_q1', text: 'Sentirse nervioso, ansioso o con los nervios de punta', type: 'likert' },
+        { id: 'gad-7_q2', text: 'No poder dejar de preocuparse o controlar la preocupación', type: 'likert' },
+        { id: 'gad-7_q3', text: 'Preocuparse demasiado por diferentes cosas', type: 'likert' },
+        { id: 'gad-7_q4', text: 'Dificultad para relajarse', type: 'likert' },
+        { id: 'gad-7_q5', text: 'Estar tan inquieto que es difícil permanecer sentado', type: 'likert' },
+        { id: 'gad-7_q6', text: 'Molestarse o ponerse irritable fácilmente', type: 'likert' },
+        { id: 'gad-7_q7', text: 'Sentir miedo como si algo terrible fuera a suceder', type: 'likert' }
+      ],
+    }],
+    interpretationData: [
+        { from: 0, to: 4, severity: 'Baja', summary: 'Ansiedad mínima. Los síntomas son transitorios y no requieren intervención clínica.' },
+        { from: 5, to: 9, severity: 'Leve', summary: 'Ansiedad leve. Monitoreo y psicoeducación. Se recomienda reevaluar en 4 semanas.' },
+        { from: 10, to: 14, severity: 'Moderada', summary: 'Ansiedad moderada. Posiblemente TAG o necesidad de TCC breve.' },
+        { from: 15, to: 21, severity: 'Alta', summary: 'Ansiedad severa. Tratamiento recomendado con TCC estructurada y evaluación psiquiátrica.' }
+    ]
+  },
+  {
     id: 'phq-9',
     name: 'Cuestionario de Salud del Paciente (PHQ-9)',
     description: 'Instrumento de 9 ítems para el cribado, diagnóstico y medición de la severidad de la depresión mayor, basado en criterios del DSM.',
@@ -715,6 +748,45 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
         { from: 41, to: 80, severity: 'Moderada', summary: 'Señales de alerta moderadas. Se recomienda seguimiento.' },
         { from: 81, to: 120, severity: 'Moderada', summary: 'Múltiples indicadores de riesgo. Se debe referir a Orientación Educativa.' },
         { from: 121, to: 180, severity: 'Alta', summary: 'Situación crítica. Se requiere intervención inmediata.' },
+    ]
+  },
+  {
+    id: 'plutchik-srs',
+    name: 'Escala de Riesgo Suicida de Plutchik',
+    description: 'Cuestionario de 15 ítems de respuesta Sí/No diseñado para evaluar la probabilidad de riesgo suicida en pacientes.',
+    category: 'Riesgo Clínico',
+    subcategory: 'Riesgo Suicida',
+    sections: [{
+      sectionId: 'main',
+      name: 'Escala de Riesgo Suicida de Plutchik',
+      instructions: 'Las siguientes preguntas tratan sobre cosas que usted ha sentido o hecho. Por favor conteste cada pregunta con SÍ o NO.',
+      likertScale: [
+        { "value": 0, "label": "NO" },
+        { "value": 1, "label": "SÍ" }
+      ],
+      questions: [
+        { id: 'plutchik_q1', text: '¿Toma de forma habitual algún medicamento como aspirinas o pastillas para dormir?', type: 'likert' },
+        { id: 'plutchik_q2', text: '¿Tiene dificultades para conciliar el sueño?', type: 'likert' },
+        { id: 'plutchik_q3', text: '¿A veces nota que podría perder el control sobre sí mismo?', type: 'likert' },
+        { id: 'plutchik_q4', text: '¿Tiene poco interés en relacionarse con la gente?', type: 'likert' },
+        { id: 'plutchik_q5', text: '¿Ve su futuro con más pesimismo que optimismo?', type: 'likert' },
+        { id: 'plutchik_q6', text: '¿Se ha sentido alguna vez inútil o sin valor?', type: 'likert' },
+        { id: 'plutchik_q7', text: '¿Ve su futuro sin ninguna esperanza?', type: 'likert' },
+        { id: 'plutchik_q8', text: '¿Se ha sentido alguna vez tan fracasado que solo quería meterse en la cama y abandonarlo todo?', type: 'likert' },
+        { id: 'plutchik_q9', text: '¿Está deprimido ahora?', type: 'likert' },
+        { id: 'plutchik_q10', text: '¿Está usted separado, divorciado o viudo?', type: 'likert' },
+        { id: 'plutchik_q11', text: '¿Sabe si alguien de su familia ha intentado suicidarse alguna vez?', type: 'likert' },
+        { id: 'plutchik_q12', text: '¿Alguna vez se ha sentido tan enfadado que habría sido capaz de matar a alguien?', type: 'likert' },
+        { id: 'plutchik_q13', text: '¿Ha pensado alguna vez en suicidarse?', type: 'likert' },
+        { id: 'plutchik_q14', text: '¿Le ha comentado a alguien, en alguna ocasión, que quería suicidarse?', type: 'likert' },
+        { id: 'plutchik_q15', text: '¿Ha intentado alguna vez quitarse la vida?', type: 'likert' }
+      ]
+    }],
+    interpretationData: [
+      { from: 0, to: 4, severity: 'Baja', summary: 'Sin riesgo. Seguimiento normal.' },
+      { from: 5, to: 6, severity: 'Leve', summary: 'Riesgo leve. Seguimiento cercano.' },
+      { from: 7, to: 8, severity: 'Moderada', summary: 'Riesgo moderado. Evaluación clínica completa.' },
+      { from: 9, to: 15, severity: 'Alta', summary: 'Riesgo alto. Intervención urgente y plan de seguridad.' }
     ]
   }
 ];
