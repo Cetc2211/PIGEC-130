@@ -17,14 +17,14 @@ export type Question = {
 };
 
 export type Interpretation = {
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto';
     summary: string;
 }
 
 export type InterpretationRule = {
     from: number;
     to: number;
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto';
     summary: string;
 };
 
@@ -826,11 +826,49 @@ const questionnairesData: Questionnaire[] = [
       ]
     }],
     interpretationData: [
-      { from: 16, to: 44, severity: 'Baja', summary: 'Niveles de preocupación habituales, no clínicos.' },
-      { from: 45, to: 59, severity: 'Moderada', summary: 'Tendencia elevada a la preocupación. Factor de riesgo para T. de Ansiedad.' },
-      { from: 60, to: 80, severity: 'Alta', summary: 'Preocupación crónica, incontrolable e intrusiva. Mecanismo clave del TAG.' }
+      { from: 16, to: 44, severity: 'Bajo', summary: 'Niveles de preocupación habituales, no clínicos.' },
+      { from: 45, to: 59, severity: 'Moderado', summary: 'Tendencia elevada a la preocupación. Factor de riesgo para T. de Ansiedad.' },
+      { from: 60, to: 80, severity: 'Alto', summary: 'Preocupación crónica, incontrolable e intrusiva. Mecanismo clave del TAG.' }
     ]
-  }
+  },
+  {
+    name: 'Escala de Actitudes Disfuncionales (DAS)',
+    id: 'das',
+    description: 'Mide esquemas cognitivos y creencias irracionales subyacentes, como la necesidad de aprobación o el perfeccionismo.',
+    category: 'Personalidad y Estado',
+    subcategory: 'Creencias Centrales',
+    sections: [{
+      sectionId: 'main',
+      name: 'Escala de Actitudes Disfuncionales',
+      instructions: 'Indique su grado de acuerdo con las siguientes afirmaciones.',
+      likertScale: [
+        { value: 1, label: 'Totalmente en desacuerdo' },
+        { value: 2, label: 'Bastante en desacuerdo' },
+        { value: 3, label: 'Ligeramente en desacuerdo' },
+        { value: 4, label: 'Indiferente' },
+        { value: 5, label: 'Ligeramente de acuerdo' },
+        { value: 6, label: 'Bastante de acuerdo' },
+        { value: 7, label: 'Totalmente de acuerdo' },
+      ],
+      questions: [
+        { id: 'das_q1', text: 'Es difícil ser feliz si no eres guapo, inteligente, rico y creativo.', type: 'likert' },
+        { id: 'das_q2', text: 'Mi valor como persona depende en gran medida de lo que otros piensen de mí.', type: 'likert' },
+        { id: 'das_q3', text: 'Si cometo un error, es probable que la gente me menosprecie.', type: 'likert' },
+        { id: 'das_q4', text: 'Si no puedo hacer algo bien, no debería hacerlo en absoluto.', type: 'likert' },
+        { id: 'das_q5', text: 'No puedo ser feliz si no le gusto a todo el mundo.', type: 'likert' },
+        { id: 'das_q6', text: 'Es mejor abandonar las propias necesidades que disgustar a los demás.', type: 'likert' },
+        { id: 'das_q7', text: 'Debo tener éxito en todo lo que emprendo.', type: 'likert' },
+        { id: 'das_q8', text: 'Si alguien a quien quiero me rechaza, significa que no soy digno de ser amado.', type: 'likert' },
+        { id: 'das_q9', text: 'Mi felicidad depende más de los demás que de mí mismo.', type: 'likert' },
+        { id: 'das_q10', text: 'Si no soy el mejor en mi trabajo, entonces soy un fracasado.', type: 'likert' }
+      ],
+    }],
+    interpretationData: [
+      { from: 10, to: 100, severity: 'Baja', summary: 'Esquemas cognitivos predominantemente funcionales.' },
+      { from: 101, to: 150, severity: 'Moderada', summary: 'Rigidez cognitiva moderada. Requiere identificación y flexibilización de reglas.' },
+      { from: 151, to: 240, severity: 'Alta', summary: 'Rigidez cognitiva alta. Implica que el paciente basa su valía en reglas rígidas y disfuncionales (ej. Perfeccionismo, dependencia). Foco de la TCC.' }
+    ]
+  },
 ];
 
 // Almacenamiento en memoria para cuestionarios personalizados
@@ -876,5 +914,6 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+
 
 
