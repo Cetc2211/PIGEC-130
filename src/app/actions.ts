@@ -52,18 +52,29 @@ export async function submitEvaluation(
     const questionId = question.id;
     const answer = answers[questionId];
     
-    if (question.type === 'likert') {
+    // Solo se suma al score si la pregunta es de tipo likert y no está explícitamente excluida
+    if (question.type === 'likert' && question.includeInScore !== false) {
       const value = parseInt(answer, 10);
       score += value;
-      answerValues[questionId] = value;
       likertQuestionsCount++;
+    }
+
+    // Guardamos el valor para todas las preguntas
+    if (question.type === 'likert') {
+       answerValues[questionId] = parseInt(answer, 10);
     } else {
-      // For 'open' questions, just save the string
-      answerValues[questionId] = answer;
+       answerValues[questionId] = answer;
     }
   }
 
-  const totalPossibleScore = likertQuestionsCount * (questionnaire.likertScale.length - 1);
+  const totalPossibleScore = questionnaire.questions
+    .filter(q => q.type === 'likert' && q.includeInScore !== false)
+    .reduce((total, q) => {
+        const options = q.options || questionnaire.likertScale;
+        const maxOptionValue = Math.max(...options.map(o => o.value));
+        return total + maxOptionValue;
+    }, 0);
+
 
   const result = saveResult({
     questionnaireId: questionnaire.id,

@@ -8,6 +8,7 @@ export type Question = {
   text: string;
   type: 'likert' | 'open';
   options?: LikertScaleOption[]; // Opciones específicas para esta pregunta
+  includeInScore?: boolean; // Por defecto es true. Si es false, no se suma al score.
 };
 
 export type Interpretation = {
@@ -225,6 +226,85 @@ export const questionnaires: Questionnaire[] = [
       { from: 8, to: 15, severity: 'Leve', summary: 'Ansiedad leve. Los síntomas son notorios pero generalmente manejables.' },
       { from: 16, to: 25, severity: 'Moderada', summary: 'Ansiedad moderada. Los síntomas son frecuentes y pueden causar un deterioro notable.' },
       { from: 26, to: 63, severity: 'Alta', summary: 'Ansiedad severa. Los síntomas son intensos y persistentes, afectando significativamente la vida diaria.' }
+    ]
+  },
+  {
+    id: 'ssi',
+    name: 'Escala de Ideación Suicida de Beck',
+    description: 'Escala de 21 ítems que evalúa la severidad y características de la ideación suicida actual.',
+    category: 'Riesgo Clínico',
+    subcategory: 'Ideación Suicida',
+    likertScale: [], // Cada pregunta tiene sus propias opciones
+    questions: [
+      { id: 'q1', text: 'DESEO DE VIVIR', type: 'likert', options: [
+        { value: 0, label: 'Moderado a fuerte' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Ninguno' }
+      ]},
+      { id: 'q2', text: 'DESEO DE MORIR', type: 'likert', options: [
+        { value: 0, label: 'Ninguno' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Moderado a fuerte' }
+      ]},
+      { id: 'q3', text: 'RAZONES PARA VIVIR/MORIR', type: 'likert', options: [
+        { value: 0, label: 'Las razones para vivir superan las de morir' }, { value: 1, label: 'Iguales' }, { value: 2, label: 'Las razones para morir superan las de vivir' }
+      ]},
+      { id: 'q4', text: 'DESEO DE INTENTAR SUICIDIO ACTIVO', type: 'likert', options: [
+        { value: 0, label: 'Ninguno' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Moderado a fuerte' }
+      ]},
+      { id: 'q5', text: 'DESEO SUICIDA PASIVO', type: 'likert', options: [
+        { value: 0, label: 'Tomaría precauciones para salvar su vida' }, { value: 1, label: 'Dejaría vida/muerte al azar' }, { value: 2, label: 'Evitaría pasos para salvar su vida' }
+      ]},
+      { id: 'q6', text: 'DIMENSIÓN TEMPORAL', type: 'likert', options: [
+        { value: 0, label: 'Breve, períodos pasajeros' }, { value: 1, label: 'Períodos más largos' }, { value: 2, label: 'Continuo o casi continuo' }
+      ]},
+      { id: 'q7', text: 'FRECUENCIA', type: 'likert', options: [
+        { value: 0, label: 'Rara, ocasional' }, { value: 1, label: 'Intermitente' }, { value: 2, label: 'Persistente o continuo' }
+      ]},
+      { id: 'q8', text: 'ACTITUD HACIA LA IDEACIÓN', type: 'likert', options: [
+        { value: 0, label: 'Rechazo' }, { value: 1, label: 'Ambivalente, indiferente' }, { value: 2, label: 'Aceptación' }
+      ]},
+      { id: 'q9', text: 'CONTROL SOBRE LA ACCIÓN SUICIDA', type: 'likert', options: [
+        { value: 0, label: 'Tiene control/no lo haría' }, { value: 1, label: 'Inseguro del control' }, { value: 2, label: 'No tiene control' }
+      ]},
+      { id: 'q10', text: 'FACTORES DISUASIVOS', type: 'likert', options: [
+        { value: 0, label: 'No lo intentaría por familia, religión, etc.' }, { value: 1, label: 'Cierta preocupación por disuasivos' }, { value: 2, label: 'Mínima o ninguna preocupación' }
+      ]},
+      { id: 'q11', text: 'RAZONES DEL INTENTO CONTEMPLADO', type: 'likert', options: [
+        { value: 0, label: 'Manipular, llamar atención' }, { value: 1, label: 'Combinación de 0 y 2' }, { value: 2, label: 'Escape, finalizar problemas' }
+      ]},
+      { id: 'q12', text: 'MÉTODO: ESPECIFICIDAD/PLANIFICACIÓN', type: 'likert', options: [
+        { value: 0, label: 'No considerado' }, { value: 1, label: 'Considerado pero no elaborado' }, { value: 2, label: 'Elaborado y detallado' }
+      ]},
+      { id: 'q13', text: 'MÉTODO: DISPONIBILIDAD/OPORTUNIDAD', type: 'likert', options: [
+        { value: 0, label: 'Método no disponible, no hay oportunidad' }, { value: 1, label: 'Método tomaría tiempo/esfuerzo' }, { value: 2, label: 'Método disponible/oportunidad presente o anticipada' }
+      ]},
+      { id: 'q14', text: "SENTIDO DE 'CAPACIDAD'", type: 'likert', options: [
+        { value: 0, label: 'No tiene valor, muy débil' }, { value: 1, label: 'Inseguro del valor' }, { value: 2, label: 'Seguro de tener valor' }
+      ]},
+      { id: 'q15', text: 'EXPECTATIVA/ANTICIPACIÓN DEL INTENTO', type: 'likert', options: [
+        { value: 0, label: 'No' }, { value: 1, label: 'Incierto' }, { value: 2, label: 'Sí' }
+      ]},
+      { id: 'q16', text: 'PREPARACIÓN REAL', type: 'likert', options: [
+        { value: 0, label: 'Ninguna' }, { value: 1, label: 'Parcial (empezar nota)' }, { value: 2, label: 'Completa (nota terminada, arreglos)' }
+      ]},
+      { id: 'q17', text: 'NOTA SUICIDA', type: 'likert', options: [
+        { value: 0, label: 'No escribió nota' }, { value: 1, label: 'Empezada pero no terminada' }, { value: 2, label: 'Nota completa' }
+      ]},
+      { id: 'q18', text: 'ACTOS FINALES', type: 'likert', options: [
+        { value: 0, label: 'Ninguno' }, { value: 1, label: 'Pensamientos o algunos arreglos' }, { value: 2, label: 'Arreglos definitivos' }
+      ]},
+      { id: 'q19', text: 'ENGAÑO/OCULTAMIENTO', type: 'likert', options: [
+        { value: 0, label: 'Reveló ideas abiertamente' }, { value: 1, label: 'Evitó el tema' }, { value: 2, label: 'Engañó, ocultó' }
+      ]},
+      { id: 'q20', text: 'INTENTOS PREVIOS', type: 'likert', includeInScore: false, options: [
+        { value: 0, label: 'Ninguno' }, { value: 1, label: 'Uno' }, { value: 2, label: 'Más de uno' }
+      ]},
+      { id: 'q21', text: 'INTENCIÓN DE MORIR EN ÚLTIMO INTENTO', type: 'likert', includeInScore: false, options: [
+        { value: 0, label: 'Baja' }, { value: 1, label: 'Moderada, ambivalente' }, { value: 2, label: 'Alta' }
+      ]}
+    ],
+    interpretationData: [
+      { from: 0, to: 5, severity: 'Baja', summary: 'Riesgo suicida bajo. Los síntomas de ideación son mínimos. Requiere seguimiento regular.' },
+      { from: 6, to: 9, severity: 'Moderada', summary: 'Riesgo suicida moderado. La ideación es presente y requiere evaluación semanal e intervención prioritaria.' },
+      { from: 10, to: 14, severity: 'Alta', summary: 'Riesgo suicida alto. La ideación es persistente, con planificación. Requiere plan de seguridad e intervención psiquiátrica urgente.' },
+      { from: 15, to: 38, severity: 'Alta', summary: 'Riesgo suicida muy alto. Presencia de planes detallados y capacidad. Requiere intervención de crisis y consideración de hospitalización.' }
     ]
   },
   {
