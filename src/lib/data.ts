@@ -17,14 +17,14 @@ export type Question = {
 };
 
 export type Interpretation = {
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta' | 'Mínima' | 'Grave';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave';
     summary: string;
 }
 
 export type InterpretationRule = {
     from: number;
     to: number;
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta' | 'Mínima' | 'Grave';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave';
     summary: string;
 };
 
@@ -357,10 +357,10 @@ const questionnairesData: Questionnaire[] = [
       ]
     }],
     interpretationData: [
-      { from: 0, to: 13, severity: 'Mínima', summary: 'Sintomatología depresiva mínima. Los síntomas son bajos o inexistentes.' },
-      { from: 14, to: 19, severity: 'Leve', summary: 'Sintomatología depresiva leve. Puede que experimente algunos síntomas que no son severos.' },
-      { from: 20, to: 28, severity: 'Moderada', summary: 'Sintomatología depresiva moderada. Se experimentan varios síntomas que pueden interferir con el funcionamiento diario.' },
-      { from: 29, to: 63, severity: 'Grave', summary: 'Sintomatología depresiva severa. Los síntomas son intensos y persistentes, afectando significativamente la vida diaria.' }
+      { from: 0, to: 13, severity: 'Mínima', summary: 'Sin depresión significativa o Subumbral.' },
+      { from: 14, to: 19, severity: 'Leve', summary: 'Síntomas leves de depresión.' },
+      { from: 20, to: 28, severity: 'Moderada', summary: 'Síntomas moderados de depresión. Se requiere atención clínica.' },
+      { from: 29, to: 63, severity: 'Grave', summary: 'Síntomas graves de depresión. Posible indicador de TDM.' },
     ]
   },
   {
@@ -572,10 +572,10 @@ const questionnairesData: Questionnaire[] = [
       ],
     }],
     interpretationData: [
-        { from: 0, to: 4, severity: 'Mínima', summary: 'Ansiedad no significativa.' },
-        { from: 5, to: 9, severity: 'Leve', summary: 'Ansiedad leve. Sugiere monitoreo.' },
-        { from: 10, to: 14, severity: 'Moderada', summary: 'Ansiedad moderada. Consistente con un posible Trastorno de Ansiedad Generalizada (TAG).' },
-        { from: 15, to: 21, severity: 'Grave', summary: 'Ansiedad grave. Alta preocupación que interfiere con el funcionamiento (Criterio D del TAG, DSM-5-TR).' }
+      { from: 0, to: 4, severity: 'Mínima', summary: 'Ansiedad no significativa.' },
+      { from: 5, to: 9, severity: 'Leve', summary: 'Ansiedad leve. Sugiere monitoreo.' },
+      { from: 10, to: 14, severity: 'Moderada', summary: 'Ansiedad moderada. Consistente con un posible Trastorno de Ansiedad Generalizada (TAG).' },
+      { from: 15, to: 21, severity: 'Grave', summary: 'Ansiedad grave. Alta preocupación que interfiere con el funcionamiento (Criterio D del TAG, DSM-5-TR).' }
     ]
   },
   {
@@ -600,7 +600,7 @@ const questionnairesData: Questionnaire[] = [
           { id: 'phq9_q2', text: 'Se ha sentido decaído, deprimido o sin esperanzas', type: 'likert' },
           { id: 'phq9_q3', text: 'Dificultad para dormir o permanecer dormido, o dormir demasiado', type: 'likert' },
           { id: 'phq9_q4', text: 'Se ha sentido cansado o con poca energía', type: 'likert' },
-          { id: 'phq9_q5', text: 'Sin apetito o ha comido en exceso', type: 'likert' },
+          { id: 'phq9_q5', text: 'Sin apetito o ha comido en exceso', type: 'liker' },
           { id: 'phq9_q6', text: 'Se ha sentido mal con usted mismo, que es un fracaso o que ha quedado mal con usted mismo o su familia', type: 'likert' },
           { id: 'phq9_q7', text: 'Dificultad para concentrarse en cosas como leer el periódico o ver TV', type: 'likert' },
           { id: 'phq9_q8', text: '¿Se ha movido o hablado tan lento que otras personas podrían haberlo notado? O lo contrario, muy inquieto o agitado, moviéndose más de lo usual', type: 'likert' },
@@ -629,11 +629,11 @@ const questionnairesData: Questionnaire[] = [
       }
     ],
     interpretationData: [
-      { "from": 0, "to": 4, "severity": 'Baja', "summary": "Depresión mínima. Monitoreo clínico o sin intervención." },
+      { "from": 0, "to": 4, "severity": 'Mínima', "summary": "Depresión mínima. Monitoreo clínico o sin intervención." },
       { "from": 5, "to": 9, "severity": 'Leve', "summary": "Depresión leve. Seguimiento/apoyo; considerar tratamiento si persiste." },
       { "from": 10, "to": 14, "severity": 'Moderada', "summary": "Depresión moderada. Considerar tratamiento con psicoterapia o medicación." },
-      { "from": 15, "to": 19, "severity": 'Moderada', "summary": "Depresión moderadamente severa. Tratamiento activo: psicoterapia más medicación." },
-      { "from": 20, "to": 27, "severity": 'Alta', "summary": "Depresión severa. Tratamiento inmediato e intensivo." }
+      { "from": 15, "to": 19, "severity": 'Moderada-Grave', "summary": "Depresión moderadamente severa. Tratamiento activo: psicoterapia más medicación." },
+      { "from": 20, "to": 27, "severity": 'Grave', "summary": "Depresión severa. Tratamiento inmediato e intensivo." }
     ]
   },
   {
@@ -755,7 +755,7 @@ const questionnairesData: Questionnaire[] = [
     id: 'plutchik-srs',
     description: 'Cuestionario de 15 ítems de respuesta Sí/No diseñado para evaluar la probabilidad de riesgo suicida en pacientes.',
     category: 'Riesgo Clínico',
-    subcategory: 'Ideación y Comportamiento Suicida',
+    subcategory: 'Riesgo Suicida',
     sections: [{
       sectionId: 'main',
       name: 'Escala de Riesgo Suicida de Plutchik',
@@ -794,18 +794,16 @@ const questionnairesData: Questionnaire[] = [
 // Almacenamiento en memoria para cuestionarios personalizados
 const customQuestionnaires: Map<string, Questionnaire> = new Map();
 
-export const questionnaires: Questionnaire[] = questionnairesData;
-
+export function getAllQuestionnaires(): Questionnaire[] {
+  return [...questionnairesData, ...Array.from(customQuestionnaires.values())];
+}
 
 export function saveCustomQuestionnaire(questionnaire: Omit<Questionnaire, 'id'>): Questionnaire {
   const id = `custom-${customQuestionnaires.size + 1}-${Date.now()}`;
   const newQuestionnaire = { ...questionnaire, id };
   customQuestionnaires.set(id, newQuestionnaire);
+  // Re-export or update the main list
   return newQuestionnaire;
-}
-
-export function getAllQuestionnaires(): Questionnaire[] {
-  return [...questionnaires, ...Array.from(customQuestionnaires.values())];
 }
 
 export function getQuestionnaire(id: string): Questionnaire | undefined {
