@@ -1,13 +1,13 @@
 // src/instruments/PSWQ.ts
 
-import type { EvaluationResult, PatientResults } from '@/lib/diagnosis';
+import type { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Severidad para PSWQ ---
 // Rangos estandarizados del PSWQ. Nota: No es una escala DSM, se usa para medir un rasgo central.
 export const PSWQ_SEVERITY_RANGES = [
-  { scoreMax: 44, severity: 'Baja', description: 'Niveles de preocupación habituales, no clínicos.' },
-  { scoreMax: 59, severity: 'Moderada', description: 'Tendencia elevada a la preocupación. Factor de riesgo para T. de Ansiedad.' },
-  { scoreMax: 80, severity: 'Alta', description: 'Preocupación crónica, incontrolable e intrusiva. Mecanismo clave del TAG (Criterio A y B).' },
+  { scoreMax: 44, severity: 'Bajo', description: 'Niveles de preocupación habituales, no clínicos.' },
+  { scoreMax: 59, severity: 'Moderado', description: 'Tendencia elevada a la preocupación. Factor de riesgo para T. de Ansiedad.' },
+  { scoreMax: 80, severity: 'Alto', description: 'Preocupación crónica, incontrolable e intrusiva. Mecanismo clave del TAG (Criterio A y B).' },
 ];
 
 /**
@@ -21,10 +21,10 @@ export function interpretPSWQScore(score: number): { severity: string, descripti
   const range = PSWQ_SEVERITY_RANGES.find(r => adjustedScore <= r.scoreMax);
 
   if (range) {
-    return { severity: range.severity as 'Baja' | 'Moderada' | 'Alta', description: range.description };
+    return { severity: range.severity as 'Bajo' | 'Moderado' | 'Alto', description: range.description };
   }
   
-  return { severity: 'Alta', description: 'Preocupación crónica e incontrolable.' };
+  return { severity: 'Alto', description: 'Preocupación crónica e incontrolable.' };
 }
 
 // --- II. Función para Generar el Resultado de Evaluación ---
@@ -37,7 +37,7 @@ export function interpretPSWQScore(score: number): { severity: string, descripti
  * @param score Puntuación bruta total del PSWQ.
  * @returns EvaluationResult para el PSWQ.
  */
-export function generatePSWQResult(score: number): EvaluationResult {
+export function generatePSWQResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretPSWQScore(score);
 
   return {
@@ -48,7 +48,7 @@ export function generatePSWQResult(score: number): EvaluationResult {
     // Escala de rasgo, no tiene ítem de riesgo suicida.
     suicideRisk: false, 
     contextDescription: interpretation.description
-  } as EvaluationResult;
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -59,7 +59,7 @@ export function generatePSWQResult(score: number): EvaluationResult {
  */
 export function simulatePSWQIntegration() {
     // Escenario clínico simulado: Preocupación Alta (Típico de TAG/Perfil C).
-    const pswqResult: EvaluationResult = generatePSWQResult(65); 
+    const pswqResult: EvaluationResultForDiagnosis = generatePSWQResult(65); 
 
     // Simular los resultados completos del paciente (solo para el contexto del PSWQ)
     const mockResults: PatientResults = {
@@ -80,3 +80,5 @@ export function simulatePSWQIntegration() {
     console.log(`Nivel de Rasgo de Preocupación: ${pswqResult.severity}`);
     console.log(`Implicación TCC: Este nivel alto dirige el protocolo hacia la Terapia Cognitiva, usando técnicas específicas para reducir la rumiación y la preocupación incontrolable (Criterio B del TAG).`);
 }
+
+// simulatePSWQIntegration(); // Descomentar para probar

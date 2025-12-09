@@ -1,6 +1,6 @@
 // src/instruments/PHQ-9.ts
 
-import { EvaluationResult, PatientResults } from '@/lib/diagnosis';
+import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Severidad para PHQ-9 ---
 // Rangos estandarizados del PHQ-9 para la interpretación clínica:
@@ -50,7 +50,7 @@ export function checkPHQ9SuicideRisk(item9Score: number): boolean {
  * @param item9Score Puntuación del ítem 9 específico (para riesgo suicida).
  * @returns EvaluationResult para el PHQ-9.
  */
-export function generatePHQ9Result(score: number, item9Score: number): EvaluationResult {
+export function generatePHQ9Result(score: number, item9Score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretPHQ9Score(score);
   const suicideRisk = checkPHQ9SuicideRisk(item9Score);
 
@@ -68,7 +68,7 @@ export function generatePHQ9Result(score: number, item9Score: number): Evaluatio
     severity: interpretation.severity, // Se mantiene la severidad de depresión general
     suicideRisk: suicideRisk, // Se activa la bandera para la función generatePatientProfile
     contextDescription: severityDescription 
-  } as EvaluationResult;
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -79,7 +79,7 @@ export function generatePHQ9Result(score: number, item9Score: number): Evaluatio
  */
 export function simulatePHQ9Integration() {
     // Escenario clínico simulado: Depresión Moderada-Grave CON Riesgo Activo.
-    const phq9Result: EvaluationResult = generatePHQ9Result(17, 2); // Score 17, Ítem 9: 2 (Más de la mitad de los días)
+    const phq9Result: EvaluationResultForDiagnosis = generatePHQ9Result(17, 2); // Score 17, Ítem 9: 2 (Más de la mitad de los días)
 
     // Simular los resultados completos del paciente
     const mockResults: PatientResults = {

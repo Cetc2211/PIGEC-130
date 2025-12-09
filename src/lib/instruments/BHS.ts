@@ -1,6 +1,6 @@
 // src/instruments/BHS.ts
 
-import { EvaluationResult, PatientResults } from '@/lib/diagnosis';
+import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Severidad para BHS ---
 // Rangos estandarizados de la BHS para la interpretación clínica:
@@ -49,7 +49,7 @@ export function checkBHSCognitiveRisk(score: number): boolean {
  * @param score Puntuación bruta total de la BHS.
  * @returns EvaluationResult para la BHS.
  */
-export function generateBHSResult(score: number): EvaluationResult {
+export function generateBHSResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretBHSScore(score);
   // La BHS se utiliza como un indicador de riesgo secundario (no de ideación activa)
   const cognitiveRisk = checkBHSCognitiveRisk(score);
@@ -70,7 +70,7 @@ export function generateBHSResult(score: number): EvaluationResult {
     // debe venir de un ítem de ideación activa (PHQ-9/SSI). Se incluye aquí para que el motor la vea.
     suicideRisk: cognitiveRisk, 
     contextDescription: severityDescription
-  } as EvaluationResult;
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -81,7 +81,7 @@ export function generateBHSResult(score: number): EvaluationResult {
  */
 export function simulateBHSIntegration() {
     // Escenario clínico simulado: Desesperanza Moderada-Grave.
-    const bhsResult: EvaluationResult = generateBHSResult(12); 
+    const bhsResult: EvaluationResultForDiagnosis = generateBHSResult(12); 
 
     // Simular los resultados completos del paciente (Comorbilidad BDI con BHS)
     const mockResults: PatientResults = {

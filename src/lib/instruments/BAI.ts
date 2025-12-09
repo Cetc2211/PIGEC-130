@@ -1,6 +1,6 @@
 // src/instruments/BAI.ts
 
-import type { EvaluationResult, PatientResults } from '../diagnosis';
+import type { EvaluationResultForDiagnosis, PatientResults } from '../diagnosis';
 
 // --- I. Definición de Rangos de Severidad para BAI ---
 // Rangos estandarizados del BAI para la interpretación clínica (foco en síntomas somáticos/fisiológicos de ansiedad):
@@ -34,7 +34,7 @@ export function interpretBAIScore(score: number): { severity: string, descriptio
  * @param score Puntuación bruta total del BAI.
  * @returns EvaluationResult para el BAI.
  */
-export function generateBAIResult(score: number): EvaluationResult {
+export function generateBAIResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretBAIScore(score);
 
   return {
@@ -45,7 +45,7 @@ export function generateBAIResult(score: number): EvaluationResult {
     // Se asume riesgo suicida como 'false' en el BAI, ya que no tiene ítems de ideación explícita.
     suicideRisk: false, 
     contextDescription: interpretation.description
-  } as EvaluationResult;
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -56,13 +56,13 @@ export function generateBAIResult(score: number): EvaluationResult {
  */
 export function simulateBAIIntegration() {
     // Escenario clínico simulado: Ansiedad Moderada.
-    const baiResult: EvaluationResult = generateBAIResult(24); 
+    const baiResult: EvaluationResultForDiagnosis = generateBAIResult(24); 
 
     // Simular los resultados completos del paciente (incluyendo BDI-II del ejemplo anterior)
     const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Depresión Leve (score: 15, item 9: 0)
-            { instrumentName: 'BDI-II', date: new Date('2025-12-05'), score: 15, severity: 'Leve', suicideRisk: false, contextDescription: 'Depresión Leve' },
+            { instrumentName: 'BDI-II', date: new Date('2025-12-05'), score: 15, severity: 'Leve', suicideRisk: false },
             baiResult // Ansiedad Moderada
         ]
     };

@@ -1,6 +1,6 @@
 // src/instruments/DAS.ts
 
-import { EvaluationResultForDiagnosis } from '@/lib/diagnosis';
+import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Actitudes Disfuncionales (DAS) ---
 // Rangos estandarizados de la DAS para la interpretación clínica:
@@ -62,7 +62,7 @@ export function simulateDASIntegration() {
     const dasResult: EvaluationResultForDiagnosis = generateDASResult(185); 
 
     // Simular los resultados completos del paciente
-    const mockResults = {
+    const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Moderada (score: 28, item 9: 0)
             { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 28, severity: 'Moderada', suicideRisk: false },
@@ -81,3 +81,4 @@ export function simulateDASIntegration() {
     console.log(`Nivel de Actitudes Disfuncionales: ${dasResult.severity}`);
     console.log(`Implicación TCC: Nivel alto indica la necesidad de priorizar la Reestructuración de Esquemas Nucleares (Terapia Cognitiva Profunda) para modificar las creencias rígidas subyacentes.`);
 }
+// simulateDASIntegration(); // Descomentar para probar

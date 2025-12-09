@@ -13,6 +13,7 @@ export type EvaluationResultForDiagnosis = {
   score: number;
   severity: string; // E.g., "Leve", "Moderada", "Alta"
   suicideRisk: boolean; // Indica si se respondió afirmativamente a una pregunta crítica
+  contextDescription?: string;
 };
 
 /**
@@ -102,6 +103,7 @@ function mapSeverityToNumber(severity: string): number {
       return 3;
     case 'moderada':
     case 'moderada-severa':
+    case 'moderada-grave':
       return 2;
     case 'leve':
       return 1;
@@ -140,7 +142,7 @@ export function generatePatientProfile(data: PatientResults): PatientProfile {
     return {
       profileId: 'inclasificable',
       name: 'INCLASIFICABLE (DATOS INSUFICIENTES)',
-      summary: 'No se encontraron puntuaciones recientes para los instrumentos clave (BDI-II, BAI, GAD-7) para aplicar la GII-M.',
+      summary: 'No se encontraron puntuaciones recientes para los instrumentos clave (BDI-II, PHQ-9, BAI, GAD-7) para aplicar la GII-M.',
       protocol: 'N/A',
       monitoringFrequency: 'N/A',
       recommendedInstruments: ['BDI-II', 'BAI', 'GAD-7'],

@@ -1,6 +1,6 @@
 // src/instruments/YMRS.ts
 
-import { EvaluationResult, PatientResults } from '@/lib/diagnosis';
+import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Severidad para YMRS ---
 // Rangos estandarizados de la YMRS para la interpretación clínica:
@@ -46,7 +46,7 @@ export function checkYMRSManicAlert(score: number): boolean {
  * @param score Puntuación bruta total de la YMRS.
  * @returns EvaluationResult para la YMRS.
  */
-export function generateYMRSResult(score: number): EvaluationResult {
+export function generateYMRSResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretYMRSScore(score);
   const manicAlert = checkYMRSManicAlert(score);
 
@@ -65,7 +65,7 @@ export function generateYMRSResult(score: number): EvaluationResult {
     // No es una escala de riesgo suicida directo, pero el riesgo es inherente al T. Bipolar
     suicideRisk: false, 
     contextDescription: severityDescription
-  } as EvaluationResult;
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -76,13 +76,13 @@ export function generateYMRSResult(score: number): EvaluationResult {
  */
 export function simulateYMRSIntegration() {
     // Escenario clínico simulado: Sospecha de Hipomanía (T. Bipolar II).
-    const ymrsResult: EvaluationResult = generateYMRSResult(18); 
+    const ymrsResult: EvaluationResultForDiagnosis = generateYMRSResult(18); 
 
     // Simular los resultados completos del paciente (Comorbilidad TDM con Alerta Maníaca)
     const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Depresión Grave (score: 30) -> Si no se aplica YMRS, sería Perfil B.
-            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 30, severity: 'Grave', suicideRisk: false, contextDescription: '' },
+            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 30, severity: 'Grave', suicideRisk: false },
             ymrsResult // Alerta Maníaca (Moderada)
         ]
     };

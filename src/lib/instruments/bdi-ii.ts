@@ -1,7 +1,6 @@
-// src/lib/instruments/BDI-II.ts
+// src/lib/instruments/bdi-ii.ts
 
-import type { EvaluationResult, PatientResults } from '@/lib/diagnosis';
-import { getLatestScore } from '@/lib/diagnosis';
+import type { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 
 // --- I. Definición de Rangos de Severidad para BDI-II ---
@@ -10,7 +9,7 @@ export const BDI_II_SEVERITY_RANGES = [
   { scoreMax: 13, severity: 'Mínima', description: 'Sin depresión significativa o Subumbral.' },
   { scoreMax: 19, severity: 'Leve', description: 'Síntomas leves de depresión.' },
   { scoreMax: 28, severity: 'Moderada', description: 'Síntomas moderados de depresión. Se requiere atención clínica.' },
-  { scoreMax: 63, severity: 'Alta', description: 'Síntomas graves de depresión. Posible indicador de TDM.' },
+  { scoreMax: 63, severity: 'Grave', description: 'Síntomas graves de depresión. Posible indicador de TDM.' },
 ];
 
 /**
@@ -50,7 +49,7 @@ export function checkBDIISuicideRisk(item9Score: number): boolean {
  * @param item9Score Puntuación del ítem 9 específico (para riesgo suicida).
  * @returns EvaluationResult para el BDI-II.
  */
-export function generateBDIResult(score: number, item9Score: number): EvaluationResult {
+export function generateBDIResult(score: number, item9Score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretBDIIScore(score);
   const suicideRisk = checkBDIISuicideRisk(item9Score);
 
@@ -67,7 +66,8 @@ export function generateBDIResult(score: number, item9Score: number): Evaluation
     score: score,
     severity: interpretation.severity,
     suicideRisk: suicideRisk,
-  } as EvaluationResult;
+    contextDescription: severityDescription,
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -78,7 +78,7 @@ export function generateBDIResult(score: number, item9Score: number): Evaluation
  */
 export function simulateBDIIntegration() {
     // Escenario clínico simulado: Depresión Moderada sin riesgo activo.
-    const bdiResult: EvaluationResult = generateBDIResult(22, 0); // Score 22 (Moderada), Ítem 9: 0 (No hay riesgo)
+    const bdiResult: EvaluationResultForDiagnosis = generateBDIResult(22, 0); // Score 22 (Moderada), Ítem 9: 0 (No hay riesgo)
 
     // Simular los resultados completos del paciente (solo BDI-II por ahora)
     const mockResults: PatientResults = {

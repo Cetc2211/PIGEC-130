@@ -1,6 +1,6 @@
 // src/instruments/AQ-10.ts
 
-import { EvaluationResult } from '@/lib/diagnosis';
+import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Severidad para AQ-10 ---
 // Rangos estandarizados del AQ-10 para la interpretación clínica:
@@ -34,7 +34,7 @@ export function interpretAQ10Score(score: number): { severity: string, descripti
  * @param score Puntuación bruta total del AQ-10.
  * @returns EvaluationResult para el AQ-10.
  */
-export function generateAQ10Result(score: number): EvaluationResult {
+export function generateAQ10Result(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretAQ10Score(score);
 
   return {
@@ -45,7 +45,7 @@ export function generateAQ10Result(score: number): EvaluationResult {
     severity: interpretation.severity, 
     suicideRisk: false, // No se utiliza para riesgo directo
     contextDescription: interpretation.description
-  } as EvaluationResult;
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -56,10 +56,10 @@ export function generateAQ10Result(score: number): EvaluationResult {
  */
 export function simulateAQ10Integration() {
     // Escenario clínico simulado: Cribado Positivo.
-    const aq10Result: EvaluationResult = generateAQ10Result(7); 
+    const aq10Result: EvaluationResultForDiagnosis = generateAQ10Result(7); 
 
     // Simular los resultados completos del paciente
-    const mockResults = {
+    const mockResults: PatientResults = {
         results: [
             // Simulación GAD-7: Ansiedad Moderada (que podría ser ansiedad social)
             { instrumentName: 'GAD-7', date: new Date('2025-12-01'), score: 13, severity: 'Moderada', suicideRisk: false },

@@ -1,6 +1,6 @@
 // src/instruments/GAD-7.ts
 
-import { EvaluationResult, PatientResults } from '@/lib/diagnosis';
+import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Severidad para GAD-7 ---
 // Rangos estandarizados del GAD-7 para la interpretación clínica (foco en la preocupación cognitiva):
@@ -35,7 +35,7 @@ export function interpretGAD7Score(score: number): { severity: string, descripti
  * @param score Puntuación bruta total del GAD-7.
  * @returns EvaluationResult para el GAD-7.
  */
-export function generateGAD7Result(score: number): EvaluationResult {
+export function generateGAD7Result(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretGAD7Score(score);
 
   return {
@@ -46,7 +46,7 @@ export function generateGAD7Result(score: number): EvaluationResult {
     // No se utiliza para activar directamente el Perfil D, sino el BDI-II/PHQ-9/SSI.
     suicideRisk: false, 
     contextDescription: interpretation.description
-  } as EvaluationResult;
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -57,7 +57,7 @@ export function generateGAD7Result(score: number): EvaluationResult {
  */
 export function simulateGAD7Integration() {
     // Escenario clínico simulado: Ansiedad Moderada.
-    const gad7Result: EvaluationResult = generateGAD7Result(11); 
+    const gad7Result: EvaluationResultForDiagnosis = generateGAD7Result(11); 
 
     // Simular los resultados completos del paciente (Comorbilidad)
     const mockResults: PatientResults = {
@@ -79,4 +79,7 @@ export function simulateGAD7Integration() {
     
     console.log("\n--- Interpretación Clínica y Perfil (Simulado) ---");
     console.log(`Severidad Ansiedad Cognitiva: ${gad7Result.severity}`);
-    console.log(`Diagnóstico Categórico GAD-7: Ansiedad moderada
+    console.log(`Diagnóstico Categórico GAD-7: Ansiedad moderada`);
+}
+
+// simulateGAD7Integration(); // Descomentar para probar

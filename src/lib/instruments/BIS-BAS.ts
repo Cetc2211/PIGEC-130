@@ -1,6 +1,6 @@
 // src/instruments/BIS-BAS.ts
 
-import { EvaluationResultForDiagnosis } from '@/lib/diagnosis';
+import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Severidad para BIS/BAS ---
 // El BIS/BAS produce dos puntuaciones principales:
@@ -87,7 +87,7 @@ export function simulateBISBASIntegration() {
     const bisbasResult: EvaluationResultForDiagnosis = generateBISBASResult(scoreBis, scoreBas); 
 
     // Simular los resultados completos del paciente (Comorbilidad BDI con BIS/BAS)
-    const mockResults = {
+    const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Moderada (score: 25, item 9: 0)
             { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 25, severity: 'Moderada', suicideRisk: false },
