@@ -6,7 +6,8 @@ export type LikertScaleOption = {
 export type Question = {
   id: string;
   text: string;
-  type: 'likert' | 'open'; // Added type
+  type: 'likert' | 'open';
+  options?: LikertScaleOption[]; // Opciones específicas para esta pregunta
 };
 
 export type Interpretation = {
@@ -42,6 +43,148 @@ const defaultLikertScale: LikertScaleOption[] = [
 ];
 
 export const questionnaires: Questionnaire[] = [
+  {
+    id: 'bdi-ii',
+    name: 'Inventario de Depresión de Beck-II',
+    description: 'Cuestionario de 21 ítems para evaluar la severidad de los síntomas de depresión en las últimas dos semanas.',
+    category: 'Estado de Ánimo',
+    subcategory: 'Depresión',
+    likertScale: [], // No usa una escala global
+    questions: [
+      { id: 'q1', text: 'TRISTEZA', type: 'likert', options: [
+        { value: 0, label: 'No me siento triste' },
+        { value: 1, label: 'Me siento triste gran parte del tiempo' },
+        { value: 2, label: 'Estoy triste todo el tiempo' },
+        { value: 3, label: 'Estoy tan triste o infeliz que no puedo soportarlo' }
+      ]},
+      { id: 'q2', text: 'PESIMISMO', type: 'likert', options: [
+        { value: 0, label: 'No estoy desalentado respecto a mi futuro' },
+        { value: 1, label: 'Me siento más desalentado respecto a mi futuro que antes' },
+        { value: 2, label: 'No espero que las cosas funcionen para mí' },
+        { value: 3, label: 'Siento que mi futuro es desesperanzador y que sólo empeorará' }
+      ]},
+      { id: 'q3', text: 'FRACASO', type: 'likert', options: [
+        { value: 0, label: 'No me siento como un fracasado' },
+        { value: 1, label: 'He fracasado más de lo que debería' },
+        { value: 2, label: 'Cuando miro hacia atrás veo muchos fracasos' },
+        { value: 3, label: 'Siento que como persona soy un fracaso total' }
+      ]},
+      { id: 'q4', text: 'PÉRDIDA DE PLACER', type: 'likert', options: [
+        { value: 0, label: 'Obtengo tanto placer como siempre de las cosas que disfruto' },
+        { value: 1, label: 'No disfruto de las cosas tanto como antes' },
+        { value: 2, label: 'Obtengo muy poco placer de las cosas que solía disfrutar' },
+        { value: 3, label: 'No obtengo ningún placer de las cosas que solía disfrutar' }
+      ]},
+      { id: 'q5', text: 'SENTIMIENTOS DE CULPA', type: 'likert', options: [
+        { value: 0, label: 'No me siento particularmente culpable' },
+        { value: 1, label: 'Me siento culpable respecto a muchas cosas que he hecho o debería haber hecho' },
+        { value: 2, label: 'Me siento bastante culpable la mayor parte del tiempo' },
+        { value: 3, label: 'Me siento culpable todo el tiempo' }
+      ]},
+      { id: 'q6', text: 'SENTIMIENTOS DE CASTIGO', type: 'likert', options: [
+        { value: 0, label: 'No siento que esté siendo castigado' },
+        { value: 1, label: 'Siento que podría ser castigado' },
+        { value: 2, label: 'Espero ser castigado' },
+        { value: 3, label: 'Siento que estoy siendo castigado' }
+      ]},
+      { id: 'q7', text: 'DISCONFORMIDAD CON UNO MISMO', type: 'likert', options: [
+        { value: 0, label: 'Me siento igual respecto a mí mismo que siempre' },
+        { value: 1, label: 'He perdido confianza en mí mismo' },
+        { value: 2, label: 'Estoy decepcionado de mí mismo' },
+        { value: 3, label: 'No me gusto a mí mismo' }
+      ]},
+      { id: 'q8', text: 'AUTOCRÍTICA', type: 'likert', options: [
+        { value: 0, label: 'No me critico o culpo más de lo habitual' },
+        { value: 1, label: 'Soy más crítico conmigo mismo de lo que solía ser' },
+        { value: 2, label: 'Me critico por todos mis errores' },
+        { value: 3, label: 'Me culpo por todo lo malo que sucede' }
+      ]},
+      { id: 'q9', text: 'PENSAMIENTOS O DESEOS SUICIDAS', type: 'likert', options: [
+        { value: 0, label: 'No tengo ningún pensamiento de suicidio' },
+        { value: 1, label: 'Tengo pensamientos de suicidio, pero no los llevaría a cabo' },
+        { value: 2, label: 'Me gustaría suicidarme' },
+        { value: 3, label: 'Me suicidaría si tuviera la oportunidad' }
+      ]},
+      { id: 'q10', text: 'LLANTO', type: 'likert', options: [
+        { value: 0, label: 'No lloro más de lo habitual' },
+        { value: 1, label: 'Lloro más de lo que solía hacerlo' },
+        { value: 2, label: 'Lloro por cualquier pequeñez' },
+        { value: 3, label: 'Siento ganas de llorar pero no puedo' }
+      ]},
+      { id: 'q11', text: 'AGITACIÓN', type: 'likert', options: [
+        { value: 0, label: 'No estoy más inquieto o nervioso que lo habitual' },
+        { value: 1, label: 'Me siento más inquieto o nervioso que lo habitual' },
+        { value: 2, label: 'Estoy tan inquieto que me es difícil quedarme quieto' },
+        { value: 3, label: 'Estoy tan inquieto que tengo que estar moviéndome o haciendo algo' }
+      ]},
+      { id: 'q12', text: 'PÉRDIDA DE INTERÉS', type: 'likert', options: [
+        { value: 0, label: 'No he perdido interés en otras personas o actividades' },
+        { value: 1, label: 'Estoy menos interesado en otras personas o cosas que antes' },
+        { value: 2, label: 'He perdido casi todo el interés en otras personas o cosas' },
+        { value: 3, label: 'Me es difícil interesarme en algo' }
+      ]},
+      { id: 'q13', text: 'INDECISIÓN', type: 'likert', options: [
+        { value: 0, label: 'Tomo decisiones tan bien como siempre' },
+        { value: 1, label: 'Me resulta más difícil tomar decisiones que lo habitual' },
+        { value: 2, label: 'Tengo mucha más dificultad para tomar decisiones que lo habitual' },
+        { value: 3, label: 'Tengo problemas para tomar cualquier decisión' }
+      ]},
+      { id: 'q14', text: 'DESVALORIZACIÓN', type: 'likert', options: [
+        { value: 0, label: 'No siento que sea inútil' },
+        { value: 1, label: 'No me considero tan valioso y útil como solía ser' },
+        { value: 2, label: 'Me siento más inútil comparado con otras personas' },
+        { value: 3, label: 'Me siento completamente inútil' }
+      ]},
+      { id: 'q15', text: 'PÉRDIDA DE ENERGÍA', type: 'likert', options: [
+        { value: 0, label: 'Tengo tanta energía como siempre' },
+        { value: 1, label: 'Tengo menos energía de la que solía tener' },
+        { value: 2, label: 'No tengo suficiente energía para hacer muchas cosas' },
+        { value: 3, label: 'No tengo energía para hacer nada' }
+      ]},
+      { id: 'q16', text: 'CAMBIOS EN EL PATRÓN DE SUEÑO', type: 'likert', options: [
+        { value: 0, label: 'No he experimentado ningún cambio en mi patrón de sueño' },
+        { value: 1, label: 'Duermo algo más de lo habitual / Duermo algo menos de lo habitual' },
+        { value: 2, label: 'Duermo mucho más de lo habitual / Duermo mucho menos de lo habitual' },
+        { value: 3, label: 'Duermo la mayor parte del día / Me despierto 1-2 horas más temprano y no puedo volver a dormir' }
+      ]},
+      { id: 'q17', text: 'IRRITABILIDAD', type: 'likert', options: [
+        { value: 0, label: 'No estoy más irritable que lo habitual' },
+        { value: 1, label: 'Estoy más irritable que lo habitual' },
+        { value: 2, label: 'Estoy mucho más irritable que lo habitual' },
+        { value: 3, label: 'Estoy irritable todo el tiempo' }
+      ]},
+      { id: 'q18', text: 'CAMBIOS EN EL APETITO', type: 'likert', options: [
+        { value: 0, label: 'No he experimentado ningún cambio en mi apetito' },
+        { value: 1, label: 'Mi apetito es algo menor de lo habitual / Mi apetito es algo mayor de lo habitual' },
+        { value: 2, label: 'Mi apetito es mucho menor que antes / Mi apetito es mucho mayor que antes' },
+        { value: 3, label: 'No tengo apetito en absoluto / Tengo ganas de comer todo el tiempo' }
+      ]},
+      { id: 'q19', text: 'DIFICULTAD DE CONCENTRACIÓN', type: 'likert', options: [
+        { value: 0, label: 'Puedo concentrarme tan bien como siempre' },
+        { value: 1, label: 'No puedo concentrarme tan bien como antes' },
+        { value: 2, label: 'Me es difícil concentrarme en algo por mucho tiempo' },
+        { value: 3, label: 'No puedo concentrarme en nada' }
+      ]},
+      { id: 'q20', text: 'CANSANCIO O FATIGA', type: 'likert', options: [
+        { value: 0, label: 'No estoy más cansado o fatigado que lo habitual' },
+        { value: 1, label: 'Me canso o fatigo más fácilmente que lo habitual' },
+        { value: 2, label: 'Estoy demasiado cansado o fatigado para hacer muchas cosas que solía hacer' },
+        { value: 3, label: 'Estoy demasiado cansado o fatigado para hacer la mayoría de las cosas que solía hacer' }
+      ]},
+      { id: 'q21', text: 'PÉRDIDA DE INTERÉS EN EL SEXO', type: 'likert', options: [
+        { value: 0, label: 'No he notado ningún cambio reciente en mi interés por el sexo' },
+        { value: 1, label: 'Estoy menos interesado en el sexo de lo que solía estar' },
+        { value: 2, label: 'Estoy mucho menos interesado en el sexo ahora' },
+        { value: 3, label: 'He perdido completamente el interés en el sexo' }
+      ]}
+    ],
+    interpretationData: [
+      { from: 0, to: 13, severity: 'Baja', summary: 'Sintomatología depresiva mínima. Los síntomas son bajos o inexistentes.' },
+      { from: 14, to: 19, severity: 'Leve', summary: 'Sintomatología depresiva leve. Puede que experimente algunos síntomas que no son severos.' },
+      { from: 20, to: 28, severity: 'Moderada', summary: 'Sintomatología depresiva moderada. Se experimentan varios síntomas que pueden interferir con el funcionamiento diario.' },
+      { from: 29, to: 63, severity: 'Alta', summary: 'Sintomatología depresiva severa. Los síntomas son intensos y persistentes, afectando significativamente la vida diaria.' }
+    ]
+  },
   {
     id: 'gad-7',
     name: 'Ansiedad GAD-7',

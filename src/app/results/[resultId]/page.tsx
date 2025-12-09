@@ -87,7 +87,8 @@ export default function ResultPage({ params }: ResultsPageProps) {
                         let displayAnswer: string;
 
                         if (question.type === 'likert') {
-                            const option = questionnaire.likertScale.find(o => o.value === Number(answer));
+                            const options = question.options || questionnaire.likertScale;
+                            const option = options.find(o => o.value === Number(answer));
                             displayAnswer = option ? `${option.label} (${answer})` : String(answer);
                         } else {
                             displayAnswer = String(answer);
