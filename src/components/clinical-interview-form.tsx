@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useActionState, useEffect } from 'react';
-import { Loader2, Save, AlertCircle, User, History, Syringe, Files } from 'lucide-react';
+import { Loader2, Save, AlertCircle, User, History, Syringe, Files, School, HeartPulse, BrainCircuit, Users } from 'lucide-react';
 import type { Patient } from '@/lib/store';
 import { saveClinicalInterviewAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -18,7 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Label } from './ui/label';
 
-// Corresponde a InterviewData en diagnosis.ts
+// Corresponde a la nueva estructura de dSIE.ts
 const interviewSchema = z.object({
   patientId: z.string(),
   motivoConsulta: z.string().min(10, 'El motivo de consulta es demasiado corto.'),
@@ -30,13 +30,15 @@ const interviewSchema = z.object({
   depresionDominante: z.boolean().default(false),
   disociacion: z.boolean().default(false),
   controlImpulsos: z.boolean().default(false),
-  traumaInfancia: z.boolean().default(false),
-  dinamicaFamiliar: z.string().min(10, 'La descripción de la dinámica familiar es demasiado corta.'),
+  complicacionesPrenatales: z.boolean().default(false),
+  hitosDesarrolloRetrasados: z.boolean().default(false),
+  dinamicaFamiliarNuclear: z.string().min(10, 'La descripción de la dinámica familiar es demasiado corta.'),
   desarrolloSexual: z.string().optional(),
   escolaridadProblemas: z.boolean().default(false),
+  relacionesInterpersonales: z.string().min(10, 'La descripción de las relaciones es demasiado corta.'),
+  traumaInfancia: z.boolean().default(false),
   afeccionMedicaCronica: z.string().optional(),
   consumoSustanciasActual: z.string().optional(),
-  impresionCIE11_DSM5: z.string().optional(),
   impresionDiagnosticoDiferencial: z.string().optional(),
 });
 
@@ -65,13 +67,15 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
       depresionDominante: false,
       disociacion: false,
       controlImpulsos: false,
-      traumaInfancia: false,
-      dinamicaFamiliar: '',
+      complicacionesPrenatales: false,
+      hitosDesarrolloRetrasados: false,
+      dinamicaFamiliarNuclear: '',
       desarrolloSexual: '',
       escolaridadProblemas: false,
+      relacionesInterpersonales: '',
+      traumaInfancia: false,
       afeccionMedicaCronica: '',
       consumoSustanciasActual: '',
-      impresionCIE11_DSM5: '',
       impresionDiagnosticoDiferencial: '',
     },
   });
@@ -96,7 +100,7 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
   return (
     <Card>
         <CardHeader>
-            <CardTitle>Entrevista Clínica Inicial</CardTitle>
+            <CardTitle>Entrevista Clínica Psicológica Aplicada (ECPA)</CardTitle>
             <CardDescription>Formato semi-estructurado para la recolección de información clínica esencial del paciente.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -150,11 +154,11 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                         </AccordionItem>
                         
                         <AccordionItem value="item-3">
-                             <AccordionTrigger className='font-semibold'><History className="mr-2" /> Fase III: Historia Clínica y Desarrollo</AccordionTrigger>
+                             <AccordionTrigger className='font-semibold'><History className="mr-2" /> Fase III: Historia Clínica y Desarrollo (ECPA)</AccordionTrigger>
                             <AccordionContent className="space-y-6 pt-4">
                                  <FormField control={form.control} name="historiaEnfermedadActual" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Historia de la Enfermedad Actual</FormLabel>
+                                        <FormLabel>Historia de la Enfermedad Actual (HMA)</FormLabel>
                                         <FormControl><Textarea placeholder="Inicio de los síntomas, evolución, factores desencadenantes y de mantenimiento..." {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -176,39 +180,49 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                                         )}/>
                                     </div>
                                  </div>
-                                  <FormField control={form.control} name="dinamicaFamiliar" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Dinámica Familiar</FormLabel>
-                                        <FormControl><Textarea placeholder="Relaciones con padres, hermanos, estructura familiar, si hay apoyo..." {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
-                                <FormField control={form.control} name="desarrolloSexual" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Historia del Desarrollo Sexual</FormLabel>
-                                        <FormControl><Textarea placeholder="Inicio de la vida sexual, orientación, relaciones significativas, dificultades..." {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
-                                 <div className="grid grid-cols-2 gap-4">
-                                     <FormField control={form.control} name="traumaInfancia" render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                            <FormLabel>Trauma en la Infancia (EAI)</FormLabel>
-                                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                  <div className="space-y-4 pt-4 border-t mt-4">
+                                    <h4 className="font-medium text-sm text-muted-foreground flex items-center"><BrainCircuit className="mr-2 h-4 w-4" /> Antecedentes del Desarrollo</h4>
+                                     <FormField control={form.control} name="dinamicaFamiliarNuclear" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Dinámica Familiar Nuclear</FormLabel>
+                                            <FormControl><Textarea placeholder="Relaciones con padres, hermanos, si hay apoyo explícito, conflictos..." {...field} /></FormControl>
+                                            <FormMessage />
                                         </FormItem>
                                     )}/>
-                                     <FormField control={form.control} name="escolaridadProblemas" render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                            <FormLabel>Problemas de Escolaridad</FormLabel>
-                                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    <FormField control={form.control} name="relacionesInterpersonales" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Relaciones Interpersonales (Pares)</FormLabel>
+                                            <FormControl><Textarea placeholder="Calidad de los vínculos con amigos, pareja, si hay aislamiento..." {...field} /></FormControl>
+                                            <FormMessage />
                                         </FormItem>
                                     )}/>
-                                 </div>
+                                    <FormField control={form.control} name="desarrolloSexual" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Historia del Desarrollo Sexual</FormLabel>
+                                            <FormControl><Textarea placeholder="Inicio de la vida sexual, orientación, identidad, relaciones significativas, dificultades..." {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                     <div className="grid grid-cols-2 gap-4">
+                                        <FormField control={form.control} name="complicacionesPrenatales" render={({ field }) => (
+                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><FormLabel>Complicaciones Prenatales</FormLabel><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
+                                        )}/>
+                                         <FormField control={form.control} name="hitosDesarrolloRetrasados" render={({ field }) => (
+                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><FormLabel>Retrasos en Hitos del Desarrollo</FormLabel><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
+                                        )}/>
+                                        <FormField control={form.control} name="traumaInfancia" render={({ field }) => (
+                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><FormLabel>Trauma en la Infancia (EAI)</FormLabel><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
+                                        )}/>
+                                         <FormField control={form.control} name="escolaridadProblemas" render={({ field }) => (
+                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><FormLabel>Problemas de Escolaridad</FormLabel><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
+                                        )}/>
+                                     </div>
+                                  </div>
                             </AccordionContent>
                         </AccordionItem>
                         
                         <AccordionItem value="item-4">
-                             <AccordionTrigger className='font-semibold'><Syringe className="mr-2" /> Fase IV: Factores Médicos y Uso de Sustancias</AccordionTrigger>
+                             <AccordionTrigger className='font-semibold'><HeartPulse className="mr-2" /> Fase IV: Etiología, Contexto y Comorbilidad</AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-4">
                                 <FormField control={form.control} name="afeccionMedicaCronica" render={({ field }) => (
                                     <FormItem>
@@ -232,17 +246,10 @@ export function ClinicalInterviewForm({ patient }: ClinicalInterviewFormProps) {
                         <AccordionItem value="item-5">
                              <AccordionTrigger className='font-semibold'><Files className="mr-2" /> Fase V: Impresión Diagnóstica del Clínico</AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-4">
-                                 <FormField control={form.control} name="impresionCIE11_DSM5" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Impresión Diagnóstica (DSM-5 / CIE-11)</FormLabel>
-                                        <FormControl><Textarea placeholder="Ej: F41.1 Trastorno de Ansiedad Generalizada; 6B00..." {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
                                   <FormField control={form.control} name="impresionDiagnosticoDiferencial" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Diagnóstico Diferencial</FormLabel>
-                                        <FormControl><Textarea placeholder="Ej: Se descarta Trastorno de Pánico por ausencia de crisis inesperadas..." {...field} /></FormControl>
+                                        <FormLabel>Hipótesis de Diagnóstico Diferencial</FormLabel>
+                                        <FormControl><Textarea placeholder="Ej: Se descarta Trastorno de Pánico por ausencia de crisis inesperadas. Se debe diferenciar de Trastorno de Adaptación..." {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}/>

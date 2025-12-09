@@ -482,27 +482,30 @@ export type SaveInterviewState = {
   errors?: Record<string, any>;
 }
 
-// Corresponde a InterviewData en diagnosis.ts
+// Corresponde a la nueva estructura de dSIE.ts
 const interviewSchema = z.object({
   patientId: z.string(),
   motivoConsulta: z.string().min(10, 'El motivo de consulta es demasiado corto.'),
   expectativasTratamiento: z.string().min(10, 'Las expectativas son demasiado cortas.'),
-  riesgoSuicidaActivo: z.boolean(),
-  crisisPsicotica: z.boolean(),
+  riesgoSuicidaActivo: z.boolean().default(false),
+  crisisPsicotica: z.boolean().default(false),
   historiaEnfermedadActual: z.string().min(20, 'La historia de la enfermedad es demasiado corta.'),
-  ansiedadDominante: z.boolean(),
-  depresionDominante: z.boolean(),
-  disociacion: z.boolean(),
-  controlImpulsos: z.boolean(),
-  traumaInfancia: z.boolean(),
-  dinamicaFamiliar: z.string().min(10, 'La descripción de la dinámica familiar es demasiado corta.'),
+  ansiedadDominante: z.boolean().default(false),
+  depresionDominante: z.boolean().default(false),
+  disociacion: z.boolean().default(false),
+  controlImpulsos: z.boolean().default(false),
+  complicacionesPrenatales: z.boolean().default(false),
+  hitosDesarrolloRetrasados: z.boolean().default(false),
+  dinamicaFamiliarNuclear: z.string().min(10, 'La descripción de la dinámica familiar es demasiado corta.'),
   desarrolloSexual: z.string().optional(),
-  escolaridadProblemas: z.boolean(),
+  escolaridadProblemas: z.boolean().default(false),
+  relacionesInterpersonales: z.string().min(10, 'La descripción de las relaciones es demasiado corta.'),
+  traumaInfancia: z.boolean().default(false),
   afeccionMedicaCronica: z.string().optional(),
   consumoSustanciasActual: z.string().optional(),
-  impresionCIE11_DSM5: z.string().optional(),
   impresionDiagnosticoDiferencial: z.string().optional(),
 });
+
 
 export async function saveClinicalInterviewAction(
   prevState: SaveInterviewState,
@@ -520,13 +523,15 @@ export async function saveClinicalInterviewAction(
         depresionDominante: formData.get('depresionDominante') === 'on',
         disociacion: formData.get('disociacion') === 'on',
         controlImpulsos: formData.get('controlImpulsos') === 'on',
-        traumaInfancia: formData.get('traumaInfancia') === 'on',
-        dinamicaFamiliar: formData.get('dinamicaFamiliar'),
+        complicacionesPrenatales: formData.get('complicacionesPrenatales') === 'on',
+        hitosDesarrolloRetrasados: formData.get('hitosDesarrolloRetrasados') === 'on',
+        dinamicaFamiliarNuclear: formData.get('dinamicaFamiliarNuclear'),
         desarrolloSexual: formData.get('desarrolloSexual'),
         escolaridadProblemas: formData.get('escolaridadProblemas') === 'on',
+        relacionesInterpersonales: formData.get('relacionesInterpersonales'),
+        traumaInfancia: formData.get('traumaInfancia') === 'on',
         afeccionMedicaCronica: formData.get('afeccionMedicaCronica'),
         consumoSustanciasActual: formData.get('consumoSustanciasActual'),
-        impresionCIE11_DSM5: formData.get('impresionCIE11_DSM5'),
         impresionDiagnosticoDiferencial: formData.get('impresionDiagnosticoDiferencial'),
     };
     
