@@ -11,20 +11,23 @@ export type Question = {
   includeInScore?: boolean; // Por defecto es true. Si es false, no se suma al score.
   scoring?: { // Lógica de puntuación personalizada por coincidencia
     type: 'match';
-    value: number; 
+    value: number;
+  } | {
+    type: 'aq-10';
+    agreesIsOne: boolean; // Si es true, "De acuerdo" da 1 punto. Si es false, "En desacuerdo" da 1 punto.
   };
   scoringDirection?: 'Directa' | 'Inversa'; // Para puntuación directa o inversa
 };
 
 export type Interpretation = {
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo';
     summary: string;
 }
 
 export type InterpretationRule = {
     from: number;
     to: number;
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo';
     summary: string;
 };
 
@@ -414,7 +417,7 @@ const questionnairesData: Questionnaire[] = [
     id: 'bhs',
     name: 'Escala de Desesperanza de Beck',
     description: 'Instrumento de 20 ítems de Verdadero/Falso para medir el grado de expectativas negativas sobre el futuro (desesperanza).',
-    category: 'Estado de Ánimo',
+    category: 'Riesgo Clínico',
     subcategory: 'Desesperanza',
     sections: [{
       sectionId: 'main',
@@ -1059,6 +1062,40 @@ const questionnairesData: Questionnaire[] = [
         { from: 25, to: 60, severity: 'Grave', summary: 'Episodio Maníaco o Mixto Grave probable. Indicador clave de T. Bipolar I (DSM-5).' }
     ]
   },
+  {
+    name: "Cociente de Espectro Autista (AQ-10)",
+    id: "aq-10",
+    description: "Cuestionario de 10 ítems para el cribado rápido de rasgos del espectro autista en adultos.",
+    category: "Diagnóstico Diferencial",
+    subcategory: "Espectro Autista",
+    sections: [{
+        sectionId: "main",
+        name: "AQ-10",
+        instructions: "Responda a las siguientes afirmaciones según qué tan bien describen su experiencia.",
+        likertScale: [
+            { value: 3, label: "Totalmente de acuerdo" },
+            { value: 2, label: "Ligeramente de acuerdo" },
+            { value: 1, label: "Ligeramente en desacuerdo" },
+            { value: 0, label: "Totalmente en desacuerdo" },
+        ],
+        questions: [
+            { id: "aq10_q1", text: "Frecuentemente noto pequeños sonidos que otros no notan.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
+            { id: "aq10_q2", text: "Usualmente me concentro más en la imagen general que en los pequeños detalles.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q3", text: "Encuentro fácil hacer más de una cosa a la vez.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q4", text: "Si hay una interrupción, puedo volver a lo que estaba haciendo muy rápidamente.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q5", text: "Encuentro fácil 'leer entre líneas' cuando alguien me habla.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q6", text: "Sé cómo saber si alguien que me escucha se está aburriendo.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q7", text: "Cuando leo una historia, encuentro difícil imaginar cómo se ven los personajes.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
+            { id: "aq10_q8", text: "Me gusta coleccionar información sobre categorías de cosas (p. ej., tipos de carros, pájaros, trenes, plantas).", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
+            { id: 'aq10_q9', text: "Encuentro fácil entender lo que otras personas están pensando o sintiendo.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q10", text: "Encuentro difícil entender la intención de las personas.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
+        ]
+    }],
+    interpretationData: [
+        { from: 0, to: 5, severity: "Negativo", summary: "Cribado negativo para rasgos del Espectro Autista." },
+        { from: 6, to: 10, severity: "Positivo", summary: "Cribado positivo. Se requiere evaluación diagnóstica integral." }
+    ]
+  },
 ];
 
 // Almacenamiento en memoria para cuestionarios personalizados
@@ -1109,3 +1146,92 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
 
 
+
+```
+  </change>
+  <change>
+    <file>src/lib/instruments/AQ-10.ts</file>
+    <content><![CDATA[// src/instruments/AQ-10.ts
+
+import { EvaluationResult } from '@/lib/diagnosis';
+
+// --- I. Definición de Rangos de Severidad para AQ-10 ---
+// Rangos estandarizados del AQ-10 para la interpretación clínica:
+export const AQ10_CUTOFF = 6; // Punto de corte común para un cribado positivo.
+
+/**
+ * Traduce la puntuación bruta del AQ-10 a una indicación de cribado.
+ * @param score Puntuación bruta del AQ-10 (rango 0-10).
+ * @returns {severity: string, description: string}
+ */
+export function interpretAQ10Score(score: number): { severity: string, description: string } {
+  
+  if (score >= AQ10_CUTOFF) {
+      return { 
+          severity: 'Positivo', 
+          description: `Cribado positivo para rasgos del Espectro Autista. Puntuación (${score}/${AQ10_CUTOFF}+). Se requiere una Evaluación Diagnóstica Integral de TEA.` 
+      };
+  } else {
+      return { 
+          severity: 'Negativo', 
+          description: `Cribado negativo para rasgos del Espectro Autista. La sintomatología se explica mejor por el diagnóstico primario (e.g., Trastorno de Ansiedad Social).` 
+      };
+  }
+}
+
+// --- II. Función para Generar el Resultado de Evaluación ---
+
+/**
+ * Genera el objeto EvaluationResult para el AQ-10.
+ *
+ * @param score Puntuación bruta total del AQ-10.
+ * @returns EvaluationResult para el AQ-10.
+ */
+export function generateAQ10Result(score: number): EvaluationResult {
+  const interpretation = interpretAQ10Score(score);
+
+  return {
+    instrumentName: 'AQ-10',
+    date: new Date(),
+    score: score,
+    // La severidad es Binaria: Positivo o Negativo
+    severity: interpretation.severity, 
+    suicideRisk: false, // No se utiliza para riesgo directo
+    contextDescription: interpretation.description
+  } as EvaluationResult;
+}
+
+
+// --- III. Ejemplo de Integración y Simulación ---
+
+/**
+ * Simula la integración de un resultado de AQ-10 en el motor de diagnóstico.
+ */
+export function simulateAQ10Integration() {
+    // Escenario clínico simulado: Cribado Positivo.
+    const aq10Result: EvaluationResult = generateAQ10Result(7); 
+
+    // Simular los resultados completos del paciente
+    const mockResults = {
+        results: [
+            // Simulación GAD-7: Ansiedad Moderada (que podría ser ansiedad social)
+            { instrumentName: 'GAD-7', date: new Date('2025-12-01'), score: 13, severity: 'Moderada', suicideRisk: false },
+            aq10Result // Cribado Positivo
+        ]
+    };
+    
+    // Si esta simulación fuera alimentada al motor dSIE:
+    // La función generateClinicalImpression debe incluir la referencia de "TEA/T. de Comunicación"
+    // en el Diagnóstico Diferencial, ya que los síntomas de ansiedad/social pueden ser
+    // secundarios al TEA (DSM-5 Criterio E del Mutismo Selectivo/Ansiedad Social).
+
+    console.log("--- AQ-10 Resultado para Integración ---");
+    console.log(aq10Result);
+    
+    console.log("\n--- Interpretación Clínica y Diagnóstico Diferencial (Simulado) ---");
+    console.log(`Cribado TEA: ${aq10Result.severity}`);
+    console.log(`Implicación Diagnóstica (DSM-5): Si el GAD-7 es alto, se debe diferenciar si la ansiedad social es primaria o es secundaria al déficit de comunicación/intereses restringidos del TEA.`);
+    console.log(`Próximo Paso: Interconsulta para Evaluación Funcional Completa de TEA.`);
+}
+
+// simulateAQ10Integration(); // Descomentar para probar

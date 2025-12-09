@@ -63,6 +63,16 @@ export async function submitEvaluation(
 
         if (question.scoring?.type === 'match') {
           scoreForQuestion = value === question.scoring.value ? 1 : 0;
+        } else if (question.scoring?.type === 'aq-10') {
+            const agrees = value === 3 || value === 2; // "Totalmente de acuerdo" o "Ligeramente de acuerdo"
+            const disagrees = value === 1 || value === 0; // "Ligeramente en desacuerdo" o "Totalmente en desacuerdo"
+            if (question.scoring.agreesIsOne && agrees) {
+                scoreForQuestion = 1;
+            } else if (!question.scoring.agreesIsOne && disagrees) {
+                scoreForQuestion = 1;
+            } else {
+                scoreForQuestion = 0;
+            }
         } else if (question.scoringDirection === 'Inversa') {
           const maxScaleValue = Math.max(...section.likertScale.map(o => o.value));
           const minScaleValue = Math.min(...section.likertScale.map(o => o.value));
@@ -86,7 +96,7 @@ export async function submitEvaluation(
     sectionTotalPossible = section.questions
       .filter(q => q.type === 'likert' && q.includeInScore !== false)
       .reduce((total, q) => {
-          if (q.scoring?.type === 'match') {
+          if (q.scoring?.type === 'match' || q.scoring?.type === 'aq-10') {
             return total + 1;
           }
           if (q.scoringDirection === 'Inversa') {
