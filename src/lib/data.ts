@@ -546,39 +546,6 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
     ]
   },
   {
-    name: 'Ansiedad GAD-7',
-    id: 'gad-7',
-    description: 'Una herramienta de 7 preguntas para la detección del Trastorno de Ansiedad Generalizada.',
-    category: 'Estado de Ánimo',
-    subcategory: 'Ansiedad',
-    sections: [{
-      sectionId: 'main',
-      name: 'Ansiedad GAD-7',
-      instructions: 'En las últimas dos semanas, ¿con qué frecuencia se ha sentido molesto/a por los siguientes problemas?',
-      likertScale: [
-        { value: 0, label: 'Para nada' },
-        { value: 1, label: 'Varios días' },
-        { value: 2, label: 'Más de la mitad de los días' },
-        { value: 3, label: 'Casi todos los días' },
-      ],
-      questions: [
-        { id: 'gad7_q1', text: 'Sentirse nervioso/a, ansioso/a o con los nervios de punta', type: 'likert' },
-        { id: 'gad7_q2', text: 'No poder detener o controlar la preocupación', type: 'likert' },
-        { id: 'gad7_q3', text: 'Preocuparse demasiado por diferentes cosas', type: 'likert' },
-        { id: 'gad7_q4', text: 'Dificultad para relajarse', type: 'likert' },
-        { id: 'gad7_q5', text: 'Estar tan inquieto/a que es difícil quedarse quieto/a', type: 'likert' },
-        { id: 'gad7_q6', text: 'Ponerse fácilmente irritable o enfadado/a', type: 'likert' },
-        { id: 'gad7_q7', text: 'Sentir miedo, como si algo horrible pudiera pasar', type: 'likert' },
-      ],
-    }],
-    interpretationData: [
-        { from: 0, to: 4, severity: 'Baja', summary: 'Ansiedad mínima. Es probable que los síntomas sean transitorios y no causen una angustia significativa.' },
-        { from: 5, to: 9, severity: 'Leve', summary: 'Ansiedad leve. Puede experimentar algunos síntomas, pero generalmente son manejables.' },
-        { from: 10, to: 14, severity: 'Moderada', summary: 'Ansiedad moderada. Los síntomas son frecuentes y causan un deterioro notable en el funcionamiento diario.' },
-        { from: 15, to: 21, severity: 'Alta', summary: 'Ansiedad severa. Los síntomas son persistentes, angustiantes e interfieren significativamente con la vida diaria.' },
-    ],
-  },
-  {
     id: 'phq-9',
     name: 'Cuestionario de Salud del Paciente (PHQ-9)',
     description: 'Instrumento de 9 ítems para el cribado, diagnóstico y medición de la severidad de la depresión mayor, basado en criterios del DSM.',
