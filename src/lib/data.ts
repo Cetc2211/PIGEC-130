@@ -869,6 +869,64 @@ const questionnairesData: Questionnaire[] = [
       { from: 151, to: 240, severity: 'Alta', summary: 'Rigidez cognitiva alta. Implica que el paciente basa su valía en reglas rígidas y disfuncionales (ej. Perfeccionismo, dependencia). Foco de la TCC.' }
     ]
   },
+  {
+    name: 'Escalas BIS/BAS',
+    id: 'bis-bas',
+    description: 'Mide la sensibilidad de los sistemas de inhibición (BIS) y activación (BAS) conductual, dos sistemas neurobiológicos fundamentales de la personalidad.',
+    category: 'Personalidad y Estado',
+    subcategory: 'Sistemas Motivacionales',
+    sections: [
+        {
+            sectionId: 'bis',
+            name: 'Escala BIS (Sensibilidad al Castigo)',
+            instructions: 'Para cada afirmación, indique qué tan de acuerdo está.',
+            likertScale: [
+                { value: 1, label: 'Muy en desacuerdo' },
+                { value: 2, label: 'Algo en desacuerdo' },
+                { value: 3, label: 'Algo de acuerdo' },
+                { value: 4, label: 'Muy de acuerdo' }
+            ],
+            questions: [
+                { id: 'bisbas_q1', text: 'Si pienso que algo desagradable va a pasar, normalmente me pongo muy tenso/a.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q2', text: 'Criticas y regaños me duelen bastante.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q3', text: 'Me siento muy preocupado/a o tenso/a cuando creo que he hecho algo mal.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q4', text: 'Soy una persona bastante preocupada.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q5', text: 'Incluso si algo malo me pasa, rara vez me afecta mucho.', type: 'likert', scoringDirection: 'Inversa' },
+                { id: 'bisbas_q6', text: 'Me siento ansioso/a cuando voy a ser criticado/a.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q7', text: 'Tengo muy pocas preocupaciones.', type: 'likert', scoringDirection: 'Inversa' }
+            ]
+        },
+        {
+            sectionId: 'bas',
+            name: 'Escala BAS (Sensibilidad a la Recompensa)',
+            instructions: 'Para cada afirmación, indique qué tan de acuerdo está.',
+            likertScale: [
+                { value: 1, label: 'Muy en desacuerdo' },
+                { value: 2, label: 'Algo en desacuerdo' },
+                { value: 3, label: 'Algo de acuerdo' },
+                { value: 4, label: 'Muy de acuerdo' }
+            ],
+            questions: [
+                { id: 'bisbas_q8', text: 'Cuando consigo algo que quiero, me siento emocionado/a y con energía.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q9', text: 'Cuando estoy haciendo algo que me gusta, me involucro mucho.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q10', text: 'Haría cualquier cosa por conseguir las cosas que me gustan.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q11', text: 'Me entusiasma y me excita mucho cuando estoy buscando cosas buenas.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q12', text: 'Cuando veo una oportunidad para algo que me gusta, me emociono inmediatamente.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q13', text: 'Busco la emoción y las nuevas sensaciones.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q14', text: 'Me encanta probar cosas nuevas.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q15', text: 'Me aburro fácilmente.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q16', text: 'Me dejo llevar por el momento.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q17', text: 'Hago lo que sea para obtener las cosas que quiero.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q18', text: 'Cuando las cosas buenas me suceden, me afecta fuertemente.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q19', text: 'Es más importante para mí actuar en el momento que pensar en el futuro.', type: 'likert', scoringDirection: 'Directa' },
+                { id: 'bisbas_q20', text: 'A menudo hago cosas por capricho.', type: 'likert', scoringDirection: 'Directa' }
+            ]
+        }
+    ],
+    interpretationData: [
+        { from: 0, to: 100, severity: 'Baja', summary: 'La interpretación depende de la combinación de puntuaciones BIS y BAS.' }
+    ]
+  },
 ];
 
 // Almacenamiento en memoria para cuestionarios personalizados
@@ -914,6 +972,7 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+
 
 
 
