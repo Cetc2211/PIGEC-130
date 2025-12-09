@@ -20,14 +20,14 @@ export type Question = {
 };
 
 export type Interpretation = {
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo' | 'Optimista' | 'Intermedio' | 'Pesimista' | 'Vulnerabilidad Depresiva' | 'Vulnerabilidad Ansiosa' | 'Mixta/Típica';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo' | 'Optimista' | 'Intermedio' | 'Pesimista' | 'Vulnerabilidad Depresiva' | 'Vulnerabilidad Ansiosa' | 'Mixta/Típica' | 'Específico y Vívido' | 'Genérico/Ambiguo' | 'Abstracto/Vision de Túnel';
     summary: string;
 }
 
 export type InterpretationRule = {
     from: number;
     to: number;
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo' | 'Optimista' | 'Intermedio' | 'Pesimista' | 'Vulnerabilidad Depresiva' | 'Vulnerabilidad Ansiosa' | 'Mixta/Típica';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo' | 'Optimista' | 'Intermedio' | 'Pesimista' | 'Vulnerabilidad Depresiva' | 'Vulnerabilidad Ansiosa' | 'Mixta/Típica' | 'Específico y Vívido' | 'Genérico/Ambiguo' | 'Abstracto/Vision de Túnel';
     summary: string;
 };
 
@@ -221,8 +221,8 @@ const questionnairesData: Questionnaire[] = [
         ]
     }],
     interpretationData: [
-      { from: 0, to: 5, severity: "Negativo", summary: "Cribado negativo para rasgos del Espectro Autista." },
-      { from: 6, to: 10, severity: "Positivo", summary: "Cribado positivo. Se requiere evaluación diagnóstica integral." }
+        { from: 0, to: 5, severity: 'Negativo', summary: 'Cribado negativo para rasgos del Espectro Autista.' },
+        { from: 6, to: 10, severity: 'Positivo', summary: 'Cribado positivo. Se requiere una Evaluación Diagnóstica Integral de TEA.' },
     ]
   },
   {
@@ -562,7 +562,7 @@ const questionnairesData: Questionnaire[] = [
         }
     ],
     interpretationData: [
-        { from: 0, to: 100, severity: 'Baja', summary: 'La interpretación depende de la combinación de puntuaciones BIS y BAS.' }
+        { from: 0, to: 100, severity: 'Vulnerabilidad Depresiva', summary: 'La interpretación depende de la combinación de puntuaciones BIS y BAS.' }
     ]
   },
   {
@@ -698,126 +698,7 @@ const questionnairesData: Questionnaire[] = [
     ]
   },
   {
-    name: 'Escala de Actitudes Disfuncionales (DAS)',
-    id: 'das',
-    description: 'Mide esquemas cognitivos y creencias irracionales subyacentes, como la necesidad de aprobación o el perfeccionismo.',
-    category: 'Evaluación Profunda de Mecanismos (Post-Tamizaje)',
-    subcategory: 'Mecanismos Cognitivo-Conductuales',
-    sections: [{
-      sectionId: 'main',
-      name: 'Escala de Actitudes Disfuncionales',
-      instructions: 'Indique su grado de acuerdo con las siguientes afirmaciones.',
-      likertScale: [
-        { value: 1, label: 'Totalmente en desacuerdo' },
-        { value: 2, label: 'Bastante en desacuerdo' },
-        { value: 3, label: 'Ligeramente en desacuerdo' },
-        { value: 4, label: 'Indiferente' },
-        { value: 5, label: 'Ligeramente de acuerdo' },
-        { value: 6, label: 'Bastante de acuerdo' },
-        { value: 7, label: 'Totalmente de acuerdo' },
-      ],
-      questions: [
-        { id: 'das_q1', text: 'Es difícil ser feliz si no eres guapo, inteligente, rico y creativo.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'das_q2', text: 'Mi valor como persona depende en gran medida de lo que otros piensen de mí.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'das_q3', text: 'Si cometo un error, es probable que la gente me menosprecie.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'das_q4', text: 'Si no puedo hacer algo bien, no debería hacerlo en absoluto.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'das_q5', text: 'No puedo ser feliz si no le gusto a todo el mundo.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'das_q6', text: 'Es mejor abandonar las propias necesidades que disgustar a los demás.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'das_q7', text: 'Debo tener éxito en todo lo que emprendo.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'das_q8', text: 'Si alguien a quien quiero me rechaza, significa que no soy digno de ser amado.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'das_q9', text: 'Mi felicidad depende más de los demás que de mí mismo.', type: 'likert', scoringDirection: 'Inversa' },
-        { id: 'das_q10', text: 'Si no soy el mejor en mi trabajo, entonces soy un fracasado.', type: 'likert', scoringDirection: 'Directa' }
-      ],
-    }],
-    interpretationData: [
-      { from: 10, to: 100, severity: 'Baja', summary: 'Esquemas cognitivos predominantemente funcionales.' },
-      { from: 101, to: 150, severity: 'Moderada', summary: 'Rigidez cognitiva moderada. Requiere identificación y flexibilización de reglas.' },
-      { from: 151, to: 240, severity: 'Alta', summary: 'Rigidez cognitiva alta. Implica que el paciente basa su valía en reglas rígidas y disfuncionales (ej. Perfeccionismo, dependencia). Foco de la TCC.' }
-    ]
-  },
-  {
-    name: 'Cuestionario de Preocupación de Penn State (PSWQ)',
-    id: 'pswq',
-    description: 'Cuestionario de 16 ítems que mide el rasgo de preocupación, un componente central del trastorno de ansiedad generalizada.',
-    category: 'Evaluación Profunda de Mecanismos (Post-Tamizaje)',
-    subcategory: 'Mecanismos Cognitivo-Conductuales',
-    sections: [{
-      sectionId: 'main',
-      name: 'Cuestionario de Preocupación de Penn State',
-      instructions: 'Marque el número que mejor describa qué tan típico es para usted cada uno de los siguientes enunciados.',
-      likertScale: [
-        { value: 1, label: 'Para nada típico en mí' },
-        { value: 2, label: 'Poco típico en mí' },
-        { value: 3, label: 'Algo típico en mí' },
-        { value: 4, label: 'Bastante típico en mí' },
-        { value: 5, label: 'Muy típico en mí' }
-      ],
-      questions: [
-        { id: 'pswq_q1', text: 'Si pudiera evitarlo, no pasaría mucho tiempo preocupándome.', type: 'likert', scoringDirection: 'Inversa' },
-        { id: 'pswq_q2', text: 'No tiendo a preocuparme por las cosas.', type: 'likert', scoringDirection: 'Inversa' },
-        { id: 'pswq_q3', text: 'Muchas situaciones me hacen preocupar.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q4', text: 'Sé que no debería preocuparme por las cosas, pero simplemente no puedo evitarlo.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q5', text: 'Cuando estoy bajo estrés, me preocupo mucho.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q6', text: 'Soy consciente de que me preocupo demasiado.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q7', text: 'Tan pronto como termino una tarea, empiezo a preocuparme por todo lo demás que tengo que hacer.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q8', text: 'No me preocupo por cada pequeña cosa.', type: 'likert', scoringDirection: 'Inversa' },
-        { id: 'pswq_q9', text: 'Me preocupo por proyectos hasta que están terminados.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q10', text: 'No soy de los que se preocupan.', type: 'likert', scoringDirection: 'Inversa' },
-        { id: 'pswq_q11', text: 'Una vez que empiezo a preocuparme, no puedo parar.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q12', text: 'Siempre me he preocupado por todo.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q13', text: 'Me doy cuenta de que me he estado preocupando por diferentes cosas.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q14', text: 'Me preocupo por todo.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q15', text: 'Me preocupo por cosas que ya han sucedido.', type: 'likert', scoringDirection: 'Directa' },
-        { id: 'pswq_q16', text: 'Mis preocupaciones me abruman.', type: 'likert', scoringDirection: 'Directa' }
-      ]
-    }],
-    interpretationData: [
-      { from: 16, to: 44, severity: 'Bajo', summary: 'Niveles de preocupación habituales, no clínicos.' },
-      { from: 45, to: 59, severity: 'Moderado', summary: 'Tendencia elevada a la preocupación. Factor de riesgo para T. de Ansiedad.' },
-      { from: 60, to: 80, severity: 'Alto', summary: 'Preocupación crónica, incontrolable e intrusiva. Mecanismo clave del TAG.' }
-    ]
-  },
-  {
-    id: 'plutchik-srs',
-    name: 'Escala de Riesgo Suicida de Plutchik',
-    description: 'Cuestionario de 15 ítems de respuesta Sí/No diseñado para evaluar la probabilidad de riesgo suicida en pacientes.',
-    category: 'Evaluación Profunda de Mecanismos (Post-Tamizaje)',
-    subcategory: 'Riesgo y Diagnóstico',
-    sections: [{
-      sectionId: 'main',
-      name: 'Escala de Riesgo Suicida de Plutchik',
-      instructions: 'Las siguientes preguntas tratan sobre cosas que usted ha sentido o hecho. Por favor conteste cada pregunta con SÍ o NO.',
-      likertScale: [
-        { "value": 0, "label": "NO" },
-        { "value": 1, "label": "SÍ" }
-      ],
-      questions: [
-        { id: 'plutchik_q1', text: '¿Toma de forma habitual algún medicamento como aspirinas o pastillas para dormir?', type: 'likert' },
-        { id: 'plutchik_q2', text: '¿Tiene dificultades para conciliar el sueño?', type: 'likert' },
-        { id: 'plutchik_q3', text: '¿A veces nota que podría perder el control sobre sí mismo?', type: 'likert' },
-        { id: 'plutchik_q4', text: '¿Tiene poco interés en relacionarse con la gente?', type: 'likert' },
-        { id: 'plutchik_q5', text: '¿Ve su futuro con más pesimismo que optimismo?', type: 'likert' },
-        { id: 'plutchik_q6', text: '¿Se ha sentido alguna vez inútil o sin valor?', type: 'likert' },
-        { id: 'plutchik_q7', text: '¿Ve su futuro sin ninguna esperanza?', type: 'likert' },
-        { id: 'plutchik_q8', text: '¿Se ha sentido alguna vez tan fracasado que solo quería meterse en la cama y abandonarlo todo?', type: 'likert' },
-        { id: 'plutchik_q9', text: '¿Está deprimido ahora?', type: 'likert' },
-        { id: 'plutchik_q10', text: '¿Está usted separado, divorciado o viudo?', type: 'likert' },
-        { id: 'plutchik_q11', text: '¿Sabe si alguien de su familia ha intentado suicidarse alguna vez?', type: 'likert' },
-        { id: 'plutchik_q12', text: '¿Ha pensado alguna vez en suicidarse?', type: 'likert' },
-        { id: 'plutchik_q13', text: '¿Le ha comentado a alguien, en alguna ocasión, que quería suicidarse?', type: 'likert' },
-        { id: 'plutchik_q14', text: '¿Ha intentado alguna vez quitarse la vida?', type: 'likert' },
-        { id: 'plutchik_q15', text: '¿Siente a menudo ganas de llorar?', type: 'likert' }
-      ]
-    }],
-    interpretationData: [
-      { from: 0, to: 4, severity: 'Baja', summary: 'Sin riesgo. Seguimiento normal.' },
-      { from: 5, to: 6, severity: 'Leve', summary: 'Riesgo leve. Seguimiento cercano.' },
-      { from: 7, to: 8, severity: 'Moderada', summary: 'Riesgo moderado. Evaluación clínica completa.' },
-      { from: 9, to: 15, severity: 'Alta', summary: 'Riesgo alto. Intervención urgente y plan de seguridad.' }
-    ]
-  },
-  {
-    name: 'Cuestionario de Pensamientos Automáticos (ATQ-30)',
+    name: "Cuestionario de Pensamientos Automáticos (ATQ-30)",
     id: 'atq-30',
     description: 'Mide la frecuencia de 30 pensamientos automáticos negativos específicos asociados con la depresión.',
     category: 'Evaluación de Sesgos Cognitivos',
@@ -871,6 +752,44 @@ const questionnairesData: Questionnaire[] = [
       { from: 61, to: 90, severity: 'Moderada', summary: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
       { from: 91, to: 120, severity: 'Alta', summary: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
       { from: 121, to: 150, severity: 'Grave', summary: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' }
+    ]
+  },
+  {
+    name: 'Escala de Actitudes Disfuncionales (DAS)',
+    id: 'das',
+    description: 'Mide esquemas cognitivos y creencias irracionales subyacentes, como la necesidad de aprobación o el perfeccionismo.',
+    category: 'Evaluación de Sesgos Cognitivos',
+    subcategory: 'Creencias y Esquemas',
+    sections: [{
+      sectionId: 'main',
+      name: 'Escala de Actitudes Disfuncionales',
+      instructions: 'Indique su grado de acuerdo con las siguientes afirmaciones.',
+      likertScale: [
+        { value: 1, label: 'Totalmente en desacuerdo' },
+        { value: 2, label: 'Bastante en desacuerdo' },
+        { value: 3, label: 'Ligeramente en desacuerdo' },
+        { value: 4, label: 'Indiferente' },
+        { value: 5, label: 'Ligeramente de acuerdo' },
+        { value: 6, label: 'Bastante de acuerdo' },
+        { value: 7, label: 'Totalmente de acuerdo' },
+      ],
+      questions: [
+        { id: 'das_q1', text: 'Es difícil ser feliz si no eres guapo, inteligente, rico y creativo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q2', text: 'Mi valor como persona depende en gran medida de lo que otros piensen de mí.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q3', text: 'Si cometo un error, es probable que la gente me menosprecie.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q4', text: 'Si no puedo hacer algo bien, no debería hacerlo en absoluto.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q5', text: 'No puedo ser feliz si no le gusto a todo el mundo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q6', text: 'Es mejor abandonar las propias necesidades que disgustar a los demás.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q7', text: 'Debo tener éxito en todo lo que emprendo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q8', text: 'Si alguien a quien quiero me rechaza, significa que no soy digno de ser amado.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q9', text: 'Mi felicidad depende más de los demás que de mí mismo.', type: 'likert', scoringDirection: 'Inversa' },
+        { id: 'das_q10', text: 'Si no soy el mejor en mi trabajo, entonces soy un fracasado.', type: 'likert', scoringDirection: 'Directa' }
+      ],
+    }],
+    interpretationData: [
+      { from: 10, to: 100, severity: 'Baja', summary: 'Esquemas cognitivos predominantemente funcionales.' },
+      { from: 101, to: 150, severity: 'Moderada', summary: 'Rigidez cognitiva moderada. Requiere identificación y flexibilización de reglas.' },
+      { from: 151, to: 240, severity: 'Alta', summary: 'Rigidez cognitiva alta. Implica que el paciente basa su valía en reglas rígidas y disfuncionales (ej. Perfeccionismo, dependencia). Foco de la TCC.' }
     ]
   },
   {
@@ -972,9 +891,78 @@ const questionnairesData: Questionnaire[] = [
       }
     ],
     interpretationData: [
-      { from: 20, to: 35, severity: 'Baja', summary: 'Rumiación adaptativa o baja. Sin tendencia a quedarse atrapado en el malestar.' },
-      { from: 36, to: 50, severity: 'Moderada', summary: 'Rumiación elevada. Riesgo de cronicidad y mantenimiento del Trastorno Depresivo (Perfil B).' },
-      { from: 51, to: 80, severity: 'Alta', summary: 'Rumiación crónica y desadaptativa. Mecanismo de evitación cognitiva que requiere técnicas de mindfulness y Terapia de Activación Conductual.' }
+      { from: 12, to: 20, severity: 'Baja', summary: 'Rumiación adaptativa o baja. Sin tendencia a quedarse atrapado en el malestar.' },
+      { from: 21, to: 30, severity: 'Moderada', summary: 'Rumiación elevada. Riesgo de cronicidad y mantenimiento del Trastorno Depresivo (Perfil B).' },
+      { from: 31, to: 48, severity: 'Alta', summary: 'Rumiación crónica y desadaptativa. Mecanismo de evitación cognitiva que requiere técnicas de mindfulness y Terapia de Activación Conductual.' }
+    ]
+  },
+  {
+    name: "Prueba de Especificidad de Metas Futuras (MRFI/FGST)",
+    id: "mrfi-fgst",
+    description: "Mide la capacidad de un individuo para generar fantasías futuras específicas y vívidas, un factor protector contra la desesperanza.",
+    category: "Evaluación de Sesgos Cognitivos",
+    subcategory: "Pensamiento Futuro",
+    sections: [{
+      sectionId: 'main',
+      name: 'Calificación de la Calidad de la Fantasía Futura',
+      instructions: "Después de pedirle al paciente que describa una meta futura positiva, califique la calidad de su respuesta.",
+      likertScale: [],
+      questions: [
+        {
+          id: 'quality_score',
+          text: 'Instrucción para el clínico: Pida al paciente que describa una meta futura positiva. Evalúe la calidad de la respuesta y puntúe según las siguientes opciones.',
+          type: 'likert',
+          options: [
+            { value: 0, label: 'Específico y Vívido: Describe una meta clara, con detalles sensoriales y un plan concreto.' },
+            { value: 1, label: 'Genérico/Ambiguo: Nombra una meta (ej. "ser feliz"), pero sin detalles concretos ni pasos para lograrla.' },
+            { value: 2, label: 'Abstracto/Visión de Túnel: Incapaz de generar una meta positiva o solo describe la evitación de un estado negativo.' }
+          ]
+        }
+      ],
+    }],
+    interpretationData: [
+      { from: 0, to: 0, severity: 'Específico y Vívido', summary: 'Alta constructibilidad y especificidad de metas futuras. Factor protector.' },
+      { from: 1, to: 1, severity: 'Genérico/Ambiguo', summary: 'Capacidad para nombrar metas futuras, pero sin detalles vívidos o específicos (Ej. "Espero estar mejor").' },
+      { from: 2, to: 2, severity: 'Abstracto/Vision de Túnel', summary: 'Incapacidad para generar metas o fantasías futuras positivas. Predominio de temas negativos o evitación.' }
+    ]
+  },
+  {
+    id: 'plutchik-srs',
+    name: 'Escala de Riesgo Suicida de Plutchik',
+    description: 'Cuestionario de 15 ítems de respuesta Sí/No diseñado para evaluar la probabilidad de riesgo suicida en pacientes.',
+    category: 'Evaluación Profunda de Mecanismos (Post-Tamizaje)',
+    subcategory: 'Riesgo y Diagnóstico',
+    sections: [{
+      sectionId: 'main',
+      name: 'Escala de Riesgo Suicida de Plutchik',
+      instructions: 'Las siguientes preguntas tratan sobre cosas que usted ha sentido o hecho. Por favor conteste cada pregunta con SÍ o NO.',
+      likertScale: [
+        { "value": 0, "label": "NO" },
+        { "value": 1, "label": "SÍ" }
+      ],
+      questions: [
+        { id: 'plutchik_q1', text: '¿Toma de forma habitual algún medicamento como aspirinas o pastillas para dormir?', type: 'likert' },
+        { id: 'plutchik_q2', text: '¿Tiene dificultades para conciliar el sueño?', type: 'likert' },
+        { id: 'plutchik_q3', text: '¿A veces nota que podría perder el control sobre sí mismo?', type: 'likert' },
+        { id: 'plutchik_q4', text: '¿Tiene poco interés en relacionarse con la gente?', type: 'likert' },
+        { id: 'plutchik_q5', text: '¿Ve su futuro con más pesimismo que optimismo?', type: 'likert' },
+        { id: 'plutchik_q6', text: '¿Se ha sentido alguna vez inútil o sin valor?', type: 'likert' },
+        { id: 'plutchik_q7', text: '¿Ve su futuro sin ninguna esperanza?', type: 'likert' },
+        { id: 'plutchik_q8', text: '¿Se ha sentido alguna vez tan fracasado que solo quería meterse en la cama y abandonarlo todo?', type: 'likert' },
+        { id: 'plutchik_q9', text: '¿Está deprimido ahora?', type: 'likert' },
+        { id: 'plutchik_q10', text: '¿Está usted separado, divorciado o viudo?', type: 'likert' },
+        { id: 'plutchik_q11', text: '¿Sabe si alguien de su familia ha intentado suicidarse alguna vez?', type: 'likert' },
+        { id: 'plutchik_q12', text: '¿Ha pensado alguna vez en suicidarse?', type: 'likert' },
+        { id: 'plutchik_q13', text: '¿Le ha comentado a alguien, en alguna ocasión, que quería suicidarse?', type: 'likert' },
+        { id: 'plutchik_q14', text: '¿Ha intentado alguna vez quitarse la vida?', type: 'likert' },
+        { id: 'plutchik_q15', text: '¿Siente a menudo ganas de llorar?', type: 'likert' }
+      ]
+    }],
+    interpretationData: [
+      { from: 0, to: 4, severity: 'Baja', summary: 'Sin riesgo. Seguimiento normal.' },
+      { from: 5, to: 6, severity: 'Leve', summary: 'Riesgo leve. Seguimiento cercano.' },
+      { from: 7, to: 8, severity: 'Moderada', summary: 'Riesgo moderado. Evaluación clínica completa.' },
+      { from: 9, to: 15, severity: 'Alta', summary: 'Riesgo alto. Intervención urgente y plan de seguridad.' }
     ]
   },
 ];
@@ -1022,4 +1010,5 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+
 
