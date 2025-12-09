@@ -1,6 +1,6 @@
 // src/instruments/SSI.ts
 
-import { EvaluationResult, PatientResults } from '@/lib/diagnosis';
+import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Severidad para SSI ---
 // Rangos estandarizados de la SSI para la interpretación clínica:
@@ -48,7 +48,7 @@ export function checkSSISuicideRisk(score: number): boolean {
  * @param score Puntuación bruta total de la SSI.
  * @returns EvaluationResult para la SSI.
  */
-export function generateSSIResult(score: number): EvaluationResult {
+export function generateSSIResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretSSIScore(score);
   const suicideRisk = checkSSISuicideRisk(score);
 
@@ -67,7 +67,7 @@ export function generateSSIResult(score: number): EvaluationResult {
     // Activa la bandera para que generatePatientProfile lo identifique como Perfil D.
     suicideRisk: suicideRisk, 
     contextDescription: severityDescription
-  } as EvaluationResult;
+  } as EvaluationResultForDiagnosis;
 }
 
 
@@ -78,7 +78,7 @@ export function generateSSIResult(score: number): EvaluationResult {
  */
 export function simulateSSIIntegration() {
     // Escenario clínico simulado: Riesgo Moderado.
-    const ssiResult: EvaluationResult = generateSSIResult(10); 
+    const ssiResult: EvaluationResultForDiagnosis = generateSSIResult(10); 
 
     // Simular los resultados completos del paciente
     const mockResults: PatientResults = {

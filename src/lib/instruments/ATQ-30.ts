@@ -5,10 +5,10 @@ import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 // --- I. Definición de Rangos de Severidad para ATQ-30 ---
 // Rangos estandarizados del ATQ-30 (versión de 30 ítems) para la interpretación clínica:
 export const ATQ30_SEVERITY_RANGES = [
-  { scoreMax: 60, severity: 'Mínima', description: 'Baja frecuencia de pensamientos automáticos negativos (PANs).' },
-  { scoreMax: 90, severity: 'Leve', description: 'Presencia de PANs que se activan bajo estrés leve.' },
-  { scoreMax: 120, severity: 'Moderada', description: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
-  { scoreMax: 150, severity: 'Grave', description: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
+  { scoreMax: 60, severity: 'Leve', description: 'Presencia de PANs que se activan bajo estrés leve.' },
+  { scoreMax: 90, severity: 'Moderada', description: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
+  { scoreMax: 120, severity: 'Alta', description: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
+  { scoreMax: 150, severity: 'Alta', description: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' },
 ];
 
 /**
@@ -20,12 +20,16 @@ export function interpretATQ30Score(score: number): { severity: string, descript
   // Asumimos la versión de 30 ítems (rango teórico 30-150)
   const adjustedScore = Math.min(Math.max(score, 30), 150); 
   
+  if (adjustedScore <= 30) {
+      return { severity: 'Mínima', description: 'Baja frecuencia de pensamientos automáticos negativos (PANs).' };
+  }
+
   const range = ATQ30_SEVERITY_RANGES.find(r => adjustedScore <= r.scoreMax);
   
   if (range) {
     return { severity: range.severity, description: range.description };
   }
-  return { severity: 'Grave', description: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' };
+  return { severity: 'Alta', description: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' };
 }
 
 // --- II. Función para Generar el Resultado de Evaluación ---

@@ -20,14 +20,14 @@ export type Question = {
 };
 
 export type Interpretation = {
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo' | 'Optimista' | 'Intermedio' | 'Pesimista';
     summary: string;
 }
 
 export type InterpretationRule = {
     from: number;
     to: number;
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Moderada-Grave' | 'Alta' | 'Mínima' | 'Grave' | 'Bajo' | 'Moderado' | 'Alto' | 'Positivo' | 'Negativo' | 'Optimista' | 'Intermedio' | 'Pesimista';
     summary: string;
 };
 
@@ -208,11 +208,11 @@ const questionnairesData: Questionnaire[] = [
             { value: 0, label: "Totalmente en desacuerdo" },
         ],
         questions: [
-            { id: "aq10_q1", text: "Frecuentemente noto pequeños sonidos que otros no notan.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
-            { id: "aq10_q2", text: "Usualmente me concentro más en la imagen general que en los pequeños detalles.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
-            { id: "aq10_q3", text: "Encuentro fácil hacer más de una cosa a la vez.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
-            { id: "aq10_q4", text: "Si hay una interrupción, puedo volver a lo que estaba haciendo muy rápidamente.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
-            { id: "aq10_q5", text: "Encuentro fácil 'leer entre líneas' cuando alguien me habla.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q1", text: "Frecuentemente noto pequeños sonidos que otros no notan.", type: 'likert', scoring: { type: 'aq-10', agreesIsOne: true } },
+            { id: "aq10_q2", text: "Usualmente me concentro más en la imagen general que en los pequeños detalles.", type: 'likert', scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q3", text: "Encuentro fácil hacer más de una cosa a la vez.", type: 'likert', scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q4", text: "Si hay una interrupción, puedo volver a lo que estaba haciendo muy rápidamente.", type: 'likert', scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q5", text: "Encuentro fácil 'leer entre líneas' cuando alguien me habla.", type: 'likert', scoring: { type: 'aq-10', agreesIsOne: false } },
             { id: "aq10_q6", text: "Sé cómo saber si alguien que me escucha se está aburriendo.", type: 'likert', scoring: { type: 'aq-10', agreesIsOne: false } },
             { id: "aq10_q7", text: "Cuando leo una historia, encuentro difícil imaginar cómo se ven los personajes.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
             { id: "aq10_q8", text: "Me gusta coleccionar información sobre categorías de cosas (p. ej., tipos de carros, pájaros, trenes, plantas).", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
@@ -221,8 +221,8 @@ const questionnairesData: Questionnaire[] = [
         ]
     }],
     interpretationData: [
-        { from: 0, to: 5, severity: "Negativo", summary: "Cribado negativo para rasgos del Espectro Autista." },
-        { from: 6, to: 10, severity: "Positivo", summary: "Cribado positivo. Se requiere evaluación diagnóstica integral." }
+      { from: 0, to: 5, severity: "Negativo", summary: "Cribado negativo para rasgos del Espectro Autista." },
+      { from: 6, to: 10, severity: "Positivo", summary: "Cribado positivo. Se requiere evaluación diagnóstica integral." }
     ]
   },
   {
@@ -828,10 +828,52 @@ const questionnairesData: Questionnaire[] = [
       ]
     }],
     interpretationData: [
-      { from: 30, to: 60, severity: 'Baja', summary: 'Baja frecuencia de pensamientos automáticos negativos (PANs).' },
-      { from: 61, to: 90, severity: 'Leve', summary: 'Presencia de PANs que se activan bajo estrés leve.' },
-      { from: 91, to: 120, severity: 'Moderada', summary: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
-      { from: 121, to: 150, severity: 'Alta', summary: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
+      { from: 30, to: 60, severity: 'Leve', summary: 'Presencia de PANs que se activan bajo estrés leve.' },
+      { from: 61, to: 90, severity: 'Moderada', summary: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
+      { from: 91, to: 120, severity: 'Alta', summary: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
+      { from: 121, to: 150, severity: 'Alta', summary: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' }
+    ]
+  },
+  {
+    name: "Cuestionario de Estilo Atribucional (ASQ)",
+    id: "asq",
+    description: "Mide cómo una persona explica las causas de los eventos, revelando sesgos pesimistas u optimistas.",
+    category: "Evaluación de Sesgos Cognitivos",
+    subcategory: "Estilo Atribucional",
+    sections: [
+        {
+            sectionId: "negativos",
+            name: "Situaciones Negativas",
+            instructions: "Imagina que te ocurren las siguientes situaciones. Escribe la causa principal y luego califícala.",
+            likertScale: [
+                { value: 1, label: "Totalmente debido a otras personas/circunstancias" }, { value: 7, label: "Totalmente debido a mí" }
+            ],
+            questions: [
+                { id: "asq_neg1_cause", text: "Situación: Tienes una discusión importante con un amigo/a.", type: "open", includeInScore: false },
+                { id: "asq_neg1_internal", text: "¿La causa es debida a ti o a factores externos?", type: "likert" },
+                { id: "asq_neg1_stable", text: "¿Esta causa estará siempre presente en tu vida?", type: "likert", options: [{ value: 1, label: "Nunca estará presente" }, { value: 7, label: "Siempre estará presente" }] },
+                { id: "asq_neg1_global", text: "¿Esta causa afecta solo a esta situación o a otras áreas de tu vida?", type: "likert", options: [{ value: 1, label: "Solo afecta esta situación" }, { value: 7, label: "Afecta todas las áreas de mi vida" }] },
+            ]
+        },
+        {
+            sectionId: "positivos",
+            name: "Situaciones Positivas",
+            instructions: "Imagina que te ocurren las siguientes situaciones. Escribe la causa principal y luego califícala.",
+            likertScale: [
+                { value: 1, label: "Totalmente debido a otras personas/circunstancias" }, { value: 7, label: "Totalmente debido a mí" }
+            ],
+            questions: [
+                 { id: "asq_pos1_cause", text: "Situación: Recibes un elogio por un trabajo bien hecho.", type: "open", includeInScore: false },
+                { id: "asq_pos1_internal", text: "¿La causa es debida a ti o a factores externos?", type: "likert" },
+                { id: "asq_pos1_stable", text: "¿Esta causa estará siempre presente en tu vida?", type: "likert", options: [{ value: 1, label: "Nunca estará presente" }, { value: 7, label: "Siempre estará presente" }] },
+                { id: "asq_pos1_global", text: "¿Esta causa afecta solo a esta situación o a otras áreas de tu vida?", type: "likert", options: [{ value: 1, label: "Solo afecta esta situación" }, { value: 7, label: "Afecta todas las áreas de mi vida" }] },
+            ]
+        }
+    ],
+    interpretationData: [
+        { from: 1, to: 3, severity: 'Optimista', summary: 'Atribución de fracasos a causas externas y específicas.' },
+        { from: 4, to: 5, severity: 'Intermedio', summary: 'Estilo atribucional flexible. El sesgo aparece bajo estrés.' },
+        { from: 6, to: 7, severity: 'Pesimista', summary: 'Alta atribución a causas internas, estables y globales. Indica Sesgo Atribucional Crónico.' }
     ]
   },
   {

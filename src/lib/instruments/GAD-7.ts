@@ -79,7 +79,7 @@ export function simulateGAD7Integration() {
     
     console.log("\n--- Interpretación Clínica y Perfil (Simulado) ---");
     console.log(`Severidad Ansiedad Cognitiva: ${gad7Result.severity}`);
-    console.log(`Diagnóstico Categórico GAD-7: Ansiedad moderada`);
+    console.log(`Diagnóstico Categórico GAD-7: Ansiedad moderada (posible TAG, Criterio A del DSM-5-TR).`);
 }
 
 // simulateGAD7Integration(); // Descomentar para probar
