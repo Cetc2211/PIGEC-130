@@ -41,10 +41,10 @@ export function checkYMRSManicAlert(score: number): boolean {
 // --- III. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para la YMRS.
+ * Genera el objeto EvaluationResultForDiagnosis para la YMRS.
  *
  * @param score Puntuación bruta total de la YMRS.
- * @returns EvaluationResult para la YMRS.
+ * @returns EvaluationResultForDiagnosis para la YMRS.
  */
 export function generateYMRSResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretYMRSScore(score);
@@ -82,7 +82,7 @@ export function simulateYMRSIntegration() {
     const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Depresión Grave (score: 30) -> Si no se aplica YMRS, sería Perfil B.
-            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 30, severity: 'Grave', suicideRisk: false },
+            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 30, severity: 'Grave', suicideRisk: false, contextDescription: '' },
             ymrsResult // Alerta Maníaca (Moderada)
         ]
     };

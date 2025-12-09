@@ -22,7 +22,7 @@ export function interpretPHQ9Score(score: number): { severity: string, descripti
   if (range) {
     return { severity: range.severity, description: range.description };
   }
-  return { severity: 'Error', description: 'Puntuación fuera de rango válido (0-27).' };
+  return { severity: 'Grave', description: 'Puntuación fuera de rango válido (0-27).' };
 }
 
 
@@ -44,11 +44,11 @@ export function checkPHQ9SuicideRisk(item9Score: number): boolean {
 // --- III. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el PHQ-9.
+ * Genera el objeto EvaluationResultForDiagnosis para el PHQ-9.
  *
  * @param score Puntuación bruta total del PHQ-9.
  * @param item9Score Puntuación del ítem 9 específico (para riesgo suicida).
- * @returns EvaluationResult para el PHQ-9.
+ * @returns EvaluationResultForDiagnosis para el PHQ-9.
  */
 export function generatePHQ9Result(score: number, item9Score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretPHQ9Score(score);
@@ -86,7 +86,7 @@ export function simulatePHQ9Integration() {
         results: [
             phq9Result,
             // Otros resultados no relevantes que serán ignorados por la prioridad del PHQ-9
-            { instrumentName: 'BAI', date: new Date('2025-12-01'), score: 8, severity: 'Mínima', suicideRisk: false },
+            { instrumentName: 'BAI', date: new Date('2025-12-01'), score: 8, severity: 'Mínima', suicideRisk: false, contextDescription: '' },
         ]
     };
     

@@ -30,12 +30,12 @@ export function interpretPSWQScore(score: number): { severity: string, descripti
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el PSWQ.
+ * Genera el objeto EvaluationResultForDiagnosis para el PSWQ.
  * Nota: El PSWQ no se utiliza para activar directamente el Perfil D, ni para el diagnóstico categórico
  * (BDI-II, GAD-7, BAI son prioritarios), sino para el componente 'protocol' del Perfil.
  *
  * @param score Puntuación bruta total del PSWQ.
- * @returns EvaluationResult para el PSWQ.
+ * @returns EvaluationResultForDiagnosis para el PSWQ.
  */
 export function generatePSWQResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretPSWQScore(score);

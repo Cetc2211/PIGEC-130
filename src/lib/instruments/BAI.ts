@@ -21,18 +21,18 @@ export function interpretBAIScore(score: number): { severity: string, descriptio
   if (range) {
     return { severity: range.severity, description: range.description };
   }
-  return { severity: 'Error', description: 'Puntuación fuera de rango válido (0-63).' };
+  return { severity: 'Grave', description: 'Puntuación fuera de rango válido (0-63).' };
 }
 
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el BAI.
+ * Genera el objeto EvaluationResultForDiagnosis para el BAI.
  * Nota: El BAI no tiene un ítem específico de riesgo suicida como el BDI-II o PHQ-9;
  * el riesgo se infiere de la comorbilidad con depresión.
  *
  * @param score Puntuación bruta total del BAI.
- * @returns EvaluationResult para el BAI.
+ * @returns EvaluationResultForDiagnosis para el BAI.
  */
 export function generateBAIResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretBAIScore(score);
@@ -62,7 +62,7 @@ export function simulateBAIIntegration() {
     const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Depresión Leve (score: 15, item 9: 0)
-            { instrumentName: 'BDI-II', date: new Date('2025-12-05'), score: 15, severity: 'Leve', suicideRisk: false },
+            { instrumentName: 'BDI-II', date: new Date('2025-12-05'), score: 15, severity: 'Leve', suicideRisk: false, contextDescription: '' },
             baiResult // Ansiedad Moderada
         ]
     };

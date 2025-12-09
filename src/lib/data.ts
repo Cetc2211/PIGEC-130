@@ -113,7 +113,7 @@ const questionnairesData: Questionnaire[] = [
   },
   {
     id: 'gad-7',
-    name: 'Escala de Ansiedad Generalizada GAD-7',
+    name: 'Trastorno de Ansiedad Generalizada (GAD-7)',
     description: 'Una herramienta de 7 preguntas para la detección, cribado y medición de la severidad del Trastorno de Ansiedad Generalizada (TAG).',
     category: 'Tamizaje Inicial de Seguridad y Severidad (T-I S)',
     subcategory: 'Seguridad y Severidad',
@@ -146,7 +146,7 @@ const questionnairesData: Questionnaire[] = [
   },
   {
     id: 'bai',
-    name: 'Inventario de Ansiedad de Beck',
+    name: 'Inventario de Ansiedad de Beck (BAI)',
     description: 'Cuestionario de 21 ítems que mide la severidad de los síntomas de ansiedad física y cognitiva experimentados durante la última semana.',
     category: 'Tamizaje Inicial de Seguridad y Severidad (T-I S)',
     subcategory: 'Soporte y Diferencial',
@@ -778,6 +778,45 @@ const questionnairesData: Questionnaire[] = [
     ]
   },
   {
+    id: 'plutchik-srs',
+    name: 'Escala de Riesgo Suicida de Plutchik',
+    description: 'Cuestionario de 15 ítems de respuesta Sí/No diseñado para evaluar la probabilidad de riesgo suicida en pacientes.',
+    category: 'Evaluación Profunda de Mecanismos (Post-Tamizaje)',
+    subcategory: 'Riesgo y Diagnóstico',
+    sections: [{
+      sectionId: 'main',
+      name: 'Escala de Riesgo Suicida de Plutchik',
+      instructions: 'Las siguientes preguntas tratan sobre cosas que usted ha sentido o hecho. Por favor conteste cada pregunta con SÍ o NO.',
+      likertScale: [
+        { "value": 0, "label": "NO" },
+        { "value": 1, "label": "SÍ" }
+      ],
+      questions: [
+        { id: 'plutchik_q1', text: '¿Toma de forma habitual algún medicamento como aspirinas o pastillas para dormir?', type: 'likert' },
+        { id: 'plutchik_q2', text: '¿Tiene dificultades para conciliar el sueño?', type: 'likert' },
+        { id: 'plutchik_q3', text: '¿A veces nota que podría perder el control sobre sí mismo?', type: 'likert' },
+        { id: 'plutchik_q4', text: '¿Tiene poco interés en relacionarse con la gente?', type: 'likert' },
+        { id: 'plutchik_q5', text: '¿Ve su futuro con más pesimismo que optimismo?', type: 'likert' },
+        { id: 'plutchik_q6', text: '¿Se ha sentido alguna vez inútil o sin valor?', type: 'likert' },
+        { id: 'plutchik_q7', text: '¿Ve su futuro sin ninguna esperanza?', type: 'likert' },
+        { id: 'plutchik_q8', text: '¿Se ha sentido alguna vez tan fracasado que solo quería meterse en la cama y abandonarlo todo?', type: 'likert' },
+        { id: 'plutchik_q9', text: '¿Está deprimido ahora?', type: 'likert' },
+        { id: 'plutchik_q10', text: '¿Está usted separado, divorciado o viudo?', type: 'likert' },
+        { id: 'plutchik_q11', text: '¿Sabe si alguien de su familia ha intentado suicidarse alguna vez?', type: 'likert' },
+        { id: 'plutchik_q12', text: '¿Ha pensado alguna vez en suicidarse?', type: 'likert' },
+        { id: 'plutchik_q13', text: '¿Le ha comentado a alguien, en alguna ocasión, que quería suicidarse?', type: 'likert' },
+        { id: 'plutchik_q14', text: '¿Ha intentado alguna vez quitarse la vida?', type: 'likert' },
+        { id: 'plutchik_q15', text: '¿Siente a menudo ganas de llorar?', type: 'likert' }
+      ]
+    }],
+    interpretationData: [
+      { from: 0, to: 4, severity: 'Baja', summary: 'Sin riesgo. Seguimiento normal.' },
+      { from: 5, to: 6, severity: 'Leve', summary: 'Riesgo leve. Seguimiento cercano.' },
+      { from: 7, to: 8, severity: 'Moderada', summary: 'Riesgo moderado. Evaluación clínica completa.' },
+      { from: 9, to: 15, severity: 'Alta', summary: 'Riesgo alto. Intervención urgente y plan de seguridad.' }
+    ]
+  },
+  {
     name: 'Cuestionario de Pensamientos Automáticos (ATQ-30)',
     id: 'atq-30',
     description: 'Mide la frecuencia de 30 pensamientos automáticos negativos específicos asociados con la depresión.',
@@ -831,7 +870,7 @@ const questionnairesData: Questionnaire[] = [
       { from: 30, to: 60, severity: 'Leve', summary: 'Presencia de PANs que se activan bajo estrés leve.' },
       { from: 61, to: 90, severity: 'Moderada', summary: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
       { from: 91, to: 120, severity: 'Alta', summary: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
-      { from: 121, to: 150, severity: 'Alta', summary: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' }
+      { from: 121, to: 150, severity: 'Grave', summary: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' }
     ]
   },
   {
@@ -865,8 +904,8 @@ const questionnairesData: Questionnaire[] = [
             questions: [
                  { id: "asq_pos1_cause", text: "Situación: Recibes un elogio por un trabajo bien hecho.", type: "open", includeInScore: false },
                 { id: "asq_pos1_internal", text: "¿La causa es debida a ti o a factores externos?", type: "likert" },
-                { id: "asq_pos1_stable", text: "¿Esta causa estará siempre presente en tu vida?", type: "likert", options: [{ value: 1, label: "Nunca estará presente" }, { value: 7, label: "Siempre estará presente" }] },
-                { id: "asq_pos1_global", text: "¿Esta causa afecta solo a esta situación o a otras áreas de tu vida?", type: "likert", options: [{ value: 1, label: "Solo afecta esta situación" }, { value: 7, label: "Afecta todas las áreas de mi vida" }] },
+                { id: "asq_pos1_stable", text: "¿Esta causa estará siempre presente en tu vida?", type: 'likert', options: [{ value: 1, label: "Nunca estará presente" }, { value: 7, label: "Siempre estará presente" }] },
+                { id: "asq_pos1_global", text: "¿Esta causa afecta solo a esta situación o a otras áreas de tu vida?", type: 'likert', options: [{ value: 1, label: "Solo afecta esta situación" }, { value: 7, label: "Afecta todas las áreas de mi vida" }] },
             ]
         }
     ],
@@ -874,45 +913,6 @@ const questionnairesData: Questionnaire[] = [
         { from: 1, to: 3, severity: 'Optimista', summary: 'Atribución de fracasos a causas externas y específicas.' },
         { from: 4, to: 5, severity: 'Intermedio', summary: 'Estilo atribucional flexible. El sesgo aparece bajo estrés.' },
         { from: 6, to: 7, severity: 'Pesimista', summary: 'Alta atribución a causas internas, estables y globales. Indica Sesgo Atribucional Crónico.' }
-    ]
-  },
-  {
-    name: 'Escala de Riesgo Suicida de Plutchik',
-    id: 'plutchik-srs',
-    description: 'Cuestionario de 15 ítems de respuesta Sí/No diseñado para evaluar la probabilidad de riesgo suicida en pacientes.',
-    category: 'Evaluación Profunda de Mecanismos (Post-Tamizaje)',
-    subcategory: 'Riesgo y Diagnóstico',
-    sections: [{
-      sectionId: 'main',
-      name: 'Escala de Riesgo Suicida de Plutchik',
-      instructions: 'Las siguientes preguntas tratan sobre cosas que usted ha sentido o hecho. Por favor conteste cada pregunta con SÍ o NO.',
-      likertScale: [
-        { "value": 0, "label": "NO" },
-        { "value": 1, "label": "SÍ" }
-      ],
-      questions: [
-        { id: 'plutchik_q1', text: '¿Toma de forma habitual algún medicamento como aspirinas o pastillas para dormir?', type: 'likert' },
-        { id: 'plutchik_q2', text: '¿Tiene dificultades para conciliar el sueño?', type: 'likert' },
-        { id: 'plutchik_q3', text: '¿A veces nota que podría perder el control sobre sí mismo?', type: 'likert' },
-        { id: 'plutchik_q4', text: '¿Tiene poco interés en relacionarse con la gente?', type: 'likert' },
-        { id: 'plutchik_q5', text: '¿Ve su futuro con más pesimismo que optimismo?', type: 'likert' },
-        { id: 'plutchik_q6', text: '¿Se ha sentido alguna vez inútil o sin valor?', type: 'likert' },
-        { id: 'plutchik_q7', text: '¿Ve su futuro sin ninguna esperanza?', type: 'likert' },
-        { id: 'plutchik_q8', text: '¿Se ha sentido alguna vez tan fracasado que solo quería meterse en la cama y abandonarlo todo?', type: 'likert' },
-        { id: 'plutchik_q9', text: '¿Está deprimido ahora?', type: 'likert' },
-        { id: 'plutchik_q10', text: '¿Está usted separado, divorciado o viudo?', type: 'likert' },
-        { id: 'plutchik_q11', text: '¿Sabe si alguien de su familia ha intentado suicidarse alguna vez?', type: 'likert' },
-        { id: 'plutchik_q12', text: '¿Ha pensado alguna vez en suicidarse?', type: 'likert' },
-        { id: 'plutchik_q13', text: '¿Le ha comentado a alguien, en alguna ocasión, que quería suicidarse?', type: 'likert' },
-        { id: 'plutchik_q14', text: '¿Ha intentado alguna vez quitarse la vida?', type: 'likert' },
-        { id: 'plutchik_q15', text: '¿Siente a menudo ganas de llorar?', type: 'likert' }
-      ]
-    }],
-    interpretationData: [
-      { from: 0, to: 4, severity: 'Baja', summary: 'Sin riesgo. Seguimiento normal.' },
-      { from: 5, to: 6, severity: 'Leve', summary: 'Riesgo leve. Seguimiento cercano.' },
-      { from: 7, to: 8, severity: 'Moderada', summary: 'Riesgo moderado. Evaluación clínica completa.' },
-      { from: 9, to: 15, severity: 'Alta', summary: 'Riesgo alto. Intervención urgente y plan de seguridad.' }
     ]
   },
   {
@@ -977,122 +977,6 @@ const questionnairesData: Questionnaire[] = [
       { from: 51, to: 80, severity: 'Alta', summary: 'Rumiación crónica y desadaptativa. Mecanismo de evitación cognitiva que requiere técnicas de mindfulness y Terapia de Activación Conductual.' }
     ]
   },
-  {
-    name: 'Inventario de Ansiedad Rasgo-Estado (IDARE)',
-    id: 'idare',
-    description: 'Instrumento de 40 ítems que mide dos componentes distintos de la ansiedad: Ansiedad Estado (transitoria) y Ansiedad Rasgo (disposición permanente).',
-    category: 'Evaluación General (No Clasificada)',
-    subcategory: 'Personalidad y Estado',
-    sections: [
-      {
-        sectionId: 'estado',
-        name: 'ANSIEDAD ESTADO (A-E)',
-        instructions: 'Lea cada frase y marque el número que indique cómo se siente AHORA MISMO.',
-        likertScale: [
-          { "value": 1, "label": "NADA" },
-          { "value": 2, "label": "POCO" },
-          { "value": 3, "label": "REGULAR" },
-          { "value": 4, "label": "MUCHO" }
-        ],
-        questions: [
-          { id: 'q1', text: 'Me siento calmado', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q2', text: 'Me siento seguro', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q3', text: 'Estoy tenso', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q4', text: 'Estoy contrariado', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q5', text: 'Me siento a gusto', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q6', text: 'Me siento alterado', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q7', text: 'Estoy preocupado por posibles desgracias futuras', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q8', text: 'Me siento descansado', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q9', text: 'Me siento ansioso', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q10', text: 'Me siento cómodo', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q11', text: 'Me siento con confianza en mí mismo', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q12', text: 'Me siento nervioso', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q13', text: 'Estoy agitado', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q14', text: 'Me siento \'a punto de explotar\'', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q15', text: 'Me siento relajado', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q16', text: 'Me siento satisfecho', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q17', text: 'Estoy preocupado', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q18', text: 'Me siento muy aturdido y confuso', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q19', text: 'Me siento alegre', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q20', text: 'Me siento bien', scoringDirection: 'Inversa', type: 'likert' }
-        ]
-      },
-      {
-        sectionId: 'rasgo',
-        name: 'ANSIEDAD RASGO (A-R)',
-        instructions: 'Lea cada frase y marque el número que indique cómo se siente GENERALMENTE.',
-        likertScale: [
-          { "value": 1, "label": "CASI NUNCA" },
-          { "value": 2, "label": "ALGUNAS VECES" },
-          { "value": 3, "label": "FRECUENTEMENTE" },
-          { "value": 4, "label": "CASI SIEMPRE" }
-        ],
-        questions: [
-          { id: 'q21', text: 'Me siento bien', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q22', text: 'Me canso rápidamente', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q23', text: 'Siento ganas de llorar', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q24', text: 'Quisiera ser tan feliz como otros', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q25', text: 'Pierdo oportunidades por no decidirme rápido', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q26', text: 'Me siento descansado', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q27', text: 'Soy una persona tranquila, serena y sosegada', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q28', text: 'Siento que las dificultades se amontonan al punto de no superarlas', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q29', text: 'Me preocupo demasiado por cosas sin importancia', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q30', text: 'Soy feliz', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q31', text: 'Tomo las cosas muy a pecho', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q32', text: 'Me falta confianza en mí mismo', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q33', text: 'Me siento seguro', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q34', text: 'Trato de evitar enfrentar crisis o dificultades', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q35', text: 'Me siento melancólico', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q36', text: 'Me siento satisfecho', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q37', text: 'Algunas ideas poco importantes pasan por mi mente y me molestan', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q38', text: 'Me afectan tanto los desengaños que no me los puedo quitar de la cabeza', scoringDirection: 'Directa', type: 'likert' },
-          { id: 'q39', text: 'Soy una persona estable', scoringDirection: 'Inversa', type: 'likert' },
-          { id: 'q40', text: 'Cuando pienso en mis asuntos actuales me pongo tenso y alterado', scoringDirection: 'Directa', type: 'likert' }
-        ]
-      }
-    ],
-    interpretationData: [
-      { from: 0, to: 32, severity: 'Baja', summary: 'Nivel de ansiedad bajo.' },
-      { from: 33, to: 45, severity: 'Moderada', summary: 'Nivel de ansiedad promedio.' },
-      { from: 46, to: 80, severity: 'Alta', summary: 'Nivel de ansiedad alto.' }
-    ]
-  },
-   {
-    name: 'Estrés Percibido PSS-10',
-    id: 'pss-10',
-    description: 'Una escala de 10 ítems que mide el grado en que las situaciones de la vida se evalúan como estresantes.',
-    category: 'Evaluación General (No Clasificada)',
-    subcategory: 'Estrés',
-    sections: [{
-      sectionId: 'main',
-      name: 'Estrés Percibido PSS-10',
-      instructions: 'Las siguientes preguntas se refieren a sus sentimientos y pensamientos durante el último mes.',
-      likertScale: [
-          { value: 0, label: 'Nunca' },
-          { value: 1, label: 'Casi nunca' },
-          { value: 2, label: 'A veces' },
-          { value: 3, label: 'Con bastante frecuencia' },
-          { value: 4, label: 'Muy a menudo' },
-      ],
-      questions: [
-          { id: 'pss10_q1', text: 'En el último mes, ¿con qué frecuencia ha estado molesto/a por algo que sucedió inesperadamente?', type: 'likert', scoringDirection: 'Directa' },
-          { id: 'pss10_q2', text: 'En el último mes, ¿con qué frecuencia ha sentido que no podía controlar las cosas importantes de su vida?', type: 'likert', scoringDirection: 'Directa' },
-          { id: 'pss10_q3', text: 'En el último mes, ¿con qué frecuencia se ha sentido nervioso/a y estresado/a?', type: 'likert', scoringDirection: 'Directa' },
-          { id: 'pss10_q4', text: 'En el último mes, ¿con qué frecuencia se ha sentido seguro/a de su capacidad para manejar sus problemas personales?', type: 'likert', scoringDirection: 'Inversa' },
-          { id: 'pss10_q5', text: 'En el último mes, ¿con qué frecuencia ha sentido que las cosas le iban bien?', type: 'likert', scoringDirection: 'Inversa' },
-          { id: 'pss10_q6', text: 'En el último mes, ¿con qué frecuencia ha descubierto que no podía hacer frente a todas las cosas que tenía que hacer?', type: 'likert', scoringDirection: 'Directa' },
-          { id: 'pss10_q7', text: 'En el último mes, ¿con qué frecuencia ha sido capaz de controlar las irritaciones en su vida?', type: 'likert', scoringDirection: 'Inversa' },
-          { id: 'pss10_q8', text: 'En el último mes, ¿con qué frecuencia ha sentido que estaba al tanto de las cosas?', type: 'likert', scoringDirection: 'Inversa' },
-          { id: 'pss10_q9', text: 'En el último mes, ¿con qué frecuencia se ha enfadado por cosas que estaban fuera de su control?', type: 'likert', scoringDirection: 'Directa' },
-          { id: 'pss10_q10', text: 'En el último mes, ¿con qué frecuencia ha sentido que las dificultades se acumulaban tanto que no podía superarlas?', type: 'likert', scoringDirection: 'Directa' }
-      ],
-    }],
-    interpretationData: [
-        { from: 0, to: 13, severity: 'Baja', summary: 'Bajo estrés percibido. Indica buenos mecanismos de afrontamiento y resiliencia.' },
-        { from: 14, to: 26, severity: 'Moderada', summary: 'Estrés percibido moderado. Experimenta algunas dificultades para manejar los estresores de la vida.' },
-        { from: 27, to: 40, severity: 'Alta', summary: 'Alto estrés percibido. Indica una dificultad significativa para hacer frente a los eventos de la vida, puede requerir apoyo.' },
-    ]
-  },
 ];
 
 // Almacenamiento en memoria para cuestionarios personalizados
@@ -1138,3 +1022,4 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+

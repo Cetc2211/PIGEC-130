@@ -4,21 +4,20 @@ import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 
 // --- I. Definición de Rangos de Rumiación (RRS Subescala) ---
 // La RRS tiene dos subescalas, pero la Rumiación es la clínicamente relevante.
-// Rangos estandarizados de la subescala de Rumiación (20 ítems, rango 20-80):
+// Rangos estandarizados de la subescala de Rumiación (12 ítems, rango 12-48):
 export const RRS_RUMINATION_RANGES = [
-  { scoreMax: 35, severity: 'Baja', description: 'Rumiación adaptativa o baja. Sin tendencia a quedarse atrapado en el malestar.' },
-  { scoreMax: 50, severity: 'Moderada', description: 'Rumiación elevada. Riesgo de cronicidad y mantenimiento del Trastorno Depresivo (Perfil B).' },
-  { scoreMax: 80, severity: 'Alta', description: 'Rumiación crónica y desadaptativa. Mecanismo de evitación cognitiva que requiere técnicas de mindfulness y Terapia de Activación Conductual.' },
+  { scoreMax: 20, severity: 'Baja', description: 'Rumiación adaptativa o baja. Sin tendencia a quedarse atrapado en el malestar.' },
+  { scoreMax: 30, severity: 'Moderada', description: 'Rumiación elevada. Riesgo de cronicidad y mantenimiento del Trastorno Depresivo (Perfil B).' },
+  { scoreMax: 48, severity: 'Alta', description: 'Rumiación crónica y desadaptativa. Mecanismo de evitación cognitiva que requiere técnicas de mindfulness y Terapia de Activación Conductual.' },
 ];
 
 /**
  * Traduce la puntuación bruta de la subescala de Rumiación a un nivel de rasgo.
- * @param scoreRumiation Puntuación bruta de la subescala de Rumiación (rango 20-80).
+ * @param scoreRumiation Puntuación bruta de la subescala de Rumiación (rango 12-48).
  * @returns {severity: string, description: string}
  */
 export function interpretRRSRuminationScore(scoreRumiation: number): { severity: string, description: string } {
-  // Asumimos el rango teórico 20-80
-  const adjustedScore = Math.min(Math.max(scoreRumiation, 20), 80); 
+  const adjustedScore = Math.min(Math.max(scoreRumiation, 12), 48); 
   
   const range = RRS_RUMINATION_RANGES.find(r => adjustedScore <= r.scoreMax);
   
@@ -31,11 +30,11 @@ export function interpretRRSRuminationScore(scoreRumiation: number): { severity:
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para la RRS (Subescala de Rumiación).
+ * Genera el objeto EvaluationResultForDiagnosis para la RRS (Subescala de Rumiación).
  *
  * @param scoreRumiation Puntuación bruta de Rumiación.
  * @param scoreReflection Puntuación bruta de Reflexión (se incluye para contexto clínico, pero no para severidad principal).
- * @returns EvaluationResult para la RRS.
+ * @returns EvaluationResultForDiagnosis para la RRS.
  */
 export function generateRRSResult(scoreRumiation: number, scoreReflection: number): EvaluationResultForDiagnosis {
   const interpretation = interpretRRSRuminationScore(scoreRumiation);
@@ -58,8 +57,8 @@ export function generateRRSResult(scoreRumiation: number, scoreReflection: numbe
  */
 export function simulateRRSIntegration() {
     // Escenario clínico simulado: Rumiación Alta (Baja Reflexión, lo cual es desadaptativo)
-    const scoreRumiation = 65; 
-    const scoreReflection = 40; 
+    const scoreRumiation = 38; 
+    const scoreReflection = 20; 
     
     const rrsResult: EvaluationResultForDiagnosis = generateRRSResult(scoreRumiation, scoreReflection); 
 

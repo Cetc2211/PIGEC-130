@@ -53,11 +53,11 @@ export function interpretBISBASScore(scoreBis: number, scoreBas: number): { seve
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el BIS/BAS.
+ * Genera el objeto EvaluationResultForDiagnosis para el BIS/BAS.
  *
  * @param scoreBis Puntuación bruta total del BIS.
  * @param scoreBas Puntuación bruta total del BAS.
- * @returns EvaluationResult para el BIS/BAS.
+ * @returns EvaluationResultForDiagnosis para el BIS/BAS.
  */
 export function generateBISBASResult(scoreBis: number, scoreBas: number): EvaluationResultForDiagnosis {
   const interpretation = interpretBISBASScore(scoreBis, scoreBas);
@@ -90,7 +90,7 @@ export function simulateBISBASIntegration() {
     const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Moderada (score: 25, item 9: 0)
-            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 25, severity: 'Moderada', suicideRisk: false },
+            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 25, severity: 'Moderada', suicideRisk: false, contextDescription: '' },
             bisbasResult // Patrón Depresivo
         ]
     };

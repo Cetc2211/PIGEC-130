@@ -43,10 +43,10 @@ export function checkSSISuicideRisk(score: number): boolean {
 // --- III. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para la SSI.
+ * Genera el objeto EvaluationResultForDiagnosis para la SSI.
  *
  * @param score Puntuación bruta total de la SSI.
- * @returns EvaluationResult para la SSI.
+ * @returns EvaluationResultForDiagnosis para la SSI.
  */
 export function generateSSIResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretSSIScore(score);

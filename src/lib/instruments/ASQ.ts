@@ -37,11 +37,11 @@ export function interpretASQScore(score_negative_avg: number): { severity: strin
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el ASQ.
+ * Genera el objeto EvaluationResultForDiagnosis para el ASQ.
  *
  * @param score_negative_avg Puntuación promedio de pesimismo (3-9).
  * @param score_positive_avg Puntuación promedio de optimismo (3-9, para contexto).
- * @returns EvaluationResult para el ASQ.
+ * @returns EvaluationResultForDiagnosis para el ASQ.
  */
 export function generateASQResult(score_negative_avg: number, score_positive_avg: number): EvaluationResultForDiagnosis {
   const interpretation = interpretASQScore(score_negative_avg);

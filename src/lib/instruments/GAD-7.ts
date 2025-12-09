@@ -21,19 +21,19 @@ export function interpretGAD7Score(score: number): { severity: string, descripti
   if (range) {
     return { severity: range.severity, description: range.description };
   }
-  return { severity: 'Error', description: 'Puntuación fuera de rango válido (0-21).' };
+  return { severity: 'Grave', description: 'Puntuación fuera de rango válido (0-21).' };
 }
 
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el GAD-7.
+ * Genera el objeto EvaluationResultForDiagnosis para el GAD-7.
  * Nota: El GAD-7, al igual que el PHQ-9, también incluye un ítem de dificultad funcional/síntomas de ansiedad
  * que, si es respondido afirmativamente, puede considerarse un factor de riesgo aunque no sea el foco principal del Triage D.
  * Sin embargo, se mantiene 'suicideRisk: false' para este módulo, confiando en el BDI-II y PHQ-9 para la alerta D.
  *
  * @param score Puntuación bruta total del GAD-7.
- * @returns EvaluationResult para el GAD-7.
+ * @returns EvaluationResultForDiagnosis para el GAD-7.
  */
 export function generateGAD7Result(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretGAD7Score(score);
@@ -63,9 +63,9 @@ export function simulateGAD7Integration() {
     const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Depresión Leve (score: 18, item 9: 0)
-            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 18, severity: 'Leve', suicideRisk: false },
+            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 18, severity: 'Leve', suicideRisk: false, contextDescription: '' },
             // Simulación BAI: Ansiedad Mínima (score: 5)
-            { instrumentName: 'BAI', date: new Date('2025-12-01'), score: 5, severity: 'Mínima', suicideRisk: false },
+            { instrumentName: 'BAI', date: new Date('2025-12-01'), score: 5, severity: 'Mínima', suicideRisk: false, contextDescription: '' },
             // GAD-7: Ansiedad Moderada (score: 11)
             gad7Result 
         ]

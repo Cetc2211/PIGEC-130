@@ -22,7 +22,7 @@ export function interpretBDIIScore(score: number): { severity: string, descripti
   if (range) {
     return { severity: range.severity, description: range.description };
   }
-  return { severity: 'Error', description: 'Puntuación fuera de rango válido (0-63).' };
+  return { severity: 'Grave', description: 'Puntuación fuera de rango válido (0-63).' };
 }
 
 
@@ -43,11 +43,11 @@ export function checkBDIISuicideRisk(item9Score: number): boolean {
 // --- III. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el BDI-II.
+ * Genera el objeto EvaluationResultForDiagnosis para el BDI-II.
  *
  * @param score Puntuación bruta total del BDI-II.
  * @param item9Score Puntuación del ítem 9 específico (para riesgo suicida).
- * @returns EvaluationResult para el BDI-II.
+ * @returns EvaluationResultForDiagnosis para el BDI-II.
  */
 export function generateBDIResult(score: number, item9Score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretBDIIScore(score);

@@ -29,10 +29,10 @@ export function interpretAQ10Score(score: number): { severity: string, descripti
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el AQ-10.
+ * Genera el objeto EvaluationResultForDiagnosis para el AQ-10.
  *
  * @param score Puntuación bruta total del AQ-10.
- * @returns EvaluationResult para el AQ-10.
+ * @returns EvaluationResultForDiagnosis para el AQ-10.
  */
 export function generateAQ10Result(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretAQ10Score(score);
@@ -62,7 +62,7 @@ export function simulateAQ10Integration() {
     const mockResults: PatientResults = {
         results: [
             // Simulación GAD-7: Ansiedad Moderada (que podría ser ansiedad social)
-            { instrumentName: 'GAD-7', date: new Date('2025-12-01'), score: 13, severity: 'Moderada', suicideRisk: false },
+            { instrumentName: 'GAD-7', date: new Date('2025-12-01'), score: 13, severity: 'Moderada', suicideRisk: false, contextDescription: '' },
             aq10Result // Cribado Positivo
         ]
     };

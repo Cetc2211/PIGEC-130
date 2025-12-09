@@ -31,11 +31,11 @@ export function interpretDASScore(score: number): { severity: 'Baja' | 'Moderada
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para la DAS.
+ * Genera el objeto EvaluationResultForDiagnosis para la DAS.
  * Nota: Es una escala de rasgo cognitivo.
  *
  * @param score Puntuación bruta total de la DAS.
- * @returns EvaluationResult para la DAS.
+ * @returns EvaluationResultForDiagnosis para la DAS.
  */
 export function generateDASResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretDASScore(score);
@@ -65,7 +65,7 @@ export function simulateDASIntegration() {
     const mockResults: PatientResults = {
         results: [
             // Simulación BDI-II: Moderada (score: 28, item 9: 0)
-            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 28, severity: 'Moderada', suicideRisk: false },
+            { instrumentName: 'BDI-II', date: new Date('2025-12-01'), score: 28, severity: 'Moderada', suicideRisk: false, contextDescription: '' },
             dasResult // Rigidez Alta
         ]
     };

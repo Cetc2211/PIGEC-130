@@ -7,8 +7,7 @@ import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 export const ATQ30_SEVERITY_RANGES = [
   { scoreMax: 60, severity: 'Leve', description: 'Presencia de PANs que se activan bajo estrés leve.' },
   { scoreMax: 90, severity: 'Moderada', description: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
-  { scoreMax: 120, severity: 'Alta', description: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
-  { scoreMax: 150, severity: 'Alta', description: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' },
+  { scoreMax: 120, severity: 'Grave', description: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
 ];
 
 /**
@@ -29,16 +28,16 @@ export function interpretATQ30Score(score: number): { severity: string, descript
   if (range) {
     return { severity: range.severity, description: range.description };
   }
-  return { severity: 'Alta', description: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' };
+  return { severity: 'Grave', description: 'Frecuencia extrema de PANs. Se requiere Reestructuración Cognitiva urgente.' };
 }
 
 // --- II. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para el ATQ-30.
+ * Genera el objeto EvaluationResultForDiagnosis para el ATQ-30.
  *
  * @param score Puntuación bruta total del ATQ-30.
- * @returns EvaluationResult para el ATQ-30.
+ * @returns EvaluationResultForDiagnosis para el ATQ-30.
  */
 export function generateATQ30Result(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretATQ30Score(score);

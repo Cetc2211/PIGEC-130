@@ -44,10 +44,10 @@ export function checkBHSCognitiveRisk(score: number): boolean {
 // --- III. Función para Generar el Resultado de Evaluación ---
 
 /**
- * Genera el objeto EvaluationResult para la BHS.
+ * Genera el objeto EvaluationResultForDiagnosis para la BHS.
  *
  * @param score Puntuación bruta total de la BHS.
- * @returns EvaluationResult para la BHS.
+ * @returns EvaluationResultForDiagnosis para la BHS.
  */
 export function generateBHSResult(score: number): EvaluationResultForDiagnosis {
   const interpretation = interpretBHSScore(score);
