@@ -10,12 +10,14 @@ type EvaluationPageProps = {
   };
   searchParams?: {
     patient?: string;
+    remote?: string;
   };
 };
 
 export default function EvaluationPage({ params, searchParams }: EvaluationPageProps) {
   const questionnaire = getQuestionnaire(params.id);
   const patientId = searchParams?.patient;
+  const isRemote = searchParams?.remote === 'true';
 
   if (!questionnaire) {
     notFound();
@@ -33,7 +35,7 @@ export default function EvaluationPage({ params, searchParams }: EvaluationPageP
             <CardDescription>{questionnaire.description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <QuestionnaireForm questionnaire={questionnaire} patientId={patientId} />
+            <QuestionnaireForm questionnaire={questionnaire} patientId={patientId} isRemote={isRemote} />
           </CardContent>
         </Card>
          <p className="text-center text-sm text-muted-foreground mt-6">

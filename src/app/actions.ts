@@ -18,6 +18,7 @@ export type FormState = {
 export async function submitEvaluation(
   questionnaireId: string,
   patientId: string | null, // patientId can be null
+  isRemote: boolean,
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
@@ -111,6 +112,16 @@ export async function submitEvaluation(
 
     totalPossibleScores[sectionId] = sectionTotalPossible;
   }
+  
+  if (isRemote) {
+    const remoteResult = {
+      patientId,
+      questionnaireId,
+      answers: answerValues,
+    };
+    const resultCode = Buffer.from(JSON.stringify(remoteResult)).toString('base64');
+    redirect(`/evaluation/submitted?code=${encodeURIComponent(resultCode)}`);
+  }
 
   const result = saveResult({
     questionnaireId: questionnaire.id,
@@ -157,7 +168,7 @@ export type CreateQuestionnaireState = {
 const interpretationSchema = z.object({
     from: z.number(),
     to: z.number(),
-    severity: z.enum(['Baja', 'Leve', 'Moderada', 'Alta']),
+    severity: z.enum(['Baja', 'Leve', 'Moderada', 'Alta', 'Positivo', 'Negativo', 'Optimista', 'Intermedio', 'Pesimista']),
     summary: z.string().min(1, 'El resumen es obligatorio'),
 });
 
@@ -564,4 +575,99 @@ export async function saveClinicalInterviewAction(
       success: true,
       message: '¡Entrevista clínica guardada con éxito!',
     };
+}
+
+
+export type ImportResultState = {
+  success: boolean;
+  message: string;
+}
+
+export async function importResultAction(prevState: ImportResultState, formData: FormData): Promise<ImportResultState> {
+  const code = formData.get('resultCode') as string;
+  if (!code) {
+    return { success: false, message: 'El código no puede estar vacío.' };
+  }
+
+  try {
+    const decoded = JSON.parse(Buffer.from(code, 'base64').toString('utf8'));
+
+    const { patientId, questionnaireId, answers } = decoded;
+
+    if (!questionnaireId || !answers) {
+      throw new Error('El código es inválido o está incompleto.');
+    }
+
+    const questionnaire = getQuestionnaire(questionnaireId);
+    if (!questionnaire) {
+        throw new Error('El cuestionario especificado en el código no existe.');
+    }
+
+    const scores: Record<string, number> = {};
+    const totalPossibleScores: Record<string, number> = {};
+
+    for (const section of questionnaire.sections) {
+      let sectionScore = 0;
+      let sectionTotalPossible = 0;
+      const sectionId = section.sectionId;
+
+      for (const question of section.questions) {
+        const questionId = question.id;
+        const rawAnswer = answers[questionId];
+
+        if (rawAnswer !== undefined && question.type === 'likert' && question.includeInScore !== false) {
+           const value = Number(rawAnswer);
+           let scoreForQuestion = value;
+
+            if (question.scoring?.type === 'match') {
+              scoreForQuestion = value === question.scoring.value ? 1 : 0;
+            } else if (question.scoring?.type === 'aq-10') {
+                const agrees = value === 3 || value === 2;
+                const disagrees = value === 1 || value === 0;
+                if (question.scoring.agreesIsOne && agrees) scoreForQuestion = 1;
+                else if (!question.scoring.agreesIsOne && disagrees) scoreForQuestion = 1;
+                else scoreForQuestion = 0;
+            } else if (question.scoringDirection === 'Inversa') {
+              const maxScaleValue = Math.max(...section.likertScale.map(o => o.value));
+              const minScaleValue = Math.min(...section.likertScale.map(o => o.value));
+              scoreForQuestion = (maxScaleValue + minScaleValue) - value;
+            }
+            
+            sectionScore += scoreForQuestion;
+        }
+         if (question.type === 'likert' && question.includeInScore !== false) {
+            if (question.scoring?.type === 'match' || question.scoring?.type === 'aq-10') {
+              sectionTotalPossible += 1;
+            } else {
+              const options = question.options || section.likertScale;
+              sectionTotalPossible += Math.max(...options.map(o => o.value));
+            }
+        }
+      }
+        scores[sectionId] = sectionScore;
+        totalPossibleScores[sectionId] = sectionTotalPossible;
+    }
+
+
+    const result = saveResult({
+      questionnaireId: questionnaire.id,
+      questionnaireName: questionnaire.name,
+      answers: answers,
+      scores,
+      totalPossibleScores,
+      submittedAt: new Date(),
+      patientId: patientId || undefined,
+    });
+
+    if (patientId) {
+        revalidatePath(`/patients/${patientId}`);
+    }
+    revalidatePath('/patients');
+
+    return { success: true, message: `Resultados del cuestionario "${questionnaire.name}" importados con éxito.` };
+
+  } catch (error: any) {
+    console.error("Import error:", error);
+    return { success: false, message: 'El código proporcionado es inválido o está corrupto. No se pudo importar el resultado.' };
+  }
 }

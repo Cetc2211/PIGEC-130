@@ -17,6 +17,7 @@ import { Separator } from './ui/separator';
 type QuestionnaireFormProps = {
   questionnaire: Questionnaire;
   patientId?: string;
+  isRemote?: boolean;
 };
 
 function SubmitButton() {
@@ -70,8 +71,8 @@ function QuestionField({ question, options, error }: { question: Question, optio
     )
 }
 
-export function QuestionnaireForm({ questionnaire, patientId }: QuestionnaireFormProps) {
-  const submitEvaluationWithContext = submitEvaluation.bind(null, questionnaire.id, patientId || null);
+export function QuestionnaireForm({ questionnaire, patientId, isRemote = false }: QuestionnaireFormProps) {
+  const submitEvaluationWithContext = submitEvaluation.bind(null, questionnaire.id, patientId || null, isRemote);
   const [state, formAction] = useActionState(submitEvaluationWithContext, { message: '' });
   const { toast } = useToast();
 

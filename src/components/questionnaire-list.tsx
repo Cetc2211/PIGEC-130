@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2 } from 'lucide-react';
+import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import type { Patient } from '@/lib/store';
@@ -120,6 +120,7 @@ type QuestionnaireListProps = {
 export function QuestionnaireList({ groupedQuestionnaires, patients }: QuestionnaireListProps) {
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<Questionnaire | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleAssignClick = (questionnaire: Questionnaire) => {
     setSelectedQuestionnaire(questionnaire);
@@ -127,6 +128,15 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
   
   const handleCloseDialog = () => {
     setSelectedQuestionnaire(null);
+  };
+
+  const handleShareClick = (questionnaire: Questionnaire) => {
+    const url = `${window.location.origin}/evaluation/${questionnaire.id}?remote=true`;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Enlace Copiado",
+      description: "El enlace para la evaluación remota ha sido copiado al portapapeles.",
+    });
   };
 
   const handleCardClick = (id: string) => {
@@ -175,12 +185,16 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
                                 <div className="text-sm text-muted-foreground">{totalQuestions(q)} preguntas</div>
                               </CardContent>
                             </div>
-                            <CardFooter className="flex justify-between items-center">
-                              <Button onClick={() => handleCardClick(q.id)} variant="outline" className="w-full mr-2">
+                            <CardFooter className="grid grid-cols-3 gap-2">
+                              <Button onClick={() => handleCardClick(q.id)} variant="outline" size="sm">
                                 <Eye className="mr-2 h-4 w-4" />
                                 Revisar
                               </Button>
-                              <Button onClick={() => handleAssignClick(q)} variant="secondary" className="w-full">
+                               <Button onClick={() => handleShareClick(q)} variant="secondary" size="sm">
+                                <Share2 className="mr-2 h-4 w-4" />
+                                Compartir
+                              </Button>
+                              <Button onClick={() => handleAssignClick(q)} size="sm">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Asignar
                               </Button>

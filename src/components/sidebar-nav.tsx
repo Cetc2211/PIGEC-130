@@ -2,13 +2,14 @@
 
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from './ui/sidebar';
-import { Home, Users, FileText, Settings } from 'lucide-react';
+import { Home, Users, FileText, Settings, Import } from 'lucide-react';
 import Link from 'next/link';
 
 const navItems = [
   { href: '/', label: 'Panel', icon: Home },
   { href: '/patients', label: 'Pacientes', icon: Users },
-  { href: '/reports', label: 'Informes', icon: FileText },
+  { href: '/import', label: 'Importar Resultados', icon: Import },
+  { href: '/reports', label: 'Informes', icon: FileText, disabled: true },
   { href: '/settings', label: 'Ajustes', icon: Settings, disabled: true },
 ];
 
