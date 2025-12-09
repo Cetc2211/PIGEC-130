@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { SidebarTriggerButton } from '@/components/sidebar-trigger-button';
 import { generatePatientProfile, PatientProfile } from '@/lib/diagnosis';
+import { ClinicalInterviewForm } from '@/components/clinical-interview-form';
 
 type PatientProfilePageProps = {
   params: {
@@ -125,7 +126,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
         </div>
       </header>
 
-      <Tabs defaultValue="diagnosis" className="w-full">
+      <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile"><Pencil className="mr-2 h-4 w-4" /> Ficha</TabsTrigger>
           <TabsTrigger value="clinical-interview"><ClipboardEdit className="mr-2 h-4 w-4" /> Entrevista</TabsTrigger>
@@ -139,15 +140,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
         </TabsContent>
 
         <TabsContent value="clinical-interview" className="mt-6">
-           <Card>
-              <CardHeader>
-                <CardTitle>Entrevista Clínica Inicial</CardTitle>
-                <CardDescription>Formato estructurado para la recolección de información clínica esencial.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">El formato de la entrevista clínica estará disponible aquí próximamente.</p>
-              </CardContent>
-            </Card>
+           <ClinicalInterviewForm patient={patient} />
         </TabsContent>
 
         <TabsContent value="informed-consent" className="mt-6">

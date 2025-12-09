@@ -475,3 +475,78 @@ export async function updatePatientAction(
         };
     }
 }
+
+export type SaveInterviewState = {
+  success: boolean;
+  message: string;
+  errors?: Record<string, any>;
+}
+
+// Corresponde a InterviewData en diagnosis.ts
+const interviewSchema = z.object({
+  patientId: z.string(),
+  motivoConsulta: z.string().min(10, 'El motivo de consulta es demasiado corto.'),
+  expectativasTratamiento: z.string().min(10, 'Las expectativas son demasiado cortas.'),
+  riesgoSuicidaActivo: z.boolean(),
+  crisisPsicotica: z.boolean(),
+  historiaEnfermedadActual: z.string().min(20, 'La historia de la enfermedad es demasiado corta.'),
+  ansiedadDominante: z.boolean(),
+  depresionDominante: z.boolean(),
+  disociacion: z.boolean(),
+  controlImpulsos: z.boolean(),
+  traumaInfancia: z.boolean(),
+  dinamicaFamiliar: z.string().min(10, 'La descripción de la dinámica familiar es demasiado corta.'),
+  desarrolloSexual: z.string().optional(),
+  escolaridadProblemas: z.boolean(),
+  afeccionMedicaCronica: z.string().optional(),
+  consumoSustanciasActual: z.string().optional(),
+  impresionCIE11_DSM5: z.string().optional(),
+  impresionDiagnosticoDiferencial: z.string().optional(),
+});
+
+export async function saveClinicalInterviewAction(
+  prevState: SaveInterviewState,
+  formData: FormData
+): Promise<SaveInterviewState> {
+    
+    const data = {
+        patientId: formData.get('patientId'),
+        motivoConsulta: formData.get('motivoConsulta'),
+        expectativasTratamiento: formData.get('expectativasTratamiento'),
+        riesgoSuicidaActivo: formData.get('riesgoSuicidaActivo') === 'on',
+        crisisPsicotica: formData.get('crisisPsicotica') === 'on',
+        historiaEnfermedadActual: formData.get('historiaEnfermedadActual'),
+        ansiedadDominante: formData.get('ansiedadDominante') === 'on',
+        depresionDominante: formData.get('depresionDominante') === 'on',
+        disociacion: formData.get('disociacion') === 'on',
+        controlImpulsos: formData.get('controlImpulsos') === 'on',
+        traumaInfancia: formData.get('traumaInfancia') === 'on',
+        dinamicaFamiliar: formData.get('dinamicaFamiliar'),
+        desarrolloSexual: formData.get('desarrolloSexual'),
+        escolaridadProblemas: formData.get('escolaridadProblemas') === 'on',
+        afeccionMedicaCronica: formData.get('afeccionMedicaCronica'),
+        consumoSustanciasActual: formData.get('consumoSustanciasActual'),
+        impresionCIE11_DSM5: formData.get('impresionCIE11_DSM5'),
+        impresionDiagnosticoDiferencial: formData.get('impresionDiagnosticoDiferencial'),
+    };
+    
+    const parsed = interviewSchema.safeParse(data);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: 'Error de validación. Revisa los campos marcados.',
+        errors: parsed.error.flatten().fieldErrors,
+      };
+    }
+    
+    // Aquí es donde guardarías los datos en la base de datos.
+    // Por ahora, solo simularemos el éxito.
+    console.log("Datos de la entrevista a guardar:", parsed.data);
+    revalidatePath(`/patients/${parsed.data.patientId}`);
+    
+    return {
+      success: true,
+      message: '¡Entrevista clínica guardada con éxito!',
+    };
+}
