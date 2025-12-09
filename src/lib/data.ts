@@ -17,14 +17,14 @@ export type Question = {
 };
 
 export type Interpretation = {
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta' | 'Mínima';
     summary: string;
 }
 
 export type InterpretationRule = {
     from: number;
     to: number;
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta' | 'Mínima';
     summary: string;
 };
 
@@ -357,7 +357,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
       ]
     }],
     interpretationData: [
-      { from: 0, to: 13, severity: 'Baja', summary: 'Sintomatología depresiva mínima. Los síntomas son bajos o inexistentes.' },
+      { from: 0, to: 13, severity: 'Mínima', summary: 'Sintomatología depresiva mínima. Los síntomas son bajos o inexistentes.' },
       { from: 14, to: 19, severity: 'Leve', summary: 'Sintomatología depresiva leve. Puede que experimente algunos síntomas que no son severos.' },
       { from: 20, to: 28, severity: 'Moderada', summary: 'Sintomatología depresiva moderada. Se experimentan varios síntomas que pueden interferir con el funcionamiento diario.' },
       { from: 29, to: 63, severity: 'Alta', summary: 'Sintomatología depresiva severa. Los síntomas son intensos y persistentes, afectando significativamente la vida diaria.' }
@@ -505,7 +505,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
         { id: 'ssi_q13', type: 'likert', text: 'MÉTODO: DISPONIBILIDAD/OPORTUNIDAD', options: [
           { value: 0, label: 'Método no disponible, no hay oportunidad' }, { value: 1, label: 'Método tomaría tiempo/esfuerzo' }, { value: 2, label: 'Método disponible/oportunidad presente o anticipada' }
         ]},
-        { id: 'ssi_q14', type: 'likert', text: "SENTIDO DE 'CAPACIDAD'", options: [
+        { id: 'ssi_q14', type: "likert", text: "SENTIDO DE 'CAPACIDAD'", options: [
           { value: 0, label: 'No tiene valor, muy débil' }, { value: 1, label: 'Inseguro del valor' }, { value: 2, label: 'Seguro de tener valor' }
         ]},
         { id: 'ssi_q15', type: 'likert', text: 'EXPECTATIVA/ANTICIPACIÓN DEL INTENTO', options: [
@@ -751,11 +751,11 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
     ]
   },
   {
-    id: 'plutchik-srs',
     name: 'Escala de Riesgo Suicida de Plutchik',
+    id: 'plutchik-srs',
     description: 'Cuestionario de 15 ítems de respuesta Sí/No diseñado para evaluar la probabilidad de riesgo suicida en pacientes.',
     category: 'Riesgo Clínico',
-    subcategory: 'Riesgo Suicida',
+    subcategory: 'Ideación y Comportamiento Suicida',
     sections: [{
       sectionId: 'main',
       name: 'Escala de Riesgo Suicida de Plutchik',
