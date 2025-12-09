@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Label } from './ui/label';
 
 // Esquema de validación que corresponde a InterviewData de diagnosis.ts
 const interviewSchema = z.object({
