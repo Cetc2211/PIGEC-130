@@ -1,13 +1,13 @@
 'use client';
 
 import type { Questionnaire } from '@/lib/data';
-import { useState, useMemo, useTransition, useActionState, useEffect } from 'react';
+import { useState, useMemo, useActionState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, Share2 } from 'lucide-react';
+import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, Share2, Link as LinkIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import type { Patient } from '@/lib/store';
@@ -50,6 +50,17 @@ function AssignEvaluationDialog({ questionnaire, patients, onClose }: AssignEval
         }
     }, [state, questionnaire.name, selectedPatient?.name, onClose, toast]);
     
+    const handleShareClick = () => {
+        if (!selectedPatient) return;
+        const url = `${window.location.origin}/evaluation/${questionnaire.id}?remote=true&patient=${selectedPatient.id}`;
+        navigator.clipboard.writeText(url);
+        toast({
+            title: "Enlace de Evaluación Remota Copiado",
+            description: `El enlace para ${selectedPatient.name} ha sido copiado.`,
+        });
+        onClose();
+    };
+
     return (
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md">
@@ -59,7 +70,7 @@ function AssignEvaluationDialog({ questionnaire, patients, onClose }: AssignEval
                     <DialogHeader>
                         <DialogTitle className="font-headline">Asignar "{questionnaire.name}"</DialogTitle>
                         <DialogDescription>
-                            Busca y selecciona el paciente al que deseas asignar esta evaluación.
+                            Busca y selecciona el paciente para asignar esta evaluación o compartir un enlace remoto.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col gap-4 py-4">
@@ -95,8 +106,16 @@ function AssignEvaluationDialog({ questionnaire, patients, onClose }: AssignEval
                             </div>
                         </ScrollArea>
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="grid grid-cols-2 gap-2 sm:flex">
                         <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
+                        <Button type="button" variant="secondary" onClick={handleShareClick} disabled={!selectedPatient || isPending}>
+                            {isPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <LinkIcon className="mr-2 h-4 w-4" />
+                            )}
+                            Compartir Enlace
+                        </Button>
                         <Button type="submit" disabled={!selectedPatient || isPending}>
                             {isPending ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -120,7 +139,6 @@ type QuestionnaireListProps = {
 export function QuestionnaireList({ groupedQuestionnaires, patients }: QuestionnaireListProps) {
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<Questionnaire | null>(null);
   const router = useRouter();
-  const { toast } = useToast();
 
   const handleAssignClick = (questionnaire: Questionnaire) => {
     setSelectedQuestionnaire(questionnaire);
@@ -128,15 +146,6 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
   
   const handleCloseDialog = () => {
     setSelectedQuestionnaire(null);
-  };
-
-  const handleShareClick = (questionnaire: Questionnaire) => {
-    const url = `${window.location.origin}/evaluation/${questionnaire.id}?remote=true`;
-    navigator.clipboard.writeText(url);
-    toast({
-      title: "Enlace Copiado",
-      description: "El enlace para la evaluación remota ha sido copiado al portapapeles.",
-    });
   };
 
   const handleCardClick = (id: string) => {
@@ -185,18 +194,14 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
                                 <div className="text-sm text-muted-foreground">{totalQuestions(q)} preguntas</div>
                               </CardContent>
                             </div>
-                            <CardFooter className="grid grid-cols-3 gap-2">
+                            <CardFooter className="grid grid-cols-2 gap-2">
                               <Button onClick={() => handleCardClick(q.id)} variant="outline" size="sm">
                                 <Eye className="mr-2 h-4 w-4" />
                                 Revisar
                               </Button>
-                               <Button onClick={() => handleShareClick(q)} variant="secondary" size="sm">
-                                <Share2 className="mr-2 h-4 w-4" />
-                                Compartir
-                              </Button>
                               <Button onClick={() => handleAssignClick(q)} size="sm">
                                 <Plus className="mr-2 h-4 w-4" />
-                                Asignar
+                                Asignar / Compartir
                               </Button>
                             </CardFooter>
                           </Card>
