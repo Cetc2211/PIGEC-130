@@ -52,6 +52,7 @@ export type Questionnaire = {
 const questionnairesData: Omit<Questionnaire, 'id'>[] = [
   {
     name: 'Escala de Ansiedad y Depresión Hospitalaria (HADS)',
+    id: 'hads',
     description: 'Instrumento de 14 ítems para detectar estados de ansiedad y depresión, centrándose en síntomas afectivos y no somáticos.',
     category: 'Estado de Ánimo',
     subcategory: 'Ansiedad y Depresión',
@@ -137,6 +138,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
   },
   {
     name: 'Inventario de Ansiedad Rasgo-Estado',
+    id: 'idare',
     description: 'Instrumento de 40 ítems que mide dos componentes distintos de la ansiedad: Ansiedad Estado (transitoria) y Ansiedad Rasgo (disposición permanente).',
     category: 'Personalidad y Estado',
     subcategory: 'Ansiedad',
@@ -215,6 +217,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
     ]
   },
   {
+    id: 'bdi-ii',
     name: 'Inventario de Depresión de Beck-II',
     description: 'Cuestionario de 21 ítems para evaluar la severidad de los síntomas de depresión en las últimas dos semanas.',
     category: 'Estado de Ánimo',
@@ -361,6 +364,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
     ]
   },
   {
+    id: 'bai',
     name: 'Inventario de Ansiedad de Beck',
     description: 'Cuestionario de 21 ítems que mide la severidad de los síntomas de ansiedad física y cognitiva experimentados durante la última semana.',
     category: 'Estado de Ánimo',
@@ -407,6 +411,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
     ]
   },
   {
+    id: 'bhs',
     name: 'Escala de Desesperanza de Beck',
     description: 'Instrumento de 20 ítems de Verdadero/Falso para medir el grado de expectativas negativas sobre el futuro (desesperanza).',
     category: 'Estado de Ánimo',
@@ -450,6 +455,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
     ]
   },
   {
+    id: 'ssi',
     name: 'Escala de Ideación Suicida de Beck',
     description: 'Escala de 21 ítems que evalúa la severidad y características de la ideación suicida actual.',
     category: 'Riesgo Clínico',
@@ -541,6 +547,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
   },
   {
     name: 'Ansiedad GAD-7',
+    id: 'gad-7',
     description: 'Una herramienta de 7 preguntas para la detección del Trastorno de Ansiedad Generalizada.',
     category: 'Estado de Ánimo',
     subcategory: 'Ansiedad',
@@ -572,6 +579,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
     ],
   },
   {
+    id: 'phq-9',
     name: 'Cuestionario de Salud del Paciente (PHQ-9)',
     description: 'Instrumento de 9 ítems para el cribado, diagnóstico y medición de la severidad de la depresión mayor, basado en criterios del DSM.',
     category: 'Estado de Ánimo',
@@ -630,6 +638,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
   },
   {
     name: 'Estrés Percibido PSS-10',
+    id: 'pss-10',
     description: 'Una escala de 10 ítems que mide el grado en que las situaciones de la vida se evalúan como estresantes.',
     category: 'Estado de Ánimo',
     subcategory: 'Estrés',
@@ -665,6 +674,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
   },
   {
     name: 'Guía de Observación Conductual en Aula (GOCA)',
+    id: 'goca',
     description: 'Instrumento para que los docentes observen y registren la frecuencia de conductas clave relacionadas con la atención, motivación, estado emocional y rendimiento del estudiante en el aula.',
     category: 'Conductual',
     subcategory: 'Observación en Aula',
