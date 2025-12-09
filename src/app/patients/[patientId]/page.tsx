@@ -1,7 +1,7 @@
 'use server';
 
 import { notFound } from 'next/navigation';
-import { getPatient, getAssignedQuestionnairesForPatient, getAllResultsForPatient } from '@/lib/store';
+import { getPatient, getAssignedQuestionnairesForPatient, getAllResultsForPatient, type EvaluationResult } from '@/lib/store';
 import { getQuestionnaire, getInterpretation } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,86 @@ import { PatientProfileForm } from '@/components/patient-profile-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { SidebarTriggerButton } from '@/components/sidebar-trigger-button';
+import { generatePatientProfile, PatientProfile } from '@/lib/diagnosis';
 
 type PatientProfilePageProps = {
   params: {
     patientId: string;
   };
 };
+
+function adaptResultsForDiagnosis(results: EvaluationResult[]): any[] {
+  return results.map(res => {
+    const mainScoreKey = Object.keys(res.scores)[0] || 'main';
+    const mainScore = res.scores[mainScoreKey];
+    const interpretation = getInterpretation(res.questionnaireId, mainScore);
+    // Asumimos que cualquier pregunta sobre suicidio marca el riesgo.
+    // Esto es una simplificación y podría mejorarse.
+    const hasSuicideQuestion = getQuestionnaire(res.questionnaireId)?.sections.flatMap(s => s.questions).some(q => q.text.toLowerCase().includes('suicid'));
+    const suicideRisk = hasSuicideQuestion && res.answers['phq9_q9'] > 0;
+
+    return {
+      instrumentName: res.questionnaireName,
+      date: res.submittedAt,
+      score: mainScore,
+      severity: interpretation.severity,
+      suicideRisk: !!suicideRisk
+    };
+  });
+}
+
+function PatientDiagnosisProfile({ profile }: { profile: PatientProfile }) {
+  const getSeverityBadgeVariant = (severity: string) => {
+    switch (severity.toLowerCase()) {
+      case 'alta':
+      case 'grave':
+        return 'destructive';
+      case 'moderada':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  return (
+     <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="font-headline text-2xl">{profile.name}</CardTitle>
+            <CardDescription>{profile.summary}</CardDescription>
+          </div>
+          <Badge variant="default" className="text-sm whitespace-nowrap">{profile.profileId.replace('perfil-', 'Perfil ').toUpperCase()}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div>
+          <h4 className="font-semibold text-muted-foreground">Puntuaciones Clave</h4>
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {profile.keyScores.length > 0 ? profile.keyScores.map(ks => (
+              <div key={ks.instrumentName} className="p-3 rounded-md border bg-muted/50">
+                <p className="font-medium">{ks.instrumentName}</p>
+                <p className="text-2xl font-bold">{ks.score}</p>
+                <Badge variant={getSeverityBadgeVariant(ks.severity)}>{ks.severity}</Badge>
+              </div>
+            )) : <p className="text-sm text-muted-foreground col-span-3">No hay puntuaciones clave disponibles.</p>}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-semibold text-muted-foreground">Protocolo y Monitoreo Recomendado</h4>
+           <div className="mt-2 space-y-2 text-sm">
+             <p><span className="font-medium">Protocolo:</span> {profile.protocol}</p>
+             <p><span className="font-medium">Frecuencia de Monitoreo:</span> {profile.monitoringFrequency}</p>
+             <p><span className="font-medium">Instrumentos Recomendados:</span> {profile.recommendedInstruments.join(', ')}</p>
+           </div>
+        </div>
+
+      </CardContent>
+    </Card>
+  )
+}
+
 
 export default async function PatientProfilePage({ params }: PatientProfilePageProps) {
   const patient = getPatient(params.patientId);
@@ -37,6 +111,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
       return getQuestionnaire(assignment.questionnaireId);
   }).filter(Boolean);
 
+  const diagnosisProfile = generatePatientProfile({ results: adaptResultsForDiagnosis(results) });
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
@@ -49,11 +124,11 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
         </div>
       </header>
 
-      <Tabs defaultValue="evaluations" className="w-full">
+      <Tabs defaultValue="diagnosis" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="profile"><Pencil className="mr-2 h-4 w-4" /> Ficha de Identificación</TabsTrigger>
           <TabsTrigger value="evaluations"><ClipboardList className="mr-2 h-4 w-4" /> Evaluaciones</TabsTrigger>
-          <TabsTrigger value="diagnosis"><Stethoscope className="mr-2 h-4 w-4" /> Realizar Diagnóstico</TabsTrigger>
+          <TabsTrigger value="diagnosis"><Stethoscope className="mr-2 h-4 w-4" /> Perfil Diagnóstico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="mt-6">
@@ -125,24 +200,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
         </TabsContent>
 
         <TabsContent value="diagnosis" className="mt-6">
-           <Card>
-            <CardHeader>
-              <CardTitle>Realizar Diagnóstico (Próximamente)</CardTitle>
-              <CardDescription>
-                Esta sección te permitirá consolidar todos los resultados de las evaluaciones, notas de entrevistas y otras observaciones para formular un diagnóstico integral. 
-                Podrás redactar tus conclusiones o utilizar herramientas de IA para que te asistan en el análisis y la redacción del informe final.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-               <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[300px]">
-                 <Stethoscope className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="font-semibold">Funcionalidad en Desarrollo</h3>
-                <p className="text-sm text-muted-foreground mt-2 max-w-md">
-                    Pronto podrás utilizar esta área para sintetizar toda la información y generar un informe diagnóstico completo.
-                </p>
-            </div>
-            </CardContent>
-          </Card>
+           <PatientDiagnosisProfile profile={diagnosisProfile} />
         </TabsContent>
       </Tabs>
     </div>
