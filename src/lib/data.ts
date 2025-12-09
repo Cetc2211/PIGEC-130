@@ -542,10 +542,10 @@ const questionnairesData: Questionnaire[] = [
       ]
     }],
     interpretationData: [
-      { from: 0, to: 5, severity: 'Baja', summary: 'Riesgo suicida bajo. Los síntomas de ideación son mínimos. Requiere seguimiento regular.' },
-      { from: 6, to: 9, severity: 'Moderada', summary: 'Riesgo suicida moderado. La ideación es presente y requiere evaluación semanal e intervención prioritaria.' },
-      { from: 10, to: 14, severity: 'Alta', summary: 'Riesgo suicida alto. La ideación es persistente, con planificación. Requiere plan de seguridad e intervención psiquiátrica urgente.' },
-      { from: 15, to: 38, severity: 'Alta', summary: 'Riesgo suicida muy alto. Requiere intervención de crisis y consideración de hospitalización.' }
+      { from: 0, to: 1, severity: 'Mínima', summary: 'Ideación vaga o ausente.' },
+      { from: 2, to: 5, severity: 'Leve', summary: 'Ideación activa (deseo de morir) sin plan específico.' },
+      { from: 6, to: 15, severity: 'Moderada', summary: 'Ideación significativa con algunos planes o métodos considerados.' },
+      { from: 16, to: 38, severity: 'Grave', summary: 'Ideación grave con plan estructurado, intención alta y/o intentos no letales previos. Activación de Protocolo de Crisis (Perfil D).' }
     ]
   },
   {
@@ -1084,7 +1084,7 @@ const questionnairesData: Questionnaire[] = [
             { id: "aq10_q3", text: "Encuentro fácil hacer más de una cosa a la vez.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
             { id: "aq10_q4", text: "Si hay una interrupción, puedo volver a lo que estaba haciendo muy rápidamente.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
             { id: "aq10_q5", text: "Encuentro fácil 'leer entre líneas' cuando alguien me habla.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
-            { id: "aq10_q6", text: "Sé cómo saber si alguien que me escucha se está aburriendo.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
+            { id: "aq10_q6", text: "Sé cómo saber si alguien que me escucha se está aburriendo.", type: 'likert', scoring: { type: 'aq-10', agreesIsOne: false } },
             { id: "aq10_q7", text: "Cuando leo una historia, encuentro difícil imaginar cómo se ven los personajes.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
             { id: "aq10_q8", text: "Me gusta coleccionar información sobre categorías de cosas (p. ej., tipos de carros, pájaros, trenes, plantas).", type: "likert", scoring: { type: 'aq-10', agreesIsOne: true } },
             { id: 'aq10_q9', text: "Encuentro fácil entender lo que otras personas están pensando o sintiendo.", type: "likert", scoring: { type: 'aq-10', agreesIsOne: false } },
@@ -1141,6 +1141,7 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+
 
 
 
