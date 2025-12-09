@@ -448,10 +448,10 @@ const questionnairesData: Questionnaire[] = [
       ],
     }],
     interpretationData: [
-      { from: 0, to: 3, severity: 'Baja', summary: 'Desesperanza mínima (normal). Las expectativas hacia el futuro son equilibradas o positivas.' },
+      { from: 0, to: 3, severity: 'Mínima', summary: 'Desesperanza mínima (normal). Las expectativas hacia el futuro son equilibradas o positivas.' },
       { from: 4, to: 8, severity: 'Leve', summary: 'Desesperanza leve. Hay presencia de algunas expectativas negativas, pero el riesgo suicida es bajo.' },
       { from: 9, to: 14, severity: 'Moderada', summary: 'Desesperanza moderada. Las expectativas negativas son significativas y están asociadas con un mayor riesgo de ideación suicida.' },
-      { from: 15, to: 20, severity: 'Alta', summary: 'Desesperanza severa. Predominio de expectativas pesimistas, indicando un riesgo suicida alto.' }
+      { from: 15, to: 20, severity: 'Grave', summary: 'Desesperanza severa. Predominio de expectativas pesimistas, indicando un riesgo suicida alto.' }
     ]
   },
   {
@@ -808,7 +808,7 @@ const questionnairesData: Questionnaire[] = [
       ],
       questions: [
         { id: 'pswq_q1', text: 'Si pudiera evitarlo, no pasaría mucho tiempo preocupándome.', type: 'likert', scoringDirection: 'Inversa' },
-        { id: 'pswq_q2', text: 'No tiendo a preocuparme por las cosas.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q2', text: 'No tiendo a preocuparme por las cosas.', type: 'likert', scoringDirection: 'Inversa' },
         { id: 'pswq_q3', text: 'Muchas situaciones me hacen preocupar.', type: 'likert', scoringDirection: 'Directa' },
         { id: 'pswq_q4', text: 'Sé que no debería preocuparme por las cosas, pero simplemente no puedo evitarlo.', type: 'likert', scoringDirection: 'Directa' },
         { id: 'pswq_q5', text: 'Cuando estoy bajo estrés, me preocupo mucho.', type: 'likert', scoringDirection: 'Directa' },
@@ -876,4 +876,5 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+
 
