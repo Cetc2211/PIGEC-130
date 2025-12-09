@@ -6,7 +6,7 @@ import { getQuestionnaire, getInterpretation } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { FileText, User, ClipboardList, Stethoscope, Pencil } from 'lucide-react';
+import { FileText, User, ClipboardList, Stethoscope, Pencil, ClipboardEdit, ShieldCheck } from 'lucide-react';
 import { PatientProfileForm } from '@/components/patient-profile-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
@@ -21,13 +21,14 @@ type PatientProfilePageProps = {
 
 function adaptResultsForDiagnosis(results: EvaluationResult[]): any[] {
   return results.map(res => {
+    // This now correctly gets the first score from the 'scores' object
     const mainScoreKey = Object.keys(res.scores)[0] || 'main';
     const mainScore = res.scores[mainScoreKey];
     const interpretation = getInterpretation(res.questionnaireId, mainScore);
-    // Asumimos que cualquier pregunta sobre suicidio marca el riesgo.
-    // Esto es una simplificación y podría mejorarse.
-    const hasSuicideQuestion = getQuestionnaire(res.questionnaireId)?.sections.flatMap(s => s.questions).some(q => q.text.toLowerCase().includes('suicid'));
-    const suicideRisk = hasSuicideQuestion && res.answers['phq9_q9'] > 0;
+
+    // This logic needs to be more robust. It assumes a specific question ID.
+    const hasSuicideQuestion = getQuestionnaire(res.questionnaireId)?.sections.flatMap(s => s.questions).some(q => q.id.includes('suicide') || q.id === 'phq9_q9');
+    const suicideRisk = hasSuicideQuestion && (res.answers['phq9_q9'] > 0 || res.answers['ssi_q4'] > 0 || res.answers['ssi_q5'] > 0);
 
     return {
       instrumentName: res.questionnaireName,
@@ -125,14 +126,40 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
       </header>
 
       <Tabs defaultValue="diagnosis" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="profile"><Pencil className="mr-2 h-4 w-4" /> Ficha de Identificación</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="profile"><Pencil className="mr-2 h-4 w-4" /> Ficha</TabsTrigger>
+          <TabsTrigger value="clinical-interview"><ClipboardEdit className="mr-2 h-4 w-4" /> Entrevista</TabsTrigger>
+          <TabsTrigger value="informed-consent"><ShieldCheck className="mr-2 h-4 w-4" /> Consentimiento</TabsTrigger>
           <TabsTrigger value="evaluations"><ClipboardList className="mr-2 h-4 w-4" /> Evaluaciones</TabsTrigger>
-          <TabsTrigger value="diagnosis"><Stethoscope className="mr-2 h-4 w-4" /> Perfil Diagnóstico</TabsTrigger>
+          <TabsTrigger value="diagnosis"><Stethoscope className="mr-2 h-4 w-4" /> Diagnóstico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="mt-6">
             <PatientProfileForm patient={patient} />
+        </TabsContent>
+
+        <TabsContent value="clinical-interview" className="mt-6">
+           <Card>
+              <CardHeader>
+                <CardTitle>Entrevista Clínica Inicial</CardTitle>
+                <CardDescription>Formato estructurado para la recolección de información clínica esencial.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">El formato de la entrevista clínica estará disponible aquí próximamente.</p>
+              </CardContent>
+            </Card>
+        </TabsContent>
+
+        <TabsContent value="informed-consent" className="mt-6">
+             <Card>
+              <CardHeader>
+                <CardTitle>Consentimiento Informado</CardTitle>
+                <CardDescription>Registro y firma del consentimiento informado del paciente o tutor.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">El formulario de consentimiento informado estará disponible aquí próximamente.</p>
+              </CardContent>
+            </Card>
         </TabsContent>
         
         <TabsContent value="evaluations" className="mt-6 grid gap-8 lg:grid-cols-2">
@@ -171,7 +198,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                 <ul className="space-y-3">
                   {results.map(result => {
                     // Adapt for multi-score results
-                    const mainScoreId = Object.keys(result.scores)[0];
+                    const mainScoreId = Object.keys(result.scores)[0] || 'main';
                     const mainScore = result.scores[mainScoreId];
                     const interpretation = getInterpretation(result.questionnaireId, mainScore);
                     return (
