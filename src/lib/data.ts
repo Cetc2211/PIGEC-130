@@ -404,10 +404,10 @@ const questionnairesData: Questionnaire[] = [
       ],
     }],
     interpretationData: [
-      { from: 0, to: 9, severity: 'Mínima', summary: 'Ansiedad muy baja o ausente.' },
+      { from: 0, to: 9, severity: 'Baja', summary: 'Ansiedad muy baja o ausente.' },
       { from: 10, to: 15, severity: 'Leve', summary: 'Ansiedad leve.' },
       { from: 16, to: 25, severity: 'Moderada', summary: 'Ansiedad moderada. Sugiere T. de Ansiedad específico (p. ej., T. de Pánico).' },
-      { from: 26, to: 63, severity: 'Grave', summary: 'Ansiedad grave. Alta activación fisiológica y malestar significativo.' },
+      { from: 26, to: 63, severity: 'Alta', summary: 'Ansiedad grave. Alta activación fisiológica y malestar significativo.' },
     ]
   },
   {
@@ -600,7 +600,7 @@ const questionnairesData: Questionnaire[] = [
           { id: 'phq9_q2', text: 'Se ha sentido decaído, deprimido o sin esperanzas', type: 'likert' },
           { id: 'phq9_q3', text: 'Dificultad para dormir o permanecer dormido, o dormir demasiado', type: 'likert' },
           { id: 'phq9_q4', text: 'Se ha sentido cansado o con poca energía', type: 'likert' },
-          { id: 'phq9_q5', text: 'Sin apetito o ha comido en exceso', type: 'liker' },
+          { id: 'phq9_q5', text: 'Sin apetito o ha comido en exceso', type: 'likert' },
           { id: 'phq9_q6', text: 'Se ha sentido mal con usted mismo, que es un fracaso o que ha quedado mal con usted mismo o su familia', type: 'likert' },
           { id: 'phq9_q7', text: 'Dificultad para concentrarse en cosas como leer el periódico o ver TV', type: 'likert' },
           { id: 'phq9_q8', text: '¿Se ha movido o hablado tan lento que otras personas podrían haberlo notado? O lo contrario, muy inquieto o agitado, moviéndose más de lo usual', type: 'likert' },
@@ -788,6 +788,48 @@ const questionnairesData: Questionnaire[] = [
       { from: 7, to: 8, severity: 'Moderada', summary: 'Riesgo moderado. Evaluación clínica completa.' },
       { from: 9, to: 15, severity: 'Alta', summary: 'Riesgo alto. Intervención urgente y plan de seguridad.' }
     ]
+  },
+  {
+    name: 'Cuestionario de Preocupación de Penn State (PSWQ)',
+    id: 'pswq',
+    description: 'Cuestionario de 16 ítems que mide el rasgo de preocupación, un componente central del trastorno de ansiedad generalizada.',
+    category: 'Personalidad y Estado',
+    subcategory: 'Ansiedad',
+    sections: [{
+      sectionId: 'main',
+      name: 'Cuestionario de Preocupación de Penn State',
+      instructions: 'Marque el número que mejor describa qué tan típico es para usted cada uno de los siguientes enunciados.',
+      likertScale: [
+        { value: 1, label: 'Para nada típico en mí' },
+        { value: 2, label: 'Poco típico en mí' },
+        { value: 3, label: 'Algo típico en mí' },
+        { value: 4, label: 'Bastante típico en mí' },
+        { value: 5, label: 'Muy típico en mí' }
+      ],
+      questions: [
+        { id: 'pswq_q1', text: 'Si pudiera evitarlo, no pasaría mucho tiempo preocupándome.', type: 'likert', scoringDirection: 'Inversa' },
+        { id: 'pswq_q2', text: 'No tiendo a preocuparme por las cosas.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q3', text: 'Muchas situaciones me hacen preocupar.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q4', text: 'Sé que no debería preocuparme por las cosas, pero simplemente no puedo evitarlo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q5', text: 'Cuando estoy bajo estrés, me preocupo mucho.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q6', text: 'Soy consciente de que me preocupo demasiado.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q7', text: 'Tan pronto como termino una tarea, empiezo a preocuparme por todo lo demás que tengo que hacer.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q8', text: 'No me preocupo por cada pequeña cosa.', type: 'likert', scoringDirection: 'Inversa' },
+        { id: 'pswq_q9', text: 'Me preocupo por proyectos hasta que están terminados.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q10', text: 'No soy de los que se preocupan.', type: 'likert', scoringDirection: 'Inversa' },
+        { id: 'pswq_q11', text: 'Una vez que empiezo a preocuparme, no puedo parar.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q12', text: 'Siempre me he preocupado por todo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q13', text: 'Me doy cuenta de que me he estado preocupando por diferentes cosas.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q14', text: 'Me preocupo por todo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q15', text: 'Me preocupo por cosas que ya han sucedido.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'pswq_q16', text: 'Mis preocupaciones me abruman.', type: 'likert', scoringDirection: 'Directa' }
+      ]
+    }],
+    interpretationData: [
+      { from: 16, to: 44, severity: 'Baja', summary: 'Niveles de preocupación habituales, no clínicos.' },
+      { from: 45, to: 59, severity: 'Moderada', summary: 'Tendencia elevada a la preocupación. Factor de riesgo para T. de Ansiedad.' },
+      { from: 60, to: 80, severity: 'Alta', summary: 'Preocupación crónica, incontrolable e intrusiva. Mecanismo clave del TAG.' }
+    ]
   }
 ];
 
@@ -834,3 +876,4 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+
