@@ -51,6 +51,86 @@ export type Questionnaire = {
 
 const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: QuestionnaireSection[], questions?: Question[], likertScale?: LikertScaleOption[] }[] = [
   {
+    id: 'idare',
+    name: 'Inventario de Ansiedad Rasgo-Estado',
+    description: 'Instrumento de 40 ítems que mide dos componentes distintos de la ansiedad: Ansiedad Estado (transitoria) y Ansiedad Rasgo (disposición permanente).',
+    category: 'Personalidad y Estado',
+    subcategory: 'Ansiedad',
+    sections: [
+      {
+        sectionId: 'estado',
+        name: 'ANSIEDAD ESTADO (A-E)',
+        instructions: 'Lea cada frase y marque el número que indique cómo se siente AHORA MISMO.',
+        likertScale: [
+          { "value": 1, "label": "NADA" },
+          { "value": 2, "label": "POCO" },
+          { "value": 3, "label": "REGULAR" },
+          { "value": 4, "label": "MUCHO" }
+        ],
+        questions: [
+          { id: 'q1', text: 'Me siento calmado', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q2', text: 'Me siento seguro', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q3', text: 'Estoy tenso', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q4', text: 'Estoy contrariado', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q5', text: 'Me siento a gusto', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q6', text: 'Me siento alterado', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q7', text: 'Estoy preocupado por posibles desgracias futuras', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q8', text: 'Me siento descansado', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q9', text: 'Me siento ansioso', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q10', text: 'Me siento cómodo', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q11', text: 'Me siento con confianza en mí mismo', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q12', text: 'Me siento nervioso', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q13', text: 'Estoy agitado', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q14', text: 'Me siento \'a punto de explotar\'', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q15', text: 'Me siento relajado', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q16', text: 'Me siento satisfecho', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q17', text: 'Estoy preocupado', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q18', text: 'Me siento muy aturdido y confuso', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q19', text: 'Me siento alegre', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q20', text: 'Me siento bien', scoringDirection: 'Inversa', type: 'likert' }
+        ]
+      },
+      {
+        sectionId: 'rasgo',
+        name: 'ANSIEDAD RASGO (A-R)',
+        instructions: 'Lea cada frase y marque el número que indique cómo se siente GENERALMENTE.',
+        likertScale: [
+          { "value": 1, "label": "CASI NUNCA" },
+          { "value": 2, "label": "ALGUNAS VECES" },
+          { "value": 3, "label": "FRECUENTEMENTE" },
+          { "value": 4, "label": "CASI SIEMPRE" }
+        ],
+        questions: [
+          { id: 'q21', text: 'Me siento bien', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q22', text: 'Me canso rápidamente', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q23', text: 'Siento ganas de llorar', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q24', text: 'Quisiera ser tan feliz como otros', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q25', text: 'Pierdo oportunidades por no decidirme rápido', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q26', text: 'Me siento descansado', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q27', text: 'Soy una persona tranquila, serena y sosegada', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q28', text: 'Siento que las dificultades se amontonan al punto de no superarlas', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q29', text: 'Me preocupo demasiado por cosas sin importancia', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q30', text: 'Soy feliz', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q31', text: 'Tomo las cosas muy a pecho', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q32', text: 'Me falta confianza en mí mismo', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q33', text: 'Me siento seguro', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q34', text: 'Trato de evitar enfrentar crisis o dificultades', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q35', text: 'Me siento melancólico', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q36', text: 'Me siento satisfecho', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q37', text: 'Algunas ideas poco importantes pasan por mi mente y me molestan', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q38', text: 'Me afectan tanto los desengaños que no me los puedo quitar de la cabeza', scoringDirection: 'Directa', type: 'likert' },
+          { id: 'q39', text: 'Soy una persona estable', scoringDirection: 'Inversa', type: 'likert' },
+          { id: 'q40', text: 'Cuando pienso en mis asuntos actuales me pongo tenso y alterado', scoringDirection: 'Directa', type: 'likert' }
+        ]
+      }
+    ],
+    interpretationData: [
+      { from: 0, to: 32, severity: 'Baja', summary: 'Nivel de ansiedad bajo.' },
+      { from: 33, to: 45, severity: 'Moderada', summary: 'Nivel de ansiedad promedio.' },
+      { from: 46, to: 80, severity: 'Alta', summary: 'Nivel de ansiedad alto.' }
+    ]
+  },
+  {
     id: 'bdi-ii',
     name: 'Inventario de Depresión de Beck-II',
     description: 'Cuestionario de 21 ítems para evaluar la severidad de los síntomas de depresión en las últimas dos semanas.',
@@ -59,6 +139,7 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
     sections: [{
       sectionId: 'main',
       name: 'Inventario de Depresión de Beck-II',
+      instructions: "Lea con atención cada grupo de afirmaciones y elija la afirmación de cada grupo que mejor describa el modo como se ha sentido durante las últimas dos semanas, incluyendo el día de hoy.",
       likertScale: [], // Opciones por pregunta
       questions: [
         { id: 'q1', type: 'likert', text: 'TRISTEZA', options: [
@@ -86,7 +167,7 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
           { value: 3, label: 'No obtengo ningún placer de las cosas que solía disfrutar' }
         ]},
         { id: 'q5', type: 'likert', text: 'SENTIMIENTOS DE CULPA', options: [
-          { value: 0, label: 'No me siento particularly culpable' },
+          { value: 0, label: 'No me siento particularmente culpable' },
           { value: 1, label: 'Me siento culpable respecto a muchas cosas que he hecho o debería haber hecho' },
           { value: 2, label: 'Me siento bastante culpable la mayor parte del tiempo' },
           { value: 3, label: 'Me siento culpable todo el tiempo' }
@@ -202,35 +283,40 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
     description: 'Cuestionario de 21 ítems que mide la severidad de los síntomas de ansiedad física y cognitiva experimentados durante la última semana.',
     category: 'Estado de Ánimo',
     subcategory: 'Ansiedad',
-    likertScale: [
-      { "value": 0, "label": "NADA" },
-      { "value": 1, "label": "LEVE" },
-      { "value": 2, "label": "MODERADO" },
-      { "value": 3, "label": "SEVERO" }
-    ],
-    questions: [
-      { "id": "q1", "text": "Entumecimiento u hormigueo", "type": "likert" },
-      { "id": "q2", "text": "Sensación de calor", "type": "likert" },
-      { "id": "q3", "text": "Temblor en las piernas", "type": "likert" },
-      { "id": "q4", "text": "Incapacidad para relajarse", "type": "likert" },
-      { "id": "q5", "text": "Miedo a que suceda lo peor", "type": "likert" },
-      { "id": "q6", "text": "Mareo o aturdimiento", "type": "likert" },
-      { "id": "q7", "text": "Palpitaciones o taquicardia", "type": "likert" },
-      { "id": "q8", "text": "Sensación de inestabilidad", "type": "likert" },
-      { "id": "q9", "text": "Sensación de terror", "type": "likert" },
-      { "id": "q10", "text": "Nerviosismo", "type": "likert" },
-      { "id": "q11", "text": "Sensación de ahogo", "type": "likert" },
-      { "id": "q12", "text": "Temblor de manos", "type": "likert" },
-      { "id": "q13", "text": "Temblor generalizado o estremecimiento", "type": "likert" },
-      { "id": "q14", "text": "Miedo a perder el control", "type": "likert" },
-      { "id": "q15", "text": "Dificultad para respirar", "type": "likert" },
-      { "id": "q16", "text": "Miedo a morir", "type": "likert" },
-      { "id": "q17", "text": "Asustado", "type": "likert" },
-      { "id": "q18", "text": "Indigestión o malestar abdominal", "type": "likert" },
-      { "id": "q19", "text": "Sensación de desmayo", "type": "likert" },
-      { "id": "q20", "text": "Rubor facial", "type": "likert" },
-      { "id": "q21", "text": "Sudoración (no debida al calor)", "type": "likert" }
-    ],
+    sections: [{
+      sectionId: 'main',
+      name: 'Inventario de Ansiedad de Beck',
+      instructions: "Indique cuánto le ha molestado cada síntoma durante la última semana, incluyendo hoy, marcando con una X en el espacio correspondiente.",
+      likertScale: [
+        { "value": 0, "label": "NADA" },
+        { "value": 1, "label": "LEVE" },
+        { "value": 2, "label": "MODERADO" },
+        { "value": 3, "label": "SEVERO" }
+      ],
+      questions: [
+        { "id": "q1", "text": "Entumecimiento u hormigueo", "type": "likert" },
+        { "id": "q2", "text": "Sensación de calor", "type": "likert" },
+        { "id": "q3", "text": "Temblor en las piernas", "type": "likert" },
+        { "id": "q4", "text": "Incapacidad para relajarse", "type": "likert" },
+        { "id": "q5", "text": "Miedo a que suceda lo peor", "type": "likert" },
+        { "id": "q6", "text": "Mareo o aturdimiento", "type": "likert" },
+        { "id": "q7", "text": "Palpitaciones o taquicardia", "type": "likert" },
+        { "id": "q8", "text": "Sensación de inestabilidad", "type": "likert" },
+        { "id": "q9", "text": "Sensación de terror", "type": "likert" },
+        { "id": "q10", "text": "Nerviosismo", "type": "likert" },
+        { "id": "q11", "text": "Sensación de ahogo", "type": "likert" },
+        { "id": "q12", "text": "Temblor de manos", "type": "likert" },
+        { "id": "q13", "text": "Temblor generalizado o estremecimiento", "type": "likert" },
+        { "id": "q14", "text": "Miedo a perder el control", "type": "likert" },
+        { "id": "q15", "text": "Dificultad para respirar", "type": "likert" },
+        { "id": "q16", "text": "Miedo a morir", "type": "likert" },
+        { "id": "q17", "text": "Asustado", "type": "likert" },
+        { "id": "q18", "text": "Indigestión o malestar abdominal", "type": "likert" },
+        { "id": "q19", "text": "Sensación de desmayo", "type": "likert" },
+        { "id": "q20", "text": "Rubor facial", "type": "likert" },
+        { "id": "q21", "text": "Sudoración (no debida al calor)", "type": "likert" }
+      ],
+    }],
     interpretationData: [
       { from: 0, to: 7, severity: 'Baja', summary: 'Ansiedad normal. Los síntomas son mínimos o inexistentes.' },
       { from: 8, to: 15, severity: 'Leve', summary: 'Ansiedad leve. Los síntomas son notorios pero generalmente manejables.' },
@@ -244,32 +330,37 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
     description: 'Instrumento de 20 ítems de Verdadero/Falso para medir el grado de expectativas negativas sobre el futuro (desesperanza).',
     category: 'Estado de Ánimo',
     subcategory: 'Desesperanza',
-    likertScale: [
-      { "value": 0, "label": "FALSO" },
-      { "value": 1, "label": "VERDADERO" }
-    ],
-    questions: [
-      { id: 'q1', text: 'Veo el futuro con esperanza y entusiasmo', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q2', text: 'Quizá debería abandonar todo porque no puedo hacer las cosas mejor', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q3', text: 'Cuando las cosas están mal, me ayuda pensar que no será así para siempre', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q4', text: 'No puedo imaginar cómo será mi vida dentro de 10 años', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q5', text: 'Tengo tiempo suficiente para realizar las cosas que más deseo hacer', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q6', text: 'En el futuro, espero tener éxito en lo que más me importa', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q7', text: 'Mi futuro me parece oscuro', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q8', text: 'Espero que me sucedan más cosas buenas que al resto de la gente', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q9', text: 'No tengo suerte y no hay razón para creer que la tendré en el futuro', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q10', text: 'Mis experiencias pasadas me han preparado bien para el futuro', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q11', text: 'Todo lo que puedo ver por delante es más desagradable que agradable', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q12', text: 'No espero conseguir lo que realmente quiero', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q13', text: 'Cuando pienso en el futuro, espero ser más feliz de lo que soy ahora', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q14', text: 'Las cosas nunca van a marchar de la forma que yo quiero', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q15', text: 'Tengo gran fe en el futuro', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q16', text: 'Nunca consigo lo que quiero, así que es absurdo querer algo', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q17', text: 'Es muy poco probable que en el futuro logre una satisfacción real', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q18', text: 'El futuro me parece vago e incierto', type: 'likert', scoring: { type: 'match', value: 1 } },
-      { id: 'q19', text: 'Se pueden esperar más épocas buenas que malas', type: 'likert', scoring: { type: 'match', value: 0 } },
-      { id: 'q20', text: 'Es inútil tratar de conseguir algo que deseo porque probablemente no lo conseguiré', type: 'likert', scoring: { type: 'match', value: 1 } }
-    ],
+    sections: [{
+      sectionId: 'main',
+      name: 'Escala de Desesperanza de Beck',
+      instructions: "Lea las siguientes afirmaciones y marque si son VERDADERAS o FALSAS para usted durante la última semana.",
+      likertScale: [
+        { "value": 0, "label": "FALSO" },
+        { "value": 1, "label": "VERDADERO" }
+      ],
+      questions: [
+        { id: 'q1', text: 'Veo el futuro con esperanza y entusiasmo', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q2', text: 'Quizá debería abandonar todo porque no puedo hacer las cosas mejor', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q3', text: 'Cuando las cosas están mal, me ayuda pensar que no será así para siempre', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q4', text: 'No puedo imaginar cómo será mi vida dentro de 10 años', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q5', text: 'Tengo tiempo suficiente para realizar las cosas que más deseo hacer', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q6', text: 'En el futuro, espero tener éxito en lo que más me importa', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q7', text: 'Mi futuro me parece oscuro', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q8', text: 'Espero que me sucedan más cosas buenas que al resto de la gente', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q9', text: 'No tengo suerte y no hay razón para creer que la tendré en el futuro', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q10', text: 'Mis experiencias pasadas me han preparado bien para el futuro', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q11', text: 'Todo lo que puedo ver por delante es más desagradable que agradable', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q12', text: 'No espero conseguir lo que realmente quiero', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q13', text: 'Cuando pienso en el futuro, espero ser más feliz de lo que soy ahora', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q14', text: 'Las cosas nunca van a marchar de la forma que yo quiero', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q15', text: 'Tengo gran fe en el futuro', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q16', text: 'Nunca consigo lo que quiero, así que es absurdo querer algo', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q17', text: 'Es muy poco probable que en el futuro logre una satisfacción real', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q18', text: 'El futuro me parece vago e incierto', type: 'likert', scoring: { type: 'match', value: 1 } },
+        { id: 'q19', text: 'Se pueden esperar más épocas buenas que malas', type: 'likert', scoring: { type: 'match', value: 0 } },
+        { id: 'q20', text: 'Es inútil tratar de conseguir algo que deseo porque probablemente no lo conseguiré', type: 'likert', scoring: { type: 'match', value: 1 } }
+      ],
+    }],
     interpretationData: [
       { from: 0, to: 3, severity: 'Baja', summary: 'Desesperanza mínima (normal). Las expectativas hacia el futuro son equilibradas o positivas.' },
       { from: 4, to: 8, severity: 'Leve', summary: 'Desesperanza leve. Hay presencia de algunas expectativas negativas, pero el riesgo suicida es bajo.' },
@@ -286,6 +377,7 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
     sections: [{
       sectionId: 'main',
       name: 'Escala de Ideación Suicida de Beck',
+      instructions: "Elija la afirmación en cada grupo que mejor describa sus sentimientos y pensamientos durante la última semana, incluyendo hoy.",
       likertScale: [], // Opciones por pregunta
       questions: [
         { id: 'q1', type: 'likert', text: 'DESEO DE VIVIR', options: [
@@ -366,21 +458,26 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
     description: 'Una herramienta de 7 preguntas para la detección del Trastorno de Ansiedad Generalizada.',
     category: 'Estado de Ánimo',
     subcategory: 'Ansiedad',
-    likertScale: [
-      { value: 0, label: 'Para nada' },
-      { value: 1, label: 'Varios días' },
-      { value: 2, label: 'Más de la mitad de los días' },
-      { value: 3, label: 'Casi todos los días' },
-    ],
-    questions: [
-      { id: 'q1', text: 'Sentirse nervioso/a, ansioso/a o con los nervios de punta', type: 'likert' },
-      { id: 'q2', text: 'No poder detener o controlar la preocupación', type: 'likert' },
-      { id: 'q3', text: 'Preocuparse demasiado por diferentes cosas', type: 'likert' },
-      { id: 'q4', text: 'Dificultad para relajarse', type: 'likert' },
-      { id: 'q5', text: 'Estar tan inquieto/a que es difícil quedarse quieto/a', type: 'likert' },
-      { id: 'q6', text: 'Ponerse fácilmente irritable o enfadado/a', type: 'likert' },
-      { id: 'q7', text: 'Sentir miedo, como si algo horrible pudiera pasar', type: 'likert' },
-    ],
+    sections: [{
+      sectionId: 'main',
+      name: 'Ansiedad GAD-7',
+      instructions: 'En las últimas dos semanas, ¿con qué frecuencia se ha sentido molesto/a por los siguientes problemas?',
+      likertScale: [
+        { value: 0, label: 'Para nada' },
+        { value: 1, label: 'Varios días' },
+        { value: 2, label: 'Más de la mitad de los días' },
+        { value: 3, label: 'Casi todos los días' },
+      ],
+      questions: [
+        { id: 'q1', text: 'Sentirse nervioso/a, ansioso/a o con los nervios de punta', type: 'likert' },
+        { id: 'q2', text: 'No poder detener o controlar la preocupación', type: 'likert' },
+        { id: 'q3', text: 'Preocuparse demasiado por diferentes cosas', type: 'likert' },
+        { id: 'q4', text: 'Dificultad para relajarse', type: 'likert' },
+        { id: 'q5', text: 'Estar tan inquieto/a que es difícil quedarse quieto/a', type: 'likert' },
+        { id: 'q6', text: 'Ponerse fácilmente irritable o enfadado/a', type: 'likert' },
+        { id: 'q7', text: 'Sentir miedo, como si algo horrible pudiera pasar', type: 'likert' },
+      ],
+    }],
     interpretationData: [
         { from: 0, to: 4, severity: 'Baja', summary: 'Ansiedad mínima. Es probable que los síntomas sean transitorios y no causen una angustia significativa.' },
         { from: 5, to: 9, severity: 'Leve', summary: 'Ansiedad leve. Puede experimentar algunos síntomas, pero generalmente son manejables.' },
@@ -394,23 +491,28 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
     description: 'Una herramienta de 9 preguntas para detectar la depresión y monitorear su gravedad.',
     category: 'Estado de Ánimo',
     subcategory: 'Depresión',
-    likertScale: [
-      { value: 0, label: 'Para nada' },
-      { value: 1, label: 'Varios días' },
-      { value: 2, label: 'Más de la mitad de los días' },
-      { value: 3, label: 'Casi todos los días' },
-    ],
-    questions: [
-        { id: 'q1', text: 'Poco interés o placer en hacer las cosas', type: 'likert' },
-        { id: 'q2', text: 'Sentirse desanimado/a, deprimido/a o sin esperanza', type: 'likert' },
-        { id: 'q3', text: 'Problemas para dormir o permanecer dormido/a, o dormir demasiado', type: 'likert' },
-        { id: 'q4', text: 'Sentirse cansado/a o con poca energía', type: 'likert' },
-        { id: 'q5', text: 'Poco apetito o comer en exceso', type: 'likert' },
-        { id: 'q6', text: 'Sentirse mal consigo mismo/a, o que es un fracaso o ha decepcionado a su familia o a usted mismo/a', type: 'likert' },
-        { id: 'q7', text: 'Dificultad para concentrarse en cosas, como leer el periódico o ver la televisión', type: 'likert' },
-        { id: 'q8', text: 'Moverse o hablar tan lento que otras personas podrían haberlo notado. O lo contrario: estar tan inquieto/a o agitado/a que se ha estado moviendo mucho más de lo habitual', type: 'likert' },
-        { id: 'q9', text: 'Pensamientos de que estaría mejor muerto/a, o de hacerse daño de alguna manera', type: 'likert' }
-    ],
+    sections: [{
+      sectionId: 'main',
+      name: 'Depresión PHQ-9',
+      instructions: 'Durante las últimas 2 semanas, ¿con qué frecuencia le han molestado los siguientes problemas?',
+      likertScale: [
+        { value: 0, label: 'Para nada' },
+        { value: 1, label: 'Varios días' },
+        { value: 2, label: 'Más de la mitad de los días' },
+        { value: 3, label: 'Casi todos los días' },
+      ],
+      questions: [
+          { id: 'q1', text: 'Poco interés o placer en hacer las cosas', type: 'likert' },
+          { id: 'q2', text: 'Sentirse desanimado/a, deprimido/a o sin esperanza', type: 'likert' },
+          { id: 'q3', text: 'Problemas para dormir o permanecer dormido/a, o dormir demasiado', type: 'likert' },
+          { id: 'q4', text: 'Sentirse cansado/a o con poca energía', type: 'likert' },
+          { id: 'q5', text: 'Poco apetito o comer en exceso', type: 'likert' },
+          { id: 'q6', text: 'Sentirse mal consigo mismo/a, o que es un fracaso o ha decepcionado a su familia o a usted mismo/a', type: 'likert' },
+          { id: 'q7', text: 'Dificultad para concentrarse en cosas, como leer el periódico o ver la televisión', type: 'likert' },
+          { id: 'q8', text: 'Moverse o hablar tan lento que otras personas podrían haberlo notado. O lo contrario: estar tan inquieto/a o agitado/a que se ha estado moviendo mucho más de lo habitual', type: 'likert' },
+          { id: 'q9', text: 'Pensamientos de que estaría mejor muerto/a, o de hacerse daño de alguna manera', type: 'likert' }
+      ],
+    }],
     interpretationData: [
         { from: 0, to: 4, severity: 'Baja', summary: 'Depresión mínima. Es poco probable que sea clínicamente significativa.' },
         { from: 5, to: 9, severity: 'Leve', summary: 'Depresión leve. Monitorear los síntomas; considerar tratamiento si persisten.' },
@@ -425,28 +527,31 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
     description: 'Una escala de 10 ítems que mide el grado en que las situaciones de la vida se evalúan como estresantes.',
     category: 'Estado de Ánimo',
     subcategory: 'Estrés',
-    likertScale: [
-        { value: 0, label: 'Nunca' },
-        { value: 1, label: 'Casi nunca' },
-        { value: 2, label: 'A veces' },
-        { value: 3, label: 'Con bastante frecuencia' },
-        { value: 4, label: 'Muy a menudo' },
-    ],
-    questions: [
-        { id: 'q1', text: 'En el último mes, ¿con qué frecuencia ha estado molesto/a por algo que sucedió inesperadamente?', type: 'likert' },
-        { id: 'q2', text: 'En el último mes, ¿con qué frecuencia ha sentido que no podía controlar las cosas importantes de su vida?', type: 'likert' },
-        { id: 'q3', text: 'En el último mes, ¿con qué frecuencia se ha sentido nervioso/a y estresado/a?', type: 'likert' },
-        { id: 'q4', text: 'En el último mes, ¿con qué frecuencia se ha sentido seguro/a de su capacidad para manejar sus problemas personales?', type: 'likert' },
-        { id: 'q5', text: 'En el último mes, ¿con qué frecuencia ha sentido que las cosas le iban bien?', type: 'likert' },
-        { id: 'q6', text: 'En el último mes, ¿con qué frecuencia ha descubierto que no podía hacer frente a todas las cosas que tenía que hacer?', type: 'likert' },
-        { id: 'q7', text: 'En el último mes, ¿con qué frecuencia ha sido capaz de controlar las irritaciones en su vida?', type: 'likert' },
-        { id: 'q8', text: 'En el último mes, ¿con qué frecuencia ha sentido que estaba al tanto de las cosas?', type: 'likert' },
-        { id: 'q9', text: 'En el último mes, ¿con qué frecuencia se ha enfadado por cosas que estaban fuera de su control?', type: 'likert' },
-        { id: 'q10', text: 'En el último mes, ¿con qué frecuencia ha sentido que las dificultades se acumulaban tanto que no podía superarlas?', type: 'likert' }
-    ],
+    sections: [{
+      sectionId: 'main',
+      name: 'Estrés Percibido PSS-10',
+      instructions: 'Las siguientes preguntas se refieren a sus sentimientos y pensamientos durante el último mes.',
+      likertScale: [
+          { value: 0, label: 'Nunca' },
+          { value: 1, label: 'Casi nunca' },
+          { value: 2, label: 'A veces' },
+          { value: 3, label: 'Con bastante frecuencia' },
+          { value: 4, label: 'Muy a menudo' },
+      ],
+      questions: [
+          { id: 'q1', text: 'En el último mes, ¿con qué frecuencia ha estado molesto/a por algo que sucedió inesperadamente?', type: 'likert', scoringDirection: 'Directa' },
+          { id: 'q2', text: 'En el último mes, ¿con qué frecuencia ha sentido que no podía controlar las cosas importantes de su vida?', type: 'likert', scoringDirection: 'Directa' },
+          { id: 'q3', text: 'En el último mes, ¿con qué frecuencia se ha sentido nervioso/a y estresado/a?', type: 'likert', scoringDirection: 'Directa' },
+          { id: 'q4', text: 'En el último mes, ¿con qué frecuencia se ha sentido seguro/a de su capacidad para manejar sus problemas personales?', type: 'likert', scoringDirection: 'Inversa' },
+          { id: 'q5', text: 'En el último mes, ¿con qué frecuencia ha sentido que las cosas le iban bien?', type: 'likert', scoringDirection: 'Inversa' },
+          { id: 'q6', text: 'En el último mes, ¿con qué frecuencia ha descubierto que no podía hacer frente a todas las cosas que tenía que hacer?', type: 'likert', scoringDirection: 'Directa' },
+          { id: 'q7', text: 'En el último mes, ¿con qué frecuencia ha sido capaz de controlar las irritaciones en su vida?', type: 'likert', scoringDirection: 'Inversa' },
+          { id: 'q8', text: 'En el último mes, ¿con qué frecuencia ha sentido que estaba al tanto de las cosas?', type: 'likert', scoringDirection: 'Inversa' },
+          { id: 'q9', text: 'En el último mes, ¿con qué frecuencia se ha enfadado por cosas que estaban fuera de su control?', type: 'likert', scoringDirection: 'Directa' },
+          { id: 'q10', text: 'En el último mes, ¿con qué frecuencia ha sentido que las dificultades se acumulaban tanto que no podía superarlas?', type: 'likert', scoringDirection: 'Directa' }
+      ],
+    }],
     interpretationData: [
-        // Nota: Para PSS-10, las preguntas 4, 5, 7 y 8 tienen puntuación inversa.
-        // Esta interpretación simple no tiene en cuenta la puntuación inversa. La lógica de puntuación debe manejarlo.
         { from: 0, to: 13, severity: 'Baja', summary: 'Bajo estrés percibido. Indica buenos mecanismos de afrontamiento y resiliencia.' },
         { from: 14, to: 26, severity: 'Moderada', summary: 'Estrés percibido moderado. Experimenta algunas dificultades para manejar los estresores de la vida.' },
         { from: 27, to: 40, severity: 'Alta', summary: 'Alto estrés percibido. Indica una dificultad significativa para hacer frente a los eventos de la vida, puede requerir apoyo.' },
@@ -458,66 +563,71 @@ const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: Questio
     description: 'Instrumento para que los docentes observen y registren la frecuencia de conductas clave relacionadas con la atención, motivación, estado emocional y rendimiento del estudiante en el aula.',
     category: 'Conductual',
     subcategory: 'Observación en Aula',
-    likertScale: [
-        { value: 0, label: 'Nunca' },
-        { value: 1, label: 'Raramente' },
-        { value: 2, label: 'A veces' },
-        { value: 3, label: 'Frecuentemente' },
-        { value: 4, label: 'Siempre' },
-    ],
-    questions: [
-      // SECCIÓN I: INDICADORES DE ATENCIÓN Y CONCENTRACIÓN
-      { id: 'goca_q1', text: 'Se distrae fácilmente con ruidos externos (conversaciones, ruidos del pasillo)', type: 'likert' },
-      { id: 'goca_q2', text: 'Necesita que se le repitan las instrucciones varias veces', type: 'likert' },
-      { id: 'goca_q3', text: 'Deja actividades o ejercicios incompletos en clase', type: 'likert' },
-      { id: 'goca_q4', text: 'Parece estar "soñando despierto" o con la mirada perdida', type: 'likert' },
-      { id: 'goca_q5', text: 'Pierde o no encuentra sus materiales escolares', type: 'likert' },
-      { id: 'goca_q6', text: 'Muestra dificultad para seguir explicaciones de más de 5 minutos', type: 'likert' },
-      { id: 'goca_q7', text: 'Se levanta de su asiento sin permiso o necesidad', type: 'likert' },
-      { id: 'goca_q8', text: 'Juega con objetos (lápiz, celular, etc.) durante la clase', type: 'likert' },
-      // SECCIÓN II: INDICADORES DE PARTICIPACIÓN Y MOTIVACIÓN
-      { id: 'goca_q9', text: 'Evita participar cuando se le pregunta directamente', type: 'likert' },
-      { id: 'goca_q10', text: 'No trae los materiales necesarios para la clase', type: 'likert' },
-      { id: 'goca_q11', text: 'Expresa comentarios negativos sobre la materia o escuela', type: 'likert' },
-      { id: 'goca_q12', text: 'Se muestra apático o desinteresado en las actividades', type: 'likert' },
-      { id: 'goca_q13', text: 'No completa las tareas asignadas para casa', type: 'likert' },
-      { id: 'goca_q14', text: 'Evita actividades que requieren esfuerzo mental sostenido', type: 'likert' },
-      { id: 'goca_q15', text: 'No toma apuntes durante la clase', type: 'likert' },
-      { id: 'goca_q16', text: 'Llega tarde a clase sin justificación', type: 'likert' },
-      // SECCIÓN III: INDICADORES EMOCIONALES Y CONDUCTUALES
-      { id: 'goca_q17', text: 'Se observa triste, cabizbajo o con expresión de tristeza', type: 'likert' },
-      { id: 'goca_q18', text: 'Muestra irritabilidad o se enoja con facilidad', type: 'likert' },
-      { id: 'goca_q19', text: 'Se aísla de sus compañeros durante actividades grupales', type: 'likert' },
-      { id: 'goca_q20', text: 'Presenta signos visibles de ansiedad (mueve piernas, muerde uñas)', type: 'likert' },
-      { id: 'goca_q21', text: 'Muestra cambios bruscos de humor durante la clase', type: 'likert' },
-      { id: 'goca_q22', text: 'Se queja frecuentemente de dolores o malestares físicos', type: 'likert' },
-      { id: 'goca_q23', text: 'Llora o parece a punto de llorar', type: 'likert' },
-      { id: 'goca_q24', text: 'Muestra conductas agresivas verbales o físicas', type: 'likert' },
-      // SECCIÓN IV: INDICADORES DE RENDIMIENTO
-      { id: 'goca_q25', text: 'Ha mostrado disminución notable en la calidad de sus trabajos', type: 'likert' },
-      { id: 'goca_q26', text: 'Tiene dificultad para comprender conceptos nuevos', type: 'likert' },
-      { id: 'goca_q27', text: 'Comete errores frecuentes por aparente descuido', type: 'likert' },
-      { id: 'goca_q28', text: 'Su rendimiento es muy inconsistente (días buenos y malos)', type: 'likert' },
-      { id: 'goca_q29', text: 'No termina los exámenes en el tiempo establecido', type: 'likert' },
-      { id: 'goca_q30', text: 'Evita hacer preguntas cuando tiene dudas', type: 'likert' },
-      { id: 'goca_q31', text: 'Sus calificaciones han bajado significativamente', type: 'likert' },
-      { id: 'goca_q32', text: 'Copia trabajos o tareas de compañeros', type: 'likert' },
-      // SECCIÓN V: INDICADORES FÍSICOS Y DE SALUD
-      { id: 'goca_q33', text: 'Se observa cansado o con sueño durante la clase', type: 'likert' },
-      { id: 'goca_q34', text: 'Presenta aspecto descuidado o higiene personal deficiente', type: 'likert' },
-      { id: 'goca_q35', text: 'Menciona que no ha desayunado o comido', type: 'likert' },
-      { id: 'goca_q36', text: 'Presenta signos que podrían indicar consumo de sustancias', type: 'likert' },
-      { id: 'goca_q37', text: 'Se queja de problemas de visión o audición', type: 'likert' },
-      { id: 'goca_q38', text: 'Muestra pérdida o aumento significativo de peso', type: 'likert' },
-      { id: 'goca_q39', text: 'Presenta lesiones visibles frecuentes', type: 'likert' },
-      { id: 'goca_q40', text: 'Solicita permisos frecuentes para ir al baño o enfermería', type: 'likert' },
-      // SECCIÓN VI: INDICADORES POSITIVOS (FACTORES PROTECTORES)
-      { id: 'goca_q41', text: 'Muestra interés en algún tema específico de la materia', type: 'likert' },
-      { id: 'goca_q42', text: 'Tiene al menos un amigo cercano en clase', type: 'likert' },
-      { id: 'goca_q43', text: 'Responde positivamente al reconocimiento o elogio', type: 'likert' },
-      { id: 'goca_q44', text: 'Muestra habilidades en algún área específica', type: 'likert' },
-      { id: 'goca_q45', text: 'Busca ayuda cuando la necesita', type: 'likert' },
-    ],
+    sections: [{
+      sectionId: 'main',
+      name: 'Guía de Observación Conductual en Aula (GOCA)',
+      instructions: 'Observe al estudiante durante el período de clase y marque la frecuencia con la que se presenta cada una de las siguientes conductas.',
+      likertScale: [
+          { value: 0, label: 'Nunca' },
+          { value: 1, label: 'Raramente' },
+          { value: 2, label: 'A veces' },
+          { value: 3, label: 'Frecuentemente' },
+          { value: 4, label: 'Siempre' },
+      ],
+      questions: [
+        // SECCIÓN I: INDICADORES DE ATENCIÓN Y CONCENTRACIÓN
+        { id: 'goca_q1', text: 'Se distrae fácilmente con ruidos externos (conversaciones, ruidos del pasillo)', type: 'likert' },
+        { id: 'goca_q2', text: 'Necesita que se le repitan las instrucciones varias veces', type: 'likert' },
+        { id: 'goca_q3', text: 'Deja actividades o ejercicios incompletos en clase', type: 'likert' },
+        { id: 'goca_q4', text: 'Parece estar "soñando despierto" o con la mirada perdida', type: 'likert' },
+        { id: 'goca_q5', text: 'Pierde o no encuentra sus materiales escolares', type: 'likert' },
+        { id: 'goca_q6', text: 'Muestra dificultad para seguir explicaciones de más de 5 minutos', type: 'likert' },
+        { id: 'goca_q7', text: 'Se levanta de su asiento sin permiso o necesidad', type: 'likert' },
+        { id: 'goca_q8', text: 'Juega con objetos (lápiz, celular, etc.) durante la clase', type: 'likert' },
+        // SECCIÓN II: INDICADORES DE PARTICIPACIÓN Y MOTIVACIÓN
+        { id: 'goca_q9', text: 'Evita participar cuando se le pregunta directamente', type: 'likert' },
+        { id: 'goca_q10', text: 'No trae los materiales necesarios para la clase', type: 'likert' },
+        { id: 'goca_q11', text: 'Expresa comentarios negativos sobre la materia o escuela', type: 'likert' },
+        { id: 'goca_q12', text: 'Se muestra apático o desinteresado en las actividades', type: 'likert' },
+        { id: 'goca_q13', text: 'No completa las tareas asignadas para casa', type: 'likert' },
+        { id: 'goca_q14', text: 'Evita actividades que requieren esfuerzo mental sostenido', type: 'likert' },
+        { id: 'goca_q15', text: 'No toma apuntes durante la clase', type: 'likert' },
+        { id: 'goca_q16', text: 'Llega tarde a clase sin justificación', type: 'likert' },
+        // SECCIÓN III: INDICADORES EMOCIONALES Y CONDUCTUALES
+        { id: 'goca_q17', text: 'Se observa triste, cabizbajo o con expresión de tristeza', type: 'likert' },
+        { id: 'goca_q18', text: 'Muestra irritabilidad o se enoja con facilidad', type: 'likert' },
+        { id: 'goca_q19', text: 'Se aísla de sus compañeros durante actividades grupales', type: 'likert' },
+        { id: 'goca_q20', text: 'Presenta signos visibles de ansiedad (mueve piernas, muerde uñas)', type: 'likert' },
+        { id: 'goca_q21', text: 'Muestra cambios bruscos de humor durante la clase', type: 'likert' },
+        { id: 'goca_q22', text: 'Se queja frecuentemente de dolores o malestares físicos', type: 'likert' },
+        { id: 'goca_q23', text: 'Llora o parece a punto de llorar', type: 'likert' },
+        { id: 'goca_q24', text: 'Muestra conductas agresivas verbales o físicas', type: 'likert' },
+        // SECCIÓN IV: INDICADORES DE RENDIMIENTO
+        { id: 'goca_q25', text: 'Ha mostrado disminución notable en la calidad de sus trabajos', type: 'likert' },
+        { id: 'goca_q26', text: 'Tiene dificultad para comprender conceptos nuevos', type: 'likert' },
+        { id: 'goca_q27', text: 'Comete errores frecuentes por aparente descuido', type: 'likert' },
+        { id: 'goca_q28', text: 'Su rendimiento es muy inconsistente (días buenos y malos)', type: 'likert' },
+        { id: 'goca_q29', text: 'No termina los exámenes en el tiempo establecido', type: 'likert' },
+        { id: 'goca_q30', text: 'Evita hacer preguntas cuando tiene dudas', type: 'likert' },
+        { id: 'goca_q31', text: 'Sus calificaciones han bajado significativamente', type: 'likert' },
+        { id: 'goca_q32', text: 'Copia trabajos o tareas de compañeros', type: 'likert' },
+        // SECCIÓN V: INDICADORES FÍSICOS Y DE SALUD
+        { id: 'goca_q33', text: 'Se observa cansado o con sueño durante la clase', type: 'likert' },
+        { id: 'goca_q34', text: 'Presenta aspecto descuidado o higiene personal deficiente', type: 'likert' },
+        { id: 'goca_q35', text: 'Menciona que no ha desayunado o comido', type: 'likert' },
+        { id: 'goca_q36', text: 'Presenta signos que podrían indicar consumo de sustancias', type: 'likert' },
+        { id: 'goca_q37', text: 'Se queja de problemas de visión o audición', type: 'likert' },
+        { id: 'goca_q38', text: 'Muestra pérdida o aumento significativo de peso', type: 'likert' },
+        { id: 'goca_q39', text: 'Presenta lesiones visibles frecuentes', type: 'likert' },
+        { id: 'goca_q40', text: 'Solicita permisos frecuentes para ir al baño o enfermería', type: 'likert' },
+        // SECCIÓN VI: INDICADORES POSITIVOS (FACTORES PROTECTORES)
+        { id: 'goca_q41', text: 'Muestra interés en algún tema específico de la materia', type: 'likert' },
+        { id: 'goca_q42', text: 'Tiene al menos un amigo cercano en clase', type: 'likert' },
+        { id: 'goca_q43', text: 'Responde positivamente al reconocimiento o elogio', type: 'likert' },
+        { id: 'goca_q44', text: 'Muestra habilidades en algún área específica', type: 'likert' },
+        { id: 'goca_q45', text: 'Busca ayuda cuando la necesita', type: 'likert' },
+      ]
+    }],
     interpretationData: [
         { from: 0, to: 40, severity: 'Baja', summary: 'Sin indicadores significativos de riesgo.' },
         { from: 41, to: 80, severity: 'Moderada', summary: 'Señales de alerta moderadas. Se recomienda seguimiento.' },
@@ -533,24 +643,26 @@ const customQuestionnaires: Map<string, Questionnaire> = new Map();
 // Helper para convertir el formato antiguo (questions/likertScale) al nuevo formato de secciones
 function normalizeQuestionnaires(data: any[]): Questionnaire[] {
   return data.map(q => {
+    // Si ya tiene el formato de secciones, lo retorna
     if (q.sections) {
       return q as Questionnaire;
     }
-    // Si no tiene secciones, crea una por defecto con las preguntas y escala existentes
+    // Si no, crea una sección por defecto
     const section: QuestionnaireSection = {
       sectionId: 'main',
       name: q.name,
+      instructions: q.instructions,
       likertScale: q.likertScale || [],
       questions: q.questions || [],
     };
+    // Elimina las propiedades antiguas para evitar duplicados
+    delete q.questions;
+    delete q.likertScale;
+    delete q.instructions;
+
     return {
-      id: q.id,
-      name: q.name,
-      description: q.description,
-      category: q.category,
-      subcategory: q.subcategory,
+      ...q,
       sections: [section],
-      interpretationData: q.interpretationData || [],
     };
   });
 }
