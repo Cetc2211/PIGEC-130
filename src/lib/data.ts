@@ -274,7 +274,7 @@ const questionnairesData: Questionnaire[] = [
           { value: 3, label: 'No me gusto a mí mismo' }
         ]},
         { id: 'bdi_q8', type: 'likert', text: 'AUTOCRÍTICA', options: [
-          { value: 0, label: 'No me critico o culpo más de lo habitual' },
+          { value: 0, label: 'No me critico o culpo más de lo que habitual' },
           { value: 1, label: 'Soy más crítico conmigo mismo de lo que solía ser' },
           { value: 2, label: 'Me critico por todos mis errores' },
           { value: 3, label: 'Me culpo por todo lo malo que sucede' }
@@ -854,16 +854,16 @@ const questionnairesData: Questionnaire[] = [
         { value: 7, label: 'Totalmente de acuerdo' },
       ],
       questions: [
-        { id: 'das_q1', text: 'Es difícil ser feliz si no eres guapo, inteligente, rico y creativo.', type: 'likert' },
-        { id: 'das_q2', text: 'Mi valor como persona depende en gran medida de lo que otros piensen de mí.', type: 'likert' },
-        { id: 'das_q3', text: 'Si cometo un error, es probable que la gente me menosprecie.', type: 'likert' },
-        { id: 'das_q4', text: 'Si no puedo hacer algo bien, no debería hacerlo en absoluto.', type: 'likert' },
-        { id: 'das_q5', text: 'No puedo ser feliz si no le gusto a todo el mundo.', type: 'likert' },
-        { id: 'das_q6', text: 'Es mejor abandonar las propias necesidades que disgustar a los demás.', type: 'likert' },
-        { id: 'das_q7', text: 'Debo tener éxito en todo lo que emprendo.', type: 'likert' },
-        { id: 'das_q8', text: 'Si alguien a quien quiero me rechaza, significa que no soy digno de ser amado.', type: 'likert' },
-        { id: 'das_q9', text: 'Mi felicidad depende más de los demás que de mí mismo.', type: 'likert' },
-        { id: 'das_q10', text: 'Si no soy el mejor en mi trabajo, entonces soy un fracasado.', type: 'likert' }
+        { id: 'das_q1', text: 'Es difícil ser feliz si no eres guapo, inteligente, rico y creativo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q2', text: 'Mi valor como persona depende en gran medida de lo que otros piensen de mí.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q3', text: 'Si cometo un error, es probable que la gente me menosprecie.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q4', text: 'Si no puedo hacer algo bien, no debería hacerlo en absoluto.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q5', text: 'No puedo ser feliz si no le gusto a todo el mundo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q6', text: 'Es mejor abandonar las propias necesidades que disgustar a los demás.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q7', text: 'Debo tener éxito en todo lo que emprendo.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q8', text: 'Si alguien a quien quiero me rechaza, significa que no soy digno de ser amado.', type: 'likert', scoringDirection: 'Directa' },
+        { id: 'das_q9', text: 'Mi felicidad depende más de los demás que de mí mismo.', type: 'likert', scoringDirection: 'Inversa' },
+        { id: 'das_q10', text: 'Si no soy el mejor en mi trabajo, entonces soy un fracasado.', type: 'likert', scoringDirection: 'Directa' }
       ],
     }],
     interpretationData: [
@@ -1147,91 +1147,3 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
 
 
-```
-  </change>
-  <change>
-    <file>src/lib/instruments/AQ-10.ts</file>
-    <content><![CDATA[// src/instruments/AQ-10.ts
-
-import { EvaluationResult } from '@/lib/diagnosis';
-
-// --- I. Definición de Rangos de Severidad para AQ-10 ---
-// Rangos estandarizados del AQ-10 para la interpretación clínica:
-export const AQ10_CUTOFF = 6; // Punto de corte común para un cribado positivo.
-
-/**
- * Traduce la puntuación bruta del AQ-10 a una indicación de cribado.
- * @param score Puntuación bruta del AQ-10 (rango 0-10).
- * @returns {severity: string, description: string}
- */
-export function interpretAQ10Score(score: number): { severity: string, description: string } {
-  
-  if (score >= AQ10_CUTOFF) {
-      return { 
-          severity: 'Positivo', 
-          description: `Cribado positivo para rasgos del Espectro Autista. Puntuación (${score}/${AQ10_CUTOFF}+). Se requiere una Evaluación Diagnóstica Integral de TEA.` 
-      };
-  } else {
-      return { 
-          severity: 'Negativo', 
-          description: `Cribado negativo para rasgos del Espectro Autista. La sintomatología se explica mejor por el diagnóstico primario (e.g., Trastorno de Ansiedad Social).` 
-      };
-  }
-}
-
-// --- II. Función para Generar el Resultado de Evaluación ---
-
-/**
- * Genera el objeto EvaluationResult para el AQ-10.
- *
- * @param score Puntuación bruta total del AQ-10.
- * @returns EvaluationResult para el AQ-10.
- */
-export function generateAQ10Result(score: number): EvaluationResult {
-  const interpretation = interpretAQ10Score(score);
-
-  return {
-    instrumentName: 'AQ-10',
-    date: new Date(),
-    score: score,
-    // La severidad es Binaria: Positivo o Negativo
-    severity: interpretation.severity, 
-    suicideRisk: false, // No se utiliza para riesgo directo
-    contextDescription: interpretation.description
-  } as EvaluationResult;
-}
-
-
-// --- III. Ejemplo de Integración y Simulación ---
-
-/**
- * Simula la integración de un resultado de AQ-10 en el motor de diagnóstico.
- */
-export function simulateAQ10Integration() {
-    // Escenario clínico simulado: Cribado Positivo.
-    const aq10Result: EvaluationResult = generateAQ10Result(7); 
-
-    // Simular los resultados completos del paciente
-    const mockResults = {
-        results: [
-            // Simulación GAD-7: Ansiedad Moderada (que podría ser ansiedad social)
-            { instrumentName: 'GAD-7', date: new Date('2025-12-01'), score: 13, severity: 'Moderada', suicideRisk: false },
-            aq10Result // Cribado Positivo
-        ]
-    };
-    
-    // Si esta simulación fuera alimentada al motor dSIE:
-    // La función generateClinicalImpression debe incluir la referencia de "TEA/T. de Comunicación"
-    // en el Diagnóstico Diferencial, ya que los síntomas de ansiedad/social pueden ser
-    // secundarios al TEA (DSM-5 Criterio E del Mutismo Selectivo/Ansiedad Social).
-
-    console.log("--- AQ-10 Resultado para Integración ---");
-    console.log(aq10Result);
-    
-    console.log("\n--- Interpretación Clínica y Diagnóstico Diferencial (Simulado) ---");
-    console.log(`Cribado TEA: ${aq10Result.severity}`);
-    console.log(`Implicación Diagnóstica (DSM-5): Si el GAD-7 es alto, se debe diferenciar si la ansiedad social es primaria o es secundaria al déficit de comunicación/intereses restringidos del TEA.`);
-    console.log(`Próximo Paso: Interconsulta para Evaluación Funcional Completa de TEA.`);
-}
-
-// simulateAQ10Integration(); // Descomentar para probar
