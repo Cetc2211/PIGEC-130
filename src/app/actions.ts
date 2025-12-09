@@ -26,9 +26,9 @@ export async function submitEvaluation(
     return { message: 'Error: Cuestionario no encontrado.' };
   }
 
+  const allQuestions = questionnaire.sections.flatMap(s => s.questions);
   const schemaFields: Record<string, z.ZodType<any, any>> = {};
-  questionnaire.questions.forEach((q) => {
-    // All fields are strings from FormData, validation for likert is handled later
+  allQuestions.forEach((q) => {
     const fieldSchema = z.string().min(1, 'Por favor, completa este campo.');
     schemaFields[q.id] = fieldSchema;
   });
@@ -44,56 +44,70 @@ export async function submitEvaluation(
   }
 
   const answers = parsed.data;
-  let score = 0;
+  const scores: Record<string, number> = {};
+  const totalPossibleScores: Record<string, number> = {};
   const answerValues: Record<string, number | string> = {};
-  
-  for (const question of questionnaire.questions) {
-    const questionId = question.id;
-    const rawAnswer = answers[questionId];
-    
-    // Solo se procesa para el score si la pregunta es de tipo likert y no está excluida
-    if (question.type === 'likert' && question.includeInScore !== false) {
-      const value = parseInt(rawAnswer, 10);
 
-      // Lógica de puntuación
-      if (question.scoring?.type === 'match') {
-        // Puntuación por clave de corrección
-        if (value === question.scoring.value) {
-          score += 1;
+  for (const section of questionnaire.sections) {
+    let sectionScore = 0;
+    let sectionTotalPossible = 0;
+    const sectionId = section.sectionId;
+
+    for (const question of section.questions) {
+      const questionId = question.id;
+      const rawAnswer = answers[questionId];
+      
+      if (question.type === 'likert' && question.includeInScore !== false) {
+        const value = parseInt(rawAnswer, 10);
+        let scoreForQuestion = value;
+
+        if (question.scoring?.type === 'match') {
+          scoreForQuestion = value === question.scoring.value ? 1 : 0;
+        } else if (question.scoringDirection === 'Inversa') {
+          const maxScaleValue = Math.max(...section.likertScale.map(o => o.value));
+          const minScaleValue = Math.min(...section.likertScale.map(o => o.value));
+          // Formula (max + min) - value. ej: (4+1)-1 = 4. (4+1)-4 = 1.
+          scoreForQuestion = (maxScaleValue + minScaleValue) - value;
         }
+        
+        sectionScore += scoreForQuestion;
+      }
+
+      if (question.type === 'likert') {
+        answerValues[questionId] = parseInt(rawAnswer, 10);
       } else {
-        // Puntuación directa
-        score += value;
+        answerValues[questionId] = rawAnswer;
       }
     }
 
-    // Guardamos el valor para todas las preguntas
-    if (question.type === 'likert') {
-       answerValues[questionId] = parseInt(rawAnswer, 10);
-    } else {
-       answerValues[questionId] = rawAnswer;
-    }
-  }
+    scores[sectionId] = sectionScore;
 
-  const totalPossibleScore = questionnaire.questions
-    .filter(q => q.type === 'likert' && q.includeInScore !== false)
-    .reduce((total, q) => {
-        if (q.scoring?.type === 'match') {
-            // Cada pregunta con clave de corrección suma 1 como máximo
+    // Calcular la puntuación total posible para la sección
+    sectionTotalPossible = section.questions
+      .filter(q => q.type === 'likert' && q.includeInScore !== false)
+      .reduce((total, q) => {
+          if (q.scoring?.type === 'match') {
             return total + 1;
-        }
-        const options = q.options || questionnaire.likertScale;
-        const maxOptionValue = Math.max(...options.map(o => o.value));
-        return total + maxOptionValue;
-    }, 0);
+          }
+          if (q.scoringDirection === 'Inversa') {
+            // La puntuación máxima es la misma independientemente de la dirección
+            const maxOptionValue = Math.max(...section.likertScale.map(o => o.value));
+            return total + maxOptionValue;
+          }
+          const options = q.options || section.likertScale;
+          const maxOptionValue = Math.max(...options.map(o => o.value));
+          return total + maxOptionValue;
+      }, 0);
 
+    totalPossibleScores[sectionId] = sectionTotalPossible;
+  }
 
   const result = saveResult({
     questionnaireId: questionnaire.id,
     questionnaireName: questionnaire.name,
     answers: answerValues,
-    score,
-    totalPossibleScore,
+    scores,
+    totalPossibleScores,
     submittedAt: new Date(),
     patientId: patientId || undefined,
   });
@@ -171,15 +185,22 @@ export async function createQuestionnaireAction(
 
     const { name, description, category, subcategory, questions, likertScale, interpretations } = parsed.data;
 
-    const newQuestionnaire = saveCustomQuestionnaire({
-      name,
-      description,
-      category,
-      subcategory,
-      questions: questions.map((q, i) => ({ ...q, id: `q${i+1}` })),
-      likertScale,
-      interpretationData: interpretations,
-    });
+    const newQuestionnaireData = {
+        name,
+        description,
+        category,
+        subcategory,
+        sections: [{
+            sectionId: 'main',
+            name,
+            questions: questions.map((q: any, i: number) => ({ ...q, id: `q${i+1}` })),
+            likertScale,
+        }],
+        interpretationData: interpretations,
+    };
+
+    // Esto necesita una adaptación para construir el tipo Questionnaire completo
+    const newQuestionnaire = saveCustomQuestionnaire(newQuestionnaireData as any);
 
     revalidatePath('/');
     

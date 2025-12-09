@@ -12,8 +12,8 @@ export type EvaluationResult = {
   patientId?: string; // Patient ID is now optional
   questionnaireId: string;
   questionnaireName: string;
-  score: number;
-  totalPossibleScore: number;
+  scores: Record<string, number>; // Soporta múltiples puntuaciones, ej. { estado: 25, rasgo: 30 }
+  totalPossibleScores: Record<string, number>;
   answers: Record<string, number | string>; // Can now store numbers or strings
   submittedAt: Date;
 };
@@ -83,10 +83,20 @@ function seedData() {
         assignedQuestionnairesStore.set(patientId, assignmentsWithDates);
     });
 
-    initialData.results.forEach((r: any) => resultsStore.set(r.id, {
-        ...r,
-        submittedAt: new Date(r.submittedAt),
-    }));
+    initialData.results.forEach((r: any) => {
+        // Adapt old results to new multi-score format
+        const oldScore = r.score;
+        const oldTotal = r.totalPossibleScore;
+        delete r.score;
+        delete r.totalPossibleScore;
+
+        resultsStore.set(r.id, {
+            ...r,
+            scores: { main: oldScore },
+            totalPossibleScores: { main: oldTotal },
+            submittedAt: new Date(r.submittedAt),
+        })
+    });
 
     isSeeded = true;
 }

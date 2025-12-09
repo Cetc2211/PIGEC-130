@@ -1,6 +1,6 @@
 'use client';
 
-import type { Questionnaire, Question } from '@/lib/data';
+import type { Questionnaire, Question, QuestionnaireSection } from '@/lib/data';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { submitEvaluation } from '@/app/actions';
@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Terminal } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
+import { Separator } from './ui/separator';
 
 type QuestionnaireFormProps = {
   questionnaire: Questionnaire;
@@ -27,26 +28,46 @@ function SubmitButton() {
   );
 }
 
-function LikertOptions({ question }: { question: Question }) {
-    // Determina si usar las opciones específicas de la pregunta o la escala global del cuestionario.
-    const options = question.options || [];
-
+function QuestionField({ question, options, error }: { question: Question, options: any[], error?: string[] }) {
     return (
-        <RadioGroup
-            name={question.id}
-            required
-            className="flex flex-wrap gap-4 pt-2"
-        >
-            {options.map((option) => (
+      <fieldset key={question.id} className="space-y-3 p-4 border rounded-lg shadow-sm bg-background">
+        <legend className="text-base font-semibold leading-7">
+           {question.text}
+        </legend>
+        
+        {question.type === 'likert' ? (
+          <RadioGroup
+              name={question.id}
+              required
+              className="flex flex-wrap gap-4 pt-2"
+            >
+              {options.map((option) => (
                 <div key={option.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
-                    <Label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
-                        {option.label}
-                    </Label>
+                  <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
+                  <Label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
+                    {option.label}
+                  </Label>
                 </div>
-            ))}
-        </RadioGroup>
-    );
+              ))}
+            </RadioGroup>
+        ) : (
+          <div className="pt-2">
+               <Label htmlFor={question.id} className="sr-only">Respuesta</Label>
+               <Textarea 
+                  id={question.id}
+                  name={question.id}
+                  required 
+                  placeholder="Escribe tu respuesta aquí..."
+                  className="min-h-[100px]"
+              />
+          </div>
+        )}
+
+        {error && (
+          <p className="text-sm font-medium text-destructive">{error}</p>
+        )}
+      </fieldset>
+    )
 }
 
 export function QuestionnaireForm({ questionnaire, patientId }: QuestionnaireFormProps) {
@@ -76,48 +97,30 @@ export function QuestionnaireForm({ questionnaire, patientId }: QuestionnaireFor
          </Alert>
       )}
 
-      {questionnaire.questions.map((question, index) => {
-        const options = question.options || questionnaire.likertScale;
-        return (
-          <fieldset key={question.id} className="space-y-3 p-4 border rounded-lg shadow-sm bg-background">
-            <legend className="text-base font-semibold leading-7">
-              {index + 1}. {question.text}
-            </legend>
+      {questionnaire.sections.map((section, sectionIndex) => (
+        <div key={section.sectionId} className='space-y-6'>
+            {questionnaire.sections.length > 1 && (
+                <div className="mt-8 mb-4">
+                    <h2 className="text-xl font-bold font-headline">{section.name}</h2>
+                    {section.instructions && <p className="text-muted-foreground">{section.instructions}</p>}
+                    <Separator className="mt-2" />
+                </div>
+            )}
             
-            {question.type === 'likert' ? (
-              <RadioGroup
-                  name={question.id}
-                  required
-                  className="flex flex-wrap gap-4 pt-2"
-                >
-                  {options.map((option) => (
-                    <div key={option.value} className="flex items-center space-x-2">
-                      <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
-                      <Label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
-                        {option.label}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-            ) : (
-              <div className="pt-2">
-                   <Label htmlFor={question.id} className="sr-only">Respuesta</Label>
-                   <Textarea 
-                      id={question.id}
-                      name={question.id}
-                      required 
-                      placeholder="Escribe tu respuesta aquí..."
-                      className="min-h-[100px]"
-                  />
-              </div>
-            )}
+            {section.questions.map((question, questionIndex) => {
+                const options = question.options || section.likertScale;
+                const questionNumber = questionnaire.sections.slice(0, sectionIndex).reduce((acc, sec) => acc + sec.questions.length, 0) + questionIndex + 1;
+                const questionTextWithNumber = `${questionNumber}. ${question.text}`;
 
-            {state.errors?.[question.id] && (
-              <p className="text-sm font-medium text-destructive">{state.errors[question.id]}</p>
-            )}
-          </fieldset>
-        )
-      })}
+                return <QuestionField 
+                    key={question.id} 
+                    question={{...question, text: questionTextWithNumber}} 
+                    options={options} 
+                    error={state.errors?.[question.id]}
+                />
+            })}
+        </div>
+      ))}
 
       <div className="flex justify-end pt-4">
         <SubmitButton />

@@ -95,7 +95,10 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
               {results.length > 0 ? (
                 <ul className="space-y-3">
                   {results.map(result => {
-                    const interpretation = getInterpretation(result.questionnaireId, result.score);
+                    // Adapt for multi-score results
+                    const mainScoreId = Object.keys(result.scores)[0];
+                    const mainScore = result.scores[mainScoreId];
+                    const interpretation = getInterpretation(result.questionnaireId, mainScore);
                     return (
                       <li key={result.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div className="flex-grow">
@@ -103,9 +106,9 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                           <p className="text-xs text-muted-foreground">
                             Completado el {new Date(result.submittedAt).toLocaleDateString()}
                           </p>
-                           <Badge variant={interpretation.severity === 'Alta' ? 'destructive' : 'secondary'} className="mt-2">
+                           {interpretation && <Badge variant={interpretation.severity === 'Alta' ? 'destructive' : 'secondary'} className="mt-2">
                             {interpretation.severity}
-                          </Badge>
+                          </Badge>}
                         </div>
                         <Button asChild size="sm" variant="outline">
                           <Link href={`/results/${result.id}`}>Ver Detalles</Link>

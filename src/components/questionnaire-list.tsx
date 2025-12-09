@@ -134,6 +134,8 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
   }
 
   const categories = Object.keys(groupedQuestionnaires).sort();
+  const totalQuestions = (q: Questionnaire) => q.sections.reduce((acc, section) => acc + section.questions.length, 0);
+
 
   if (categories.length === 0) {
     return <p className="text-muted-foreground">No hay evaluaciones disponibles. ¡Crea una para empezar!</p>;
@@ -170,7 +172,7 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
                                 <CardDescription>{q.description}</CardDescription>
                               </CardHeader>
                               <CardContent>
-                                <div className="text-sm text-muted-foreground">{q.questions.length} preguntas</div>
+                                <div className="text-sm text-muted-foreground">{totalQuestions(q)} preguntas</div>
                               </CardContent>
                             </div>
                             <CardFooter className="flex justify-between items-center">

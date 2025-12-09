@@ -9,10 +9,11 @@ export type Question = {
   type: 'likert' | 'open';
   options?: LikertScaleOption[]; // Opciones específicas para esta pregunta
   includeInScore?: boolean; // Por defecto es true. Si es false, no se suma al score.
-  scoring?: { // Lógica de puntuación personalizada
+  scoring?: { // Lógica de puntuación personalizada por coincidencia
     type: 'match';
-    value: number; // El valor que debe coincidir para sumar 1 punto
-  }
+    value: number; 
+  };
+  scoringDirection?: 'Directa' | 'Inversa'; // Para puntuación directa o inversa
 };
 
 export type Interpretation = {
@@ -27,6 +28,13 @@ export type InterpretationRule = {
     summary: string;
 };
 
+export type QuestionnaireSection = {
+  sectionId: string;
+  name: string;
+  instructions?: string;
+  likertScale: LikertScaleOption[];
+  questions: Question[];
+};
 
 export type Questionnaire = {
   id: string;
@@ -34,155 +42,153 @@ export type Questionnaire = {
   description: string;
   category: string;
   subcategory: string;
-  questions: Question[];
-  likertScale: LikertScaleOption[];
-  interpretationData: InterpretationRule[];
+  // Un cuestionario puede tener una o más secciones.
+  sections: QuestionnaireSection[]; 
+  // La interpretación puede ser más compleja y depender de la sección, por ahora se mantiene global.
+  interpretationData: InterpretationRule[]; 
 };
 
 
-const defaultLikertScale: LikertScaleOption[] = [
-  { value: 0, label: 'Para nada' },
-  { value: 1, label: 'Varios días' },
-  { value: 2, label: 'Más de la mitad de los días' },
-  { value: 3, label: 'Casi todos los días' },
-];
-
-export const questionnaires: Questionnaire[] = [
+const questionnairesData: Omit<Questionnaire, 'sections'> & { sections?: QuestionnaireSection[], questions?: Question[], likertScale?: LikertScaleOption[] }[] = [
   {
     id: 'bdi-ii',
     name: 'Inventario de Depresión de Beck-II',
     description: 'Cuestionario de 21 ítems para evaluar la severidad de los síntomas de depresión en las últimas dos semanas.',
     category: 'Estado de Ánimo',
     subcategory: 'Depresión',
-    likertScale: [], // No usa una escala global
-    questions: [
-      { id: 'q1', type: 'likert', text: 'TRISTEZA', options: [
-        { value: 0, label: 'No me siento triste' },
-        { value: 1, label: 'Me siento triste gran parte del tiempo' },
-        { value: 2, label: 'Estoy triste todo el tiempo' },
-        { value: 3, label: 'Estoy tan triste o infeliz que no puedo soportarlo' }
-      ]},
-      { id: 'q2', type: 'likert', text: 'PESIMISMO', options: [
-        { value: 0, label: 'No estoy desalentado respecto a mi futuro' },
-        { value: 1, label: 'Me siento más desalentado respecto a mi futuro que antes' },
-        { value: 2, label: 'No espero que las cosas funcionen para mí' },
-        { value: 3, label: 'Siento que mi futuro es desesperanzador y que sólo empeorará' }
-      ]},
-      { id: 'q3', type: 'likert', text: 'FRACASO', options: [
-        { value: 0, label: 'No me siento como un fracasado' },
-        { value: 1, label: 'He fracasado más de lo que debería' },
-        { value: 2, label: 'Cuando miro hacia atrás veo muchos fracasos' },
-        { value: 3, label: 'Siento que como persona soy un fracaso total' }
-      ]},
-      { id: 'q4', type: 'likert', text: 'PÉRDIDA DE PLACER', options: [
-        { value: 0, label: 'Obtengo tanto placer como siempre de las cosas que disfruto' },
-        { value: 1, label: 'No disfruto de las cosas tanto como antes' },
-        { value: 2, label: 'Obtengo muy poco placer de las cosas que solía disfrutar' },
-        { value: 3, label: 'No obtengo ningún placer de las cosas que solía disfrutar' }
-      ]},
-      { id: 'q5', type: 'likert', text: 'SENTIMIENTOS DE CULPA', options: [
-        { value: 0, label: 'No me siento particularmente culpable' },
-        { value: 1, label: 'Me siento culpable respecto a muchas cosas que he hecho o debería haber hecho' },
-        { value: 2, label: 'Me siento bastante culpable la mayor parte del tiempo' },
-        { value: 3, label: 'Me siento culpable todo el tiempo' }
-      ]},
-      { id: 'q6', type: 'likert', text: 'SENTIMIENTOS DE CASTIGO', options: [
-        { value: 0, label: 'No siento que esté siendo castigado' },
-        { value: 1, label: 'Siento que podría ser castigado' },
-        { value: 2, label: 'Espero ser castigado' },
-        { value: 3, label: 'Siento que estoy siendo castigado' }
-      ]},
-      { id: 'q7', type: 'likert', text: 'DISCONFORMIDAD CON UNO MISMO', options: [
-        { value: 0, label: 'Me siento igual respecto a mí mismo que siempre' },
-        { value: 1, label: 'He perdido confianza en mí mismo' },
-        { value: 2, label: 'Estoy decepcionado de mí mismo' },
-        { value: 3, label: 'No me gusto a mí mismo' }
-      ]},
-      { id: 'q8', type: 'likert', text: 'AUTOCRÍTICA', options: [
-        { value: 0, label: 'No me critico o culpo más de lo habitual' },
-        { value: 1, label: 'Soy más crítico conmigo mismo de lo que solía ser' },
-        { value: 2, label: 'Me critico por todos mis errores' },
-        { value: 3, label: 'Me culpo por todo lo malo que sucede' }
-      ]},
-      { id: 'q9', type: 'likert', text: 'PENSAMIENTOS O DESEOS SUICIDAS', options: [
-        { value: 0, label: 'No tengo ningún pensamiento de suicidio' },
-        { value: 1, label: 'Tengo pensamientos de suicidio, pero no los llevaría a cabo' },
-        { value: 2, label: 'Me gustaría suicidarme' },
-        { value: 3, label: 'Me suicidaría si tuviera la oportunidad' }
-      ]},
-      { id: 'q10', type: 'likert', text: 'LLANTO', options: [
-        { value: 0, label: 'No lloro más de lo habitual' },
-        { value: 1, label: 'Lloro más de lo que solía hacerlo' },
-        { value: 2, label: 'Lloro por cualquier pequeñez' },
-        { value: 3, label: 'Siento ganas de llorar pero no puedo' }
-      ]},
-      { id: 'q11', type: 'likert', text: 'AGITACIÓN', options: [
-        { value: 0, label: 'No estoy más inquieto o nervioso que lo habitual' },
-        { value: 1, label: 'Me siento más inquieto o nervioso que lo habitual' },
-        { value: 2, label: 'Estoy tan inquieto que me es difícil quedarme quieto' },
-        { value: 3, label: 'Estoy tan inquieto que tengo que estar moviéndome o haciendo algo' }
-      ]},
-      { id: 'q12', type: 'likert', text: 'PÉRDIDA DE INTERÉS', options: [
-        { value: 0, label: 'No he perdido interés en otras personas o actividades' },
-        { value: 1, label: 'Estoy menos interesado en otras personas o cosas que antes' },
-        { value: 2, label: 'He perdido casi todo el interés en otras personas o cosas' },
-        { value: 3, label: 'Me es difícil interesarme en algo' }
-      ]},
-      { id: 'q13', type: 'likert', text: 'INDECISIÓN', options: [
-        { value: 0, label: 'Tomo decisiones tan bien como siempre' },
-        { value: 1, label: 'Me resulta más difícil tomar decisiones que lo habitual' },
-        { value: 2, label: 'Tengo mucha más dificultad para tomar decisiones que lo habitual' },
-        { value: 3, label: 'Tengo problemas para tomar cualquier decisión' }
-      ]},
-      { id: 'q14', type: 'likert', text: 'DESVALORIZACIÓN', options: [
-        { value: 0, label: 'No siento que sea inútil' },
-        { value: 1, label: 'No me considero tan valioso y útil como solía ser' },
-        { value: 2, label: 'Me siento más inútil comparado con otras personas' },
-        { value: 3, label: 'Me siento completamente inútil' }
-      ]},
-      { id: 'q15', type: 'likert', text: 'PÉRDIDA DE ENERGÍA', options: [
-        { value: 0, label: 'Tengo tanta energía como siempre' },
-        { value: 1, label: 'Tengo menos energía de la que solía tener' },
-        { value: 2, label: 'No tengo suficiente energía para hacer muchas cosas' },
-        { value: 3, label: 'No tengo energía para hacer nada' }
-      ]},
-      { id: 'q16', type: 'likert', text: 'CAMBIOS EN EL PATRÓN DE SUEÑO', options: [
-        { value: 0, label: 'No he experimentado ningún cambio en mi patrón de sueño' },
-        { value: 1, label: 'Duermo algo más de lo habitual / Duermo algo menos de lo habitual' },
-        { value: 2, label: 'Duermo mucho más de lo habitual / Duermo mucho menos de lo habitual' },
-        { value: 3, label: 'Duermo la mayor parte del día / Me despierto 1-2 horas más temprano y no puedo volver a dormir' }
-      ]},
-      { id: 'q17', type: 'likert', text: 'IRRITABILIDAD', options: [
-        { value: 0, label: 'No estoy más irritable que lo habitual' },
-        { value: 1, label: 'Estoy más irritable que lo habitual' },
-        { value: 2, label: 'Estoy mucho más irritable que lo habitual' },
-        { value: 3, label: 'Estoy irritable todo el tiempo' }
-      ]},
-      { id: 'q18', type: 'likert', text: 'CAMBIOS EN EL APETITO', options: [
-        { value: 0, label: 'No he experimentado ningún cambio en mi apetito' },
-        { value: 1, label: 'Mi apetito es algo menor de lo habitual / Mi apetito es algo mayor de lo habitual' },
-        { value: 2, label: 'Mi apetito es mucho menor que antes / Mi apetito es mucho mayor que antes' },
-        { value: 3, label: 'No tengo apetito en absoluto / Tengo ganas de comer todo el tiempo' }
-      ]},
-      { id: 'q19', type: 'likert', text: 'DIFICULTAD DE CONCENTRACIÓN', options: [
-        { value: 0, label: 'Puedo concentrarme tan bien como siempre' },
-        { value: 1, label: 'No puedo concentrarme tan bien como antes' },
-        { value: 2, label: 'Me es difícil concentrarme en algo por mucho tiempo' },
-        { value: 3, label: 'No puedo concentrarme en nada' }
-      ]},
-      { id: 'q20', type: 'likert', text: 'CANSANCIO O FATIGA', options: [
-        { value: 0, label: 'No estoy más cansado o fatigado que lo habitual' },
-        { value: 1, label: 'Me canso o fatigo más fácilmente que lo habitual' },
-        { value: 2, label: 'Estoy demasiado cansado o fatigado para hacer muchas cosas que solía hacer' },
-        { value: 3, label: 'Estoy demasiado cansado o fatigado para hacer la mayoría de las cosas que solía hacer' }
-      ]},
-      { id: 'q21', type: 'likert', text: 'PÉRDIDA DE INTERÉS EN EL SEXO', options: [
-        { value: 0, label: 'No he notado ningún cambio reciente en mi interés por el sexo' },
-        { value: 1, label: 'Estoy menos interesado en el sexo de lo que solía estar' },
-        { value: 2, label: 'Estoy mucho menos interesado en el sexo ahora' },
-        { value: 3, label: 'He perdido completamente el interés en el sexo' }
-      ]}
-    ],
+    sections: [{
+      sectionId: 'main',
+      name: 'Inventario de Depresión de Beck-II',
+      likertScale: [], // Opciones por pregunta
+      questions: [
+        { id: 'q1', type: 'likert', text: 'TRISTEZA', options: [
+          { value: 0, label: 'No me siento triste' },
+          { value: 1, label: 'Me siento triste gran parte del tiempo' },
+          { value: 2, label: 'Estoy triste todo el tiempo' },
+          { value: 3, label: 'Estoy tan triste o infeliz que no puedo soportarlo' }
+        ]},
+        { id: 'q2', type: 'likert', text: 'PESIMISMO', options: [
+          { value: 0, label: 'No estoy desalentado respecto a mi futuro' },
+          { value: 1, label: 'Me siento más desalentado respecto a mi futuro que antes' },
+          { value: 2, label: 'No espero que las cosas funcionen para mí' },
+          { value: 3, label: 'Siento que mi futuro es desesperanzador y que sólo empeorará' }
+        ]},
+        { id: 'q3', type: 'likert', text: 'FRACASO', options: [
+          { value: 0, label: 'No me siento como un fracasado' },
+          { value: 1, label: 'He fracasado más de lo que debería' },
+          { value: 2, label: 'Cuando miro hacia atrás veo muchos fracasos' },
+          { value: 3, label: 'Siento que como persona soy un fracaso total' }
+        ]},
+        { id: 'q4', type: 'likert', text: 'PÉRDIDA DE PLACER', options: [
+          { value: 0, label: 'Obtengo tanto placer como siempre de las cosas que disfruto' },
+          { value: 1, label: 'No disfruto de las cosas tanto como antes' },
+          { value: 2, label: 'Obtengo muy poco placer de las cosas que solía disfrutar' },
+          { value: 3, label: 'No obtengo ningún placer de las cosas que solía disfrutar' }
+        ]},
+        { id: 'q5', type: 'likert', text: 'SENTIMIENTOS DE CULPA', options: [
+          { value: 0, label: 'No me siento particularly culpable' },
+          { value: 1, label: 'Me siento culpable respecto a muchas cosas que he hecho o debería haber hecho' },
+          { value: 2, label: 'Me siento bastante culpable la mayor parte del tiempo' },
+          { value: 3, label: 'Me siento culpable todo el tiempo' }
+        ]},
+        { id: 'q6', type: 'likert', text: 'SENTIMIENTOS DE CASTIGO', options: [
+          { value: 0, label: 'No siento que esté siendo castigado' },
+          { value: 1, label: 'Siento que podría ser castigado' },
+          { value: 2, label: 'Espero ser castigado' },
+          { value: 3, label: 'Siento que estoy siendo castigado' }
+        ]},
+        { id: 'q7', type: 'likert', text: 'DISCONFORMIDAD CON UNO MISMO', options: [
+          { value: 0, label: 'Me siento igual respecto a mí mismo que siempre' },
+          { value: 1, label: 'He perdido confianza en mí mismo' },
+          { value: 2, label: 'Estoy decepcionado de mí mismo' },
+          { value: 3, label: 'No me gusto a mí mismo' }
+        ]},
+        { id: 'q8', type: 'likert', text: 'AUTOCRÍTICA', options: [
+          { value: 0, label: 'No me critico o culpo más de lo habitual' },
+          { value: 1, label: 'Soy más crítico conmigo mismo de lo que solía ser' },
+          { value: 2, label: 'Me critico por todos mis errores' },
+          { value: 3, label: 'Me culpo por todo lo malo que sucede' }
+        ]},
+        { id: 'q9', type: 'likert', text: 'PENSAMIENTOS O DESEOS SUICIDAS', options: [
+          { value: 0, label: 'No tengo ningún pensamiento de suicidio' },
+          { value: 1, label: 'Tengo pensamientos de suicidio, pero no los llevaría a cabo' },
+          { value: 2, label: 'Me gustaría suicidarme' },
+          { value: 3, label: 'Me suicidaría si tuviera la oportunidad' }
+        ]},
+        { id: 'q10', type: 'likert', text: 'LLANTO', options: [
+          { value: 0, label: 'No lloro más de lo habitual' },
+          { value: 1, label: 'Lloro más de lo que solía hacerlo' },
+          { value: 2, label: 'Lloro por cualquier pequeñez' },
+          { value: 3, label: 'Siento ganas de llorar pero no puedo' }
+        ]},
+        { id: 'q11', type: 'likert', text: 'AGITACIÓN', options: [
+          { value: 0, label: 'No estoy más inquieto o nervioso que lo habitual' },
+          { value: 1, label: 'Me siento más inquieto o nervioso que lo habitual' },
+          { value: 2, label: 'Estoy tan inquieto que me es difícil quedarme quieto' },
+          { value: 3, label: 'Estoy tan inquieto que tengo que estar moviéndome o haciendo algo' }
+        ]},
+        { id: 'q12', type: 'likert', text: 'PÉRDIDA DE INTERÉS', options: [
+          { value: 0, label: 'No he perdido interés en otras personas o actividades' },
+          { value: 1, label: 'Estoy menos interesado en otras personas o cosas que antes' },
+          { value: 2, label: 'He perdido casi todo el interés en otras personas o cosas' },
+          { value: 3, label: 'Me es difícil interesarme en algo' }
+        ]},
+        { id: 'q13', type: 'likert', text: 'INDECISIÓN', options: [
+          { value: 0, label: 'Tomo decisiones tan bien como siempre' },
+          { value: 1, label: 'Me resulta más difícil tomar decisiones que lo habitual' },
+          { value: 2, label: 'Tengo mucha más dificultad para tomar decisiones que lo habitual' },
+          { value: 3, label: 'Tengo problemas para tomar cualquier decisión' }
+        ]},
+        { id: 'q14', type: 'likert', text: 'DESVALORIZACIÓN', options: [
+          { value: 0, label: 'No siento que sea inútil' },
+          { value: 1, label: 'No me considero tan valioso y útil como solía ser' },
+          { value: 2, label: 'Me siento más inútil comparado con otras personas' },
+          { value: 3, label: 'Me siento completamente inútil' }
+        ]},
+        { id: 'q15', type: 'likert', text: 'PÉRDIDA DE ENERGÍA', options: [
+          { value: 0, label: 'Tengo tanta energía como siempre' },
+          { value: 1, label: 'Tengo menos energía de la que solía tener' },
+          { value: 2, label: 'No tengo suficiente energía para hacer muchas cosas' },
+          { value: 3, label: 'No tengo energía para hacer nada' }
+        ]},
+        { id: 'q16', type: 'likert', text: 'CAMBIOS EN EL PATRÓN DE SUEÑO', options: [
+          { value: 0, label: 'No he experimentado ningún cambio en mi patrón de sueño' },
+          { value: 1, label: 'Duermo algo más de lo habitual / Duermo algo menos de lo habitual' },
+          { value: 2, label: 'Duermo mucho más de lo habitual / Duermo mucho menos de lo habitual' },
+          { value: 3, label: 'Duermo la mayor parte del día / Me despierto 1-2 horas más temprano y no puedo volver a dormir' }
+        ]},
+        { id: 'q17', type: 'likert', text: 'IRRITABILIDAD', options: [
+          { value: 0, label: 'No estoy más irritable que lo habitual' },
+          { value: 1, label: 'Estoy más irritable que lo habitual' },
+          { value: 2, label: 'Estoy mucho más irritable que lo habitual' },
+          { value: 3, label: 'Estoy irritable todo el tiempo' }
+        ]},
+        { id: 'q18', type: 'likert', text: 'CAMBIOS EN EL APETITO', options: [
+          { value: 0, label: 'No he experimentado ningún cambio en mi apetito' },
+          { value: 1, label: 'Mi apetito es algo menor de lo habitual / Mi apetito es algo mayor de lo habitual' },
+          { value: 2, label: 'Mi apetito es mucho menor que antes / Mi apetito es mucho mayor que antes' },
+          { value: 3, label: 'No tengo apetito en absoluto / Tengo ganas de comer todo el tiempo' }
+        ]},
+        { id: 'q19', type: 'likert', text: 'DIFICULTAD DE CONCENTRACIÓN', options: [
+          { value: 0, label: 'Puedo concentrarme tan bien como siempre' },
+          { value: 1, label: 'No puedo concentrarme tan bien como antes' },
+          { value: 2, label: 'Me es difícil concentrarme en algo por mucho tiempo' },
+          { value: 3, label: 'No puedo concentrarme en nada' }
+        ]},
+        { id: 'q20', type: 'likert', text: 'CANSANCIO O FATIGA', options: [
+          { value: 0, label: 'No estoy más cansado o fatigado que lo habitual' },
+          { value: 1, label: 'Me canso o fatigo más fácilmente que lo habitual' },
+          { value: 2, label: 'Estoy demasiado cansado o fatigado para hacer muchas cosas que solía hacer' },
+          { value: 3, label: 'Estoy demasiado cansado o fatigado para hacer la mayoría de las cosas que solía hacer' }
+        ]},
+        { id: 'q21', type: 'likert', text: 'PÉRDIDA DE INTERÉS EN EL SEXO', options: [
+          { value: 0, label: 'No he notado ningún cambio reciente en mi interés por el sexo' },
+          { value: 1, label: 'Estoy menos interesado en el sexo de lo que solía estar' },
+          { value: 2, label: 'Estoy mucho menos interesado en el sexo ahora' },
+          { value: 3, label: 'He perdido completamente el interés en el sexo' }
+        ]}
+      ]
+    }],
     interpretationData: [
       { from: 0, to: 13, severity: 'Baja', summary: 'Sintomatología depresiva mínima. Los síntomas son bajos o inexistentes.' },
       { from: 14, to: 19, severity: 'Leve', summary: 'Sintomatología depresiva leve. Puede que experimente algunos síntomas que no son severos.' },
@@ -277,72 +283,76 @@ export const questionnaires: Questionnaire[] = [
     description: 'Escala de 21 ítems que evalúa la severidad y características de la ideación suicida actual.',
     category: 'Riesgo Clínico',
     subcategory: 'Ideación Suicida',
-    likertScale: [], // Cada pregunta tiene sus propias opciones
-    questions: [
-      { id: 'q1', type: 'likert', text: 'DESEO DE VIVIR', options: [
-        { value: 0, label: 'Moderado a fuerte' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Ninguno' }
-      ]},
-      { id: 'q2', type: 'likert', text: 'DESEO DE MORIR', options: [
-        { value: 0, label: 'Ninguno' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Moderado a fuerte' }
-      ]},
-      { id: 'q3', type: 'likert', text: 'RAZONES PARA VIVIR/MORIR', options: [
-        { value: 0, label: 'Las razones para vivir superan las de morir' }, { value: 1, label: 'Iguales' }, { value: 2, label: 'Las razones para morir superan las de vivir' }
-      ]},
-      { id: 'q4', type: 'likert', text: 'DESEO DE INTENTAR SUICIDIO ACTIVO', options: [
-        { value: 0, label: 'Ninguno' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Moderado a fuerte' }
-      ]},
-      { id: 'q5', type: 'likert', text: 'DESEO SUICIDA PASIVO', options: [
-        { value: 0, label: 'Tomaría precauciones para salvar su vida' }, { value: 1, label: 'Dejaría vida/muerte al azar' }, { value: 2, label: 'Evitaría pasos para salvar su vida' }
-      ]},
-      { id: 'q6', type: 'likert', text: 'DIMENSIÓN TEMPORAL', options: [
-        { value: 0, label: 'Breve, períodos pasajeros' }, { value: 1, label: 'Períodos más largos' }, { value: 2, label: 'Continuo o casi continuo' }
-      ]},
-      { id: 'q7', type: 'likert', text: 'FRECUENCIA', options: [
-        { value: 0, label: 'Rara, ocasional' }, { value: 1, label: 'Intermitente' }, { value: 2, label: 'Persistente o continuo' }
-      ]},
-      { id: 'q8', type: 'likert', text: 'ACTITUD HACIA LA IDEACIÓN', options: [
-        { value: 0, label: 'Rechazo' }, { value: 1, label: 'Ambivalente, indiferente' }, { value: 2, label: 'Aceptación' }
-      ]},
-      { id: 'q9', type: 'likert', text: 'CONTROL SOBRE LA ACCIÓN SUICIDA', options: [
-        { value: 0, label: 'Tiene control/no lo haría' }, { value: 1, label: 'Inseguro del control' }, { value: 2, label: 'No tiene control' }
-      ]},
-      { id: 'q10', type: 'likert', text: 'FACTORES DISUASIVOS', options: [
-        { value: 0, label: 'No lo intentaría por familia, religión, etc.' }, { value: 1, label: 'Cierta preocupación por disuasivos' }, { value: 2, label: 'Mínima o ninguna preocupación' }
-      ]},
-      { id: 'q11', type: 'likert', text: 'RAZONES DEL INTENTO CONTEMPLADO', options: [
-        { value: 0, label: 'Manipular, llamar atención' }, { value: 1, label: 'Combinación de 0 y 2' }, { value: 2, label: 'Escape, finalizar problemas' }
-      ]},
-      { id: 'q12', type: 'likert', text: 'MÉTODO: ESPECIFICIDAD/PLANIFICACIÓN', options: [
-        { value: 0, label: 'No considerado' }, { value: 1, label: 'Considerado pero no elaborado' }, { value: 2, label: 'Elaborado y detallado' }
-      ]},
-      { id: 'q13', type: 'likert', text: 'MÉTODO: DISPONIBILIDAD/OPORTUNIDAD', options: [
-        { value: 0, label: 'Método no disponible, no hay oportunidad' }, { value: 1, label: 'Método tomaría tiempo/esfuerzo' }, { value: 2, label: 'Método disponible/oportunidad presente o anticipada' }
-      ]},
-      { id: 'q14', type: 'likert', text: "SENTIDO DE 'CAPACIDAD'", options: [
-        { value: 0, label: 'No tiene valor, muy débil' }, { value: 1, label: 'Inseguro del valor' }, { value: 2, label: 'Seguro de tener valor' }
-      ]},
-      { id: 'q15', type: 'likert', text: 'EXPECTATIVA/ANTICIPACIÓN DEL INTENTO', options: [
-        { value: 0, label: 'No' }, { value: 1, label: 'Incierto' }, { value: 2, label: 'Sí' }
-      ]},
-      { id: 'q16', type: 'likert', text: 'PREPARACIÓN REAL', options: [
-        { value: 0, label: 'Ninguna' }, { value: 1, label: 'Parcial (empezar nota)' }, { value: 2, label: 'Completa (nota terminada, arreglos)' }
-      ]},
-      { id: 'q17', type: 'likert', text: 'NOTA SUICIDA', options: [
-        { value: 0, label: 'No escribió nota' }, { value: 1, label: 'Empezada pero no terminada' }, { value: 2, label: 'Nota completa' }
-      ]},
-      { id: 'q18', type: 'likert', text: 'ACTOS FINALES', options: [
-        { value: 0, label: 'Ninguno' }, { value: 1, label: 'Pensamientos o algunos arreglos' }, { value: 2, label: 'Arreglos definitivos' }
-      ]},
-      { id: 'q19', type: 'likert', text: 'ENGAÑO/OCULTAMIENTO', options: [
-        { value: 0, label: 'Reveló ideas abiertamente' }, { value: 1, label: 'Evitó el tema' }, { value: 2, label: 'Engañó, ocultó' }
-      ]},
-      { id: 'q20', text: 'INTENTOS PREVIOS', type: 'likert', includeInScore: false, options: [
-        { value: 0, label: 'Ninguno' }, { value: 1, label: 'Uno' }, { value: 2, label: 'Más de uno' }
-      ]},
-      { id: 'q21', text: 'INTENCIÓN DE MORIR EN ÚLTIMO INTENTO', type: 'likert', includeInScore: false, options: [
-        { value: 0, label: 'Baja' }, { value: 1, label: 'Moderada, ambivalente' }, { value: 2, label: 'Alta' }
-      ]}
-    ],
+    sections: [{
+      sectionId: 'main',
+      name: 'Escala de Ideación Suicida de Beck',
+      likertScale: [], // Opciones por pregunta
+      questions: [
+        { id: 'q1', type: 'likert', text: 'DESEO DE VIVIR', options: [
+          { value: 0, label: 'Moderado a fuerte' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Ninguno' }
+        ]},
+        { id: 'q2', type: 'likert', text: 'DESEO DE MORIR', options: [
+          { value: 0, label: 'Ninguno' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Moderado a fuerte' }
+        ]},
+        { id: 'q3', type: 'likert', text: 'RAZONES PARA VIVIR/MORIR', options: [
+          { value: 0, label: 'Las razones para vivir superan las de morir' }, { value: 1, label: 'Iguales' }, { value: 2, label: 'Las razones para morir superan las de vivir' }
+        ]},
+        { id: 'q4', type: 'likert', text: 'DESEO DE INTENTAR SUICIDIO ACTIVO', options: [
+          { value: 0, label: 'Ninguno' }, { value: 1, label: 'Débil' }, { value: 2, label: 'Moderado a fuerte' }
+        ]},
+        { id: 'q5', type: 'likert', text: 'DESEO SUICIDA PASIVO', options: [
+          { value: 0, label: 'Tomaría precauciones para salvar su vida' }, { value: 1, label: 'Dejaría vida/muerte al azar' }, { value: 2, label: 'Evitaría pasos para salvar su vida' }
+        ]},
+        { id: 'q6', type: 'likert', text: 'DIMENSIÓN TEMPORAL', options: [
+          { value: 0, label: 'Breve, períodos pasajeros' }, { value: 1, label: 'Períodos más largos' }, { value: 2, label: 'Continuo o casi continuo' }
+        ]},
+        { id: 'q7', type: 'likert', text: 'FRECUENCIA', options: [
+          { value: 0, label: 'Rara, ocasional' }, { value: 1, label: 'Intermitente' }, { value: 2, label: 'Persistente o continuo' }
+        ]},
+        { id: 'q8', type: 'likert', text: 'ACTITUD HACIA LA IDEACIÓN', options: [
+          { value: 0, label: 'Rechazo' }, { value: 1, label: 'Ambivalente, indiferente' }, { value: 2, label: 'Aceptación' }
+        ]},
+        { id: 'q9', type: 'likert', text: 'CONTROL SOBRE LA ACCIÓN SUICIDA', options: [
+          { value: 0, label: 'Tiene control/no lo haría' }, { value: 1, label: 'Inseguro del control' }, { value: 2, label: 'No tiene control' }
+        ]},
+        { id: 'q10', type: 'likert', text: 'FACTORES DISUASIVOS', options: [
+          { value: 0, label: 'No lo intentaría por familia, religión, etc.' }, { value: 1, label: 'Cierta preocupación por disuasivos' }, { value: 2, label: 'Mínima o ninguna preocupación' }
+        ]},
+        { id: 'q11', type: 'likert', text: 'RAZONES DEL INTENTO CONTEMPLADO', options: [
+          { value: 0, label: 'Manipular, llamar atención' }, { value: 1, label: 'Combinación de 0 y 2' }, { value: 2, label: 'Escape, finalizar problemas' }
+        ]},
+        { id: 'q12', type: 'likert', text: 'MÉTODO: ESPECIFICIDAD/PLANIFICACIÓN', options: [
+          { value: 0, label: 'No considerado' }, { value: 1, label: 'Considerado pero no elaborado' }, { value: 2, label: 'Elaborado y detallado' }
+        ]},
+        { id: 'q13', type: 'likert', text: 'MÉTODO: DISPONIBILIDAD/OPORTUNIDAD', options: [
+          { value: 0, label: 'Método no disponible, no hay oportunidad' }, { value: 1, label: 'Método tomaría tiempo/esfuerzo' }, { value: 2, label: 'Método disponible/oportunidad presente o anticipada' }
+        ]},
+        { id: 'q14', type: 'likert', text: "SENTIDO DE 'CAPACIDAD'", options: [
+          { value: 0, label: 'No tiene valor, muy débil' }, { value: 1, label: 'Inseguro del valor' }, { value: 2, label: 'Seguro de tener valor' }
+        ]},
+        { id: 'q15', type: 'likert', text: 'EXPECTATIVA/ANTICIPACIÓN DEL INTENTO', options: [
+          { value: 0, label: 'No' }, { value: 1, label: 'Incierto' }, { value: 2, label: 'Sí' }
+        ]},
+        { id: 'q16', type: 'likert', text: 'PREPARACIÓN REAL', options: [
+          { value: 0, label: 'Ninguna' }, { value: 1, label: 'Parcial (empezar nota)' }, { value: 2, label: 'Completa (nota terminada, arreglos)' }
+        ]},
+        { id: 'q17', type: 'likert', text: 'NOTA SUICIDA', options: [
+          { value: 0, label: 'No escribió nota' }, { value: 1, label: 'Empezada pero no terminada' }, { value: 2, label: 'Nota completa' }
+        ]},
+        { id: 'q18', type: 'likert', text: 'ACTOS FINALES', options: [
+          { value: 0, label: 'Ninguno' }, { value: 1, label: 'Pensamientos o algunos arreglos' }, { value: 2, label: 'Arreglos definitivos' }
+        ]},
+        { id: 'q19', type: 'likert', text: 'ENGAÑO/OCULTAMIENTO', options: [
+          { value: 0, label: 'Reveló ideas abiertamente' }, { value: 1, label: 'Evitó el tema' }, { value: 2, label: 'Engañó, ocultó' }
+        ]},
+        { id: 'q20', text: 'INTENTOS PREVIOS', type: 'likert', includeInScore: false, options: [
+          { value: 0, label: 'Ninguno' }, { value: 1, label: 'Uno' }, { value: 2, label: 'Más de uno' }
+        ]},
+        { id: 'q21', text: 'INTENCIÓN DE MORIR EN ÚLTIMO INTENTO', type: 'likert', includeInScore: false, options: [
+          { value: 0, label: 'Baja' }, { value: 1, label: 'Moderada, ambivalente' }, { value: 2, label: 'Alta' }
+        ]}
+      ]
+    }],
     interpretationData: [
       { from: 0, to: 5, severity: 'Baja', summary: 'Riesgo suicida bajo. Los síntomas de ideación son mínimos. Requiere seguimiento regular.' },
       { from: 6, to: 9, severity: 'Moderada', summary: 'Riesgo suicida moderado. La ideación es presente y requiere evaluación semanal e intervención prioritaria.' },
@@ -356,7 +366,12 @@ export const questionnaires: Questionnaire[] = [
     description: 'Una herramienta de 7 preguntas para la detección del Trastorno de Ansiedad Generalizada.',
     category: 'Estado de Ánimo',
     subcategory: 'Ansiedad',
-    likertScale: defaultLikertScale,
+    likertScale: [
+      { value: 0, label: 'Para nada' },
+      { value: 1, label: 'Varios días' },
+      { value: 2, label: 'Más de la mitad de los días' },
+      { value: 3, label: 'Casi todos los días' },
+    ],
     questions: [
       { id: 'q1', text: 'Sentirse nervioso/a, ansioso/a o con los nervios de punta', type: 'likert' },
       { id: 'q2', text: 'No poder detener o controlar la preocupación', type: 'likert' },
@@ -379,7 +394,12 @@ export const questionnaires: Questionnaire[] = [
     description: 'Una herramienta de 9 preguntas para detectar la depresión y monitorear su gravedad.',
     category: 'Estado de Ánimo',
     subcategory: 'Depresión',
-    likertScale: defaultLikertScale,
+    likertScale: [
+      { value: 0, label: 'Para nada' },
+      { value: 1, label: 'Varios días' },
+      { value: 2, label: 'Más de la mitad de los días' },
+      { value: 3, label: 'Casi todos los días' },
+    ],
     questions: [
         { id: 'q1', text: 'Poco interés o placer en hacer las cosas', type: 'likert' },
         { id: 'q2', text: 'Sentirse desanimado/a, deprimido/a o sin esperanza', type: 'likert' },
@@ -507,9 +527,36 @@ export const questionnaires: Questionnaire[] = [
   }
 ];
 
-
 // Almacenamiento en memoria para cuestionarios personalizados
 const customQuestionnaires: Map<string, Questionnaire> = new Map();
+
+// Helper para convertir el formato antiguo (questions/likertScale) al nuevo formato de secciones
+function normalizeQuestionnaires(data: any[]): Questionnaire[] {
+  return data.map(q => {
+    if (q.sections) {
+      return q as Questionnaire;
+    }
+    // Si no tiene secciones, crea una por defecto con las preguntas y escala existentes
+    const section: QuestionnaireSection = {
+      sectionId: 'main',
+      name: q.name,
+      likertScale: q.likertScale || [],
+      questions: q.questions || [],
+    };
+    return {
+      id: q.id,
+      name: q.name,
+      description: q.description,
+      category: q.category,
+      subcategory: q.subcategory,
+      sections: [section],
+      interpretationData: q.interpretationData || [],
+    };
+  });
+}
+
+export const questionnaires: Questionnaire[] = normalizeQuestionnaires(questionnairesData);
+
 
 export function saveCustomQuestionnaire(questionnaire: Omit<Questionnaire, 'id'>): Questionnaire {
   const id = `custom-${customQuestionnaires.size + 1}-${Date.now()}`;
@@ -532,13 +579,14 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
         return { severity: 'Baja', summary: 'No se encontró el cuestionario.' };
     }
     
+    // Esta función ahora es muy simple y puede que no funcione para IDARE.
+    // Necesitaría ser expandida para manejar múltiples puntuaciones.
     if (questionnaire.interpretationData) {
         const rule = questionnaire.interpretationData.find(i => score >= i.from && score <= i.to);
         if (rule) {
             return { severity: rule.severity, summary: rule.summary };
         }
 
-        // Handle scores potentially higher than the max "to"
         const maxRule = questionnaire.interpretationData.reduce((max, r) => r.to > max.to ? r : max, questionnaire.interpretationData[0]);
         if (score > maxRule.to) {
             return { severity: maxRule.severity, summary: maxRule.summary };

@@ -22,16 +22,22 @@ export default function ResultPage({ params }: ResultsPageProps) {
   }
 
   const questionnaire = getQuestionnaire(result.questionnaireId);
+  const allQuestions = questionnaire?.sections.flatMap(s => s.questions) ?? [];
 
-  const hasNumericScore = result.totalPossibleScore > 0;
-  const percentage = hasNumericScore ? (result.score / result.totalPossibleScore) * 100 : 0;
-  const interpretation = hasNumericScore ? getInterpretation(result.questionnaireId, result.score) : null;
+  const mainScoreId = Object.keys(result.scores)[0] || 'main';
+  const mainScore = result.scores[mainScoreId];
+  const mainTotalPossible = result.totalPossibleScores[mainScoreId];
+
+  const hasNumericScore = mainTotalPossible > 0;
+  const percentage = hasNumericScore ? (mainScore / mainTotalPossible) * 100 : 0;
+  // This needs to be adapted for multi-score interpretations
+  const interpretation = hasNumericScore ? getInterpretation(result.questionnaireId, mainScore) : null;
 
   const evaluationDataForAI = JSON.stringify({
     questionnaireName: result.questionnaireName,
-    score: result.score,
-    totalPossibleScore: result.totalPossibleScore,
-    interpretation: interpretation,
+    scores: result.scores,
+    totalPossibleScores: result.totalPossibleScores,
+    interpretation: interpretation, // Will need adjustment for multi-score
     answers: result.answers,
     submittedAt: result.submittedAt.toISOString(),
   });
@@ -56,20 +62,35 @@ export default function ResultPage({ params }: ResultsPageProps) {
                     <CardDescription>Resumen de Puntuación</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {hasNumericScore && interpretation ? (
+                    {hasNumericScore ? (
                         <>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold">{result.score}</span>
-                                <span className="text-muted-foreground">/ {result.totalPossibleScore}</span>
-                            </div>
-                            <Progress value={percentage} aria-label={`${percentage.toFixed(0)}%`} />
-                            <div>
-                                <h3 className="font-semibold mb-2">Interpretación</h3>
-                                <Badge variant={interpretation.severity === 'Alta' ? 'destructive' : 'secondary'}>
-                                    Severidad {interpretation.severity}
-                                </Badge>
-                                <p className="text-sm text-muted-foreground mt-2">{interpretation.summary}</p>
-                            </div>
+                           {Object.entries(result.scores).map(([sectionId, score]) => {
+                                const total = result.totalPossibleScores[sectionId];
+                                const sectionPercentage = total > 0 ? (score / total) * 100 : 0;
+                                const sectionInterpretation = getInterpretation(result.questionnaireId, score);
+                                const sectionName = questionnaire?.sections.find(s => s.sectionId === sectionId)?.name || sectionId;
+
+                                return (
+                                    <div key={sectionId} className="space-y-2">
+                                        <h3 className="font-semibold">{sectionName}</h3>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-2xl font-bold">{score}</span>
+                                            <span className="text-muted-foreground">/ {total}</span>
+                                        </div>
+                                        <Progress value={sectionPercentage} aria-label={`${sectionPercentage.toFixed(0)}%`} />
+                                         {sectionInterpretation && (
+                                            <div>
+                                                <h4 className="font-medium text-sm mt-2">Interpretación</h4>
+                                                <Badge variant={sectionInterpretation.severity === 'Alta' ? 'destructive' : 'secondary'}>
+                                                    Severidad {sectionInterpretation.severity}
+                                                </Badge>
+                                                <p className="text-xs text-muted-foreground mt-1">{sectionInterpretation.summary}</p>
+                                            </div>
+                                         )}
+                                         <Separator className="mt-4"/>
+                                    </div>
+                                );
+                           })}
                         </>
                     ) : (
                         <p className="text-sm text-muted-foreground">Este cuestionario es cualitativo o no tiene una puntuación numérica interpretable.</p>
@@ -82,12 +103,13 @@ export default function ResultPage({ params }: ResultsPageProps) {
                     <CardDescription>Respuestas detalladas a cada pregunta.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {questionnaire?.questions.map((question, index) => {
+                    {allQuestions.map((question, index) => {
                         const answer = result.answers[question.id];
                         let displayAnswer: string;
+                        const section = questionnaire?.sections.find(s => s.questions.some(q => q.id === question.id));
+                        const options = question.options || section?.likertScale;
 
-                        if (question.type === 'likert') {
-                            const options = question.options || questionnaire.likertScale;
+                        if (question.type === 'likert' && options) {
                             const option = options.find(o => o.value === Number(answer));
                             displayAnswer = option ? `${option.label} (${answer})` : String(answer);
                         } else {
@@ -100,7 +122,7 @@ export default function ResultPage({ params }: ResultsPageProps) {
                                 <p className="text-sm text-muted-foreground whitespace-pre-wrap pl-4 border-l-2 ml-2 mt-1 py-1">
                                     {displayAnswer}
                                 </p>
-                                {index < questionnaire.questions.length - 1 && <Separator className="mt-4"/>}
+                                {index < allQuestions.length - 1 && <Separator className="mt-4"/>}
                             </div>
                         );
                     })}
