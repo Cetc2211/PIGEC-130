@@ -186,6 +186,48 @@ export const questionnaires: Questionnaire[] = [
     ]
   },
   {
+    id: 'bai',
+    name: 'Inventario de Ansiedad de Beck',
+    description: 'Cuestionario de 21 ítems que mide la severidad de los síntomas de ansiedad física y cognitiva experimentados durante la última semana.',
+    category: 'Estado de Ánimo',
+    subcategory: 'Ansiedad',
+    likertScale: [
+      { "value": 0, "label": "NADA" },
+      { "value": 1, "label": "LEVE" },
+      { "value": 2, "label": "MODERADO" },
+      { "value": 3, "label": "SEVERO" }
+    ],
+    questions: [
+      { "id": "q1", "text": "Entumecimiento u hormigueo", "type": "likert" },
+      { "id": "q2", "text": "Sensación de calor", "type": "likert" },
+      { "id": "q3", "text": "Temblor en las piernas", "type": "likert" },
+      { "id": "q4", "text": "Incapacidad para relajarse", "type": "likert" },
+      { "id": "q5", "text": "Miedo a que suceda lo peor", "type": "likert" },
+      { "id": "q6", "text": "Mareo o aturdimiento", "type": "likert" },
+      { "id": "q7", "text": "Palpitaciones o taquicardia", "type": "likert" },
+      { "id": "q8", "text": "Sensación de inestabilidad", "type": "likert" },
+      { "id": "q9", "text": "Sensación de terror", "type": "likert" },
+      { "id": "q10", "text": "Nerviosismo", "type": "likert" },
+      { "id": "q11", "text": "Sensación de ahogo", "type": "likert" },
+      { "id": "q12", "text": "Temblor de manos", "type": "likert" },
+      { "id": "q13", "text": "Temblor generalizado o estremecimiento", "type": "likert" },
+      { "id": "q14", "text": "Miedo a perder el control", "type": "likert" },
+      { "id": "q15", "text": "Dificultad para respirar", "type": "likert" },
+      { "id": "q16", "text": "Miedo a morir", "type": "likert" },
+      { "id": "q17", "text": "Asustado", "type": "likert" },
+      { "id": "q18", "text": "Indigestión o malestar abdominal", "type": "likert" },
+      { "id": "q19", "text": "Sensación de desmayo", "type": "likert" },
+      { "id": "q20", "text": "Rubor facial", "type": "likert" },
+      { "id": "q21", "text": "Sudoración (no debida al calor)", "type": "likert" }
+    ],
+    interpretationData: [
+      { from: 0, to: 7, severity: 'Baja', summary: 'Ansiedad normal. Los síntomas son mínimos o inexistentes.' },
+      { from: 8, to: 15, severity: 'Leve', summary: 'Ansiedad leve. Los síntomas son notorios pero generalmente manejables.' },
+      { from: 16, to: 25, severity: 'Moderada', summary: 'Ansiedad moderada. Los síntomas son frecuentes y pueden causar un deterioro notable.' },
+      { from: 26, to: 63, severity: 'Alta', summary: 'Ansiedad severa. Los síntomas son intensos y persistentes, afectando significativamente la vida diaria.' }
+    ]
+  },
+  {
     id: 'gad-7',
     name: 'Ansiedad GAD-7',
     description: 'Una herramienta de 7 preguntas para la detección del Trastorno de Ansiedad Generalizada.',
