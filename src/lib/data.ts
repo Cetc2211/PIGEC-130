@@ -502,8 +502,8 @@ const questionnairesData: Questionnaire[] = [
     }],
     interpretationData: [
       { from: 0, to: 3, severity: 'Mínima', summary: 'Desesperanza mínima (normal). Las expectativas hacia el futuro son equilibradas o positivas.' },
-      { from: 4, to: 8, severity: 'Leve', summary: 'Desesperanza leve. Hay presencia de algunas expectativas negativas, pero el riesgo suicida es bajo.' },
-      { from: 9, to: 14, severity: 'Moderada', summary: 'Desesperanza moderada. Las expectativas negativas son significativas y están asociadas con un mayor riesgo de ideación suicida.' },
+      { from: 4, to: 8, severity: 'Leve', summary: 'Desesperanza leve. No presenta riesgo inminente de suicidio por este factor.' },
+      { from: 9, to: 14, severity: 'Moderada', summary: 'Desesperanza moderada. Factor de riesgo significativo para la cronicidad y la conducta suicida.' },
       { from: 15, to: 20, severity: 'Grave', summary: 'Desesperanza severa. Predominio de expectativas pesimistas, indicando un riesgo suicida alto.' }
     ]
   },
@@ -778,89 +778,60 @@ const questionnairesData: Questionnaire[] = [
     ]
   },
   {
-    name: 'Escala de Ansiedad y Depresión Hospitalaria (HADS)',
-    id: 'hads',
-    description: 'Instrumento de 14 ítems para detectar estados de ansiedad y depresión, centrándose en síntomas afectivos y no somáticos.',
-    category: 'Evaluación General (No Clasificada)',
-    subcategory: 'Estado de Ánimo',
-    sections: [
-        {
-            sectionId: 'ansiedad',
-            name: 'Subescala de Ansiedad',
-            instructions: 'Marque la respuesta que mejor describa cómo se ha sentido durante la última semana.',
-            likertScale: [],
-            questions: [
-                { id: "hads_q1", text: "Me siento tenso o nervioso", type: "likert", options: [
-                  { "value": 3, "label": "Casi todo el día" }, { "value": 2, "label": "Gran parte del día" },
-                  { "value": 1, "label": "De vez en cuando" }, { "value": 0, "label": "Nunca" }
-                ]},
-                { id: "hads_q3", text: "Siento una especie de temor como si algo malo fuera a suceder", type: "likert", options: [
-                  { "value": 3, "label": "Sí, y muy intenso" }, { "value": 2, "label": "Sí, pero no muy intenso" },
-                  { "value": 1, "label": "Sí, pero no me preocupa" }, { "value": 0, "label": "No siento nada de eso" }
-                ]},
-                { id: "hads_q5", text: "Tengo la cabeza llena de preocupaciones", type: "likert", options: [
-                  { "value": 3, "label": "Casi todo el día" }, { "value": 2, "label": "Gran parte del día" },
-                  { "value": 1, "label": "De vez en cuando" }, { "value": 0, "label": "Nunca" }
-                ]},
-                { id: "hads_q7", text: "Soy capaz de permanecer sentado tranquilo y relajado", type: "likert", options: [
-                  { "value": 0, "label": "Siempre" }, { "value": 1, "label": "A menudo" },
-                  { "value": 2, "label": "Raras veces" }, { "value": 3, "label": "Nunca" }
-                ]},
-                { id: "hads_q9", text: "Experimento una desagradable sensación de 'nervios y hormigueos' en el estómago", type: "likert", options: [
-                  { "value": 0, "label": "Nunca" }, { "value": 1, "label": "Sólo en algunas ocasiones" },
-                  { "value": 2, "label": "A menudo" }, { "value": 3, "label": "Muy a menudo" }
-                ]},
-                { id: "hads_q11", text: "Me siento inquieto como si no pudiera parar de moverme", type: "likert", options: [
-                  { "value": 3, "label": "Realmente mucho" }, { "value": 2, "label": "Bastante" },
-                  { "value": 1, "label": "No mucho" }, { "value": 0, "label": "En absoluto" }
-                ]},
-                { id: "hads_q13", text: "Experimento de repente sensaciones de gran angustia o temor", type: "likert", options: [
-                  { "value": 3, "label": "Muy a menudo" }, { "value": 2, "label": "Con cierta frecuencia" },
-                  { "value": 1, "label": "Raramente" }, { "value": 0, "label": "Nunca" }
-                ]}
-            ]
-        },
-        {
-            sectionId: 'depresion',
-            name: 'Subescala de Depresión',
-            instructions: 'Marque la respuesta que mejor describa cómo se ha sentido durante la última semana.',
-            likertScale: [],
-            questions: [
-                { id: "hads_q2", text: "Sigo disfrutando de las cosas como siempre", type: "likert", options: [
-                  { "value": 0, "label": "Ciertamente, igual que antes" }, { "value": 1, "label": "No tanto como antes" },
-                  { "value": 2, "label": "Solamente un poco" }, { "value": 3, "label": "Ya no disfruto con nada" }
-                ]},
-                { id: "hads_q4", text: "Soy capaz de reírme y ver el lado gracioso de las cosas", type: "likert", options: [
-                  { "value": 0, "label": "Igual que siempre" }, { "value": 1, "label": "Actualmente, algo menos" },
-                  { "value": 2, "label": "Actualmente, mucho menos" }, { "value": 3, "label": "Actualmente, en absoluto" }
-                ]},
-                { id: "hads_q6", text: "Me siento alegre", type: "likert", options: [
-                  { "value": 3, "label": "Nunca" }, { "value": 2, "label": "Muy pocas veces" },
-                  { "value": 1, "label": "En algunas ocasiones" }, { "value": 0, "label": "Gran parte del día" }
-                ]},
-                { id: "hads_q8", text: "Me siento lento y torpe", type: "likert", options: [
-                  { "value": 3, "label": "Gran parte del día" }, { "value": 2, "label": "A menudo" },
-                  { "value": 1, "label": "A veces" }, { "value": 0, "label": "Nunca" }
-                ]},
-                { id: "hads_q10", text: "He perdido el interés por mi aspecto personal", type: "likert", options: [
-                  { "value": 3, "label": "Completamente" }, { "value": 2, "label": "No me cuido como debería hacerlo" },
-                  { "value": 1, "label": "Es posible que no me cuide como debiera" }, { "value": 0, "label": "Me cuido como siempre" }
-                ]},
-                { id: "hads_q12", text: "Espero las cosas con ilusión", type: "likert", options: [
-                  { "value": 0, "label": "Como siempre" }, { "value": 1, "label": "Algo menos que antes" },
-                  { "value": 2, "label": "Mucho menos que antes" }, { "value": 3, "label": "En absoluto" }
-                ]},
-                { id: "hads_q14", text: "Soy capaz de disfrutar con un buen libro o programa de TV", type: "likert", options: [
-                  { "value": 0, "label": "A menudo" }, { "value": 1, "label": "Algunas veces" },
-                  { "value": 2, "label": "Pocas veces" }, { "value": 3, "label": "Casi nunca" }
-                ]}
-            ]
-        }
-    ],
+    name: 'Cuestionario de Pensamientos Automáticos (ATQ-30)',
+    id: 'atq-30',
+    description: 'Mide la frecuencia de 30 pensamientos automáticos negativos específicos asociados con la depresión.',
+    category: 'Evaluación de Sesgos Cognitivos',
+    subcategory: 'Pensamientos Automáticos',
+    sections: [{
+      sectionId: 'main',
+      name: 'Cuestionario de Pensamientos Automáticos (ATQ-30)',
+      instructions: 'Indique con qué frecuencia ha tenido cada uno de estos pensamientos durante la última semana.',
+      likertScale: [
+        { value: 1, label: 'Nunca' },
+        { value: 2, label: 'Algunas veces' },
+        { value: 3, label: 'A menudo' },
+        { value: 4, label: 'La mayor parte del tiempo' },
+        { value: 5, label: 'Todo el tiempo' },
+      ],
+      questions: [
+        { id: 'atq_1', text: 'Me siento como un fracaso.', type: 'likert' },
+        { id: 'atq_2', text: 'No soy bueno/a.', type: 'likert' },
+        { id: 'atq_3', text: '¿Por qué no puedo ser como los demás?', type: 'likert' },
+        { id: 'atq_4', text: 'Mi vida no va como yo quiero.', type: 'likert' },
+        { id: 'atq_5', text: 'Desearía ser una mejor persona.', type: 'likert' },
+        { id: 'atq_6', text: 'Estoy tan decepcionado/a de mí mismo/a.', type: 'likert' },
+        { id: 'atq_7', text: 'Nada me sale bien.', type: 'likert' },
+        { id: 'atq_8', text: 'Odio mi vida.', type: 'likert' },
+        { id: 'atq_9', text: 'No puedo terminar nada.', type: 'likert' },
+        { id: 'atq_10', text: 'Soy un perdedor/a.', type: 'likert' },
+        { id: 'atq_11', text: 'Mi futuro es oscuro.', type: 'likert' },
+        { id: 'atq_12', text: 'Es mi culpa.', type: 'likert' },
+        { id: 'atq_13', text: 'No valgo nada.', type: 'likert' },
+        { id: 'atq_14', text: 'No puedo seguir adelante.', type: 'likert' },
+        { id: 'atq_15', text: 'No voy a superar esto.', type: 'likert' },
+        { id: 'atq_16', text: 'Desearía estar en otro lugar.', type: 'likert' },
+        { id: 'atq_17', text: 'No puedo levantarme y ponerme en marcha.', type: 'likert' },
+        { id: 'atq_18', text: '¿Qué me pasa?', type: 'likert' },
+        { id: 'atq_19', text: 'Desearía estar muerto/a.', type: 'likert' },
+        { id: 'atq_20', text: 'No puedo soportarlo más.', type: 'likert' },
+        { id: 'atq_21', text: 'Soy un inútil.', type: 'likert' },
+        { id: 'atq_22', text: 'La gente estaría mejor sin mí.', type: 'likert' },
+        { id: 'atq_23', text: 'Soy un desastre.', type: 'likert' },
+        { id: 'atq_24', text: 'Mi vida es un desastre.', type: 'likert' },
+        { id: 'atq_25', text: 'Soy un cobarde.', type: 'likert' },
+        { id: 'atq_26', text: 'No puedo pensar con claridad.', type: 'likert' },
+        { id: 'atq_27', text: 'Me culpo por todo.', type: 'likert' },
+        { id: 'atq_28', text: 'No tengo control sobre mi vida.', type: 'likert' },
+        { id: 'atq_29', text: 'Me siento tan indefenso/a.', type: 'likert' },
+        { id: 'atq_30', text: 'Algo tiene que cambiar.', type: 'likert' }
+      ]
+    }],
     interpretationData: [
-        { from: 0, to: 7, severity: 'Baja', summary: 'Puntuación en rango normal, sin significación clínica.' },
-        { from: 8, to: 10, severity: 'Leve', summary: 'Puntuación límite o dudosa. Sugiere reevaluación o exploración clínica.' },
-        { from: 11, to: 21, severity: 'Alta', summary: 'Puntuación en rango clínico. Se considera un caso probable y se recomienda intervención.' }
+      { from: 30, to: 60, severity: 'Baja', summary: 'Baja frecuencia de pensamientos automáticos negativos (PANs).' },
+      { from: 61, to: 90, severity: 'Leve', summary: 'Presencia de PANs que se activan bajo estrés leve.' },
+      { from: 91, to: 120, severity: 'Moderada', summary: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
+      { from: 121, to: 150, severity: 'Alta', summary: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
     ]
   },
   {
@@ -889,10 +860,10 @@ const questionnairesData: Questionnaire[] = [
         { id: 'plutchik_q9', text: '¿Está deprimido ahora?', type: 'likert' },
         { id: 'plutchik_q10', text: '¿Está usted separado, divorciado o viudo?', type: 'likert' },
         { id: 'plutchik_q11', text: '¿Sabe si alguien de su familia ha intentado suicidarse alguna vez?', type: 'likert' },
-        { id: 'plutchik_q12', text: '¿Alguna vez se ha sentido tan enfadado que habría sido capaz de matar a alguien?', type: 'likert' },
-        { id: 'plutchik_q13', text: '¿Ha pensado alguna vez en suicidarse?', type: 'likert' },
-        { id: 'plutchik_q14', text: '¿Le ha comentado a alguien, en alguna ocasión, que quería suicidarse?', type: 'likert' },
-        { id: 'plutchik_q15', text: '¿Ha intentado alguna vez quitarse la vida?', type: 'likert' }
+        { id: 'plutchik_q12', text: '¿Ha pensado alguna vez en suicidarse?', type: 'likert' },
+        { id: 'plutchik_q13', text: '¿Le ha comentado a alguien, en alguna ocasión, que quería suicidarse?', type: 'likert' },
+        { id: 'plutchik_q14', text: '¿Ha intentado alguna vez quitarse la vida?', type: 'likert' },
+        { id: 'plutchik_q15', text: '¿Siente a menudo ganas de llorar?', type: 'likert' }
       ]
     }],
     interpretationData: [
