@@ -46,30 +46,42 @@ export async function submitEvaluation(
   const answers = parsed.data;
   let score = 0;
   const answerValues: Record<string, number | string> = {};
-  let likertQuestionsCount = 0;
   
   for (const question of questionnaire.questions) {
     const questionId = question.id;
-    const answer = answers[questionId];
+    const rawAnswer = answers[questionId];
     
-    // Solo se suma al score si la pregunta es de tipo likert y no está explícitamente excluida
+    // Solo se procesa para el score si la pregunta es de tipo likert y no está excluida
     if (question.type === 'likert' && question.includeInScore !== false) {
-      const value = parseInt(answer, 10);
-      score += value;
-      likertQuestionsCount++;
+      const value = parseInt(rawAnswer, 10);
+
+      // Lógica de puntuación
+      if (question.scoring?.type === 'match') {
+        // Puntuación por clave de corrección
+        if (value === question.scoring.value) {
+          score += 1;
+        }
+      } else {
+        // Puntuación directa
+        score += value;
+      }
     }
 
     // Guardamos el valor para todas las preguntas
     if (question.type === 'likert') {
-       answerValues[questionId] = parseInt(answer, 10);
+       answerValues[questionId] = parseInt(rawAnswer, 10);
     } else {
-       answerValues[questionId] = answer;
+       answerValues[questionId] = rawAnswer;
     }
   }
 
   const totalPossibleScore = questionnaire.questions
     .filter(q => q.type === 'likert' && q.includeInScore !== false)
     .reduce((total, q) => {
+        if (q.scoring?.type === 'match') {
+            // Cada pregunta con clave de corrección suma 1 como máximo
+            return total + 1;
+        }
         const options = q.options || questionnaire.likertScale;
         const maxOptionValue = Math.max(...options.map(o => o.value));
         return total + maxOptionValue;
@@ -127,7 +139,7 @@ const interpretationSchema = z.object({
 
 const questionSchema = z.object({ 
     text: z.string().min(1, 'El texto de la pregunta no puede estar vacío'),
-    type: z.enum(['likert', 'open']), // Added type
+    type: z.enum(['likert', 'open']),
 });
 
 const formSchema = z.object({
@@ -164,7 +176,7 @@ export async function createQuestionnaireAction(
       description,
       category,
       subcategory,
-      questions: questions.map((q: any, i: number) => ({ ...q, id: `q${i+1}` })),
+      questions: questions.map((q, i) => ({ ...q, id: `q${i+1}` })),
       likertScale,
       interpretationData: interpretations,
     });
