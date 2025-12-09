@@ -17,14 +17,14 @@ export type Question = {
 };
 
 export type Interpretation = {
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta' | 'Mínima';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta' | 'Mínima' | 'Grave';
     summary: string;
 }
 
 export type InterpretationRule = {
     from: number;
     to: number;
-    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta' | 'Mínima';
+    severity: 'Baja' | 'Leve' | 'Moderada' | 'Alta' | 'Mínima' | 'Grave';
     summary: string;
 };
 
@@ -360,7 +360,7 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
       { from: 0, to: 13, severity: 'Mínima', summary: 'Sintomatología depresiva mínima. Los síntomas son bajos o inexistentes.' },
       { from: 14, to: 19, severity: 'Leve', summary: 'Sintomatología depresiva leve. Puede que experimente algunos síntomas que no son severos.' },
       { from: 20, to: 28, severity: 'Moderada', summary: 'Sintomatología depresiva moderada. Se experimentan varios síntomas que pueden interferir con el funcionamiento diario.' },
-      { from: 29, to: 63, severity: 'Alta', summary: 'Sintomatología depresiva severa. Los síntomas son intensos y persistentes, afectando significativamente la vida diaria.' }
+      { from: 29, to: 63, severity: 'Grave', summary: 'Sintomatología depresiva severa. Los síntomas son intensos y persistentes, afectando significativamente la vida diaria.' }
     ]
   },
   {
@@ -404,10 +404,10 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
       ],
     }],
     interpretationData: [
-      { from: 0, to: 7, severity: 'Baja', summary: 'Ansiedad normal. Los síntomas son mínimos o inexistentes.' },
-      { from: 8, to: 15, severity: 'Leve', summary: 'Ansiedad leve. Los síntomas son notorios pero generalmente manejables.' },
-      { from: 16, to: 25, severity: 'Moderada', summary: 'Ansiedad moderada. Los síntomas son frecuentes y pueden causar un deterioro notable.' },
-      { from: 26, to: 63, severity: 'Alta', summary: 'Ansiedad severa. Los síntomas son intensos y persistentes, afectando significativamente la vida diaria.' }
+      { from: 0, to: 9, severity: 'Mínima', summary: 'Ansiedad muy baja o ausente.' },
+      { from: 10, to: 15, severity: 'Leve', summary: 'Ansiedad leve.' },
+      { from: 16, to: 25, severity: 'Moderada', summary: 'Ansiedad moderada. Sugiere T. de Ansiedad específico (p. ej., T. de Pánico).' },
+      { from: 26, to: 63, severity: 'Grave', summary: 'Ansiedad grave. Alta activación fisiológica y malestar significativo.' },
     ]
   },
   {
