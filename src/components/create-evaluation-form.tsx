@@ -31,6 +31,7 @@ const interpretationSchema = z.object({
 
 const questionSchema = z.object({
     text: z.string().min(1, 'El texto de la pregunta no puede estar vacío'),
+    type: z.enum(['likert', 'open']),
 });
 
 const formSchema = z.object({
@@ -165,7 +166,7 @@ export function CreateEvaluationForm() {
             description: "",
             category: "",
             subcategory: "",
-            questions: [{ text: "" }],
+            questions: [{ text: "", type: "likert" }],
             likertScale: [
                 { label: "Nunca" },
                 { label: "Pocas veces" },
@@ -205,7 +206,7 @@ export function CreateEvaluationForm() {
             description: data.description || '',
             category: '', // Let user set category
             subcategory: '', // Let user set subcategory
-            questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text})) : [{ text: '' }],
+            questions: data.questions?.length > 0 ? data.questions.map((q: { text: string; }) => ({text: q.text, type: 'likert'})) : [{ text: '', type: 'likert' }],
             likertScale: data.likertScale?.length > 0 ? data.likertScale.map((s: { label: string; }) => ({label: s.label})) : [{label: ''}],
             interpretations: data.interpretations?.length > 0 ? data.interpretations.map((i: any) => ({from: i.from, to: i.to, severity: i.severity, summary: i.summary})) : [{ from: 0, to: 0, severity: 'Baja', summary: '' }],
         });
@@ -367,13 +368,34 @@ export function CreateEvaluationForm() {
                                                     </FormItem>
                                                 )}
                                             />
+                                             <FormField
+                                                control={form.control}
+                                                name={`questions.${index}.type`}
+                                                render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs">Tipo de Pregunta</FormLabel>
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger className="w-[180px]">
+                                                            <SelectValue placeholder="Seleccionar tipo" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="likert">Escala (Likert)</SelectItem>
+                                                        <SelectItem value="open">Texto Abierto</SelectItem>
+                                                    </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                                )}
+                                            />
                                         </div>
                                         <Button type="button" variant="ghost" size="icon" onClick={() => removeQuestion(index)} disabled={questions.length <= 1}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 ))}
-                                <Button type="button" variant="outline" size="sm" onClick={() => appendQuestion({ text: "" })}>
+                                <Button type="button" variant="outline" size="sm" onClick={() => appendQuestion({ text: "", type: "likert" })}>
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Añadir Pregunta
                                 </Button>
@@ -384,7 +406,7 @@ export function CreateEvaluationForm() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Escala de Calificación (Likert)</CardTitle>
-                                    <CardDescription>Define las etiquetas para tu escala.</CardDescription>
+                                    <CardDescription>Define las etiquetas para tu escala (solo aplica a preguntas tipo Likert).</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {likertScale.map((field, index) => (

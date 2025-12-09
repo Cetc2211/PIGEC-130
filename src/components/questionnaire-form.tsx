@@ -62,20 +62,33 @@ export function QuestionnaireForm({ questionnaire, patientId }: QuestionnaireFor
             {index + 1}. {question.text}
           </legend>
           
-          <RadioGroup
-            name={question.id}
-            required
-            className="flex flex-wrap gap-4 pt-2"
-          >
-            {questionnaire.likertScale.map((option) => (
-              <div key={option.value} className="flex items-center space-x-2">
-                <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
-                <Label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
-                  {option.label}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
+          {question.type === 'likert' ? (
+             <RadioGroup
+                name={question.id}
+                required
+                className="flex flex-wrap gap-4 pt-2"
+              >
+                {questionnaire.likertScale.map((option) => (
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={String(option.value)} id={`${question.id}-${option.value}`} />
+                    <Label htmlFor={`${question.id}-${option.value}`} className="font-normal cursor-pointer">
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+          ) : (
+            <div className="pt-2">
+                 <Label htmlFor={question.id} className="sr-only">Respuesta</Label>
+                 <Textarea 
+                    id={question.id}
+                    name={question.id}
+                    required 
+                    placeholder="Escribe tu respuesta aquí..."
+                    className="min-h-[100px]"
+                />
+            </div>
+          )}
 
           {state.errors?.[question.id] && (
             <p className="text-sm font-medium text-destructive">{state.errors[question.id]}</p>

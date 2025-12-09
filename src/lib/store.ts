@@ -14,7 +14,7 @@ export type EvaluationResult = {
   questionnaireName: string;
   score: number;
   totalPossibleScore: number;
-  answers: Record<string, number | string>;
+  answers: Record<string, number | string>; // Can now store numbers or strings
   submittedAt: Date;
 };
 

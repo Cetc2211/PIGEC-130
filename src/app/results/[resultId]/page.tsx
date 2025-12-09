@@ -72,7 +72,7 @@ export default function ResultPage({ params }: ResultsPageProps) {
                             </div>
                         </>
                     ) : (
-                        <p className="text-sm text-muted-foreground">Este cuestionario es cualitativo y no tiene una puntuación numérica.</p>
+                        <p className="text-sm text-muted-foreground">Este cuestionario es cualitativo o no tiene una puntuación numérica interpretable.</p>
                     )}
                 </CardContent>
             </Card>
@@ -82,15 +82,27 @@ export default function ResultPage({ params }: ResultsPageProps) {
                     <CardDescription>Respuestas detalladas a cada pregunta.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {questionnaire?.questions.map((question, index) => (
-                        <div key={question.id}>
-                            <p className="text-sm font-semibold">{index + 1}. {question.text}</p>
-                            <p className="text-sm text-muted-foreground pl-4 border-l-2 ml-2 mt-1 py-1">
-                                {String(result.answers[question.id])}
-                            </p>
-                            {index < questionnaire.questions.length - 1 && <Separator className="mt-4"/>}
-                        </div>
-                    ))}
+                    {questionnaire?.questions.map((question, index) => {
+                        const answer = result.answers[question.id];
+                        let displayAnswer: string;
+
+                        if (question.type === 'likert') {
+                            const option = questionnaire.likertScale.find(o => o.value === Number(answer));
+                            displayAnswer = option ? `${option.label} (${answer})` : String(answer);
+                        } else {
+                            displayAnswer = String(answer);
+                        }
+
+                        return (
+                            <div key={question.id}>
+                                <p className="text-sm font-semibold">{index + 1}. {question.text}</p>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap pl-4 border-l-2 ml-2 mt-1 py-1">
+                                    {displayAnswer}
+                                </p>
+                                {index < questionnaire.questions.length - 1 && <Separator className="mt-4"/>}
+                            </div>
+                        );
+                    })}
                 </CardContent>
             </Card>
         </div>

@@ -28,6 +28,7 @@ export async function submitEvaluation(
 
   const schemaFields: Record<string, z.ZodType<any, any>> = {};
   questionnaire.questions.forEach((q) => {
+    // All fields are strings from FormData, validation for likert is handled later
     const fieldSchema = z.string().min(1, 'Por favor, completa este campo.');
     schemaFields[q.id] = fieldSchema;
   });
@@ -45,17 +46,24 @@ export async function submitEvaluation(
   const answers = parsed.data;
   let score = 0;
   const answerValues: Record<string, number | string> = {};
+  let likertQuestionsCount = 0;
   
   for (const question of questionnaire.questions) {
     const questionId = question.id;
     const answer = answers[questionId];
-    // Since we only have likert now, we always parse to int
-    const value = parseInt(answer, 10);
-    score += value;
-    answerValues[questionId] = value;
+    
+    if (question.type === 'likert') {
+      const value = parseInt(answer, 10);
+      score += value;
+      answerValues[questionId] = value;
+      likertQuestionsCount++;
+    } else {
+      // For 'open' questions, just save the string
+      answerValues[questionId] = answer;
+    }
   }
 
-  const totalPossibleScore = questionnaire.questions.length * (questionnaire.likertScale.length - 1);
+  const totalPossibleScore = likertQuestionsCount * (questionnaire.likertScale.length - 1);
 
   const result = saveResult({
     questionnaireId: questionnaire.id,
@@ -108,6 +116,7 @@ const interpretationSchema = z.object({
 
 const questionSchema = z.object({ 
     text: z.string().min(1, 'El texto de la pregunta no puede estar vacío'),
+    type: z.enum(['likert', 'open']), // Added type
 });
 
 const formSchema = z.object({
