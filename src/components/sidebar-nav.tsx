@@ -2,14 +2,13 @@
 
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from './ui/sidebar';
-import { Home, Users, FileText, Settings, PlusCircle } from 'lucide-react';
+import { Home, Users, FileText, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 const navItems = [
   { href: '/', label: 'Panel', icon: Home },
-  { href: '/create-evaluation', label: 'Crear Evaluación', icon: PlusCircle },
   { href: '/patients', label: 'Pacientes', icon: Users },
-  { href: '/reports', label: 'Informes', icon: FileText, disabled: true },
+  { href: '/reports', label: 'Informes', icon: FileText },
   { href: '/settings', label: 'Ajustes', icon: Settings, disabled: true },
 ];
 
