@@ -927,6 +927,138 @@ const questionnairesData: Questionnaire[] = [
         { from: 0, to: 100, severity: 'Baja', summary: 'La interpretación depende de la combinación de puntuaciones BIS y BAS.' }
     ]
   },
+  {
+    id: 'ymrs',
+    name: 'Escala de Manía de Young (YMRS)',
+    description: 'Instrumento de 11 ítems para evaluar la severidad de los síntomas maníacos. Es heteroaplicada por el clínico.',
+    category: 'Diagnóstico Diferencial',
+    subcategory: 'Manía / Hipomanía',
+    sections: [{
+        sectionId: 'main',
+        name: 'YMRS',
+        instructions: 'Evalúe al paciente y califique la severidad de cada síntoma durante las últimas 48 horas.',
+        likertScale: [], // Custom options per question
+        questions: [
+            {
+                id: 'ymrs_q1', text: '1. Estado de ánimo elevado', type: 'likert',
+                options: [
+                    { value: 0, label: 'Ausente' },
+                    { value: 1, label: 'Levemente o posiblemente elevado' },
+                    { value: 2, label: 'Elevación definida; optimista, alegre' },
+                    { value: 3, label: 'Elevado, inapropiadamente eufórico' },
+                    { value: 4, label: 'Riendo, cantando; claramente eufórico' }
+                ]
+            },
+            {
+                id: 'ymrs_q2', text: '2. Aumento de la actividad motora y energía', type: 'likert',
+                options: [
+                    { value: 0, label: 'Ausente' },
+                    { value: 1, label: 'Algo aumentado' },
+                    { value: 2, label: 'Aumento evidente; inquietud' },
+                    { value: 3, label: 'Hiperactividad excesiva' },
+                    { value: 4, label: 'Constantemente activo, sin descanso' }
+                ]
+            },
+            {
+                id: 'ymrs_q3', text: '3. Interés sexual', type: 'likert',
+                options: [
+                    { value: 0, label: 'Normal, no aumentado' },
+                    { value: 1, label: 'Levemente aumentado' },
+                    { value: 2, label: 'Definidamente aumentado' },
+                    { value: 3, label: 'Ideas y actos sexuales espontáneos' },
+                    { value: 4, label: 'Absorto en planes y actos sexuales' }
+                ]
+            },
+            {
+                id: 'ymrs_q4', text: '4. Sueño', type: 'likert',
+                options: [
+                    { value: 0, label: 'No reducido' },
+                    { value: 1, label: 'Disminución de hasta un 25% del tiempo habitual' },
+                    { value: 2, label: 'Disminución de hasta un 50% del tiempo habitual' },
+                    { value: 3, label: 'Disminución de más del 75% del tiempo habitual' },
+                    { value: 4, label: 'Niega necesidad de dormir' }
+                ]
+            },
+            {
+                id: 'ymrs_q5', text: '5. Irritabilidad', type: 'likert',
+                options: [
+                    { value: 0, label: 'Ausente' }, { value: 1, label: 'Subjetivamente aumentada' },
+                    { value: 2, label: 'Irritable, pero no altera la entrevista' }, { value: 3, label: '' },
+                    { value: 4, label: 'Hostil, se queja, no coopera' }, { value: 5, label: '' },
+                    { value: 6, label: 'Amenazante, requiere control' }, { value: 7, label: '' },
+                    { value: 8, label: 'Agresivo, destructivo' }
+                ]
+            },
+            {
+                id: 'ymrs_q6', text: '6. Habla (Tasa y Cantidad)', type: 'likert',
+                options: [
+                    { value: 0, label: 'Normal' }, { value: 1, label: 'Algo hablador' },
+                    { value: 2, label: 'Hablador, difícil de interrumpir' }, { value: 3, label: '' },
+                    { value: 4, label: 'Verborreico, ocupa la entrevista' }, { value: 5, label: '' },
+                    { value: 6, label: 'Ininteligible por la velocidad' }, { value: 7, label: '' },
+                    { value: 8, label: 'Imposible de interrumpir, continuo' }
+                ]
+            },
+            {
+                id: 'ymrs_q7', text: '7. Trastornos del pensamiento', type: 'likert',
+                options: [
+                    { value: 0, label: 'Ausentes' },
+                    { value: 1, label: 'Circunstancial, distraído' },
+                    { value: 2, label: 'Fuga de ideas, tangencial' },
+                    { value: 3, label: 'Asociaciones laxas, difícil de seguir' },
+                    { value: 4, label: 'Incoherente, incomprensible' }
+                ]
+            },
+            {
+                id: 'ymrs_q8', text: '8. Contenido del Pensamiento', type: 'likert',
+                options: [
+                    { value: 0, label: 'Normal' },
+                    { value: 1, label: 'Planes ambiciosos, nuevos intereses' },
+                    { value: 2, label: 'Proyectos grandiosos, sin confianza en sí mismo' }, { value: 3, label: '' },
+                    { value: 4, label: 'Ideas de grandeza' }, { value: 5, label: '' },
+                    { value: 6, label: 'Ideas delirantes de grandeza' }, { value: 7, label: '' },
+                    { value: 8, label: 'Delirios bizarros, alucinaciones' }
+                ]
+            },
+            {
+                id: 'ymrs_q9', text: '9. Conducta disruptiva/agresiva', type: 'likert',
+                options: [
+                    { value: 0, label: 'Ausente, cooperador' }, { value: 1, label: 'Sarcástico, impaciente' },
+                    { value: 2, label: 'Exigente, demandante' }, { value: 3, label: '' },
+                    { value: 4, label: 'Amenaza verbal, intimida' }, { value: 5, label: '' },
+                    { value: 6, label: 'Agresión física leve, destructivo' }, { value: 7, label: '' },
+                    { value: 8, label: 'Violencia física franca' }
+                ]
+            },
+            {
+                id: 'ymrs_q10', text: '10. Apariencia', type: 'likert',
+                options: [
+                    { value: 0, label: 'Normal, bien aseado' },
+                    { value: 1, label: 'Algo descuidado' },
+                    { value: 2, label: 'Mal aseado, moderadamente desaliñado' },
+                    { value: 3, label: 'Muy desaliñado, ropa llamativa' },
+                    { value: 4, label: 'Completamente desaliñado, decorado' }
+                ]
+            },
+            {
+                id: 'ymrs_q11', text: '11. Insight (Conciencia de enfermedad)', type: 'likert',
+                options: [
+                    { value: 0, label: 'Presente, admite enfermedad' },
+                    { value: 1, label: 'Admite posible enfermedad' },
+                    { value: 2, label: 'Admite cambios conductuales, pero los niega como enfermedad' },
+                    { value: 3, label: 'Niega cambios conductuales' },
+                    { value: 4, label: 'Completamente ausente' }
+                ]
+            }
+        ]
+    }],
+    interpretationData: [
+        { from: 0, to: 6, severity: 'Mínima', summary: 'Sin síntomas maníacos significativos. Descarte de manía/hipomanía exitoso.' },
+        { from: 7, to: 12, severity: 'Leve', summary: 'Síntomas subumbrales. Requiere vigilancia activa y monitoreo para descartar T. Bipolar II.' },
+        { from: 13, to: 24, severity: 'Moderada', summary: 'Episodio Hipomaníaco probable. Indicador clave de T. Bipolar II (DSM-5).' },
+        { from: 25, to: 60, severity: 'Grave', summary: 'Episodio Maníaco o Mixto Grave probable. Indicador clave de T. Bipolar I (DSM-5).' }
+    ]
+  },
 ];
 
 // Almacenamiento en memoria para cuestionarios personalizados
@@ -972,6 +1104,7 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+
 
 
 
