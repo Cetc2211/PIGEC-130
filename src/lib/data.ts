@@ -49,7 +49,7 @@ export type Questionnaire = {
 };
 
 
-const questionnairesData: Omit<Questionnaire, 'id'>[] = [
+const questionnairesData: Questionnaire[] = [
   {
     name: 'Escala de Ansiedad y Depresión Hospitalaria (HADS)',
     id: 'hads',
@@ -572,10 +572,10 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
       ],
     }],
     interpretationData: [
-        { from: 0, to: 4, severity: 'Baja', summary: 'Ansiedad mínima. Los síntomas son transitorios y no requieren intervención clínica.' },
-        { from: 5, to: 9, severity: 'Leve', summary: 'Ansiedad leve. Monitoreo y psicoeducación. Se recomienda reevaluar en 4 semanas.' },
-        { from: 10, to: 14, severity: 'Moderada', summary: 'Ansiedad moderada. Posiblemente TAG o necesidad de TCC breve.' },
-        { from: 15, to: 21, severity: 'Alta', summary: 'Ansiedad severa. Tratamiento recomendado con TCC estructurada y evaluación psiquiátrica.' }
+        { from: 0, to: 4, severity: 'Mínima', summary: 'Ansiedad no significativa.' },
+        { from: 5, to: 9, severity: 'Leve', summary: 'Ansiedad leve. Sugiere monitoreo.' },
+        { from: 10, to: 14, severity: 'Moderada', summary: 'Ansiedad moderada. Consistente con un posible Trastorno de Ansiedad Generalizada (TAG).' },
+        { from: 15, to: 21, severity: 'Grave', summary: 'Ansiedad grave. Alta preocupación que interfiere con el funcionamiento (Criterio D del TAG, DSM-5-TR).' }
     ]
   },
   {
@@ -791,15 +791,10 @@ const questionnairesData: Omit<Questionnaire, 'id'>[] = [
   }
 ];
 
-const processedQuestionnaires = questionnairesData.map((q, index) => ({
-  ...q,
-  id: q.id || `${q.name.toLowerCase().replace(/\s/g, '-')}-${index}`
-}));
-
 // Almacenamiento en memoria para cuestionarios personalizados
 const customQuestionnaires: Map<string, Questionnaire> = new Map();
 
-export const questionnaires: Questionnaire[] = processedQuestionnaires;
+export const questionnaires: Questionnaire[] = questionnairesData;
 
 
 export function saveCustomQuestionnaire(questionnaire: Omit<Questionnaire, 'id'>): Questionnaire {
