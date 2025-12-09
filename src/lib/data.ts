@@ -123,6 +123,79 @@ export const questionnaires: Questionnaire[] = [
         { from: 14, to: 26, severity: 'Moderada', summary: 'Estrés percibido moderado. Experimenta algunas dificultades para manejar los estresores de la vida.' },
         { from: 27, to: 40, severity: 'Alta', summary: 'Alto estrés percibido. Indica una dificultad significativa para hacer frente a los eventos de la vida, puede requerir apoyo.' },
     ]
+  },
+  {
+    id: 'goca',
+    name: 'Guía de Observación Conductual en Aula (GOCA)',
+    description: 'Instrumento para que los docentes observen y registren la frecuencia de conductas clave relacionadas con la atención, motivación, estado emocional y rendimiento del estudiante en el aula.',
+    category: 'Conductual',
+    subcategory: 'Observación en Aula',
+    likertScale: [
+        { value: 0, label: 'Nunca' },
+        { value: 1, label: 'Raramente' },
+        { value: 2, label: 'A veces' },
+        { value: 3, label: 'Frecuentemente' },
+        { value: 4, label: 'Siempre' },
+    ],
+    questions: [
+      // SECCIÓN I: INDICADORES DE ATENCIÓN Y CONCENTRACIÓN
+      { id: 'goca_q1', text: 'Se distrae fácilmente con ruidos externos (conversaciones, ruidos del pasillo)', type: 'likert' },
+      { id: 'goca_q2', text: 'Necesita que se le repitan las instrucciones varias veces', type: 'likert' },
+      { id: 'goca_q3', text: 'Deja actividades o ejercicios incompletos en clase', type: 'likert' },
+      { id: 'goca_q4', text: 'Parece estar "soñando despierto" o con la mirada perdida', type: 'likert' },
+      { id: 'goca_q5', text: 'Pierde o no encuentra sus materiales escolares', type: 'likert' },
+      { id: 'goca_q6', text: 'Muestra dificultad para seguir explicaciones de más de 5 minutos', type: 'likert' },
+      { id: 'goca_q7', text: 'Se levanta de su asiento sin permiso o necesidad', type: 'likert' },
+      { id: 'goca_q8', text: 'Juega con objetos (lápiz, celular, etc.) durante la clase', type: 'likert' },
+      // SECCIÓN II: INDICADORES DE PARTICIPACIÓN Y MOTIVACIÓN
+      { id: 'goca_q9', text: 'Evita participar cuando se le pregunta directamente', type: 'likert' },
+      { id: 'goca_q10', text: 'No trae los materiales necesarios para la clase', type: 'likert' },
+      { id: 'goca_q11', text: 'Expresa comentarios negativos sobre la materia o escuela', type: 'likert' },
+      { id: 'goca_q12', text: 'Se muestra apático o desinteresado en las actividades', type: 'likert' },
+      { id: 'goca_q13', text: 'No completa las tareas asignadas para casa', type: 'likert' },
+      { id: 'goca_q14', text: 'Evita actividades que requieren esfuerzo mental sostenido', type: 'likert' },
+      { id: 'goca_q15', text: 'No toma apuntes durante la clase', type: 'likert' },
+      { id: 'goca_q16', text: 'Llega tarde a clase sin justificación', type: 'likert' },
+      // SECCIÓN III: INDICADORES EMOCIONALES Y CONDUCTUALES
+      { id: 'goca_q17', text: 'Se observa triste, cabizbajo o con expresión de tristeza', type: 'likert' },
+      { id: 'goca_q18', text: 'Muestra irritabilidad o se enoja con facilidad', type: 'likert' },
+      { id: 'goca_q19', text: 'Se aísla de sus compañeros durante actividades grupales', type: 'likert' },
+      { id: 'goca_q20', text: 'Presenta signos visibles de ansiedad (mueve piernas, muerde uñas)', type: 'likert' },
+      { id: 'goca_q21', text: 'Muestra cambios bruscos de humor durante la clase', type: 'likert' },
+      { id: 'goca_q22', text: 'Se queja frecuentemente de dolores o malestares físicos', type: 'likert' },
+      { id: 'goca_q23', text: 'Llora o parece a punto de llorar', type: 'likert' },
+      { id: 'goca_q24', text: 'Muestra conductas agresivas verbales o físicas', type: 'likert' },
+      // SECCIÓN IV: INDICADORES DE RENDIMIENTO
+      { id: 'goca_q25', text: 'Ha mostrado disminución notable en la calidad de sus trabajos', type: 'likert' },
+      { id: 'goca_q26', text: 'Tiene dificultad para comprender conceptos nuevos', type: 'likert' },
+      { id: 'goca_q27', text: 'Comete errores frecuentes por aparente descuido', type: 'likert' },
+      { id: 'goca_q28', text: 'Su rendimiento es muy inconsistente (días buenos y malos)', type: 'likert' },
+      { id: 'goca_q29', text: 'No termina los exámenes en el tiempo establecido', type: 'likert' },
+      { id: 'goca_q30', text: 'Evita hacer preguntas cuando tiene dudas', type: 'likert' },
+      { id: 'goca_q31', text: 'Sus calificaciones han bajado significativamente', type: 'likert' },
+      { id: 'goca_q32', text: 'Copia trabajos o tareas de compañeros', type: 'likert' },
+      // SECCIÓN V: INDICADORES FÍSICOS Y DE SALUD
+      { id: 'goca_q33', text: 'Se observa cansado o con sueño durante la clase', type: 'likert' },
+      { id: 'goca_q34', text: 'Presenta aspecto descuidado o higiene personal deficiente', type: 'likert' },
+      { id: 'goca_q35', text: 'Menciona que no ha desayunado o comido', type: 'likert' },
+      { id: 'goca_q36', text: 'Presenta signos que podrían indicar consumo de sustancias', type: 'likert' },
+      { id: 'goca_q37', text: 'Se queja de problemas de visión o audición', type: 'likert' },
+      { id: 'goca_q38', text: 'Muestra pérdida o aumento significativo de peso', type: 'likert' },
+      { id: 'goca_q39', text: 'Presenta lesiones visibles frecuentes', type: 'likert' },
+      { id: 'goca_q40', text: 'Solicita permisos frecuentes para ir al baño o enfermería', type: 'likert' },
+      // SECCIÓN VI: INDICADORES POSITIVOS (FACTORES PROTECTORES)
+      { id: 'goca_q41', text: 'Muestra interés en algún tema específico de la materia', type: 'likert' },
+      { id: 'goca_q42', text: 'Tiene al menos un amigo cercano en clase', type: 'likert' },
+      { id: 'goca_q43', text: 'Responde positivamente al reconocimiento o elogio', type: 'likert' },
+      { id: 'goca_q44', text: 'Muestra habilidades en algún área específica', type: 'likert' },
+      { id: 'goca_q45', text: 'Busca ayuda cuando la necesita', type: 'likert' },
+    ],
+    interpretationData: [
+        { from: 0, to: 40, severity: 'Baja', summary: 'Sin indicadores significativos de riesgo.' },
+        { from: 41, to: 80, severity: 'Moderada', summary: 'Señales de alerta moderadas. Se recomienda seguimiento.' },
+        { from: 81, to: 120, severity: 'Moderada', summary: 'Múltiples indicadores de riesgo. Se debe referir a Orientación Educativa.' },
+        { from: 121, to: 180, severity: 'Alta', summary: 'Situación crítica. Se requiere intervención inmediata.' },
+    ]
   }
 ];
 
