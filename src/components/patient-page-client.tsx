@@ -84,7 +84,7 @@ function PatientList({ patientsByGroup, assignmentsByPatient }: { patientsByGrou
     );
 }
 
-export function PatientPageClient({ patients, assignments }: { patients: Patient[], assignments: Assignment[] }) {
+export function PatientPageClient({ patients, assignmentsByPatient }: { patients: Patient[], assignmentsByPatient: Record<string, Assignment[]> }) {
     const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
 
     const patientsByGroup = useMemo(() => {
@@ -97,17 +97,6 @@ export function PatientPageClient({ patients, assignments }: { patients: Patient
             return acc;
         }, {} as Record<string, Patient[]>);
     }, [patients]);
-
-    const assignmentsByPatient = useMemo(() => {
-        return assignments.reduce((acc, assignment) => {
-            const key = assignment.patientId;
-            if (!acc[key]) {
-                acc[key] = [];
-            }
-            acc[key].push(assignment);
-            return acc;
-        }, {} as Record<string, Assignment[]>);
-    }, [assignments]);
     
     const openAddPatientModal = () => {
         setIsAddPatientOpen(true);

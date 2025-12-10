@@ -189,6 +189,30 @@
         "patientId": "pat-6-1765338628464",
         "questionnaireId": "bdi-ii",
         "assignedAt": "2025-12-10T05:56:44.401Z"
+      },
+      {
+        "assignmentId": "asg-1765346385604-0.4615330049260198",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T05:59:45.605Z"
+      },
+      {
+        "assignmentId": "asg-1765346385605-0.06634275488252173",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T05:59:45.605Z"
+      },
+      {
+        "assignmentId": "asg-1765346385605-0.319672714683811",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bdi-ii",
+        "assignedAt": "2025-12-10T05:59:45.605Z"
+      },
+      {
+        "assignmentId": "asg-1765346385605-0.6654785590584842",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bis-bas",
+        "assignedAt": "2025-12-10T05:59:45.605Z"
       }
     ]
   },
