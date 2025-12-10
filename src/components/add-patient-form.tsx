@@ -5,9 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
-import { addPatientAction } from '@/app/actions';
+import { addPatientAndRedirectAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +24,7 @@ type AddPatientFormProps = {
 
 export function AddPatientForm({ onFinished }: AddPatientFormProps) {
   const { toast } = useToast();
-  const router = useRouter();
-  const [state, formAction, isPending] = useActionState(addPatientAction, {
+  const [state, formAction, isPending] = useActionState(addPatientAndRedirectAction, {
     success: false,
     message: '',
   });
@@ -41,21 +39,15 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
   });
 
   useEffect(() => {
-    if (state.success && state.patientId) {
-      toast({
-        title: '¡Éxito!',
-        description: state.message,
-      });
-      onFinished();
-      router.push(`/patients/${state.patientId}`);
-    } else if (state.message && !state.success) {
+    if (state.message && !state.success) {
       toast({
         title: 'Error',
         description: state.message,
         variant: 'destructive',
       });
     }
-  }, [state, onFinished, toast, router]);
+    // No need to handle success here, as the server action redirects
+  }, [state, onFinished, toast]);
   
   return (
     <Form {...form}>
