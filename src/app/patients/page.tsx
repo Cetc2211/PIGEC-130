@@ -5,9 +5,9 @@ import { getAllPatients, getAllAssignedQuestionnaires, Assignment } from '@/lib/
 
 export default async function PatientsPage() {
   const patients = getAllPatients();
-  const assignments = getAllAssignedQuestionnaires();
+  const allAssignments = getAllAssignedQuestionnaires();
 
-  const assignmentsByPatient = assignments.reduce((acc, assignment) => {
+  const assignmentsByPatient = allAssignments.reduce((acc, assignment) => {
       const key = assignment.patientId;
       if (!acc[key]) {
           acc[key] = [];
