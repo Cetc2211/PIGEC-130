@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type { Questionnaire } from '@/lib/data';
-import { useState, useMemo, useActionState, useEffect } from 'react';
+import type { Questionnaire } from "@/lib/data";
+import { useState, useMemo, useActionState, useEffect, useTransition } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -22,7 +22,10 @@ type AssignEvaluationDialogProps = {
 
 function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEvaluationDialogProps) {
     const { toast } = useToast();
-    const [state, formAction, isPending] = useActionState(assignQuestionnairesAction, { success: false, message: "" });
+    const [state, formAction, isActionPending] = useActionState(assignQuestionnairesAction, { success: false, message: "" });
+    const [isTransitionPending, startTransition] = useTransition();
+
+    const isPending = isActionPending || isTransitionPending;
     
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -76,7 +79,9 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
         const formData = new FormData();
         formData.append('patientId', selectedPatient.id);
         selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
-        formAction(formData);
+        startTransition(() => {
+            formAction(formData);
+        });
         
         const patientPhone = selectedPatient.mobilePhone;
         const message = `Hola ${selectedPatient.name.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${evaluationUrl}`;
