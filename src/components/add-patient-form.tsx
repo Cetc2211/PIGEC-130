@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-import { addPatientAndRedirectAction } from '@/app/actions';
+import { addPatientAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,8 @@ type AddPatientFormProps = {
 
 export function AddPatientForm({ onFinished }: AddPatientFormProps) {
   const { toast } = useToast();
-  const [state, formAction, isPending] = useActionState(addPatientAndRedirectAction, {
+  const router = useRouter();
+  const [state, formAction, isPending] = useActionState(addPatientAction, {
     success: false,
     message: '',
   });
@@ -46,10 +48,15 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
         variant: 'destructive',
       });
     }
-    if (state.success) {
+    if (state.success && state.patientId) {
+        toast({
+            title: 'Éxito',
+            description: state.message,
+        });
         onFinished();
+        router.push(`/patients/${state.patientId}`);
     }
-  }, [state, onFinished, toast]);
+  }, [state, onFinished, toast, router]);
   
   return (
     <Form {...form}>

@@ -1,4 +1,3 @@
-
 {
   "patients": [
     {
@@ -45,6 +44,14 @@
       "group": "B",
       "email": "elena.torres@example.com",
       "createdAt": "2024-01-01T10:04:00.000Z"
+    },
+    {
+      "name": "Cecilio Topete Cruz ",
+      "semester": "1°",
+      "group": "AM",
+      "id": "pat-6-1765338628464",
+      "recordId": "CBTA/130/00006/10/12/25",
+      "createdAt": "2025-12-10T03:50:28.464Z"
     }
   ],
   "assignments": {
@@ -59,14 +66,28 @@
   },
   "results": [
     {
-        "id": "res-seed-1",
-        "patientId": "pat-seed-2",
-        "questionnaireId": "phq-9",
-        "questionnaireName": "Depresión PHQ-9",
-        "scores": { "main": 12 },
-        "totalPossibleScores": { "main": 27 },
-        "answers": { "q1": 2, "q2": 2, "q3": 1, "q4": 2, "q5": 1, "q6": 2, "q7": 1, "q8": 1, "q9": 0 },
-        "submittedAt": "2024-05-10T14:30:00.000Z"
+      "id": "res-seed-1",
+      "patientId": "pat-seed-2",
+      "questionnaireId": "phq-9",
+      "questionnaireName": "Depresión PHQ-9",
+      "scores": {
+        "main": 12
+      },
+      "totalPossibleScores": {
+        "main": 27
+      },
+      "answers": {
+        "q1": 2,
+        "q2": 2,
+        "q3": 1,
+        "q4": 2,
+        "q5": 1,
+        "q6": 2,
+        "q7": 1,
+        "q8": 1,
+        "q9": 0
+      },
+      "submittedAt": "2024-05-10T14:30:00.000Z"
     }
   ]
 }

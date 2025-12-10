@@ -705,13 +705,3 @@ export async function deleteAssignmentAction(
     };
   }
 }
-
-const addPatientAndRedirectSchema = addPatientFormSchema;
-
-export async function addPatientAndRedirectAction(prevState: AddPatientState, formData: FormData): Promise<AddPatientState> {
-    const result = await addPatientAction(prevState, formData);
-    if (result.success && result.patientId) {
-        redirect(`/patients/${result.patientId}`);
-    }
-    return result;
-}
