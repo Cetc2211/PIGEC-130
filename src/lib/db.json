@@ -105,6 +105,66 @@
         "patientId": "pat-6-1765338628464",
         "questionnaireId": "aq-10",
         "assignedAt": "2025-12-10T04:51:25.508Z"
+      },
+      {
+        "assignmentId": "asg-1765342626071-0.29716750258740765",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:57:06.071Z"
+      },
+      {
+        "assignmentId": "asg-1765342626071-0.11329117827939972",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "phq-9",
+        "assignedAt": "2025-12-10T04:57:06.071Z"
+      },
+      {
+        "assignmentId": "asg-1765342626071-0.9347532681865118",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:57:06.071Z"
+      },
+      {
+        "assignmentId": "asg-1765342626071-0.013972037400045156",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "aq-10",
+        "assignedAt": "2025-12-10T04:57:06.071Z"
+      },
+      {
+        "assignmentId": "asg-1765342662230-0.19267541532123866",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:57:42.230Z"
+      },
+      {
+        "assignmentId": "asg-1765342662230-0.04537352166518227",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "phq-9",
+        "assignedAt": "2025-12-10T04:57:42.230Z"
+      },
+      {
+        "assignmentId": "asg-1765342662230-0.025786666358479815",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:57:42.230Z"
+      },
+      {
+        "assignmentId": "asg-1765342735503-0.07495634057989542",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:58:55.503Z"
+      },
+      {
+        "assignmentId": "asg-1765342735503-0.8677835524933624",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:58:55.503Z"
+      },
+      {
+        "assignmentId": "asg-1765342735503-0.9423225206176966",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "phq-9",
+        "assignedAt": "2025-12-10T04:58:55.503Z"
       }
     ]
   },

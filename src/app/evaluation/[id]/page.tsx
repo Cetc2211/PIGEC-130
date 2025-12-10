@@ -28,14 +28,25 @@ function EvaluationPageContent({ params, searchParams }: EvaluationPageProps) {
     notFound();
   }
   
-  // If this is the first remote evaluation for a patient, redirect to the portal
-  if (isRemote && patientId && !intermediateResults) {
+  // If this is a remote evaluation for a patient, figure out the correct test sequence.
+  if (isRemote && patientId) {
     const assignments = getAssignedQuestionnairesForPatient(patientId);
     if (assignments.length > 0) {
-      // Redirect to the first assigned questionnaire, which will then chain
-       const firstAssignmentId = assignments[0].questionnaireId;
-       const portalUrl = `/evaluation/${firstAssignmentId}?patient=${patientId}&remote=true`;
-       redirect(portalUrl);
+      // Determine which questionnaires are already completed from intermediateResults
+      const completedQuestionnaireIds = intermediateResults 
+        ? JSON.parse(intermediateResults).map((r: any) => r.questionnaireId)
+        : [];
+      
+      // Find the first assignment that is NOT in the completed list
+      const nextAssignment = assignments.find(
+        (a) => !completedQuestionnaireIds.includes(a.questionnaireId)
+      );
+
+      if (nextAssignment && nextAssignment.questionnaireId !== params.id) {
+         // If there is a next assignment and we are not already on its page, redirect.
+         const nextUrl = `/evaluation/${nextAssignment.questionnaireId}?patient=${patientId}&remote=true${intermediateResults ? `&intermediateResults=${intermediateResults}` : ''}`;
+         redirect(nextUrl);
+      }
     }
   }
 
