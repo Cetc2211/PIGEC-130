@@ -7,7 +7,7 @@ import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 export const ATQ30_SEVERITY_RANGES = [
   { scoreMax: 60, severity: 'Leve', description: 'Presencia de PANs que se activan bajo estrés leve.' },
   { scoreMax: 90, severity: 'Moderada', description: 'Frecuencia significativa de PANs y autocrítica. Foco principal para la Reestructuración Cognitiva.' },
-  { scoreMax: 120, severity: 'Grave', description: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
+  { scoreMax: 120, severity: 'Alta', description: 'Alta frecuencia de PANs y diálogos internos negativos intrusivos, manteniendo la sintomatología (Perfil A, B).' },
 ];
 
 /**

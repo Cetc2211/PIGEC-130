@@ -1012,3 +1012,4 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 }
 
 
+

@@ -13,18 +13,18 @@ import { EvaluationResultForDiagnosis, PatientResults } from '@/lib/diagnosis';
 export const ASQ_SEVERITY_RANGES = [
   { scoreMax: 3, severity: 'Optimista', description: 'Atribución de fracasos a causas externas y específicas.' },
   { scoreMax: 5, severity: 'Intermedio', description: 'Estilo atribucional flexible. El sesgo aparece bajo estrés.' },
-  { scoreMax: 9, severity: 'Pesimista', description: 'Alta atribución a causas internas, estables y globales. Indica Sesgo Atribucional Crónico.' },
+  { scoreMax: 7, severity: 'Pesimista', description: 'Alta atribución a causas internas, estables y globales. Indica Sesgo Atribucional Crónico.' },
 ];
 
 /**
  * Calcula la Puntuación de Pesimismo Negativo (promedio de las subescalas de eventos negativos).
  * Traduce el índice de pesimismo negativo a un nivel de riesgo.
- * @param score_negative_avg Puntuación promedio de las 3 subescalas de eventos negativos (rango 3-9).
+ * @param score_negative_avg Puntuación promedio de las 3 subescalas de eventos negativos (rango 1-7).
  * @returns {severity: string, description: string}
  */
 export function interpretASQScore(score_negative_avg: number): { severity: string, description: string } {
-  // Ajustamos el score_negative_avg al rango teórico 3-9
-  const adjustedScore = Math.min(Math.max(score_negative_avg, 3), 9); 
+  // Ajustamos el score_negative_avg al rango teórico 1-7
+  const adjustedScore = Math.min(Math.max(score_negative_avg, 1), 7); 
   
   const range = ASQ_SEVERITY_RANGES.find(r => adjustedScore <= r.scoreMax);
   
@@ -39,8 +39,8 @@ export function interpretASQScore(score_negative_avg: number): { severity: strin
 /**
  * Genera el objeto EvaluationResultForDiagnosis para el ASQ.
  *
- * @param score_negative_avg Puntuación promedio de pesimismo (3-9).
- * @param score_positive_avg Puntuación promedio de optimismo (3-9, para contexto).
+ * @param score_negative_avg Puntuación promedio de pesimismo (1-7).
+ * @param score_positive_avg Puntuación promedio de optimismo (1-7, para contexto).
  * @returns EvaluationResultForDiagnosis para el ASQ.
  */
 export function generateASQResult(score_negative_avg: number, score_positive_avg: number): EvaluationResultForDiagnosis {
