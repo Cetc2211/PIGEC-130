@@ -8,10 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import type { Patient, Assignment } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { BulkAddPatientsForm } from './bulk-add-patients-form';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
 import { SidebarTriggerButton } from './sidebar-trigger-button';
+import { AddPatientForm } from './add-patient-form';
 
 
 function PatientList({ patientsByGroup, assignmentsByPatient }: { patientsByGroup: Record<string, Patient[]>, assignmentsByPatient: Record<string, Assignment[]> }) {
@@ -27,7 +27,7 @@ function PatientList({ patientsByGroup, assignmentsByPatient }: { patientsByGrou
                 <Users className="h-16 w-16 text-muted-foreground mb-4" />
                 <h2 className="text-xl font-semibold">No hay grupos ni pacientes todavía</h2>
                 <p className="text-muted-foreground mt-2 max-w-sm">
-                    Haz clic en "Añadir Estudiantes en Bloque" para crear tu primer grupo y añadir expedientes.
+                    Haz clic en "Añadir Estudiante" para crear tu primer expediente.
                 </p>
             </div>
         );
@@ -85,7 +85,7 @@ function PatientList({ patientsByGroup, assignmentsByPatient }: { patientsByGrou
 }
 
 export function PatientPageClient({ patients, assignments }: { patients: Patient[], assignments: Assignment[] }) {
-    const [isBulkAddOpen, setIsBulkAddOpen] = useState(false);
+    const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
 
     const patientsByGroup = useMemo(() => {
         return patients.reduce((acc, patient) => {
@@ -109,8 +109,8 @@ export function PatientPageClient({ patients, assignments }: { patients: Patient
         }, {} as Record<string, Assignment[]>);
     }, [assignments]);
     
-    const openBulkAddModal = () => {
-        setIsBulkAddOpen(true);
+    const openAddPatientModal = () => {
+        setIsAddPatientOpen(true);
     }
     
     return (
@@ -127,24 +127,24 @@ export function PatientPageClient({ patients, assignments }: { patients: Patient
                 </p>
             </div>
         </div>
-        <Button onClick={openBulkAddModal}>
+        <Button onClick={openAddPatientModal}>
             <UserPlus className="mr-2 h-4 w-4" />
-            Añadir Estudiantes en Bloque
+            Añadir Estudiante
         </Button>
       </header>
       <main className="flex-1 overflow-auto p-4 sm:p-6">
         <PatientList patientsByGroup={patientsByGroup} assignmentsByPatient={assignmentsByPatient} />
       </main>
 
-       <Dialog open={isBulkAddOpen} onOpenChange={setIsBulkAddOpen}>
+       <Dialog open={isAddPatientOpen} onOpenChange={setIsAddPatientOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Añadir Nuevos Estudiantes en Bloque</DialogTitle>
+                    <DialogTitle>Añadir Nuevo Estudiante</DialogTitle>
                     <DialogDescription>
-                        Define el semestre y grupo, luego pega una lista de nombres. Se creará un expediente para cada estudiante.
+                        Define el semestre y grupo, luego ingresa el nombre del estudiante para crear su expediente.
                     </DialogDescription>
                 </DialogHeader>
-                <BulkAddPatientsForm onFinished={() => setIsBulkAddOpen(false)} />
+                <AddPatientForm onFinished={() => setIsAddPatientOpen(false)} />
             </DialogContent>
         </Dialog>
     </div>
