@@ -18,13 +18,14 @@ type QuestionnaireFormProps = {
   questionnaire: Questionnaire;
   patientId?: string;
   isRemote?: boolean;
+  intermediateResults?: string;
 };
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-      {pending ? 'Enviando...' : 'Enviar Evaluación'}
+      {pending ? 'Enviando...' : 'Enviar y Continuar'}
     </Button>
   );
 }
@@ -71,9 +72,9 @@ function QuestionField({ question, options, error }: { question: Question, optio
     )
 }
 
-export function QuestionnaireForm({ questionnaire, patientId, isRemote = false }: QuestionnaireFormProps) {
+export function QuestionnaireForm({ questionnaire, patientId, isRemote = false, intermediateResults }: QuestionnaireFormProps) {
   const submitEvaluationWithContext = submitEvaluation.bind(null, questionnaire.id, patientId || null, isRemote);
-  const [state, formAction] = useActionState(submitEvaluationWithContext, { message: '' });
+  const [state, formAction] = useActionState(submitEvaluationWithContext, { message: '', intermediateResults });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -96,6 +97,11 @@ export function QuestionnaireForm({ questionnaire, patientId, isRemote = false }
                 {state.message}
             </AlertDescription>
          </Alert>
+      )}
+
+      {/* Hidden input to pass intermediate results */}
+      {intermediateResults && (
+        <input type="hidden" name="intermediateResults" value={intermediateResults} />
       )}
 
       {questionnaire.sections.map((section, sectionIndex) => (

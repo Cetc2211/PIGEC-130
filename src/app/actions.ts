@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { getQuestionnaire, saveCustomQuestionnaire, Question } from '@/lib/data';
-import { savePatient, saveResult, savePatientsBatch, assignQuestionnaireToPatient, updatePatient, deleteAssignment } from '@/lib/store';
+import { savePatient, saveResult, savePatientsBatch, assignQuestionnairesToPatient, updatePatient, deleteAssignment } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
@@ -13,11 +13,13 @@ import { createQuestionnaireFromText } from '@/ai/flows/create-questionnaire-fro
 export type FormState = {
   message: string;
   errors?: Record<string, string[] | undefined>;
+  // To support chained evaluations, we need to pass results between steps
+  intermediateResults?: string; 
 };
 
 export async function submitEvaluation(
   questionnaireId: string,
-  patientId: string | null, // patientId can be null
+  patientId: string | null,
   isRemote: boolean,
   prevState: FormState,
   formData: FormData
@@ -33,6 +35,8 @@ export async function submitEvaluation(
     const fieldSchema = z.string().min(1, 'Por favor, completa este campo.');
     schemaFields[q.id] = fieldSchema;
   });
+  // Add field for intermediate results
+  schemaFields['intermediateResults'] = z.string().optional();
   const schema = z.object(schemaFields);
   
   const parsed = schema.safeParse(Object.fromEntries(formData.entries()));
@@ -44,7 +48,7 @@ export async function submitEvaluation(
     };
   }
 
-  const answers = parsed.data;
+  const { intermediateResults: prevResults, ...answers } = parsed.data;
   const scores: Record<string, number> = {};
   const totalPossibleScores: Record<string, number> = {};
   const answerValues: Record<string, number | string> = {};
@@ -65,8 +69,8 @@ export async function submitEvaluation(
         if (question.scoring?.type === 'match') {
           scoreForQuestion = value === question.scoring.value ? 1 : 0;
         } else if (question.scoring?.type === 'aq-10') {
-            const agrees = value === 3 || value === 2; // "Totalmente de acuerdo" o "Ligeramente de acuerdo"
-            const disagrees = value === 1 || value === 0; // "Ligeramente en desacuerdo" o "Totalmente en desacuerdo"
+            const agrees = value === 3 || value === 2;
+            const disagrees = value === 1 || value === 0;
             if (question.scoring.agreesIsOne && agrees) {
                 scoreForQuestion = 1;
             } else if (!question.scoring.agreesIsOne && disagrees) {
@@ -77,7 +81,6 @@ export async function submitEvaluation(
         } else if (question.scoringDirection === 'Inversa') {
           const maxScaleValue = Math.max(...section.likertScale.map(o => o.value));
           const minScaleValue = Math.min(...section.likertScale.map(o => o.value));
-          // Formula (max + min) - value. ej: (4+1)-1 = 4. (4+1)-4 = 1.
           scoreForQuestion = (maxScaleValue + minScaleValue) - value;
         }
         
@@ -93,7 +96,6 @@ export async function submitEvaluation(
 
     scores[sectionId] = sectionScore;
 
-    // Calcular la puntuación total posible para la sección
     sectionTotalPossible = section.questions
       .filter(q => q.type === 'likert' && q.includeInScore !== false)
       .reduce((total, q) => {
@@ -101,7 +103,6 @@ export async function submitEvaluation(
             return total + 1;
           }
           if (q.scoringDirection === 'Inversa') {
-            // La puntuación máxima es la misma independientemente de la dirección
             const maxOptionValue = Math.max(...section.likertScale.map(o => o.value));
             return total + maxOptionValue;
           }
@@ -112,24 +113,46 @@ export async function submitEvaluation(
 
     totalPossibleScores[sectionId] = sectionTotalPossible;
   }
-  
-  if (isRemote) {
-    const remoteResult = {
-      patientId,
+
+  const currentResult = {
       questionnaireId,
+      questionnaireName: questionnaire.name,
       answers: answerValues,
-    };
-    const resultCode = Buffer.from(JSON.stringify(remoteResult)).toString('base64');
-    redirect(`/evaluation/submitted?code=${encodeURIComponent(resultCode)}`);
+      scores,
+      totalPossibleScores,
+      submittedAt: new Date(),
+  };
+
+  if (isRemote) {
+    const allResults = prevResults ? JSON.parse(prevResults) : [];
+    allResults.push(currentResult);
+    
+    // Check for more pending assignments for this patient
+    const { getAssignedQuestionnairesForPatient } = await import('@/lib/store');
+    const allAssignments = getAssignedQuestionnairesForPatient(patientId!);
+    const completedQuestionnaireIds = allResults.map((r: any) => r.questionnaireId);
+    const nextAssignment = allAssignments.find(
+      (a) => !completedQuestionnaireIds.includes(a.questionnaireId)
+    );
+
+    if (nextAssignment) {
+      // If there's another test, redirect to it, passing along the accumulated results
+      const nextUrl = `/evaluation/${nextAssignment.questionnaireId}?patient=${patientId}&remote=true&intermediateResults=${encodeURIComponent(JSON.stringify(allResults))}`;
+      redirect(nextUrl);
+    } else {
+      // All tests are done, generate the final code
+      const finalPayload = {
+        patientId,
+        results: allResults,
+      };
+      const resultCode = Buffer.from(JSON.stringify(finalPayload)).toString('base64');
+      redirect(`/evaluation/submitted?code=${encodeURIComponent(resultCode)}`);
+    }
   }
 
+  // This part is for non-remote submissions
   const result = saveResult({
-    questionnaireId: questionnaire.id,
-    questionnaireName: questionnaire.name,
-    answers: answerValues,
-    scores,
-    totalPossibleScores,
-    submittedAt: new Date(),
+    ...currentResult,
     patientId: patientId || undefined,
   });
 
@@ -220,7 +243,6 @@ export async function createQuestionnaireAction(
         interpretationData: interpretations,
     };
 
-    // Esto necesita una adaptación para construir el tipo Questionnaire completo
     const newQuestionnaire = saveCustomQuestionnaire(newQuestionnaireData as any);
 
     revalidatePath('/');
@@ -283,12 +305,11 @@ export async function processTextAction(text: string) {
   }
 }
 
-
 export type AddPatientState = {
-    message: string;
-    success: boolean;
-    errors?: Record<string, any>;
-    patientId?: string;
+  message: string;
+  success: boolean;
+  errors?: Record<string, any>;
+  patientId?: string;
 };
 
 const addPatientFormSchema = z.object({
@@ -298,44 +319,43 @@ const addPatientFormSchema = z.object({
 });
 
 export async function addPatientAction(
-    prevState: AddPatientState,
-    formData: FormData
+  prevState: AddPatientState,
+  formData: FormData
 ): Promise<AddPatientState> {
-    try {
-        const parsed = addPatientFormSchema.safeParse({
-            name: formData.get('name'),
-            semester: formData.get('semester'),
-            group: formData.get('group'),
-        });
+  try {
+    const parsed = addPatientFormSchema.safeParse({
+      name: formData.get('name'),
+      semester: formData.get('semester'),
+      group: formData.get('group'),
+    });
 
-        if (!parsed.success) {
-            return {
-                success: false,
-                message: 'Validación fallida.',
-                errors: parsed.error.flatten().fieldErrors,
-            };
-        }
-
-        const newPatient = savePatient({
-            name: parsed.data.name,
-            semester: parsed.data.semester,
-            group: parsed.data.group,
-        });
-
-        revalidatePath('/patients');
-
-        return {
-            success: true,
-            message: `¡Paciente "${newPatient.name}" añadido con éxito!`,
-            patientId: newPatient.id,
-        };
-
-    } catch (error: any) {
-        return {
-            success: false,
-            message: error.message || 'Ocurrió un error inesperado al añadir el paciente.',
-        };
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: 'Validación fallida.',
+        errors: parsed.error.flatten().fieldErrors,
+      };
     }
+
+    const newPatient = savePatient({
+      name: parsed.data.name,
+      semester: parsed.data.semester,
+      group: parsed.data.group,
+    });
+
+    revalidatePath('/patients');
+
+    return {
+      success: true,
+      message: `¡Paciente "${newPatient.name}" añadido con éxito!`,
+      patientId: newPatient.id,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || 'Ocurrió un error inesperado al añadir el paciente.',
+    };
+  }
 }
 
 export type BulkAddPatientsState = {
@@ -406,26 +426,38 @@ export type AssignQuestionnaireState = {
   message: string;
 };
 
-export async function assignQuestionnaireAction(
+const assignSchema = z.object({
+  patientId: z.string().min(1, 'Debe seleccionar un paciente.'),
+  questionnaireIds: z.array(z.string().min(1)).min(1, 'Debe seleccionar al menos un cuestionario.'),
+});
+
+export async function assignQuestionnairesAction(
   prevState: AssignQuestionnaireState,
   formData: FormData
 ): Promise<AssignQuestionnaireState> {
-  const patientId = formData.get('patientId') as string;
-  const questionnaireId = formData.get('questionnaireId') as string;
-
-  if (!patientId || !questionnaireId) {
-    return {
-      success: false,
-      message: 'Faltan el ID del paciente o del cuestionario.',
-    };
-  }
   try {
-    assignQuestionnaireToPatient(patientId, questionnaireId);
+    const data = {
+      patientId: formData.get('patientId'),
+      questionnaireIds: formData.getAll('questionnaireIds'),
+    };
+    
+    const parsed = assignSchema.safeParse(data);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: parsed.error.flatten().fieldErrors.questionnaireIds?.[0] || 'Error de validación.',
+      };
+    }
+
+    const { patientId, questionnaireIds } = parsed.data;
+
+    assignQuestionnairesToPatient(patientId, questionnaireIds);
     revalidatePath('/patients');
     revalidatePath(`/patients/${patientId}`);
     return {
       success: true,
-      message: 'Cuestionario asignado con éxito.',
+      message: 'Cuestionarios asignados con éxito.',
     };
   } catch (error: any) {
     return {
@@ -503,7 +535,6 @@ export type SaveInterviewState = {
   errors?: Record<string, any>;
 }
 
-// Corresponde a la nueva estructura de dSIE.ts
 const interviewSchema = z.object({
   patientId: z.string(),
   motivoConsulta: z.string().min(10, 'El motivo de consulta es demasiado corto.'),
@@ -566,8 +597,6 @@ export async function saveClinicalInterviewAction(
       };
     }
     
-    // Aquí es donde guardarías los datos en la base de datos.
-    // Por ahora, solo simularemos el éxito.
     console.log("Datos de la entrevista a guardar:", parsed.data);
     revalidatePath(`/patients/${parsed.data.patientId}`);
     
@@ -592,79 +621,83 @@ export async function importResultAction(prevState: ImportResultState, formData:
   try {
     const decoded = JSON.parse(Buffer.from(code, 'base64').toString('utf8'));
 
-    const { patientId, questionnaireId, answers } = decoded;
+    const { patientId, results: importedResults } = decoded;
 
-    if (!questionnaireId || !answers) {
-      throw new Error('El código es inválido o está incompleto.');
+    if (!patientId || !Array.isArray(importedResults) || importedResults.length === 0) {
+      throw new Error('El código es inválido, está corrupto o no contiene resultados.');
     }
 
-    const questionnaire = getQuestionnaire(questionnaireId);
-    if (!questionnaire) {
-        throw new Error('El cuestionario especificado en el código no existe.');
-    }
+    let importedCount = 0;
+    for (const res of importedResults) {
+        const { questionnaireId, answers } = res;
+        if (!questionnaireId || !answers) continue;
 
-    const scores: Record<string, number> = {};
-    const totalPossibleScores: Record<string, number> = {};
+        const questionnaire = getQuestionnaire(questionnaireId);
+        if (!questionnaire) continue;
 
-    for (const section of questionnaire.sections) {
-      let sectionScore = 0;
-      let sectionTotalPossible = 0;
-      const sectionId = section.sectionId;
+        const scores: Record<string, number> = {};
+        const totalPossibleScores: Record<string, number> = {};
 
-      for (const question of section.questions) {
-        const questionId = question.id;
-        const rawAnswer = answers[questionId];
+        for (const section of questionnaire.sections) {
+            let sectionScore = 0;
+            let sectionTotalPossible = 0;
+            const sectionId = section.sectionId;
 
-        if (rawAnswer !== undefined && question.type === 'likert' && question.includeInScore !== false) {
-           const value = Number(rawAnswer);
-           let scoreForQuestion = value;
+            for (const question of section.questions) {
+                const questionId = question.id;
+                const rawAnswer = answers[questionId];
 
-            if (question.scoring?.type === 'match') {
-              scoreForQuestion = value === question.scoring.value ? 1 : 0;
-            } else if (question.scoring?.type === 'aq-10') {
-                const agrees = value === 3 || value === 2;
-                const disagrees = value === 1 || value === 0;
-                if (question.scoring.agreesIsOne && agrees) scoreForQuestion = 1;
-                else if (!question.scoring.agreesIsOne && disagrees) scoreForQuestion = 1;
-                else scoreForQuestion = 0;
-            } else if (question.scoringDirection === 'Inversa') {
-              const maxScaleValue = Math.max(...section.likertScale.map(o => o.value));
-              const minScaleValue = Math.min(...section.likertScale.map(o => o.value));
-              scoreForQuestion = (maxScaleValue + minScaleValue) - value;
+                if (rawAnswer !== undefined && question.type === 'likert' && question.includeInScore !== false) {
+                    const value = Number(rawAnswer);
+                    let scoreForQuestion = value;
+
+                    if (question.scoring?.type === 'match') {
+                        scoreForQuestion = value === question.scoring.value ? 1 : 0;
+                    } else if (question.scoring?.type === 'aq-10') {
+                        const agrees = value === 3 || value === 2;
+                        const disagrees = value === 1 || value === 0;
+                        if (question.scoring.agreesIsOne && agrees) scoreForQuestion = 1;
+                        else if (!question.scoring.agreesIsOne && disagrees) scoreForQuestion = 1;
+                        else scoreForQuestion = 0;
+                    } else if (question.scoringDirection === 'Inversa') {
+                        const maxScaleValue = Math.max(...section.likertScale.map(o => o.value));
+                        const minScaleValue = Math.min(...section.likertScale.map(o => o.value));
+                        scoreForQuestion = (maxScaleValue + minScaleValue) - value;
+                    }
+                    
+                    sectionScore += scoreForQuestion;
+                }
+                if (question.type === 'likert' && question.includeInScore !== false) {
+                    if (question.scoring?.type === 'match' || question.scoring?.type === 'aq-10') {
+                        sectionTotalPossible += 1;
+                    } else {
+                        const options = question.options || section.likertScale;
+                        sectionTotalPossible += Math.max(...options.map(o => o.value));
+                    }
+                }
             }
-            
-            sectionScore += scoreForQuestion;
+            scores[sectionId] = sectionScore;
+            totalPossibleScores[sectionId] = sectionTotalPossible;
         }
-         if (question.type === 'likert' && question.includeInScore !== false) {
-            if (question.scoring?.type === 'match' || question.scoring?.type === 'aq-10') {
-              sectionTotalPossible += 1;
-            } else {
-              const options = question.options || section.likertScale;
-              sectionTotalPossible += Math.max(...options.map(o => o.value));
-            }
-        }
-      }
-        scores[sectionId] = sectionScore;
-        totalPossibleScores[sectionId] = sectionTotalPossible;
+
+        saveResult({
+            questionnaireId: questionnaire.id,
+            questionnaireName: questionnaire.name,
+            answers: answers,
+            scores,
+            totalPossibleScores,
+            submittedAt: new Date(res.submittedAt),
+            patientId: patientId,
+        });
+        importedCount++;
     }
-
-
-    const result = saveResult({
-      questionnaireId: questionnaire.id,
-      questionnaireName: questionnaire.name,
-      answers: answers,
-      scores,
-      totalPossibleScores,
-      submittedAt: new Date(),
-      patientId: patientId || undefined,
-    });
 
     if (patientId) {
         revalidatePath(`/patients/${patientId}`);
     }
     revalidatePath('/patients');
 
-    return { success: true, message: `Resultados del cuestionario "${questionnaire.name}" importados con éxito.` };
+    return { success: true, message: `Se importaron ${importedCount} resultados de evaluaciones con éxito.` };
 
   } catch (error: any) {
     console.error("Import error:", error);

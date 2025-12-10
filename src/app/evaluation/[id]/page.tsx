@@ -1,8 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getQuestionnaire } from "@/lib/data";
 import { QuestionnaireForm } from "@/components/questionnaire-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
+import { getAssignedQuestionnairesForPatient } from "@/lib/store";
+import { Suspense } from "react";
 
 type EvaluationPageProps = {
   params: {
@@ -11,16 +13,30 @@ type EvaluationPageProps = {
   searchParams?: {
     patient?: string;
     remote?: string;
+    // For chained evaluations
+    intermediateResults?: string;
   };
 };
 
-export default function EvaluationPage({ params, searchParams }: EvaluationPageProps) {
+function EvaluationPageContent({ params, searchParams }: EvaluationPageProps) {
   const questionnaire = getQuestionnaire(params.id);
   const patientId = searchParams?.patient;
   const isRemote = searchParams?.remote === 'true';
+  const intermediateResults = searchParams?.intermediateResults;
 
   if (!questionnaire) {
     notFound();
+  }
+  
+  // If this is the first remote evaluation for a patient, redirect to the portal
+  if (isRemote && patientId && !intermediateResults) {
+    const assignments = getAssignedQuestionnairesForPatient(patientId);
+    if (assignments.length > 0) {
+      // Redirect to the first assigned questionnaire, which will then chain
+       const firstAssignmentId = assignments[0].questionnaireId;
+       const portalUrl = `/evaluation/${firstAssignmentId}?patient=${patientId}&remote=true`;
+       redirect(portalUrl);
+    }
   }
 
   return (
@@ -35,7 +51,12 @@ export default function EvaluationPage({ params, searchParams }: EvaluationPageP
             <CardDescription>{questionnaire.description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <QuestionnaireForm questionnaire={questionnaire} patientId={patientId} isRemote={isRemote} />
+            <QuestionnaireForm 
+              questionnaire={questionnaire} 
+              patientId={patientId} 
+              isRemote={isRemote}
+              intermediateResults={intermediateResults}
+            />
           </CardContent>
         </Card>
          <p className="text-center text-sm text-muted-foreground mt-6">
@@ -44,4 +65,12 @@ export default function EvaluationPage({ params, searchParams }: EvaluationPageP
       </div>
     </div>
   );
+}
+
+export default function EvaluationPage(props: EvaluationPageProps) {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <EvaluationPageContent {...props} />
+    </Suspense>
+  )
 }

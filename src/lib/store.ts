@@ -89,9 +89,13 @@ function writeDb() {
 
 function seedData() {
     // Seeding should only happen if the store is empty.
-    if (patientsStore.size > 0 || resultsStore.size > 0) return;
+    if (isSeeded) return;
 
     const initialDb = readDb();
+
+    patientsStore.clear();
+    assignedQuestionnairesStore.clear();
+    resultsStore.clear();
 
     initialDb.patients.forEach((p: any) => patientsStore.set(p.id, {
         ...p,
@@ -112,6 +116,7 @@ function seedData() {
             submittedAt: new Date(r.submittedAt),
         })
     });
+    isSeeded = true;
 }
 
 
@@ -212,21 +217,20 @@ export function updatePatient(patientId: string, dataToUpdate: Partial<Patient>)
 }
 
 // Assignment functions
-export const assignQuestionnaireToPatient = (patientId: string, questionnaireId: string): Assignment => {
+export const assignQuestionnairesToPatient = (patientId: string, questionnaireIds: string[]): Assignment[] => {
     seedData();
-    const assignmentId = `asg-${Date.now()}-${Math.random()}`;
-    const newAssignment: Assignment = {
-        assignmentId,
+    const newAssignments: Assignment[] = questionnaireIds.map(qid => ({
+        assignmentId: `asg-${Date.now()}-${Math.random()}`,
         patientId,
-        questionnaireId,
+        questionnaireId: qid,
         assignedAt: new Date(),
-    };
+    }));
 
     const existingAssignments = assignedQuestionnairesStore.get(patientId) || [];
-    assignedQuestionnairesStore.set(patientId, [...existingAssignments, newAssignment]);
+    assignedQuestionnairesStore.set(patientId, [...existingAssignments, ...newAssignments]);
     
     writeDb();
-    return newAssignment;
+    return newAssignments;
 };
 
 export const deleteAssignment = (patientId: string, assignmentId: string): void => {

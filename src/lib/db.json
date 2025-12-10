@@ -62,6 +62,26 @@
         "questionnaireId": "gad-7",
         "assignedAt": "2024-01-01T11:00:00.000Z"
       }
+    ],
+    "pat-6-1765338628464": [
+      {
+        "assignmentId": "asg-1765340792954-0.3608571187537226",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:26:32.954Z"
+      },
+      {
+        "assignmentId": "asg-1765340806901-0.9575248258272366",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:26:46.901Z"
+      },
+      {
+        "assignmentId": "asg-1765340822357-0.8587222357115241",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "aq-10",
+        "assignedAt": "2025-12-10T04:27:02.357Z"
+      }
     ]
   },
   "results": [
@@ -88,6 +108,33 @@
         "q9": 0
       },
       "submittedAt": "2024-05-10T14:30:00.000Z"
+    },
+    {
+      "questionnaireId": "phq-9",
+      "questionnaireName": "Cuestionario de Salud del Paciente (PHQ-9)",
+      "answers": {
+        "phq9_q1": 1,
+        "phq9_q2": 0,
+        "phq9_q3": 0,
+        "phq9_q4": 0,
+        "phq9_q5": 1,
+        "phq9_q6": 0,
+        "phq9_q7": 0,
+        "phq9_q8": 0,
+        "phq9_q9": 0,
+        "phq9_q10": 0
+      },
+      "scores": {
+        "main": 2,
+        "functional": 0
+      },
+      "totalPossibleScores": {
+        "main": 27,
+        "functional": 0
+      },
+      "submittedAt": "2025-12-10T04:32:51.366Z",
+      "patientId": "pat-6-1765338628464",
+      "id": "res-2-1765341171366"
     }
   ]
 }
