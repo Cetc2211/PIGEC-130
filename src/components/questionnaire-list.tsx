@@ -70,20 +70,32 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
         };
 
         const firstQuestionnaireId = Array.from(selectedQuestionnaires)[0];
-        const url = `${window.location.origin}/evaluation/${firstQuestionnaireId}?remote=true&patient=${selectedPatient.id}`;
+        const evaluationUrl = `${window.location.origin}/evaluation/${firstQuestionnaireId}?remote=true&patient=${selectedPatient.id}`;
         
         // Before sharing, we need to assign the questionnaires so the remote flow works
         const formData = new FormData();
         formData.append('patientId', selectedPatient.id);
         selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
-        
         formAction(formData);
+        
+        const patientPhone = selectedPatient.mobilePhone;
+        const message = `Hola ${selectedPatient.name.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${evaluationUrl}`;
 
-        navigator.clipboard.writeText(url);
-        toast({
-            title: "Enlace de Evaluación Remota Copiado",
-            description: `El enlace para la secuencia de pruebas de ${selectedPatient.name} ha sido copiado.`,
-        });
+        if (patientPhone) {
+            const whatsappUrl = `https://wa.me/${patientPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            toast({
+                title: "Abriendo WhatsApp...",
+                description: `Se está abriendo una conversación con ${selectedPatient.name}.`,
+            });
+        } else {
+            navigator.clipboard.writeText(evaluationUrl);
+            toast({
+                title: "Enlace Copiado",
+                description: "El número de teléfono no está registrado. El enlace se ha copiado al portapapeles.",
+            });
+        }
+
         onClose();
     };
 

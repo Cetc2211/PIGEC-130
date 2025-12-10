@@ -21,6 +21,9 @@ function SubmittedContent() {
         title: '¡Código Copiado!',
         description: 'El código de resultados ha sido copiado a tu portapapeles.',
       });
+      const whatsappMessage = `Hola, te envío mi código de resultados de la evaluación. Por favor, pégalo en mi expediente:\n\n(Pega el código aquí)`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
+      window.open(whatsappUrl, '_blank');
     }
   };
 
