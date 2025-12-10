@@ -46,7 +46,9 @@ export function AddPatientForm({ onFinished }: AddPatientFormProps) {
         variant: 'destructive',
       });
     }
-    // No need to handle success here, as the server action redirects
+    if (state.success) {
+        onFinished();
+    }
   }, [state, onFinished, toast]);
   
   return (

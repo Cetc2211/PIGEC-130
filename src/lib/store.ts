@@ -1,10 +1,12 @@
 // NOTE: This now uses a static JSON file for initial data to ensure persistence
-// across server reloads in development. Write operations are still in-memory.
+// across server reloads in development. Write operations now write back to the file.
 
 import { format } from 'date-fns';
-import initialDb from './db.json';
+import fs from 'fs';
+import path from 'path';
 
-// Simple flag to prevent re-seeding in hot-reload scenarios
+const dbPath = path.resolve(process.cwd(), 'src/lib/db.json');
+
 let isSeeded = false;
 
 export type EvaluationResult = {
@@ -57,25 +59,46 @@ export type Assignment = {
 // In-memory stores
 let patientsStore: Map<string, Patient> = new Map();
 let assignedQuestionnairesStore: Map<string, Assignment[]> = new Map();
-const resultsStore: Map<string, EvaluationResult> = new Map();
+let resultsStore: Map<string, EvaluationResult> = new Map();
 
-// --- Data Seeding ---
+// --- Data Seeding and Persistence ---
+
+function readDb(): { patients: Patient[], assignments: Record<string, Assignment[]>, results: EvaluationResult[] } {
+    try {
+        const fileContent = fs.readFileSync(dbPath, 'utf-8');
+        return JSON.parse(fileContent);
+    } catch (error) {
+        console.error("Error reading db.json, returning empty state:", error);
+        return { patients: [], assignments: {}, results: [] };
+    }
+}
+
+function writeDb() {
+    try {
+        const data = {
+            patients: Array.from(patientsStore.values()),
+            assignments: Object.fromEntries(assignedQuestionnairesStore.entries()),
+            results: Array.from(resultsStore.values()),
+        };
+        fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (error) {
+        console.error("Error writing to db.json:", error);
+    }
+}
+
+
 function seedData() {
-    if (isSeeded) return;
+    // Seeding should only happen if the store is empty.
+    if (patientsStore.size > 0 || resultsStore.size > 0) return;
 
-    patientsStore.clear();
-    assignedQuestionnairesStore.clear();
-    resultsStore.clear();
+    const initialDb = readDb();
 
-    // Deep copy to avoid mutations affecting the imported JSON object across reloads
-    const initialData = JSON.parse(JSON.stringify(initialDb));
-
-    initialData.patients.forEach((p: any) => patientsStore.set(p.id, {
+    initialDb.patients.forEach((p: any) => patientsStore.set(p.id, {
         ...p,
         createdAt: new Date(p.createdAt)
     }));
     
-    Object.entries(initialData.assignments).forEach(([patientId, assignments]: [string, any]) => {
+    Object.entries(initialDb.assignments).forEach(([patientId, assignments]: [string, any]) => {
         const assignmentsWithDates = assignments.map((a: any) => ({
             ...a,
             assignedAt: new Date(a.assignedAt),
@@ -83,34 +106,24 @@ function seedData() {
         assignedQuestionnairesStore.set(patientId, assignmentsWithDates);
     });
 
-    initialData.results.forEach((r: any) => {
-        // Adapt old results to new multi-score format
-        const oldScore = r.score;
-        const oldTotal = r.totalPossibleScore;
-        delete r.score;
-        delete r.totalPossibleScore;
-
-        resultsStore.set(r.id, {
+    initialDb.results.forEach((r: any) => {
+         resultsStore.set(r.id, {
             ...r,
-            scores: { main: oldScore },
-            totalPossibleScores: { main: oldTotal },
             submittedAt: new Date(r.submittedAt),
         })
     });
-
-    isSeeded = true;
 }
 
 
 // --- Store Functions ---
+// Always seed before any operation to ensure data is loaded.
 
 export const saveResult = (result: Omit<EvaluationResult, 'id'>): EvaluationResult => {
-  seedData(); // Ensure data is loaded
+  seedData(); 
   const id = `res-${resultsStore.size + 1}-${Date.now()}`;
-  const newResult: EvaluationResult = { ...result, id };
+  const newResult: EvaluationResult = { ...result, id, submittedAt: new Date(result.submittedAt) };
   resultsStore.set(id, newResult);
   
-  // This is a new change: remove the assignment once the result is saved
   if (newResult.patientId) {
     const patientAssignments = assignedQuestionnairesStore.get(newResult.patientId) || [];
     const updatedAssignments = patientAssignments.filter(
@@ -119,22 +132,22 @@ export const saveResult = (result: Omit<EvaluationResult, 'id'>): EvaluationResu
     assignedQuestionnairesStore.set(newResult.patientId, updatedAssignments);
   }
   
+  writeDb();
   return newResult;
 };
 
 export const getResult = (id: string): EvaluationResult | undefined => {
-  seedData(); // Ensure data is loaded
+  seedData();
   return resultsStore.get(id);
 };
 
 export function getAllResultsForPatient(patientId: string): EvaluationResult[] {
-    seedData(); // Ensure data is loaded
+    seedData();
     return Array.from(resultsStore.values()).filter(r => r.patientId === patientId);
 }
 
-// Patient store functions
 const generateRecordId = (date: Date) => {
-    seedData(); // Ensure data is loaded
+    seedData();
     const totalPatients = patientsStore.size;
     const sequence = (totalPatients + 1).toString().padStart(5, '0');
     const datePart = format(date, 'dd/MM/yy');
@@ -142,18 +155,19 @@ const generateRecordId = (date: Date) => {
 }
 
 export const savePatient = (patientData: Omit<Patient, 'id' | 'createdAt' | 'recordId'>): Patient => {
-  seedData(); // Ensure data is loaded
+  seedData();
   const id = `pat-${patientsStore.size + 1}-${Date.now()}`;
   const now = new Date();
   const recordId = generateRecordId(now);
 
   const newPatient: Patient = { ...patientData, id, recordId, createdAt: now };
-  patientsStore.set(id, newPatient); // Save to in-memory store
+  patientsStore.set(id, newPatient);
+  writeDb();
   return newPatient;
 };
 
 export const savePatientsBatch = (patientsData: Omit<Patient, 'id' | 'createdAt' | 'recordId' | 'dob'>[]): number => {
-    seedData(); // Ensure data is loaded
+    seedData();
     const now = new Date();
     let createdCount = 0;
     
@@ -169,17 +183,18 @@ export const savePatientsBatch = (patientsData: Omit<Patient, 'id' | 'createdAt'
         createdCount++;
     });
 
+    writeDb();
     return createdCount;
 };
 
 
 export const getPatient = (id: string): Patient | undefined => {
-    seedData(); // Ensure data is loaded
+    seedData();
     return patientsStore.get(id);
 };
 
 export const getAllPatients = (): Patient[] => {
-    seedData(); // Ensure data is loaded
+    seedData();
     const patients = Array.from(patientsStore.values());
     return patients.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
@@ -190,6 +205,7 @@ export function updatePatient(patientId: string, dataToUpdate: Partial<Patient>)
     if (patient) {
         const updatedPatient = { ...patient, ...dataToUpdate };
         patientsStore.set(patientId, updatedPatient);
+        writeDb();
     } else {
         throw new Error("Patient not found");
     }
@@ -197,7 +213,7 @@ export function updatePatient(patientId: string, dataToUpdate: Partial<Patient>)
 
 // Assignment functions
 export const assignQuestionnaireToPatient = (patientId: string, questionnaireId: string): Assignment => {
-    seedData(); // Ensure data is loaded
+    seedData();
     const assignmentId = `asg-${Date.now()}-${Math.random()}`;
     const newAssignment: Assignment = {
         assignmentId,
@@ -209,25 +225,27 @@ export const assignQuestionnaireToPatient = (patientId: string, questionnaireId:
     const existingAssignments = assignedQuestionnairesStore.get(patientId) || [];
     assignedQuestionnairesStore.set(patientId, [...existingAssignments, newAssignment]);
     
+    writeDb();
     return newAssignment;
 };
 
 export const deleteAssignment = (patientId: string, assignmentId: string): void => {
-    seedData(); // Ensure data is loaded
+    seedData();
     const assignments = assignedQuestionnairesStore.get(patientId);
     if (!assignments) {
         throw new Error('No se encontraron asignaciones para este paciente.');
     }
     const updatedAssignments = assignments.filter(a => a.assignmentId !== assignmentId);
     assignedQuestionnairesStore.set(patientId, updatedAssignments);
+    writeDb();
 };
 
 export const getAssignedQuestionnairesForPatient = (patientId: string): Assignment[] => {
-    seedData(); // Ensure data is loaded
+    seedData();
     return assignedQuestionnairesStore.get(patientId) || [];
 };
 
 export const getAllAssignedQuestionnaires = (): Assignment[] => {
-    seedData(); // Ensure data is loaded
+    seedData();
     return Array.from(assignedQuestionnairesStore.values()).flat();
 };
