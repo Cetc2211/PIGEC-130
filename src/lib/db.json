@@ -79,33 +79,6 @@
         "q9": 0
       },
       "submittedAt": "2024-05-10T14:30:00.000Z"
-    },
-    {
-      "questionnaireId": "phq-9",
-      "questionnaireName": "Cuestionario de Salud del Paciente (PHQ-9)",
-      "answers": {
-        "phq9_q1": 1,
-        "phq9_q2": 0,
-        "phq9_q3": 0,
-        "phq9_q4": 0,
-        "phq9_q5": 1,
-        "phq9_q6": 0,
-        "phq9_q7": 0,
-        "phq9_q8": 0,
-        "phq9_q9": 0,
-        "phq9_q10": 0
-      },
-      "scores": {
-        "main": 2,
-        "functional": 0
-      },
-      "totalPossibleScores": {
-        "main": 27,
-        "functional": 0
-      },
-      "submittedAt": "2025-12-10T04:32:51.366Z",
-      "patientId": "pat-6-1765338628464",
-      "id": "res-2-1765341171366"
     }
   ]
 }
