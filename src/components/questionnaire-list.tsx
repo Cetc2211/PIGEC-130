@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, Link as LinkIcon, Check, CheckSquare, Square } from 'lucide-react';
+import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, Link as LinkIcon, CheckSquare, Square } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import type { Patient } from '@/lib/store';
@@ -48,14 +48,46 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
         });
     };
 
+    const handleSubmitAndShare = () => {
+        if (!selectedPatient || selectedQuestionnaires.size === 0) {
+          toast({ title: 'Error', description: 'Selecciona un paciente y al menos un cuestionario.', variant: 'destructive' });
+          return;
+        };
+        
+        startTransition(() => {
+            const formData = new FormData();
+            formData.append('patientId', selectedPatient.id);
+            selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
+            formAction(formData);
+        });
+    };
+
     useEffect(() => {
         if (state.message) {
             if (state.success) {
-                toast({
-                    title: "¡Evaluaciones Asignadas!",
-                    description: `Las pruebas seleccionadas han sido añadidas al expediente de ${selectedPatient?.name}.`,
-                });
+                // If the action was successful, it means questionnaires are assigned.
+                // Now we can proceed with sharing.
+                const firstQuestionnaireId = Array.from(selectedQuestionnaires)[0];
+                const evaluationUrl = `${window.location.origin}/evaluation/${firstQuestionnaireId}?remote=true&patient=${selectedPatient?.id}`;
+                const patientPhone = selectedPatient?.mobilePhone;
+                const message = `Hola ${selectedPatient?.name.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${evaluationUrl}`;
+
+                if (patientPhone) {
+                    const whatsappUrl = `https://wa.me/${patientPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, '_blank');
+                    toast({
+                        title: "Abriendo WhatsApp...",
+                        description: `Se está abriendo una conversación con ${selectedPatient?.name}.`,
+                    });
+                } else {
+                    navigator.clipboard.writeText(evaluationUrl);
+                    toast({
+                        title: "Enlace Copiado",
+                        description: "El número de teléfono no está registrado. El enlace se ha copiado al portapapeles.",
+                    });
+                }
                 onClose();
+
             } else {
                 toast({
                     title: "Error",
@@ -64,136 +96,89 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
                 });
             }
         }
-    }, [state, selectedPatient?.name, onClose, toast]);
+    }, [state, selectedPatient, selectedQuestionnaires, onClose, toast]);
     
-    const handleShareClick = () => {
-        if (!selectedPatient || selectedQuestionnaires.size === 0) {
-          toast({ title: 'Error', description: 'Selecciona un paciente y al menos un cuestionario.', variant: 'destructive' });
-          return;
-        };
-
-        const firstQuestionnaireId = Array.from(selectedQuestionnaires)[0];
-        const evaluationUrl = `${window.location.origin}/evaluation/${firstQuestionnaireId}?remote=true&patient=${selectedPatient.id}`;
-        
-        // Before sharing, we need to assign the questionnaires so the remote flow works
-        const formData = new FormData();
-        formData.append('patientId', selectedPatient.id);
-        selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
-        startTransition(() => {
-            formAction(formData);
-        });
-        
-        const patientPhone = selectedPatient.mobilePhone;
-        const message = `Hola ${selectedPatient.name.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${evaluationUrl}`;
-
-        if (patientPhone) {
-            const whatsappUrl = `https://wa.me/${patientPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-            toast({
-                title: "Abriendo WhatsApp...",
-                description: `Se está abriendo una conversación con ${selectedPatient.name}.`,
-            });
-        } else {
-            navigator.clipboard.writeText(evaluationUrl);
-            toast({
-                title: "Enlace Copiado",
-                description: "El número de teléfono no está registrado. El enlace se ha copiado al portapapeles.",
-            });
-        }
-
-        onClose();
-    };
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-3xl">
-                <form action={formAction}>
-                    <input type="hidden" name="patientId" value={selectedPatient?.id || ''} />
-                    {Array.from(selectedQuestionnaires).map(id => (
-                        <input key={id} type="hidden" name="questionnaireIds" value={id} />
-                    ))}
-                    <DialogHeader>
-                        <DialogTitle className="font-headline">Asignar Evaluaciones</DialogTitle>
-                        <DialogDescription>
-                            Selecciona las pruebas, busca y selecciona un paciente, y luego asigna o comparte un enlace remoto para la secuencia de evaluación.
-                        </DialogDescription>
-                    </DialogHeader>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-                        {/* Questionnaire Selection */}
-                        <div className='flex flex-col gap-4'>
-                           <h4 className="font-semibold text-foreground">1. Seleccionar Pruebas</h4>
-                           <ScrollArea className="h-[250px] border rounded-md">
-                                <div className="p-2 space-y-1">
-                                    {questionnaires.map(q => (
-                                        <button
-                                            type="button"
-                                            key={q.id}
-                                            onClick={() => toggleQuestionnaire(q.id)}
-                                            className="w-full text-left p-2 rounded-md transition-colors flex items-center gap-3 hover:bg-muted"
-                                        >
-                                            {selectedQuestionnaires.has(q.id) ? 
-                                                <CheckSquare className="h-5 w-5 text-primary" /> : 
-                                                <Square className="h-5 w-5 text-muted-foreground" />
-                                            }
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium">{q.name}</span>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </ScrollArea>
-                        </div>
-                        
-                        {/* Patient Selection */}
-                        <div className="flex flex-col gap-4">
-                            <h4 className="font-semibold text-foreground">2. Seleccionar Paciente</h4>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Buscar paciente por nombre..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10"
-                                />
+                <DialogHeader>
+                    <DialogTitle className="font-headline">Asignar y/o Compartir Evaluaciones</DialogTitle>
+                    <DialogDescription>
+                        Selecciona las pruebas, busca y elige un paciente para asignar las pruebas a su expediente o compartir un enlace remoto.
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                    {/* Questionnaire Selection */}
+                    <div className='flex flex-col gap-4'>
+                       <h4 className="font-semibold text-foreground">1. Seleccionar Pruebas</h4>
+                       <ScrollArea className="h-[250px] border rounded-md">
+                            <div className="p-2 space-y-1">
+                                {questionnaires.map(q => (
+                                    <button
+                                        type="button"
+                                        key={q.id}
+                                        onClick={() => toggleQuestionnaire(q.id)}
+                                        className="w-full text-left p-2 rounded-md transition-colors flex items-center gap-3 hover:bg-muted"
+                                    >
+                                        {selectedQuestionnaires.has(q.id) ? 
+                                            <CheckSquare className="h-5 w-5 text-primary" /> : 
+                                            <Square className="h-5 w-5 text-muted-foreground" />
+                                        }
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium">{q.name}</span>
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
-                            <ScrollArea className="h-[200px] border rounded-md">
-                                <div className="p-2 space-y-1">
-                                    {filteredPatients.length > 0 ? (
-                                        filteredPatients.map(patient => (
-                                            <button
-                                                type="button"
-                                                key={patient.id}
-                                                onClick={() => setSelectedPatient(patient)}
-                                                className={`w-full text-left p-2 rounded-md transition-colors flex items-center gap-3 ${selectedPatient?.id === patient.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-                                            >
-                                                <User className="h-4 w-4" />
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-medium">{patient.name}</span>
-                                                    <span className={`text-xs ${selectedPatient?.id === patient.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{patient.recordId}</span>
-                                                </div>
-                                            </button>
-                                        ))
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground text-center p-4">No se encontraron pacientes.</p>
-                                    )}
-                                </div>
-                            </ScrollArea>
-                        </div>
+                        </ScrollArea>
                     </div>
                     
-                    <DialogFooter className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <Button type="button" variant="outline" onClick={onClose} disabled={isPending} className="sm:col-start-1">Cancelar</Button>
-                        <Button type="button" variant="secondary" onClick={handleShareClick} disabled={!selectedPatient || selectedQuestionnaires.size === 0 || isPending}>
-                             <LinkIcon className="mr-2 h-4 w-4" />
-                            Compartir Enlace
-                        </Button>
-                        <Button type="submit" disabled={!selectedPatient || selectedQuestionnaires.size === 0 || isPending}>
-                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-                            Asignar a Expediente
-                        </Button>
-                    </DialogFooter>
-                </form>
+                    {/* Patient Selection */}
+                    <div className="flex flex-col gap-4">
+                        <h4 className="font-semibold text-foreground">2. Seleccionar Paciente</h4>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Buscar paciente por nombre..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
+                        <ScrollArea className="h-[200px] border rounded-md">
+                            <div className="p-2 space-y-1">
+                                {filteredPatients.length > 0 ? (
+                                    filteredPatients.map(patient => (
+                                        <button
+                                            type="button"
+                                            key={patient.id}
+                                            onClick={() => setSelectedPatient(patient)}
+                                            className={`w-full text-left p-2 rounded-md transition-colors flex items-center gap-3 ${selectedPatient?.id === patient.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                                        >
+                                            <User className="h-4 w-4" />
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium">{patient.name}</span>
+                                                <span className={`text-xs ${selectedPatient?.id === patient.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{patient.recordId}</span>
+                                            </div>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-muted-foreground text-center p-4">No se encontraron pacientes.</p>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </div>
+                </div>
+                
+                <DialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
+                    <Button type="button" onClick={handleSubmitAndShare} disabled={!selectedPatient || selectedQuestionnaires.size === 0 || isPending}>
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LinkIcon className="mr-2 h-4 w-4" />}
+                        Asignar y Compartir Enlace
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

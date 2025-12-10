@@ -880,7 +880,7 @@ const questionnairesData: Questionnaire[] = [
           { id: 'rrs_d1', text: 'Hago algo que disfruto.', type: 'likert', scoringDirection: 'Inversa' },
           { id: 'rrs_d2', text: 'Pienso en lo difícil que es concentrarse.', type: 'likert', scoringDirection: 'Directa' },
           { id: 'rrs_d3', text: 'Pienso en que podría estar haciéndolo mejor.', type: 'likert', scoringDirection: 'Directa' },
-          { id: 'rrs_d4', text: 'Escribo lo que estoy pensando y lo analizo.', type: 'likert', scoringDirection: 'Directa' },
+          { id: 'rrs_d4', text: 'Escribo lo que estoy pensando y lo analizo.', type: 'likert', scoringDirection: 'Inversa' },
           { id: 'rrs_d5', text: 'Me recuerdo a mí mismo/a todas las cosas que tengo que hacer.', type: 'likert', scoringDirection: 'Directa' },
           { id: 'rrs_d6', text: 'Me culpo por sentirme así.', type: 'likert', scoringDirection: 'Directa' },
           { id: 'rrs_d7', text: 'Pido ayuda a mis amigos para mis problemas.', type: 'likert', scoringDirection: 'Inversa' },
@@ -1010,6 +1010,7 @@ export function getInterpretation(questionnaireId: string, score: number): Inter
 
     return { severity: 'Baja', summary: 'No se encontraron reglas de interpretación para esta escala.' };
 }
+
 
 
 
