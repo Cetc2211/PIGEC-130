@@ -212,6 +212,16 @@ export const assignQuestionnaireToPatient = (patientId: string, questionnaireId:
     return newAssignment;
 };
 
+export const deleteAssignment = (patientId: string, assignmentId: string): void => {
+    seedData(); // Ensure data is loaded
+    const assignments = assignedQuestionnairesStore.get(patientId);
+    if (!assignments) {
+        throw new Error('No se encontraron asignaciones para este paciente.');
+    }
+    const updatedAssignments = assignments.filter(a => a.assignmentId !== assignmentId);
+    assignedQuestionnairesStore.set(patientId, updatedAssignments);
+};
+
 export const getAssignedQuestionnairesForPatient = (patientId: string): Assignment[] => {
     seedData(); // Ensure data is loaded
     return assignedQuestionnairesStore.get(patientId) || [];

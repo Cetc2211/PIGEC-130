@@ -1,18 +1,20 @@
 'use server';
 
 import { notFound } from 'next/navigation';
-import { getPatient, getAssignedQuestionnairesForPatient, getAllResultsForPatient, type EvaluationResult } from '@/lib/store';
+import { getPatient, getAssignedQuestionnairesForPatient, getAllResultsForPatient, type EvaluationResult, type Assignment } from '@/lib/store';
 import { getQuestionnaire, getInterpretation } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { FileText, User, ClipboardList, Stethoscope, Pencil, ClipboardEdit, ShieldCheck } from 'lucide-react';
+import { FileText, User, ClipboardList, Stethoscope, Pencil, ClipboardEdit, ShieldCheck, Trash2 } from 'lucide-react';
 import { PatientProfileForm } from '@/components/patient-profile-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { SidebarTriggerButton } from '@/components/sidebar-trigger-button';
 import { generatePatientProfile, PatientProfile } from '@/lib/diagnosis';
 import { ClinicalInterviewForm } from '@/components/clinical-interview-form';
+import { DeleteAssignmentDialog } from '@/components/delete-assignment-dialog';
+
 
 type PatientProfilePageProps = {
   params: {
@@ -109,10 +111,6 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
     assignment => !completedQuestionnaireIds.has(assignment.questionnaireId)
   );
 
-  const assignedQuestionnaires = pendingAssignments.map(assignment => {
-      return getQuestionnaire(assignment.questionnaireId);
-  }).filter(Boolean);
-
   const diagnosisProfile = generatePatientProfile({ results: adaptResultsForDiagnosis(results) });
 
   return (
@@ -162,19 +160,26 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
               <CardDescription>Pruebas pendientes de aplicar para este paciente.</CardDescription>
             </CardHeader>
             <CardContent>
-              {assignedQuestionnaires.length > 0 ? (
+              {pendingAssignments.length > 0 ? (
                 <ul className="space-y-3">
-                  {assignedQuestionnaires.map(q => q && (
-                    <li key={q.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-medium">{q.name}</span>
-                      </div>
-                      <Button asChild size="sm">
-                        <Link href={`/evaluation/${q.id}?patient=${patient.id}`}>Iniciar Evaluación</Link>
-                      </Button>
-                    </li>
-                  ))}
+                  {pendingAssignments.map(assignment => {
+                    const questionnaire = getQuestionnaire(assignment.questionnaireId);
+                    if (!questionnaire) return null;
+                    return (
+                        <li key={assignment.assignmentId} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                                <FileText className="h-5 w-5 text-muted-foreground" />
+                                <span className="font-medium">{questionnaire.name}</span>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                                <Button asChild size="sm">
+                                    <Link href={`/evaluation/${questionnaire.id}?patient=${patient.id}`}>Iniciar Evaluación</Link>
+                                </Button>
+                                <DeleteAssignmentDialog patient={patient} assignment={assignment} questionnaireName={questionnaire.name} />
+                            </div>
+                        </li>
+                    )
+                  })}
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">No hay evaluaciones pendientes.</p>
@@ -201,7 +206,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                           <p className="text-xs text-muted-foreground">
                             Completado el {new Date(result.submittedAt).toLocaleDateString()}
                           </p>
-                           {interpretation && <Badge variant={interpretation.severity === 'Alta' ? 'destructive' : 'secondary'} className="mt-2">
+                           {interpretation && <Badge variant={interpretation.severity === 'Alta' || interpretation.severity === 'Grave' ? 'destructive' : 'secondary'} className="mt-2">
                             {interpretation.severity}
                           </Badge>}
                         </div>

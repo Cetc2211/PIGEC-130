@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { getQuestionnaire, saveCustomQuestionnaire, Question } from '@/lib/data';
-import { savePatient, saveResult, savePatientsBatch, assignQuestionnaireToPatient, updatePatient } from '@/lib/store';
+import { savePatient, saveResult, savePatientsBatch, assignQuestionnaireToPatient, updatePatient, deleteAssignment } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
@@ -669,5 +669,39 @@ export async function importResultAction(prevState: ImportResultState, formData:
   } catch (error: any) {
     console.error("Import error:", error);
     return { success: false, message: 'El código proporcionado es inválido o está corrupto. No se pudo importar el resultado.' };
+  }
+}
+
+export type DeleteAssignmentState = {
+  success: boolean;
+  message: string;
+};
+
+export async function deleteAssignmentAction(
+  prevState: DeleteAssignmentState,
+  formData: FormData
+): Promise<DeleteAssignmentState> {
+  const patientId = formData.get('patientId') as string;
+  const assignmentId = formData.get('assignmentId') as string;
+
+  if (!patientId || !assignmentId) {
+    return {
+      success: false,
+      message: 'Faltan el ID del paciente o de la asignación.',
+    };
+  }
+
+  try {
+    deleteAssignment(patientId, assignmentId);
+    revalidatePath(`/patients/${patientId}`);
+    return {
+      success: true,
+      message: 'La evaluación asignada ha sido eliminada.',
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || 'No se pudo eliminar la asignación.',
+    };
   }
 }
