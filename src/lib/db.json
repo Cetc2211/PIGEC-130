@@ -63,8 +63,8 @@
         "patientId": "pat-seed-2",
         "questionnaireId": "phq-9",
         "questionnaireName": "Depresión PHQ-9",
-        "score": 12,
-        "totalPossibleScore": 27,
+        "scores": { "main": 12 },
+        "totalPossibleScores": { "main": 27 },
         "answers": { "q1": 2, "q2": 2, "q3": 1, "q4": 2, "q5": 1, "q6": 2, "q7": 1, "q8": 1, "q9": 0 },
         "submittedAt": "2024-05-10T14:30:00.000Z"
     }
