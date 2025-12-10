@@ -65,8 +65,6 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
     useEffect(() => {
         if (state.message) {
             if (state.success) {
-                // If the action was successful, it means questionnaires are assigned.
-                // Now we can proceed with sharing.
                 const firstQuestionnaireId = Array.from(selectedQuestionnaires)[0];
                 const evaluationUrl = `${window.location.origin}/evaluation/${firstQuestionnaireId}?remote=true&patient=${selectedPatient?.id}`;
                 const patientPhone = selectedPatient?.mobilePhone;
@@ -80,10 +78,9 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
                         description: `Se está abriendo una conversación con ${selectedPatient?.name}.`,
                     });
                 } else {
-                    navigator.clipboard.writeText(evaluationUrl);
-                    toast({
-                        title: "Enlace Copiado",
-                        description: "El número de teléfono no está registrado. El enlace se ha copiado al portapapeles.",
+                     toast({
+                        title: "Asignación Exitosa",
+                        description: "Las pruebas se asignaron al expediente. No se encontró un número de teléfono para enviar por WhatsApp.",
                     });
                 }
                 onClose();
