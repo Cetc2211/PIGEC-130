@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import type { Patient } from '@/lib/store';
 import { ScrollArea } from './ui/scroll-area';
-import { assignQuestionnairesAction } from '@/app/actions';
+import { assignQuestionnairesAction, type AssignQuestionnaireState } from '@/app/actions';
 
 type AssignEvaluationDialogProps = {
     questionnaires: Questionnaire[];
@@ -22,10 +22,7 @@ type AssignEvaluationDialogProps = {
 
 function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEvaluationDialogProps) {
     const { toast } = useToast();
-    const [state, formAction, isActionPending] = useActionState(assignQuestionnairesAction, { success: false, message: "" });
-    const [isTransitionPending, startTransition] = useTransition();
-
-    const isPending = isActionPending || isTransitionPending;
+    const [isPending, startTransition] = useTransition();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -48,34 +45,30 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
         });
     };
 
-    const handleSubmitAndShare = () => {
+    const handleSubmitAndShare = async () => {
         if (!selectedPatient || selectedQuestionnaires.size === 0) {
           toast({ title: 'Error', description: 'Selecciona un paciente y al menos un cuestionario.', variant: 'destructive' });
           return;
         };
         
-        startTransition(() => {
-            const formData = new FormData();
-            formData.append('patientId', selectedPatient.id);
-            selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
-            formAction(formData);
-        });
-    };
+        const formData = new FormData();
+        formData.append('patientId', selectedPatient.id);
+        selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
+        formData.append('baseUrl', window.location.origin);
 
-    useEffect(() => {
-        if (state.message) {
-            if (state.success) {
-                const firstQuestionnaireId = Array.from(selectedQuestionnaires)[0];
-                const evaluationUrl = `${window.location.origin}/evaluation/${firstQuestionnaireId}?remote=true&patient=${selectedPatient?.id}`;
-                const patientPhone = selectedPatient?.mobilePhone;
-                const message = `Hola ${selectedPatient?.name.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${evaluationUrl}`;
-
+        startTransition(async () => {
+            const result = await assignQuestionnairesAction({ success: false, message: '' }, formData);
+        
+            if (result.success && result.evaluationUrl) {
+                const patientPhone = selectedPatient.mobilePhone;
+                const message = `Hola ${selectedPatient.name.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${result.evaluationUrl}`;
+                
                 if (patientPhone) {
                     const whatsappUrl = `https://wa.me/${patientPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
                     window.open(whatsappUrl, '_blank');
                     toast({
                         title: "Abriendo WhatsApp...",
-                        description: `Se está abriendo una conversación con ${selectedPatient?.name}.`,
+                        description: `Se está abriendo una conversación con ${selectedPatient.name}.`,
                     });
                 } else {
                      toast({
@@ -84,17 +77,15 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
                     });
                 }
                 onClose();
-
             } else {
                 toast({
                     title: "Error",
-                    description: state.message,
+                    description: result.message,
                     variant: "destructive",
                 });
             }
-        }
-    }, [state, selectedPatient, selectedQuestionnaires, onClose, toast]);
-    
+        });
+    };
 
     return (
         <Dialog open={true} onOpenChange={onClose}>

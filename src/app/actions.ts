@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { getQuestionnaire, saveCustomQuestionnaire, Question } from '@/lib/data';
-import { savePatient, saveResult, savePatientsBatch, assignQuestionnairesToPatient, updatePatient, deleteAssignment } from '@/lib/store';
+import { savePatient, saveResult, savePatientsBatch, assignQuestionnairesToPatient, updatePatient, deleteAssignment, getPatient } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
@@ -424,11 +424,13 @@ export async function bulkAddPatientsAction(
 export type AssignQuestionnaireState = {
   success: boolean;
   message: string;
+  evaluationUrl?: string;
 };
 
 const assignSchema = z.object({
   patientId: z.string().min(1, 'Debe seleccionar un paciente.'),
   questionnaireIds: z.array(z.string().min(1)).min(1, 'Debe seleccionar al menos un cuestionario.'),
+  baseUrl: z.string().url(),
 });
 
 export async function assignQuestionnairesAction(
@@ -439,6 +441,7 @@ export async function assignQuestionnairesAction(
     const data = {
       patientId: formData.get('patientId'),
       questionnaireIds: formData.getAll('questionnaireIds'),
+      baseUrl: formData.get('baseUrl'),
     };
     
     const parsed = assignSchema.safeParse(data);
@@ -450,14 +453,19 @@ export async function assignQuestionnairesAction(
       };
     }
 
-    const { patientId, questionnaireIds } = parsed.data;
+    const { patientId, questionnaireIds, baseUrl } = parsed.data;
 
-    assignQuestionnairesToPatient(patientId, questionnaireIds);
+    const newAssignments = assignQuestionnairesToPatient(patientId, questionnaireIds);
     revalidatePath('/patients');
     revalidatePath(`/patients/${patientId}`);
+
+    const firstQuestionnaireId = newAssignments[0].questionnaireId;
+    const evaluationUrl = `${baseUrl}/evaluation/${firstQuestionnaireId}?remote=true&patient=${patientId}`;
+
     return {
       success: true,
       message: 'Cuestionarios asignados con éxito.',
+      evaluationUrl: evaluationUrl,
     };
   } catch (error: any) {
     return {
