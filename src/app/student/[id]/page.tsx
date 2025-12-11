@@ -1,5 +1,7 @@
 import { Header } from "@/components/header";
 import ClinicalAssessmentForm from "@/components/clinical-assessment-form";
+import FunctionalAnalysisForm from "@/components/functional-analysis-form";
+
 
 // --- ESTRUCTURA DE DATOS DE EJEMPLO SIMULANDO LA INTEGRACIÓN ---
 interface StudentData {
@@ -46,14 +48,15 @@ export default function StudentFilePage({ params }: { params: { id: string } }) 
                 <div className="max-w-4xl mx-auto">
                     <div className="mb-8">
                         <h1 className="text-3xl font-extrabold text-gray-800">{student.name}</h1>
-                        <p className="text-md text-gray-500">Expediente Clínico y Evaluación Funcional (Módulo 2)</p>
+                        <p className="text-md text-gray-500">Expediente Clínico y Evaluación Funcional</p>
                     </div>
 
                     <div className="space-y-12">
                         {/* Módulo 2.1: Interfaz de Evaluación Clínica */}
                         <ClinicalAssessmentForm />
 
-                        {/* Aquí irán los futuros módulos 2.3 (Análisis Funcional) y 3 (Generador de Plan) */}
+                        {/* Módulo 2.3: Análisis Funcional (AF) y Formulación */}
+                        <FunctionalAnalysisForm studentName={student.name} />
                     </div>
                 </div>
             </main>
