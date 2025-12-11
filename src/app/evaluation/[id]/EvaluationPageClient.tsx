@@ -1,6 +1,6 @@
 'use client';
 
-import { redirect, notFound } from "next/navigation";
+import { useRouter, notFound } from "next/navigation";
 import { QuestionnaireForm } from "@/components/questionnaire-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
@@ -25,6 +25,7 @@ export function EvaluationPageClient({
   isRemote,
   intermediateResults
 }: EvaluationPageClientProps) {
+  const router = useRouter();
 
   // useEffect handles client-side redirection logic for remote sessions
   useEffect(() => {
@@ -43,10 +44,10 @@ export function EvaluationPageClient({
         if (intermediateResults) {
             nextUrl += `&intermediateResults=${encodeURIComponent(intermediateResults)}`;
         }
-        redirect(nextUrl);
+        router.replace(nextUrl);
       }
     }
-  }, [params.id, isRemote, patientId, session, intermediateResults]);
+  }, [params.id, isRemote, patientId, session, intermediateResults, router]);
 
 
   if (!questionnaire) {
