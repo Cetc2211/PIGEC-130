@@ -2,37 +2,27 @@
 
 import { Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getEvaluationSession } from '@/lib/store';
 import { Loader2 } from 'lucide-react';
 
 function StartEvaluationContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const sessionId = searchParams.get('session');
+    const patientId = searchParams.get('patientId');
+    const firstQuestionnaireId = searchParams.get('firstQuestionnaireId');
 
     useEffect(() => {
-        if (!sessionId) {
-            // TODO: Show an error page
+        if (!sessionId || !patientId || !firstQuestionnaireId) {
+            // TODO: Show an error page, for now redirect home
             router.replace('/');
             return;
         }
-
-        const session = getEvaluationSession(sessionId);
-
-        if (!session || session.questionnaireIds.length === 0) {
-            // TODO: Show an error page
-            router.replace('/');
-            return;
-        }
-
-        const firstQuestionnaireId = session.questionnaireIds[0];
-        const patientId = session.patientId;
-
-        // Redirect to the first questionnaire in the session
+        
+        // All data is present, perform the redirect.
         const initialUrl = `/evaluation/${firstQuestionnaireId}?patient=${patientId}&remote=true&session=${sessionId}`;
         router.replace(initialUrl);
 
-    }, [sessionId, router]);
+    }, [sessionId, patientId, firstQuestionnaireId, router]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen text-center">
@@ -44,7 +34,7 @@ function StartEvaluationContent() {
 }
 
 
-export default function StartEvaluationPage() {
+export default function StartEvaluationPageWrapper() {
     return (
         <Suspense fallback={<div>Cargando sesión...</div>}>
             <StartEvaluationContent />
