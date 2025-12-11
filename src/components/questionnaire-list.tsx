@@ -1,7 +1,7 @@
 "use client";
 
 import type { Questionnaire } from "@/lib/data";
-import { useState, useMemo, useActionState, useEffect, useTransition } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import type { Patient } from '@/lib/store';
 import { ScrollArea } from './ui/scroll-area';
-import { assignQuestionnairesAction, type AssignQuestionnaireState } from '@/app/actions';
+import { assignQuestionnairesAction } from '@/app/actions';
 
 type AssignEvaluationDialogProps = {
     questionnaires: Questionnaire[];
@@ -51,12 +51,12 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
           return;
         };
         
-        const formData = new FormData();
-        formData.append('patientId', selectedPatient.id);
-        selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
-        formData.append('baseUrl', window.location.origin);
-
         startTransition(async () => {
+            const formData = new FormData();
+            formData.append('patientId', selectedPatient.id);
+            selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
+            formData.append('baseUrl', window.location.origin);
+            
             const result = await assignQuestionnairesAction({ success: false, message: '' }, formData);
         
             if (result.success && result.evaluationUrl) {
@@ -73,13 +73,13 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
                 } else {
                      toast({
                         title: "Asignación Exitosa",
-                        description: "Las pruebas se asignaron al expediente. No se encontró un número de teléfono para enviar por WhatsApp.",
+                        description: "Las pruebas se asignaron. No se encontró un número para enviar por WhatsApp. Copia el enlace manualmente si es necesario.",
                     });
                 }
                 onClose();
             } else {
                 toast({
-                    title: "Error",
+                    title: "Error al Asignar",
                     description: result.message,
                     variant: "destructive",
                 });
@@ -164,7 +164,7 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
                     <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
                     <Button type="button" onClick={handleSubmitAndShare} disabled={!selectedPatient || selectedQuestionnaires.size === 0 || isPending}>
                         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LinkIcon className="mr-2 h-4 w-4" />}
-                        Asignar y Compartir Enlace
+                        Asignar y Enviar por WhatsApp
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -102,6 +102,18 @@
         "patientId": "pat-6-1765338628464",
         "questionnaireId": "phq-9",
         "assignedAt": "2025-12-10T04:58:55.503Z"
+      },
+      {
+        "assignmentId": "asg-1765428686682-0.7511126382646556",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bhs",
+        "assignedAt": "2025-12-11T04:51:26.682Z"
+      },
+      {
+        "assignmentId": "asg-1765428686682-0.8510038584766051",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bis-bas",
+        "assignedAt": "2025-12-11T04:51:26.682Z"
       }
     ]
   },
