@@ -69,7 +69,22 @@
       "emergencyContactPhone": ""
     }
   ],
-  "assignments": {},
+  "assignments": {
+    "pat-6-1765338628464": [
+      {
+        "assignmentId": "asg-1765431099782-0.11551928929231292",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-11T05:31:39.782Z"
+      },
+      {
+        "assignmentId": "asg-1765431099782-0.9375307511271902",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "aq-10",
+        "assignedAt": "2025-12-11T05:31:39.782Z"
+      }
+    ]
+  },
   "results": [
     {
       "id": "res-seed-1",
@@ -96,5 +111,15 @@
       "submittedAt": "2024-05-10T14:30:00.000Z"
     }
   ],
-  "sessions": []
+  "sessions": [
+    {
+      "sessionId": "session-1765431099783-p5oyyao",
+      "patientId": "pat-6-1765338628464",
+      "questionnaireIds": [
+        "bai",
+        "aq-10"
+      ],
+      "createdAt": "2025-12-11T05:31:39.783Z"
+    }
+  ]
 }
