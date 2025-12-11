@@ -18,10 +18,8 @@ export interface Student {
         gpa: number; // Promedio general
         absences: number; // Porcentaje de ausencias
     };
-}
-
-export interface StudentWithRisk extends Student {
-    riskIndex: number;
+    // Este campo es para simulación, se puede quitar después
+    ansiedadScore?: number;
 }
 
 
@@ -37,40 +35,35 @@ export interface Evaluation {
 
 const studentsDB: Student[] = [
     { 
-        id: 'cbta-001', name: 'Ana Sofía López', 
+        id: 'S001', name: 'Ana M. Pérez (Riesgo Alto)', 
         demographics: { age: 17, group: '5A' },
         emergencyContact: { name: 'Mariana López', phone: '5512345678' },
-        suicideRiskLevel: 'Bajo',
-        academicData: { gpa: 8.5, absences: 5 }
+        suicideRiskLevel: 'Alto',
+        academicData: { gpa: 6.2, absences: 25 },
+        ansiedadScore: 18,
     },
     { 
-        id: 'cbta-002', name: 'Carlos Mendoza', 
+        id: 'S002', name: 'Carlos V. Ruiz (Riesgo Medio)', 
         demographics: { age: 16, group: '3B' },
         emergencyContact: { name: 'Juan Mendoza', phone: '5587654321' },
-        suicideRiskLevel: 'Bajo',
-        academicData: { gpa: 6.8, absences: 25 }
+        suicideRiskLevel: 'Medio',
+        academicData: { gpa: 7.8, absences: 15 },
+        ansiedadScore: 10,
     },
     { 
-        id: 'cbta-003', name: 'Beatriz Jiménez', 
+        id: 'S003', name: 'Laura J. García (Riesgo Bajo)', 
         demographics: { age: 18, group: '5A' },
         emergencyContact: { name: 'Lucía Jiménez', phone: '5555555555' },
-        suicideRiskLevel: 'Medio',
-        academicData: { gpa: 7.2, absences: 40 }
-    },
-     { 
-        id: 'cbta-004', name: 'David Ruiz', 
-        demographics: { age: 17, group: '3C' },
-        emergencyContact: { name: 'Pedro Ruiz', phone: '5511223344' },
-        suicideRiskLevel: 'Alto',
-        academicData: { gpa: 6.1, absences: 80 }
+        suicideRiskLevel: 'Bajo',
+        academicData: { gpa: 9.1, absences: 5 },
+        ansiedadScore: 4,
     },
 ];
 
 const evaluationsDB: Evaluation[] = [
-    { id: 'eval-01', studentId: 'cbta-001', type: 'GAD-7', score: 4, date: new Date('2024-05-01') },
-    { id: 'eval-02', studentId: 'cbta-002', type: 'GAD-7', score: 14, date: new Date('2024-05-10') },
-    { id: 'eval-03', studentId: 'cbta-003', type: 'GAD-7', score: 18, date: new Date('2024-05-12') },
-    { id: 'eval-04', studentId: 'cbta-004', type: 'GAD-7', score: 20, date: new Date('2024-05-15') },
+    { id: 'eval-01', studentId: 'S001', type: 'GAD-7', score: 18, date: new Date('2024-05-01') },
+    { id: 'eval-02', studentId: 'S002', type: 'GAD-7', score: 10, date: new Date('2024-05-10') },
+    { id: 'eval-03', studentId: 'S003', type: 'GAD-7', score: 4, date: new Date('2024-05-12') },
 ];
 
 
@@ -80,6 +73,11 @@ export function getStudents(): Student[] {
     // En una app real: return await db.collection('Estudiantes').get();
     return studentsDB;
 }
+
+export function getStudentById(id: string): Student | undefined {
+    return studentsDB.find(s => s.id === id);
+}
+
 
 export function getEvaluations(): Evaluation[] {
     // En una app real: return await db.collection('Evaluaciones').get();
