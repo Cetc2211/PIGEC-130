@@ -1,146 +1,115 @@
 'use client';
+import React from 'react';
+import { calculateRisk } from '../lib/risk-analysis';
+import RiskIndicator from './RiskIndicator';
 
-import { useState } from 'react';
-import { Input } from './ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { FileText, User, ChevronDown, ChevronUp } from 'lucide-react';
-import type { StudentWithRisk } from '@/lib/store';
-import { getRiskLevel } from '@/lib/risk-analysis';
+// --- ESTRUCTURA DE DATOS DE EJEMPLO SIMULANDO LA INTEGRACIÓN ---
 
-function RiskIndicator({ level }: { level: 'Bajo' | 'Medio' | 'Alto' }) {
-  const levelMap = {
-    Bajo: { color: 'bg-green-500', text: 'Bajo' },
-    Medio: { color: 'bg-yellow-500', text: 'Medio' },
-    Alto: { color: 'bg-red-500', text: 'Alto' },
-  };
-  const { color, text } = levelMap[level];
-  return (
-    <div className="flex items-center gap-2">
-      <span className={`h-3 w-3 rounded-full ${color}`}></span>
-      <span className="font-medium">{text}</span>
-    </div>
-  );
+interface StudentData {
+    id: string;
+    name: string;
+    gpa: number;
+    totalClasses: number;
+    nonAttendedClasses: number;
+    ansiedadScore: number; // Asumimos GAD-7 Score (0-21)
 }
 
+// Función auxiliar para normalizar el GAD-7 Score (ejemplo)
+const normalizeAnxiety = (score: number) => Math.min(score / 21, 1.0); // 0 a 1.0
 
-export function StudentDashboard({ students }: { students: StudentWithRisk[] }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: keyof StudentWithRisk | 'riskIndex'; direction: 'ascending' | 'descending' } | null>({ key: 'riskIndex', direction: 'descending' });
+// Base de Datos Simulada (datos obtenidos de AcademicTracker y Screening Clínico)
+const MOCK_STUDENTS: StudentData[] = [
+    { id: 'S001', name: 'Ana M. Pérez (Riesgo Alto)', gpa: 6.2, totalClasses: 100, nonAttendedClasses: 25, ansiedadScore: 18 },
+    { id: 'S002', name: 'Carlos V. Ruiz (Riesgo Medio)', gpa: 7.8, totalClasses: 120, nonAttendedClasses: 15, ansiedadScore: 10 },
+    { id: 'S003', name: 'Laura J. García (Riesgo Bajo)', gpa: 9.1, totalClasses: 110, nonAttendedClasses: 5, ansiedadScore: 4 },
+];
 
-  const sortedStudents = [...students].sort((a, b) => {
-    if (sortConfig === null) return 0;
-    
-    let aValue, bValue;
-    
-    if (sortConfig.key === 'riskIndex') {
-      aValue = a.riskIndex;
-      bValue = b.riskIndex;
-    } else if (sortConfig.key === 'name') {
-      aValue = a.name;
-      bValue = b.name;
-    } else {
-        return 0;
-    }
+const StudentDashboard: React.FC = () => {
 
-    if (aValue < bValue) {
-      return sortConfig.direction === 'ascending' ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortConfig.direction === 'ascending' ? 1 : -1;
-    }
-    return 0;
-  });
+    const studentsWithRisk = MOCK_STUDENTS.map(student => {
+        // Preparación de variables de riesgo para el modelo (X1, X2, X3)
+        const ausentismo_norm = student.nonAttendedClasses / student.totalClasses; // X1
+        const bajo_rendimiento_bin = student.gpa < 7.0 ? 1 : 0; // X2
+        const ansiedad_norm = normalizeAnxiety(student.ansiedadScore); // X3
 
-  const filteredStudents = sortedStudents.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const requestSort = (key: keyof StudentWithRisk | 'riskIndex') => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-  };
+        const riskData = {
+            ausentismo_norm,
+            bajo_rendimiento_bin,
+            ansiedad_norm,
+        };
 
-  const getSortIcon = (key: keyof StudentWithRisk | 'riskIndex') => {
-    if (!sortConfig || sortConfig.key !== key) {
-        return <ChevronDown className="h-4 w-4 text-gray-400" />;
-    }
-    return sortConfig.direction === 'ascending' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
-  }
+        const riskResult = calculateRisk(riskData);
 
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-md">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Expedientes de Estudiantes</h2>
-        <div className="w-1/3">
-          <Input
-            placeholder="🔍 Buscar estudiante..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="cursor-pointer" onClick={() => requestSort('name')}>
-                <div className="flex items-center gap-1">Estudiante {getSortIcon('name')}</div>
-              </TableHead>
-              <TableHead>Datos Académicos</TableHead>
-              <TableHead className="cursor-pointer" onClick={() => requestSort('riskIndex')}>
-                 <div className="flex items-center gap-1">Índice de Riesgo (IRC) {getSortIcon('riskIndex')}</div>
-              </TableHead>
-              <TableHead>Nivel de Riesgo</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredStudents.map((student) => (
-              <TableRow key={student.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-100 rounded-full">
-                      <User className="h-5 w-5 text-gray-600" />
-                    </div>
-                    <div>
-                      <div className="font-bold">{student.name}</div>
-                      <div className="text-sm text-gray-500">{student.id}</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className='flex gap-4'>
-                    <Badge variant="outline">GPA: {student.academicData.gpa.toFixed(1)}</Badge>
-                    <Badge variant="outline">Faltas: {student.academicData.absences}%</Badge>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="font-mono text-lg font-semibold">{student.riskIndex.toFixed(2)}%</div>
-                </TableCell>
-                <TableCell>
-                  <RiskIndicator level={getRiskLevel(student.riskIndex)} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="outline" size="sm">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Ver Expediente
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {filteredStudents.length === 0 && (
-            <div className="text-center py-12 text-gray-500">
-                <p>No se encontraron estudiantes con ese criterio.</p>
+        return {
+            ...student,
+            ...riskResult, // Añade IRC, nivelRiesgo, color
+        };
+    });
+
+    return (
+        <div className="p-8">
+            <h1 className="text-3xl font-bold mb-6 text-gray-800">
+                Dashboard de Detección Universal (SDTBE)
+            </h1>
+            <p className="mb-4 text-sm text-gray-600">
+                El Índice de Riesgo Compuesto (IRC) combina factores académicos (GPA, Faltas) y clínicos (Ansiedad) para categorizar el riesgo de abandono.
+            </p>
+
+            <div className="border rounded-xl overflow-hidden shadow-lg">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Estudiante
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                GPA
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Faltas (%)
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nivel de Riesgo (IRC)
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Acción
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {studentsWithRisk.map((student) => (
+                            <tr key={student.id}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {student.name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {student.gpa.toFixed(1)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {((student.nonAttendedClasses / student.totalClasses) * 100).toFixed(0)}%
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <RiskIndicator
+                                        irc={student.IRC}
+                                        nivel={student.nivelRiesgo}
+                                        color={student.color}
+                                    />
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                    <button
+                                        onClick={() => alert(`Iniciando canalización para: ${student.name}`)}
+                                        className={`px-3 py-1 text-white text-xs font-semibold rounded ${student.color === 'red' ? 'bg-red-500 hover:bg-red-600' : student.color === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-400'}`}
+                                    >
+                                        {student.color !== 'green' ? 'Canalizar Nivel 2/3' : 'Ver Expediente'}
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
-        )}
-      </div>
-    </div>
-  );
-}
+        </div>
+    );
+};
+
+export default StudentDashboard;

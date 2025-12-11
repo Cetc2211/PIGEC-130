@@ -1,57 +1,72 @@
 /**
- * Simulación de la Función de Cálculo del Índice de Riesgo Compuesto (IRC)
- * Esta función representa la lógica de la Regresión Logística (Cap. 5.1.3)
+ * Define los coeficientes ponderados (Betas) para las variables predictoras (Xi).
+ * NOTA: Estos coeficientes son simulados y deben ajustarse con la investigación real del Cap. 5.1.1.
  */
-type RiskData = {
-    gpa: number;        // Calificación promedio, ej: 8.5
-    absences: number;   // Porcentaje de ausentismo, ej: 15 para 15%
-    gad7Score?: number; // Puntaje del GAD-7, ej: 14
+interface RiskCoefficients {
+    B0_intercepto: number;
+    B1_ausentismo: number;
+    B2_bajo_rendimiento: number;
+    B3_ansiedad_clinica: number;
+}
+
+const DEFAULT_COEFFICIENTS: RiskCoefficients = {
+    B0_intercepto: -3.0, // Base line (ajuste)
+    B1_ausentismo: 1.5, // Fuerte predictor (más peso)
+    B2_bajo_rendimiento: 1.0, // Predictor moderado
+    B3_ansiedad_clinica: 0.8, // Predictor clínico
 };
 
-// Normaliza un valor a una escala de 0 a 1.
-// Para GPA, un valor más bajo es peor. Invertimos la escala.
-const normalizeGpa = (gpa: number) => Math.max(0, 1 - ((gpa - 5) / 5)); // Asume que 5 es la peor nota (1) y 10 es la mejor (0)
-// Para ausentismo, un valor más alto es peor.
-const normalizeAbsences = (absences: number) => Math.min(1, absences / 50); // Asume que 50% de faltas es el máximo riesgo (1)
-// Para GAD-7, un valor más alto es peor.
-const normalizeGad7 = (score: number) => Math.min(1, score / 21); // 21 es el puntaje máximo
+/**
+ * Define los datos necesarios para el cálculo de riesgo.
+ * La Ansiedad (X3) se asume normalizada de 0 a 1 (0 = baja, 1 = alta).
+ */
+interface RiskData {
+    // Academic Tracker Inputs
+    ausentismo_norm: number; // X1: Porcentaje de faltas (0 a 1.0)
+    bajo_rendimiento_bin: 0 | 1; // X2: 1 si GPA < 7.0; 0 si no.
 
-export function calculateRiskIndex(data: RiskData) {
-    // Coeficientes pre-determinados (deben ajustarse según la investigación real del 5.1.1)
-    const beta0 = -3.0; // Intercepto (ajuste)
-    const beta_ausentismo = 0.35; // Peso para X1
-    const beta_rendimiento = 0.25; // Peso para X2
-    const beta_ansiedad = 0.40; // Peso para X3
-
-    // Variables de entrada normalizadas (asumiendo que los puntajes ya están de 0 a 1)
-    const X1 = normalizeAbsences(data.absences);
-    const X2 = normalizeGpa(data.gpa);
-    const X3 = data.gad7Score !== undefined ? normalizeGad7(data.gad7Score) : 0;
-
-    // Cálculo del puntaje lineal (Z)
-    const Z = beta0 + (beta_ausentismo * X1) + (beta_rendimiento * X2) + (beta_ansiedad * X3);
-
-    // Aplicación de la Ecuación Logística para obtener la Probabilidad (P)
-    // P = 1 / (1 + e^(-Z))
-    const probabilidadRiesgo = 1 / (1 + Math.exp(-Z));
-
-    // Normalizar la probabilidad a una escala de 0 a 100 para el Semáforo
-    const IRC = (probabilidadRiesgo * 100);
-
-    return {
-        IRC: parseFloat(IRC.toFixed(2)),
-        probabilidad: probabilidadRiesgo
-    };
+    // Clinical Screening Input (from MTSS Expediente)
+    ansiedad_norm: number; // X3: Puntuación normalizada de GAD-7/BAI (0 a 1.0)
 }
 
 /**
- * Devuelve el nivel de riesgo (semáforo) basado en el IRC.
- * - Verde (Bajo Riesgo): IRC < 30%
- * - Amarillo (Riesgo Medio): 30% <= IRC < 60%
- * - Rojo (Alto Riesgo): IRC >= 60%
+ * Calcula el Índice de Riesgo Compuesto (IRC) y determina el nivel de riesgo (Semáforo).
+ * @param data Datos del estudiante, ya procesados y normalizados.
+ * @returns IRC (0-100) y Nivel de Riesgo (Bajo, Medio, Alto).
  */
-export function getRiskLevel(irc: number): 'Bajo' | 'Medio' | 'Alto' {
-  if (irc >= 60) return 'Alto';
-  if (irc >= 30) return 'Medio';
-  return 'Bajo';
+export function calculateRisk(data: RiskData) {
+    const { B0_intercepto, B1_ausentismo, B2_bajo_rendimiento, B3_ansiedad_clinica } = DEFAULT_COEFFICIENTS;
+
+    // 1. Cálculo del puntaje lineal (Z)
+    const Z = B0_intercepto +
+        (B1_ausentismo * data.ausentismo_norm) +
+        (B2_bajo_rendimiento * data.bajo_rendimiento_bin) +
+        (B3_ansiedad_clinica * data.ansiedad_norm);
+
+    // 2. Aplicación de la Ecuación Logística: P = 1 / (1 + e^(-Z))
+    const probabilidadRiesgo = 1 / (1 + Math.exp(-Z));
+
+    // 3. Normalizar a porcentaje
+    const IRC = parseFloat((probabilidadRiesgo * 100).toFixed(1));
+
+    // 4. Lógica del Semáforo (Cap. 5.2.3)
+    let nivelRiesgo: 'Bajo (Verde)' | 'Medio (Amarillo)' | 'Alto (Rojo)';
+    let color: 'green' | 'yellow' | 'red';
+
+    if (IRC >= 60) {
+        nivelRiesgo = 'Alto (Rojo)';
+        color = 'red';
+    } else if (IRC >= 30) {
+        nivelRiesgo = 'Medio (Amarillo)';
+        color = 'yellow';
+    } else {
+        nivelRiesgo = 'Bajo (Verde)';
+        color = 'green';
+    }
+
+    return {
+        IRC,
+        nivelRiesgo,
+        color,
+    };
 }
