@@ -27,7 +27,8 @@ export default async function EvaluationPage({ params, searchParams }: Evaluatio
   let session = null;
   if (isRemote && sessionId) {
     session = getEvaluationSession(sessionId);
-    // If the session is invalid or doesn't match the patient, treat it as not found.
+    // CRITICAL FIX: Add a check to ensure the session object exists before trying to access its properties.
+    // If the session is not found, it's a "not found" case.
     if (!session || session.patientId !== patientId) {
       notFound();
     }
