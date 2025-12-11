@@ -54,6 +54,273 @@
       "createdAt": "2025-12-10T03:50:28.464Z"
     }
   ],
-  "assignments": [],
-  "results": []
+  "assignments": {
+    "pat-seed-1": [
+      {
+        "assignmentId": "asg-seed-1",
+        "patientId": "pat-seed-1",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2024-01-01T11:00:00.000Z"
+      }
+    ],
+    "pat-6-1765338628464": [
+      {
+        "assignmentId": "asg-1765340792954-0.3608571187537226",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:26:32.954Z"
+      },
+      {
+        "assignmentId": "asg-1765340806901-0.9575248258272366",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:26:46.901Z"
+      },
+      {
+        "assignmentId": "asg-1765340822357-0.8587222357115241",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "aq-10",
+        "assignedAt": "2025-12-10T04:27:02.357Z"
+      },
+      {
+        "assignmentId": "asg-1765342285508-0.5118202586842873",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:51:25.508Z"
+      },
+      {
+        "assignmentId": "asg-1765342285508-0.8987553786230629",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "phq-9",
+        "assignedAt": "2025-12-10T04:51:25.508Z"
+      },
+      {
+        "assignmentId": "asg-1765342285508-0.020454928364020297",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:51:25.508Z"
+      },
+      {
+        "assignmentId": "asg-1765342285508-0.8066179963473705",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "aq-10",
+        "assignedAt": "2025-12-10T04:51:25.508Z"
+      },
+      {
+        "assignmentId": "asg-1765342626071-0.29716750258740765",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:57:06.071Z"
+      },
+      {
+        "assignmentId": "asg-1765342626071-0.11329117827939972",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "phq-9",
+        "assignedAt": "2025-12-10T04:57:06.071Z"
+      },
+      {
+        "assignmentId": "asg-1765342626071-0.9347532681865118",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:57:06.071Z"
+      },
+      {
+        "assignmentId": "asg-1765342626071-0.013972037400045156",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "aq-10",
+        "assignedAt": "2025-12-10T04:57:06.071Z"
+      },
+      {
+        "assignmentId": "asg-1765342662230-0.19267541532123866",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:57:42.230Z"
+      },
+      {
+        "assignmentId": "asg-1765342662230-0.04537352166518227",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "phq-9",
+        "assignedAt": "2025-12-10T04:57:42.230Z"
+      },
+      {
+        "assignmentId": "asg-1765342662230-0.025786666358479815",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:57:42.230Z"
+      },
+      {
+        "assignmentId": "asg-1765342735503-0.07495634057989542",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T04:58:55.503Z"
+      },
+      {
+        "assignmentId": "asg-1765342735503-0.8677835524933624",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T04:58:55.503Z"
+      },
+      {
+        "assignmentId": "asg-1765342735503-0.9423225206176966",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "phq-9",
+        "assignedAt": "2025-12-10T04:58:55.503Z"
+      },
+      {
+        "assignmentId": "asg-1765346204401-0.5653743921145631",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T05:56:44.401Z"
+      },
+      {
+        "assignmentId": "asg-1765346204401-0.9417794939732156",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T05:56:44.401Z"
+      },
+      {
+        "assignmentId": "asg-1765346204401-0.8999198115288913",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "ssi",
+        "assignedAt": "2025-12-10T05:56:44.401Z"
+      },
+      {
+        "assignmentId": "asg-1765346204401-0.2661269099221486",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bdi-ii",
+        "assignedAt": "2025-12-10T05:56:44.401Z"
+      },
+      {
+        "assignmentId": "asg-1765346385604-0.4615330049260198",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T05:59:45.605Z"
+      },
+      {
+        "assignmentId": "asg-1765346385605-0.06634275488252173",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T05:59:45.605Z"
+      },
+      {
+        "assignmentId": "asg-1765346385605-0.319672714683811",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bdi-ii",
+        "assignedAt": "2025-12-10T05:59:45.605Z"
+      },
+      {
+        "assignmentId": "asg-1765346385605-0.6654785590584842",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bis-bas",
+        "assignedAt": "2025-12-10T05:59:45.605Z"
+      },
+      {
+        "assignmentId": "asg-1765349559884-0.23393418571807234",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T06:52:39.884Z"
+      },
+      {
+        "assignmentId": "asg-1765349559884-0.27170182466091974",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T06:52:39.884Z"
+      },
+      {
+        "assignmentId": "asg-1765349559884-0.0032846325668862697",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bdi-ii",
+        "assignedAt": "2025-12-10T06:52:39.884Z"
+      },
+      {
+        "assignmentId": "asg-1765349616400-0.2127114125006606",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T06:53:36.401Z"
+      },
+      {
+        "assignmentId": "asg-1765349616401-0.5930857776874425",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T06:53:36.401Z"
+      },
+      {
+        "assignmentId": "asg-1765349616401-0.04469152298508128",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bdi-ii",
+        "assignedAt": "2025-12-10T06:53:36.401Z"
+      },
+      {
+        "assignmentId": "asg-1765349710119-0.14995195939118933",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "gad-7",
+        "assignedAt": "2025-12-10T06:55:10.119Z"
+      },
+      {
+        "assignmentId": "asg-1765349710119-0.15708825799757475",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bai",
+        "assignedAt": "2025-12-10T06:55:10.119Z"
+      },
+      {
+        "assignmentId": "asg-1765349710119-0.9526356419812336",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "bdi-ii",
+        "assignedAt": "2025-12-10T06:55:10.119Z"
+      }
+    ]
+  },
+  "results": [
+    {
+      "id": "res-seed-1",
+      "patientId": "pat-seed-2",
+      "questionnaireId": "phq-9",
+      "questionnaireName": "Depresión PHQ-9",
+      "scores": {
+        "main": 12
+      },
+      "totalPossibleScores": {
+        "main": 27
+      },
+      "answers": {
+        "q1": 2,
+        "q2": 2,
+        "q3": 1,
+        "q4": 2,
+        "q5": 1,
+        "q6": 2,
+        "q7": 1,
+        "q8": 1,
+        "q9": 0
+      },
+      "submittedAt": "2024-05-10T14:30:00.000Z"
+    },
+    {
+      "questionnaireId": "phq-9",
+      "questionnaireName": "Cuestionario de Salud del Paciente (PHQ-9)",
+      "answers": {
+        "phq9_q1": 1,
+        "phq9_q2": 0,
+        "phq9_q3": 0,
+        "phq9_q4": 0,
+        "phq9_q5": 1,
+        "phq9_q6": 0,
+        "phq9_q7": 0,
+        "phq9_q8": 0,
+        "phq9_q9": 0,
+        "phq9_q10": 0
+      },
+      "scores": {
+        "main": 2,
+        "functional": 0
+      },
+      "totalPossibleScores": {
+        "main": 27,
+        "functional": 0
+      },
+      "submittedAt": "2025-12-10T04:32:51.366Z",
+      "patientId": "pat-6-1765338628464",
+      "id": "res-2-1765341171366"
+    }
+  ]
 }
