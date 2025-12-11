@@ -94,6 +94,18 @@
         "patientId": "pat-6-1765338628464",
         "questionnaireId": "ssi",
         "assignedAt": "2025-12-11T05:35:33.211Z"
+      },
+      {
+        "assignmentId": "asg-1765431429783-0.22343570759554",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "ssi",
+        "assignedAt": "2025-12-11T05:37:09.783Z"
+      },
+      {
+        "assignmentId": "asg-1765431429783-0.7035627502465958",
+        "patientId": "pat-6-1765338628464",
+        "questionnaireId": "aq-10",
+        "assignedAt": "2025-12-11T05:37:09.783Z"
       }
     ]
   },
@@ -141,6 +153,15 @@
         "ssi"
       ],
       "createdAt": "2025-12-11T05:35:33.212Z"
+    },
+    {
+      "sessionId": "session-1765431429784-svijc75",
+      "patientId": "pat-6-1765338628464",
+      "questionnaireIds": [
+        "ssi",
+        "aq-10"
+      ],
+      "createdAt": "2025-12-11T05:37:09.784Z"
     }
   ]
 }
