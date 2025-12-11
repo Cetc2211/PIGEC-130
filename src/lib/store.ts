@@ -7,6 +7,7 @@ import path from 'path';
 
 const dbPath = path.resolve(process.cwd(), 'src/lib/db.json');
 
+// This flag prevents re-seeding on every hot reload in development
 let isSeeded = false;
 
 export type EvaluationResult = {
@@ -56,20 +57,29 @@ export type Assignment = {
     assignedAt: Date | string;
 };
 
+export type EvaluationSession = {
+    sessionId: string;
+    patientId: string;
+    questionnaireIds: string[];
+    createdAt: Date;
+};
+
+
 // In-memory stores
 let patientsStore: Map<string, Patient> = new Map();
 let assignedQuestionnairesStore: Map<string, Assignment[]> = new Map();
 let resultsStore: Map<string, EvaluationResult> = new Map();
+let sessionsStore: Map<string, EvaluationSession> = new Map();
 
 // --- Data Seeding and Persistence ---
 
-function readDb(): { patients: Patient[], assignments: Record<string, Assignment[]>, results: EvaluationResult[] } {
+function readDb(): { patients: Patient[], assignments: Record<string, Assignment[]>, results: EvaluationResult[], sessions: EvaluationSession[] } {
     try {
         const fileContent = fs.readFileSync(dbPath, 'utf-8');
         return JSON.parse(fileContent);
     } catch (error) {
         console.error("Error reading db.json, returning empty state:", error);
-        return { patients: [], assignments: {}, results: [] };
+        return { patients: [], assignments: {}, results: [], sessions: [] };
     }
 }
 
@@ -79,6 +89,7 @@ function writeDb() {
             patients: Array.from(patientsStore.values()),
             assignments: Object.fromEntries(assignedQuestionnairesStore.entries()),
             results: Array.from(resultsStore.values()),
+            sessions: Array.from(sessionsStore.values()),
         };
         fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
     } catch (error) {
@@ -96,26 +107,38 @@ function seedData() {
     patientsStore.clear();
     assignedQuestionnairesStore.clear();
     resultsStore.clear();
+    sessionsStore.clear();
 
-    initialDb.patients.forEach((p: any) => patientsStore.set(p.id, {
+    initialDb.patients?.forEach((p: any) => patientsStore.set(p.id, {
         ...p,
         createdAt: new Date(p.createdAt)
     }));
     
-    Object.entries(initialDb.assignments).forEach(([patientId, assignments]: [string, any]) => {
-        const assignmentsWithDates = assignments.map((a: any) => ({
-            ...a,
-            assignedAt: new Date(a.assignedAt),
-        }));
-        assignedQuestionnairesStore.set(patientId, assignmentsWithDates);
-    });
+    if (initialDb.assignments) {
+      Object.entries(initialDb.assignments).forEach(([patientId, assignments]: [string, any]) => {
+          const assignmentsWithDates = assignments.map((a: any) => ({
+              ...a,
+              assignedAt: new Date(a.assignedAt),
+          }));
+          assignedQuestionnairesStore.set(patientId, assignmentsWithDates);
+      });
+    }
 
-    initialDb.results.forEach((r: any) => {
+
+    initialDb.results?.forEach((r: any) => {
          resultsStore.set(r.id, {
             ...r,
             submittedAt: new Date(r.submittedAt),
         })
     });
+
+    initialDb.sessions?.forEach((s: any) => {
+      sessionsStore.set(s.sessionId, {
+        ...s,
+        createdAt: new Date(s.createdAt)
+      });
+    });
+
     isSeeded = true;
 }
 
@@ -253,3 +276,23 @@ export const getAllAssignedQuestionnaires = (): Assignment[] => {
     seedData();
     return Array.from(assignedQuestionnairesStore.values()).flat();
 };
+
+// Session functions
+export function createEvaluationSession(patientId: string, questionnaireIds: string[]): EvaluationSession {
+  seedData();
+  const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  const newSession: EvaluationSession = {
+    sessionId,
+    patientId,
+    questionnaireIds,
+    createdAt: new Date(),
+  };
+  sessionsStore.set(sessionId, newSession);
+  writeDb();
+  return newSession;
+}
+
+export function getEvaluationSession(sessionId: string): EvaluationSession | undefined {
+  seedData();
+  return sessionsStore.get(sessionId);
+}

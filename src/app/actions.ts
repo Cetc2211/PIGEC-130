@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { getQuestionnaire, saveCustomQuestionnaire, Question } from '@/lib/data';
-import { savePatient, saveResult, savePatientsBatch, assignQuestionnairesToPatient, updatePatient, deleteAssignment, getPatient } from '@/lib/store';
+import { savePatient, saveResult, savePatientsBatch, assignQuestionnairesToPatient, updatePatient, deleteAssignment, getPatient, createEvaluationSession } from '@/lib/store';
 import { generateEvaluationReport } from '@/ai/flows/generate-evaluation-report';
 import { revalidatePath } from 'next/cache';
 import { createQuestionnaireFromPdf } from '@/ai/flows/create-questionnaire-from-pdf';
@@ -21,6 +21,7 @@ export async function submitEvaluation(
   questionnaireId: string,
   patientId: string | null,
   isRemote: boolean,
+  sessionId: string | null,
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
@@ -123,27 +124,29 @@ export async function submitEvaluation(
       submittedAt: new Date(),
   };
 
-  if (isRemote) {
+  if (isRemote && patientId && sessionId) {
     const allResults = prevResults ? JSON.parse(prevResults) : [];
     allResults.push(currentResult);
     
-    // Check for more pending assignments for this patient
-    const { getAssignedQuestionnairesForPatient } = await import('@/lib/store');
-    const allAssignments = getAssignedQuestionnairesForPatient(patientId!);
+    const { getEvaluationSession } = await import('@/lib/store');
+    const session = getEvaluationSession(sessionId);
+    if (!session) {
+      return { message: 'Error: Sesión de evaluación no válida.' };
+    }
+    
     const completedQuestionnaireIds = allResults.map((r: any) => r.questionnaireId);
-    const nextAssignment = allAssignments.find(
-      (a) => !completedQuestionnaireIds.includes(a.questionnaireId)
+    const nextQuestionnaireId = session.questionnaireIds.find(
+      (id) => !completedQuestionnaireIds.includes(id)
     );
 
-    if (nextAssignment) {
-      // If there's another test, redirect to it, passing along the accumulated results
-      const nextUrl = `/evaluation/${nextAssignment.questionnaireId}?patient=${patientId}&remote=true&intermediateResults=${encodeURIComponent(JSON.stringify(allResults))}`;
+    if (nextQuestionnaireId) {
+      const nextUrl = `/evaluation/${nextQuestionnaireId}?patient=${patientId}&remote=true&session=${sessionId}&intermediateResults=${encodeURIComponent(JSON.stringify(allResults))}`;
       redirect(nextUrl);
     } else {
-      // All tests are done, generate the final code
       const finalPayload = {
         patientId,
         results: allResults,
+        sessionId,
       };
       const resultCode = Buffer.from(JSON.stringify(finalPayload)).toString('base64');
       redirect(`/evaluation/submitted?code=${encodeURIComponent(resultCode)}`);
@@ -456,16 +459,19 @@ export async function assignQuestionnairesAction(
       return { success: false, message: "Paciente no encontrado." };
     }
 
-    const newAssignments = assignQuestionnairesToPatient(patientId, questionnaireIds);
+    // This still creates individual assignments, which is good for history.
+    assignQuestionnairesToPatient(patientId, questionnaireIds);
     revalidatePath('/patients');
     revalidatePath(`/patients/${patientId}`);
 
-    const firstQuestionnaireId = newAssignments[0].questionnaireId;
-    const evaluationUrl = `${baseUrl}/evaluation/${firstQuestionnaireId}?remote=true&patient=${patientId}`;
+    // Create a new evaluation session for this specific batch.
+    const session = createEvaluationSession(patientId, questionnaireIds);
+
+    const evaluationUrl = `${baseUrl}/evaluation/start?session=${session.sessionId}`;
 
     return {
       success: true,
-      message: 'Cuestionarios asignados con éxito.',
+      message: 'Cuestionarios asignados con éxito. Copia el enlace para el paciente.',
       evaluationUrl: evaluationUrl,
       patientPhone: patient.mobilePhone,
       patientName: patient.name,

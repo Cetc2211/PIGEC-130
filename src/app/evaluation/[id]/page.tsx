@@ -3,7 +3,7 @@ import { getQuestionnaire } from "@/lib/data";
 import { QuestionnaireForm } from "@/components/questionnaire-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
-import { getAssignedQuestionnairesForPatient } from "@/lib/store";
+import { getEvaluationSession } from "@/lib/store";
 import { Suspense } from "react";
 
 type EvaluationPageProps = {
@@ -13,6 +13,7 @@ type EvaluationPageProps = {
   searchParams?: {
     patient?: string;
     remote?: string;
+    session?: string;
     // For chained evaluations
     intermediateResults?: string;
   };
@@ -22,6 +23,7 @@ function EvaluationPageContent({ params, searchParams }: EvaluationPageProps) {
   const questionnaire = getQuestionnaire(params.id);
   const patientId = searchParams?.patient;
   const isRemote = searchParams?.remote === 'true';
+  const sessionId = searchParams?.session;
   const intermediateResults = searchParams?.intermediateResults;
 
   if (!questionnaire) {
@@ -29,24 +31,30 @@ function EvaluationPageContent({ params, searchParams }: EvaluationPageProps) {
   }
   
   // If this is a remote evaluation for a patient, figure out the correct test sequence.
-  if (isRemote && patientId) {
-    const assignments = getAssignedQuestionnairesForPatient(patientId);
-    if (assignments.length > 0) {
-      // Determine which questionnaires are already completed from intermediateResults
-      const completedQuestionnaireIds = intermediateResults 
-        ? JSON.parse(intermediateResults).map((r: any) => r.questionnaireId)
-        : [];
-      
-      // Find the first assignment that is NOT in the completed list
-      const nextAssignment = assignments.find(
-        (a) => !completedQuestionnaireIds.includes(a.questionnaireId)
-      );
+  if (isRemote && patientId && sessionId) {
+    const session = getEvaluationSession(sessionId);
 
-      if (nextAssignment && nextAssignment.questionnaireId !== params.id) {
-         // If there is a next assignment and we are not already on its page, redirect.
-         const nextUrl = `/evaluation/${nextAssignment.questionnaireId}?patient=${patientId}&remote=true${intermediateResults ? `&intermediateResults=${intermediateResults}` : ''}`;
-         redirect(nextUrl);
-      }
+    // If the session is invalid or doesn't belong to the patient, it's an error.
+    if (!session || session.patientId !== patientId) {
+      // Or show an error page
+      notFound();
+    }
+    
+    // Determine which questionnaires are already completed from intermediateResults
+    const completedQuestionnaireIds = intermediateResults 
+      ? JSON.parse(intermediateResults).map((r: any) => r.questionnaireId)
+      : [];
+    
+    // Find the first questionnaire in the session's list that is NOT completed
+    const nextQuestionnaireId = session.questionnaireIds.find(
+      (id) => !completedQuestionnaireIds.includes(id)
+    );
+
+    // If the next test is not the current one, redirect to the correct one.
+    // This handles cases where user navigates back/forward or re-opens a link for an old test in the sequence.
+    if (nextQuestionnaireId && nextQuestionnaireId !== params.id) {
+       const nextUrl = `/evaluation/${nextQuestionnaireId}?patient=${patientId}&remote=true&session=${sessionId}${intermediateResults ? `&intermediateResults=${intermediateResults}` : ''}`;
+       redirect(nextUrl);
     }
   }
 
@@ -66,6 +74,7 @@ function EvaluationPageContent({ params, searchParams }: EvaluationPageProps) {
               questionnaire={questionnaire} 
               patientId={patientId} 
               isRemote={isRemote}
+              sessionId={sessionId}
               intermediateResults={intermediateResults}
             />
           </CardContent>

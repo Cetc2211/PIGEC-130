@@ -18,6 +18,7 @@ type QuestionnaireFormProps = {
   questionnaire: Questionnaire;
   patientId?: string;
   isRemote?: boolean;
+  sessionId?: string;
   intermediateResults?: string;
 };
 
@@ -72,8 +73,8 @@ function QuestionField({ question, options, error }: { question: Question, optio
     )
 }
 
-export function QuestionnaireForm({ questionnaire, patientId, isRemote = false, intermediateResults }: QuestionnaireFormProps) {
-  const submitEvaluationWithContext = submitEvaluation.bind(null, questionnaire.id, patientId || null, isRemote);
+export function QuestionnaireForm({ questionnaire, patientId, isRemote = false, sessionId, intermediateResults }: QuestionnaireFormProps) {
+  const submitEvaluationWithContext = submitEvaluation.bind(null, questionnaire.id, patientId || null, isRemote, sessionId || null);
   const [state, formAction] = useActionState(submitEvaluationWithContext, { message: '', intermediateResults });
   const { toast } = useToast();
 
