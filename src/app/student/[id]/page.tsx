@@ -1,6 +1,7 @@
 import { Header } from "@/components/header";
 import ClinicalAssessmentForm from "@/components/clinical-assessment-form";
 import FunctionalAnalysisForm from "@/components/functional-analysis-form";
+import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
 
 
 // --- ESTRUCTURA DE DATOS DE EJEMPLO SIMULANDO LA INTEGRACIÓN ---
@@ -57,6 +58,9 @@ export default function StudentFilePage({ params }: { params: { id: string } }) 
 
                         {/* Módulo 2.3: Análisis Funcional (AF) y Formulación */}
                         <FunctionalAnalysisForm studentName={student.name} />
+
+                        {/* Módulo 3: Generador de Plan de Tratamiento */}
+                        <TreatmentPlanGenerator studentName={student.name} />
                     </div>
                 </div>
             </main>
