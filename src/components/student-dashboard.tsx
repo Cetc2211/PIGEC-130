@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { FileText, User, ChevronDown, ChevronUp } from 'lucide-react';
 import type { StudentWithRisk } from '@/lib/store';
+import { getRiskLevel } from '@/lib/risk-analysis';
 
 function RiskIndicator({ level }: { level: 'Bajo' | 'Medio' | 'Alto' }) {
   const levelMap = {
@@ -23,11 +24,6 @@ function RiskIndicator({ level }: { level: 'Bajo' | 'Medio' | 'Alto' }) {
   );
 }
 
-function getRiskLevel(irc: number): 'Bajo' | 'Medio' | 'Alto' {
-  if (irc >= 75) return 'Alto';
-  if (irc >= 40) return 'Medio';
-  return 'Bajo';
-}
 
 export function StudentDashboard({ students }: { students: StudentWithRisk[] }) {
   const [searchTerm, setSearchTerm] = useState('');

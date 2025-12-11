@@ -43,3 +43,15 @@ export function calculateRiskIndex(data: RiskData) {
         probabilidad: probabilidadRiesgo
     };
 }
+
+/**
+ * Devuelve el nivel de riesgo (semáforo) basado en el IRC.
+ * - Verde (Bajo Riesgo): IRC < 30%
+ * - Amarillo (Riesgo Medio): 30% <= IRC < 60%
+ * - Rojo (Alto Riesgo): IRC >= 60%
+ */
+export function getRiskLevel(irc: number): 'Bajo' | 'Medio' | 'Alto' {
+  if (irc >= 60) return 'Alto';
+  if (irc >= 30) return 'Medio';
+  return 'Bajo';
+}
