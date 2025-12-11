@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
-import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { Logo } from "@/components/logo";
-import { SidebarNav } from "@/components/sidebar-nav";
 
 export const metadata: Metadata = {
-  title: "EscalaWeb",
-  description: "Plataforma moderna de evaluación psicológica",
+  title: "Suite Integral - Sistema de Soporte a la Decisión",
+  description: "Plataforma para el análisis de riesgo y gestión de expedientes del protocolo MTSS-CBTA 130.",
 };
 
 export default function RootLayout({
@@ -17,26 +13,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <head>
+       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased">
-        <SidebarProvider>
-          <Sidebar>
-            <SidebarHeader>
-              <Logo />
-            </SidebarHeader>
-            <SidebarContent>
-              <SidebarNav />
-            </SidebarContent>
-          </Sidebar>
-          <SidebarInset>
-            {children}
-          </SidebarInset>
-        </SidebarProvider>
-        <Toaster />
+      <body className="font-sans bg-gray-50 text-gray-900">
+        {children}
       </body>
     </html>
   );

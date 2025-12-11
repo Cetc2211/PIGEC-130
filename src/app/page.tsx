@@ -1,43 +1,37 @@
-import { QuestionnaireList } from "@/components/questionnaire-list";
-import { getAllQuestionnaires, Questionnaire } from "@/lib/data";
-import { getAllPatients } from "@/lib/store";
-import { SidebarTriggerButton } from "@/components/sidebar-trigger-button";
+import { Header } from '@/components/header';
+import { StudentDashboard } from '@/components/student-dashboard';
+import { getStudents, getEvaluations } from '@/lib/store';
+import { calculateRiskIndex } from '@/lib/risk-analysis';
 
 export default function DashboardPage() {
-  const questionnaires = getAllQuestionnaires();
-  const patients = getAllPatients();
+  const students = getStudents();
+  const evaluations = getEvaluations();
 
-  const groupedQuestionnaires = questionnaires.reduce((acc, q) => {
-    const category = q.category || "Sin Categoría";
-    const subcategory = q.subcategory || "General";
-    
-    if (!acc[category]) {
-      acc[category] = {};
-    }
-    if (!acc[category][subcategory]) {
-      acc[category][subcategory] = [];
-    }
-    acc[category][subcategory].push(q);
-    
-    return acc;
-  }, {} as Record<string, Record<string, Questionnaire[]>>);
+  const studentsWithRisk = students.map(student => {
+    const studentEvaluations = evaluations.filter(e => e.studentId === student.id);
+    const latestGpa = student.academicData.gpa;
+    const latestAbsences = student.academicData.absences;
+    const latestGad7 = studentEvaluations.find(e => e.type === 'GAD-7')?.score;
 
+    const riskData = {
+      gpa: latestGpa,
+      absences: latestAbsences,
+      gad7Score: latestGad7
+    };
+
+    const riskIndex = calculateRiskIndex(riskData);
+
+    return {
+      ...student,
+      riskIndex: riskIndex.IRC
+    };
+  });
 
   return (
-    <div className="flex flex-col h-full">
-      <header className="p-4 sm:p-6 border-b flex items-center gap-4">
-        <SidebarTriggerButton />
-        <div>
-          <h1 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight">
-            Biblioteca de Evaluaciones
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Explora, asigna y selecciona las pruebas psicológicas para tus pacientes.
-          </p>
-        </div>
-      </header>
-      <main className="flex-1 overflow-auto p-4 sm:p-6">
-        <QuestionnaireList groupedQuestionnaires={groupedQuestionnaires} patients={patients} />
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        <StudentDashboard students={studentsWithRisk} />
       </main>
     </div>
   );
