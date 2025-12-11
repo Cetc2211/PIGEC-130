@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Link from 'next/link';
 import { calculateRisk } from '../lib/risk-analysis';
 import RiskIndicator from './RiskIndicator';
 
@@ -96,12 +97,13 @@ const StudentDashboard: React.FC = () => {
                                     />
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <button
-                                        onClick={() => alert(`Iniciando canalización para: ${student.name}`)}
-                                        className={`px-3 py-1 text-white text-xs font-semibold rounded ${student.color === 'red' ? 'bg-red-500 hover:bg-red-600' : student.color === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-400'}`}
-                                    >
-                                        {student.color !== 'green' ? 'Canalizar Nivel 2/3' : 'Ver Expediente'}
-                                    </button>
+                                    <Link href={`/student/${student.id}`} passHref>
+                                        <button
+                                            className={`px-3 py-1 text-white text-xs font-semibold rounded ${student.color === 'red' ? 'bg-red-500 hover:bg-red-600' : student.color === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-400 hover:bg-gray-500'}`}
+                                        >
+                                            {student.color !== 'green' ? 'Canalizar Nivel 2/3' : 'Ver Expediente'}
+                                        </button>
+                                    </Link>
                                 </td>
                             </tr>
                         ))}
