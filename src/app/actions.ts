@@ -439,7 +439,7 @@ export async function assignQuestionnairesAction(
   patientId: string,
   questionnaireIds: string[],
   baseUrl: string
-) {
+): Promise<AssignQuestionnaireState> {
   try {
     const data = { patientId, questionnaireIds, baseUrl };
     const parsed = assignSchema.safeParse(data);
@@ -749,3 +749,5 @@ export async function deleteAssignmentAction(
     };
   }
 }
+
+    

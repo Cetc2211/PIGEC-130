@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, MessageCircle, CheckSquare, Square } from 'lucide-react';
+import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, MessageCircle, CheckSquare, Square, Copy, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import type { Patient } from '@/lib/store';
@@ -28,6 +28,9 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [selectedQuestionnaires, setSelectedQuestionnaires] = useState<Set<string>>(new Set());
 
+    const [assignmentResult, setAssignmentResult] = useState<{ url: string; patientName: string } | null>(null);
+    const [isCopied, setIsCopied] = useState(false);
+
     const filteredPatients = useMemo(() => {
         if (!searchTerm) return patients;
         return patients.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -45,7 +48,7 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
         });
     };
 
-    const handleSubmitAndShare = async () => {
+    const handleAssign = () => {
         if (!selectedPatient || selectedQuestionnaires.size === 0) {
           toast({ title: 'Error', description: 'Selecciona un paciente y al menos un cuestionario.', variant: 'destructive' });
           return;
@@ -59,21 +62,11 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
             );
         
             if (result.success && result.evaluationUrl) {
-                if (result.patientPhone) {
-                    const message = `Hola ${result.patientName?.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${result.evaluationUrl}`;
-                    const whatsappUrl = `https://wa.me/${result.patientPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappUrl, '_blank');
-                    toast({
-                        title: "Abriendo WhatsApp...",
-                        description: `Se está abriendo una conversación con ${result.patientName}.`,
-                    });
-                } else {
-                     toast({
-                        title: "Asignación Exitosa",
-                        description: "Las pruebas se asignaron. No se encontró un número para enviar por WhatsApp.",
-                    });
-                }
-                onClose();
+                setAssignmentResult({ url: result.evaluationUrl, patientName: result.patientName || 'el paciente' });
+                toast({
+                    title: "Asignación Exitosa",
+                    description: `Las pruebas se asignaron a ${result.patientName}. Ahora puedes copiar el enlace.`,
+                });
             } else {
                 toast({
                     title: "Error al Asignar",
@@ -83,14 +76,50 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
             }
         });
     };
+    
+    const handleCopy = () => {
+        if (!assignmentResult) return;
+        navigator.clipboard.writeText(assignmentResult.url).then(() => {
+            setIsCopied(true);
+            toast({ title: "¡Enlace Copiado!"});
+            setTimeout(() => setIsCopied(false), 2000);
+        }).catch(err => {
+            toast({ title: "Error al copiar", description: "No se pudo copiar el enlace.", variant: "destructive" });
+        });
+    };
+
+    if (assignmentResult) {
+        return (
+             <Dialog open={true} onOpenChange={onClose}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl">¡Asignación Creada!</DialogTitle>
+                        <DialogDescription>
+                            El enlace para que {assignmentResult.patientName} complete las pruebas ha sido generado. Cópialo y envíalo manualmente.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="my-4 space-y-2">
+                        <Input readOnly value={assignmentResult.url} className="font-mono text-sm" />
+                        <Button onClick={handleCopy} className="w-full">
+                            {isCopied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                            {isCopied ? 'Copiado' : 'Copiar Enlace'}
+                        </Button>
+                    </div>
+                     <DialogFooter>
+                        <Button onClick={onClose}>Cerrar</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        )
+    }
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle className="font-headline">Asignar y/o Compartir Evaluaciones</DialogTitle>
+                    <DialogTitle className="font-headline">Asignar Evaluaciones</DialogTitle>
                     <DialogDescription>
-                        Selecciona las pruebas, busca y elige un paciente para asignar las pruebas a su expediente o compartir un enlace remoto.
+                        Selecciona las pruebas y el paciente para generar un enlace de evaluación remota.
                     </DialogDescription>
                 </DialogHeader>
                 
@@ -159,9 +188,9 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
                 
                 <DialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
-                    <Button type="button" onClick={handleSubmitAndShare} disabled={!selectedPatient || selectedQuestionnaires.size === 0 || isPending}>
-                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageCircle className="mr-2 h-4 w-4" />}
-                        Asignar y Enviar por WhatsApp
+                    <Button type="button" onClick={handleAssign} disabled={!selectedPatient || selectedQuestionnaires.size === 0 || isPending}>
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                        Asignar y Generar Enlace
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -269,3 +298,5 @@ export function QuestionnaireList({ groupedQuestionnaires, patients }: Questionn
     </>
   );
 }
+
+    
