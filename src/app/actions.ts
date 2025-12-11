@@ -425,6 +425,8 @@ export type AssignQuestionnaireState = {
   success: boolean;
   message: string;
   evaluationUrl?: string;
+  patientPhone?: string | null;
+  patientName?: string;
 };
 
 const assignSchema = z.object({
@@ -434,16 +436,12 @@ const assignSchema = z.object({
 });
 
 export async function assignQuestionnairesAction(
-  prevState: AssignQuestionnaireState,
-  formData: FormData
-): Promise<AssignQuestionnaireState> {
+  patientId: string,
+  questionnaireIds: string[],
+  baseUrl: string
+) {
   try {
-    const data = {
-      patientId: formData.get('patientId'),
-      questionnaireIds: formData.getAll('questionnaireIds'),
-      baseUrl: formData.get('baseUrl'),
-    };
-    
+    const data = { patientId, questionnaireIds, baseUrl };
     const parsed = assignSchema.safeParse(data);
 
     if (!parsed.success) {
@@ -453,7 +451,10 @@ export async function assignQuestionnairesAction(
       };
     }
 
-    const { patientId, questionnaireIds, baseUrl } = parsed.data;
+    const patient = getPatient(patientId);
+    if (!patient) {
+      return { success: false, message: "Paciente no encontrado." };
+    }
 
     const newAssignments = assignQuestionnairesToPatient(patientId, questionnaireIds);
     revalidatePath('/patients');
@@ -466,6 +467,8 @@ export async function assignQuestionnairesAction(
       success: true,
       message: 'Cuestionarios asignados con éxito.',
       evaluationUrl: evaluationUrl,
+      patientPhone: patient.mobilePhone,
+      patientName: patient.name,
     };
   } catch (error: any) {
     return {

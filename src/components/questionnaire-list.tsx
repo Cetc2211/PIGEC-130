@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, Link as LinkIcon, CheckSquare, Square } from 'lucide-react';
+import { Eye, Folder, FolderOpen, Plus, Search, User, Loader2, MessageCircle, CheckSquare, Square } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import type { Patient } from '@/lib/store';
@@ -52,28 +52,25 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
         };
         
         startTransition(async () => {
-            const formData = new FormData();
-            formData.append('patientId', selectedPatient.id);
-            selectedQuestionnaires.forEach(id => formData.append('questionnaireIds', id));
-            formData.append('baseUrl', window.location.origin);
-            
-            const result = await assignQuestionnairesAction({ success: false, message: '' }, formData);
+            const result = await assignQuestionnairesAction(
+              selectedPatient.id, 
+              Array.from(selectedQuestionnaires), 
+              window.location.origin
+            );
         
             if (result.success && result.evaluationUrl) {
-                const patientPhone = selectedPatient.mobilePhone;
-                const message = `Hola ${selectedPatient.name.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${result.evaluationUrl}`;
-                
-                if (patientPhone) {
-                    const whatsappUrl = `https://wa.me/${patientPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+                if (result.patientPhone) {
+                    const message = `Hola ${result.patientName?.split(' ')[0]}, por favor completa la siguiente evaluación psicológica: ${result.evaluationUrl}`;
+                    const whatsappUrl = `https://wa.me/${result.patientPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
                     window.open(whatsappUrl, '_blank');
                     toast({
                         title: "Abriendo WhatsApp...",
-                        description: `Se está abriendo una conversación con ${selectedPatient.name}.`,
+                        description: `Se está abriendo una conversación con ${result.patientName}.`,
                     });
                 } else {
                      toast({
                         title: "Asignación Exitosa",
-                        description: "Las pruebas se asignaron. No se encontró un número para enviar por WhatsApp. Copia el enlace manualmente si es necesario.",
+                        description: "Las pruebas se asignaron. No se encontró un número para enviar por WhatsApp.",
                     });
                 }
                 onClose();
@@ -163,7 +160,7 @@ function AssignEvaluationDialog({ questionnaires, patients, onClose }: AssignEva
                 <DialogFooter className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
                     <Button type="button" onClick={handleSubmitAndShare} disabled={!selectedPatient || selectedQuestionnaires.size === 0 || isPending}>
-                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LinkIcon className="mr-2 h-4 w-4" />}
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageCircle className="mr-2 h-4 w-4" />}
                         Asignar y Enviar por WhatsApp
                     </Button>
                 </DialogFooter>

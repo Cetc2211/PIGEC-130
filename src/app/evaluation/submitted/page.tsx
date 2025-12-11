@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, Copy } from 'lucide-react';
+import { CheckCircle, Copy, MessageCircle } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
 function SubmittedContent() {
@@ -14,16 +14,29 @@ function SubmittedContent() {
   const code = searchParams.get('code');
   const { toast } = useToast();
 
-  const handleCopy = () => {
-    if (code) {
-      navigator.clipboard.writeText(code);
+  const handleCopyAndSend = async () => {
+    if (!code) return;
+
+    try {
+      await navigator.clipboard.writeText(code);
       toast({
         title: '¡Código Copiado!',
         description: 'El código de resultados ha sido copiado a tu portapapeles.',
       });
-      const whatsappMessage = `Hola, te envío mi código de resultados de la evaluación. Por favor, pégalo en mi expediente:\n\n(Pega el código aquí)`;
+
+      const whatsappMessage = `Hola, te envío mi código de resultados de la evaluación. Por favor, pégalo en mi expediente:\n\n${code}`;
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
+      
+      // Abrir WhatsApp en una nueva pestaña
       window.open(whatsappUrl, '_blank');
+
+    } catch (err) {
+      console.error('Error al copiar o abrir WhatsApp:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo copiar el código o abrir WhatsApp. Por favor, copia el código manualmente.',
+      });
     }
   };
 
@@ -55,9 +68,9 @@ function SubmittedContent() {
         </p>
       </div>
       
-      <Button onClick={handleCopy} className="w-full">
-        <Copy className="mr-2 h-4 w-4" />
-        Copiar Código y Enviar por WhatsApp
+      <Button onClick={handleCopyAndSend} className="w-full">
+        <MessageCircle className="mr-2 h-4 w-4" />
+        Enviar Código por WhatsApp
       </Button>
     </>
   );
