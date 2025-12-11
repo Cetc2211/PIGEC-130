@@ -2,6 +2,7 @@ import { Header } from "@/components/header";
 import ClinicalAssessmentForm from "@/components/clinical-assessment-form";
 import FunctionalAnalysisForm from "@/components/functional-analysis-form";
 import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
+import ProgressTracker from "@/components/progress-tracker";
 
 
 // --- ESTRUCTURA DE DATOS DE EJEMPLO SIMULANDO LA INTEGRACIÓN ---
@@ -61,6 +62,9 @@ export default function StudentFilePage({ params }: { params: { id: string } }) 
 
                         {/* Módulo 3: Generador de Plan de Tratamiento */}
                         <TreatmentPlanGenerator studentName={student.name} />
+
+                        {/* Módulo 4: Seguimiento y Trazabilidad del Progreso */}
+                        <ProgressTracker />
                     </div>
                 </div>
             </main>
