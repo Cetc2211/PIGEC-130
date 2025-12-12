@@ -30,34 +30,24 @@ export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalys
         setFormData(prev => ({ ...prev, consequence: value }));
     };
 
-    const handleGenerateHypothesis = (event: React.FormEvent) => {
+    const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
 
-        // Simulación del prompt de IA. En una aplicación real, esto sería una llamada a la API.
-        const promptData = {
-            student_name: studentName,
-            conducta_problema: formData.behavior,
-            antecedente_principal: formData.antecedent,
-            funcion_mantenimiento: formData.consequence,
-            creencia_esquema: formData.cognitiveSchema,
-            irc_score: 65, // Dato simulado para el ejemplo
+        const analysisData = {
+            studentId: 'S001', // ID de estudiante (debe ser dinámico en una app real)
+            session_number: 1, // Número de sesión (debe ser dinámico)
+            fecha_sesion: new Date().toISOString(),
+            analisis_funcional: {
+                antecedente_principal: formData.antecedent,
+                conducta_problema: formData.behavior,
+                funcion_mantenimiento: formData.consequence,
+                creencia_esquema: formData.cognitiveSchema,
+            }
         };
 
-        const hypothesisText = `
-            DATOS ENVIADOS AL MOTOR DE IA PARA GENERAR HIPÓTESIS:
-            ----------------------------------------------------
-            Estudiante: ${promptData.student_name}
-            Conducta Problema (B): ${promptData.conducta_problema}
-            Antecedente (A): ${promptData.antecedente_principal}
-            Función (C): ${promptData.funcion_mantenimiento}
-            Creencia Clave: ${promptData.creencia_esquema}
-            IRC: ${promptData.irc_score}%
-            ----------------------------------------------------
-            (Simulación Exitosa)
-        `;
-
-        alert("Hipótesis Funcional generada (simulación). Revisa la consola para ver los datos enviados.");
-        console.log(hypothesisText);
+        // Simulación de llamada a saveFunctionalAnalysis(analysisData)
+        console.log("Guardando en 'session_data':", analysisData);
+        alert("Análisis Funcional guardado (simulación). Revisa la consola para ver los datos enviados.");
     };
 
     return (
@@ -69,7 +59,7 @@ export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalys
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleGenerateHypothesis} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-8">
                     {/* SECCIÓN I: MAPEO DE CONTINGENCIAS A-B-C */}
                     <div>
                         <h3 className="text-lg font-semibold text-gray-700 mb-4">I. Mapeo de Contingencias (A-B-C)</h3>
@@ -117,7 +107,7 @@ export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalys
                     
                     <div className="flex justify-end pt-4">
                         <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                           Generar Hipótesis Funcional
+                           Guardar Análisis Funcional
                         </Button>
                     </div>
                 </form>

@@ -9,12 +9,24 @@ export default function ClinicalAssessmentForm() {
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        // Lógica para guardar los datos en la base de datos
-        // Por ahora, solo mostramos una alerta
-        alert("Perfil Clínico actualizado (simulación). Los datos se han guardado en la consola.");
+        
         const formData = new FormData(event.currentTarget);
-        const data = Object.fromEntries(formData.entries());
-        console.log("Datos del formulario:", data);
+        const data = {
+            studentId: 'S001', // ID de estudiante (debe ser dinámico en una app real)
+            fecha_evaluacion: new Date().toISOString(),
+            bdi_ii_score: Number(formData.get('bdi_score')),
+            bai_score: Number(formData.get('bai_score')),
+            ssi_score: Number(formData.get('ssi_score')),
+            neuro_mt_score: Number(formData.get('mt_index')),
+            neuro_as_score: Number(formData.get('as_index')),
+            neuro_vp_score: Number(formData.get('vp_index')),
+            assist_result: formData.get('assist_result'),
+            self_harm_score: Number(formData.get('self_harm_score')),
+        };
+
+        // Simulación de llamada a saveClinicalAssessment(data)
+        console.log("Guardando en 'clinical_assessments':", data);
+        alert("Perfil Clínico actualizado (simulación). Los datos se han guardado en la consola.");
     };
 
     return (
@@ -86,7 +98,7 @@ export default function ClinicalAssessmentForm() {
 
                     <div className="flex justify-end pt-4">
                         <Button type="submit" className="bg-pink-600 hover:bg-pink-700 text-white font-bold">
-                            Actualizar Perfil Clínico
+                            Guardar Evaluación Clínica
                         </Button>
                     </div>
                 </form>

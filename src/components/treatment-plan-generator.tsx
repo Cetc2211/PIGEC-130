@@ -17,7 +17,6 @@ export default function TreatmentPlanGenerator({ studentName }: TreatmentPlanGen
     const handleGeneratePlan = async () => {
         setIsLoading(true);
         // Simulación de llamada a la API del Motor IA
-        // En una implementación real, aquí se haría una petición a /generate-clinical-plan
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         const generatedPlan = `
@@ -39,8 +38,14 @@ El progreso será monitoreado semanalmente, evaluando el cumplimiento de las met
     };
 
     const handleSavePlan = () => {
-        // Simulación de guardado en la base de datos
-        console.log("Plan guardado en el expediente:", plan);
+        const planData = {
+            studentId: 'S001', // ID de estudiante (debe ser dinámico)
+            plan_narrativo_final: plan,
+            fecha_aprobacion: new Date().toISOString(),
+        };
+
+        // Simulación de actualización de documento en 'session_data'
+        console.log("Guardando en 'session_data' (actualización):", planData);
         alert("Plan de Tratamiento guardado con éxito en el expediente del estudiante (simulación).");
     };
 

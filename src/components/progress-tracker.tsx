@@ -38,12 +38,25 @@ export default function ProgressTracker() {
     const [newAchievement, setNewAchievement] = useState([5]);
 
     const handleAddProgress = () => {
+        const newWeekNumber = progress.length + 1;
         const newWeekData = {
-            week: progress.length + 1,
+            week: newWeekNumber,
             suicidalIdeation: newIdeation[0],
             suds: newSuds[0],
             taskAchievement: newAchievement[0],
         };
+
+        const progressDataToSave = {
+            studentId: 'S001', // ID de estudiante (debe ser dinámico)
+            semana_numero: newWeekNumber,
+            fecha_registro: new Date().toISOString(),
+            ideacion_suicida_score: newIdeation[0],
+            suds_score: newSuds[0],
+            logro_tarea_score: newAchievement[0],
+        };
+
+        // Simulación de llamada a saveProgressTracking(progressDataToSave)
+        console.log("Guardando en 'progress_tracking':", progressDataToSave);
         setProgress([...progress, newWeekData]);
         alert("Progreso semanal guardado con éxito (simulación).");
     };
