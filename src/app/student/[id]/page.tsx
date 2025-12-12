@@ -42,14 +42,16 @@ function CrisisManagementActions({ studentName, riskLevel }: { studentName: stri
                             Activar Plan de Seguridad
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
+                    <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
                         <DialogHeader>
                           <DialogTitle>Módulo de Plan de Seguridad y Crisis</DialogTitle>
                           <DialogDescription>
                             Herramienta para el manejo activo del riesgo suicida y de autolesiones (Cap. 11.2).
                           </DialogDescription>
                         </DialogHeader>
-                        <SafetyPlan studentName={studentName} />
+                        <div className="flex-grow overflow-y-auto">
+                           <SafetyPlan studentName={studentName} />
+                        </div>
                     </DialogContent>
                 </Dialog>
 
