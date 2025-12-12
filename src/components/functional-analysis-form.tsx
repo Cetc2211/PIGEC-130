@@ -40,7 +40,7 @@ export default function FunctionalAnalysisForm({ studentName, initialData }: Fun
     };
     
     const handleSelectChange = (value: string) => {
-        setFormData(prev => ({ ...prev, consequence: value }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (event: React.FormEvent) => {

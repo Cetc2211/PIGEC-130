@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, ShieldAlert, Lock } from "lucide-react";
 import ReferralFlow from "@/components/referral-flow";
 import SafetyPlan from "@/components/safety-plan";
-import { useMemo } from "react";
+import { useMemo } from "useMemo";
 import {
   Dialog,
   DialogContent,
