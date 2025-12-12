@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from 'lucide-react';
+import { UserPlus, RefreshCw } from 'lucide-react';
 
 // Simulación de la función que guardaría en Firestore
 async function addNewStudent(data: { studentId: string; studentName: string; group: string; }) {
@@ -77,7 +77,7 @@ function AddNewStudentForm() {
     };
     
     return (
-        <Card className="max-w-lg mx-auto">
+        <Card className="w-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <UserPlus className="h-6 w-6" />
@@ -118,6 +118,42 @@ function AddNewStudentForm() {
     );
 }
 
+function SyncMockCard() {
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        console.log("Iniciando simulación de sincronización masiva desde API de AcademicTracker...");
+        // Simular una llamada a API
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log("Simulación completa: 250 estudiantes han sido actualizados/ingresados.");
+        alert("Sincronización masiva (simulación) completada. Revisa la consola para más detalles.");
+        setIsSyncing(false);
+    };
+
+    return (
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <RefreshCw className="h-6 w-6" />
+                    Sincronización Masiva
+                </CardTitle>
+                <CardDescription>
+                    Importar y actualizar datos académicos (GPA, faltas) para toda la población estudiantil desde una fuente externa (API).
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <p className="text-sm text-gray-600 mb-4">
+                    Esta acción simula una conexión con la API de AcademicTracker para ingestar los datos de cientos de estudiantes a la vez, actualizando el sistema de riesgo (SDTBE).
+                </p>
+                <Button onClick={handleSync} disabled={isSyncing} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                    {isSyncing ? 'Sincronizando...' : 'Sincronizar Datos Académicos (API Mock)'}
+                </Button>
+            </CardContent>
+        </Card>
+    )
+}
+
 
 export default function AdminPage() {
     return (
@@ -126,10 +162,13 @@ export default function AdminPage() {
                 Módulo de Administración
             </h1>
             <p className="mb-8 text-sm text-gray-600">
-                Gestión de expedientes y cuentas de usuario del sistema MTSS.
+                Gestión de expedientes y sincronización de datos masivos del sistema MTSS.
             </p>
 
-            <AddNewStudentForm />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <AddNewStudentForm />
+                <SyncMockCard />
+            </div>
         </div>
     );
 }

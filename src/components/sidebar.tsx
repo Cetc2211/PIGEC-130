@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Scale, Home, Wrench, Settings, UserPlus } from 'lucide-react';
+import { Scale, Home, Wrench, Settings, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Dashboard de Riesgo', icon: Home },
+  { href: '/screening', label: 'Módulo de Tamizaje', icon: ClipboardList },
   { href: '/tools', label: 'Herramientas', icon: Wrench },
   { href: '/admin', label: 'Administración', icon: Settings },
 ];
