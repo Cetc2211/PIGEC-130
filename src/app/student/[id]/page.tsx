@@ -1,6 +1,5 @@
 'use client';
 
-import { Header } from "@/components/header";
 import ClinicalAssessmentForm from "@/components/clinical-assessment-form";
 import FunctionalAnalysisForm from "@/components/functional-analysis-form";
 import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
@@ -29,7 +28,6 @@ export default function StudentFilePage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
             <main className="p-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="mb-8">
