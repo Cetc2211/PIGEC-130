@@ -18,6 +18,7 @@ export interface Student {
         gpa: number; // Promedio general
         absences: number; // Porcentaje de ausencias
     };
+    dualRelationshipNote?: string; // Campo para trazabilidad de relación dual (Cap. 4.3)
     // Este campo es para simulación, se puede quitar después
     ansiedadScore?: number;
 }
@@ -82,6 +83,7 @@ const studentsDB: Student[] = [
         suicideRiskLevel: 'Alto',
         academicData: { gpa: 6.2, absences: 25 },
         ansiedadScore: 18,
+        dualRelationshipNote: 'Sin relación dual reportada.'
     },
     { 
         id: 'S002', name: 'Carlos V. Ruiz (Riesgo Medio)', 

@@ -60,7 +60,7 @@ export default function ClinicalAssessmentForm({ initialData }: ClinicalAssessme
                                 <Input id="bai-score" name="bai_score" type="number" placeholder="Ej. 21" defaultValue={initialData?.bai_score} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="beck-suicide-score">Puntaje Riesgo Suicida (Beck)</Label>
+                                <Label htmlFor="beck-suicide-score">Puntaje Ideación Suicida (Beck)</Label>
                                 <Input id="beck-suicide-score" name="beck_suicide_score" type="number" placeholder="Ej. 10" defaultValue={initialData?.riesgo_suicida_beck_score} />
                             </div>
                         </div>

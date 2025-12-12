@@ -3,36 +3,23 @@ import React from 'react';
 import Link from 'next/link';
 import { calculateRisk } from '../lib/risk-analysis';
 import RiskIndicator from './RiskIndicator';
-import { getStudents, Student } from '@/lib/store';
-
-// Función auxiliar para normalizar el GAD-7 Score (ejemplo)
-const normalizeAnxiety = (score: number) => Math.min(score / 21, 1.0); // 0 a 1.0
+import { getStudents } from '@/lib/store';
+import { useSession } from '@/context/SessionContext';
+import { AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const StudentDashboard: React.FC = () => {
-
+    const { role } = useSession();
     const students = getStudents();
 
     const studentsWithRisk = students.map(student => {
-        // Preparación de variables de riesgo para el modelo (X1, X2, X3)
-        const ausentismo_norm = student.academicData.absences / 100; // X1
-        const bajo_rendimiento_bin = student.academicData.gpa < 7.0 ? 1 : 0; // X2
-        
-        // Simulación de puntaje de ansiedad si no está en el modelo
-        const ansiedadScore = student.ansiedadScore || 10;
-        const ansiedad_norm = normalizeAnxiety(ansiedadScore); // X3
+        const ausentismo_norm = student.academicData.absences / 100;
+        const bajo_rendimiento_bin = student.academicData.gpa < 7.0 ? 1 : 0;
+        const ansiedad_norm = (student.ansiedadScore || 0) / 21;
 
-        const riskData = {
-            ausentismo_norm,
-            bajo_rendimiento_bin,
-            ansiedad_norm,
-        };
+        const riskResult = calculateRisk({ ausentismo_norm, bajo_rendimiento_bin, ansiedad_norm });
 
-        const riskResult = calculateRisk(riskData);
-
-        return {
-            ...student,
-            ...riskResult, // Añade IRC, nivelRiesgo, color
-        };
+        return { ...student, ...riskResult };
     });
 
     return (
@@ -41,7 +28,8 @@ const StudentDashboard: React.FC = () => {
                 Dashboard de Detección Universal (SDTBE)
             </h1>
             <p className="mb-4 text-sm text-gray-600">
-                El Índice de Riesgo Compuesto (IRC) combina factores académicos (GPA, Faltas) y clínicos (Ansiedad) para categorizar el riesgo de abandono.
+                El Índice de Riesgo Compuesto (IRC) combina factores académicos y clínicos para categorizar el riesgo de abandono. 
+                {role === 'Orientador' && <span className='font-bold text-purple-700'> (Vista de Orientador: Puntajes detallados ocultos).</span>}
             </p>
 
             <div className="border rounded-xl overflow-hidden shadow-lg">
@@ -51,12 +39,16 @@ const StudentDashboard: React.FC = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Estudiante
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                GPA
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Faltas (%)
-                            </th>
+                            {role === 'Clinico' && (
+                                <>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        GPA
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Faltas (%)
+                                    </th>
+                                </>
+                            )}
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Nivel de Riesgo (IRC)
                             </th>
@@ -66,35 +58,46 @@ const StudentDashboard: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {studentsWithRisk.map((student) => (
-                            <tr key={student.id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {student.name}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {student.academicData.gpa.toFixed(1)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {student.academicData.absences.toFixed(0)}%
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <RiskIndicator
-                                        irc={student.IRC}
-                                        nivel={student.nivelRiesgo}
-                                        color={student.color}
-                                    />
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <Link href={`/student/${student.id}`} passHref>
-                                        <button
-                                            className={`px-3 py-1 text-white text-xs font-semibold rounded ${student.color === 'red' ? 'bg-red-500 hover:bg-red-600' : student.color === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-400 hover:bg-gray-500'}`}
-                                        >
-                                            {student.color !== 'green' ? 'Canalizar Nivel 2/3' : 'Ver Expediente'}
-                                        </button>
-                                    </Link>
-                                </td>
-                            </tr>
-                        ))}
+                        {studentsWithRisk.map((student) => {
+                            const isHighRisk = student.suicideRiskLevel === 'Alto' || student.suicideRiskLevel === 'Crítico';
+                            return (
+                                <tr key={student.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {student.name}
+                                    </td>
+                                    {role === 'Clinico' && (
+                                        <>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {student.academicData.gpa.toFixed(1)}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {student.academicData.absences.toFixed(0)}%
+                                            </td>
+                                        </>
+                                    )}
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <RiskIndicator
+                                            irc={student.IRC}
+                                            nivel={student.nivelRiesgo}
+                                            color={student.color}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                        <Link href={`/student/${student.id}`} passHref>
+                                            <button
+                                                className={cn(
+                                                    'px-3 py-1 text-white text-xs font-semibold rounded flex items-center justify-center mx-auto',
+                                                    isHighRisk ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-500 hover:bg-gray-600'
+                                                )}
+                                            >
+                                                {isHighRisk && <AlertTriangle className="mr-2 h-4 w-4" />}
+                                                {role === 'Clinico' ? 'Abrir Expediente' : 'Ver Resumen'}
+                                            </button>
+                                        </Link>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

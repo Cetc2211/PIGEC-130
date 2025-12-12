@@ -8,7 +8,7 @@ import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysis
 import { useParams } from "next/navigation";
 import { notFound } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert } from "lucide-react";
+import { Terminal, ShieldAlert, Lock } from "lucide-react";
 import ReferralFlow from "@/components/referral-flow";
 import SafetyPlan from "@/components/safety-plan";
 import { useMemo } from "react";
@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSession } from "@/context/SessionContext";
 
 
 function CrisisManagementActions({ studentName, riskLevel }: { studentName: string, riskLevel: 'Bajo' | 'Medio' | 'Alto' | 'Crítico' }) {
-    // El botón se muestra más prominente si el riesgo es alto o crítico
     const isHighRisk = riskLevel === 'Alto' || riskLevel === 'Crítico';
 
     return (
@@ -65,8 +65,8 @@ function CrisisManagementActions({ studentName, riskLevel }: { studentName: stri
 export default function StudentFilePage() {
     const params = useParams();
     const studentId = params.id as string;
+    const { role } = useSession();
 
-    // Fetch all data for the student using the in-memory store
     const student = useMemo(() => getStudentById(studentId), [studentId]);
     const clinicalAssessment = useMemo(() => getClinicalAssessmentByStudentId(studentId), [studentId]);
     const functionalAnalysis = useMemo(() => getFunctionalAnalysisByStudentId(studentId), [studentId]);
@@ -77,6 +77,40 @@ export default function StudentFilePage() {
         return notFound();
     }
 
+    // El rol de Orientador tiene acceso restringido al expediente
+    if (role === 'Orientador') {
+        return (
+            <div className="p-8">
+                <div className="max-w-4xl mx-auto">
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-extrabold text-gray-800">{student.name}</h1>
+                        <p className="text-md text-gray-500">Expediente Clínico y Evaluación Funcional</p>
+                    </div>
+
+                    <Card className="bg-yellow-50 border-yellow-500">
+                        <CardHeader className="flex-row items-center gap-4">
+                            <Lock className="h-8 w-8 text-yellow-700" />
+                            <div>
+                                <CardTitle className="text-yellow-800">Acceso Restringido</CardTitle>
+                                <CardDescription className="text-yellow-700">
+                                    Su rol de <strong>Orientador</strong> solo permite el acceso a la vista general de riesgo.
+                                </CardDescription>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-gray-800">
+                                La visualización de puntajes detallados, notas clínicas, planes de tratamiento y la activación de planes de seguridad está reservada para el <strong>Rol Clínico</strong>, de acuerdo con los Perfiles de Competencia (Cap. 4.5) y la NOM-004.
+                                <br /><br />
+                                Si se requiere una intervención clínica, por favor canalice el caso al personal especializado.
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    // Vista completa para el Rol Clínico
     return (
         <div className="min-h-screen bg-gray-50">
             <main className="p-8">
@@ -86,28 +120,27 @@ export default function StudentFilePage() {
                         <p className="text-md text-gray-500">Expediente Clínico y Evaluación Funcional</p>
                     </div>
 
+                     <Alert variant="destructive" className="mb-8">
+                        <ShieldAlert className="h-4 w-4" />
+                        <AlertTitle>Alerta de Riesgo Alto</AlertTitle>
+                        <AlertDescription>
+                            Este caso está marcado con Riesgo Suicida '{student.suicideRiskLevel}'. Se debe priorizar la aplicación del Plan de Seguridad y considerar la canalización externa (Criterio A/B).
+                        </AlertDescription>
+                    </Alert>
+
                     <Alert className="mb-8 border-yellow-500 text-yellow-800">
                         <Terminal className="h-4 w-4" />
-                        <AlertTitle>Impresión Diagnóstica Provisional</AlertTitle>
+                        <AlertTitle>Disclaimer Deontológico (Cap. 1.5)</AlertTitle>
                         <AlertDescription>
-                            El resultado de este expediente (IRC, BDI, etc.) constituye una Alerta de Riesgo y una Impresión Diagnóstica Provisional, no un diagnóstico nosológico definitivo (Cap. 1.5).
+                            El resultado de este expediente (IRC, BDI, etc.) constituye una Alerta de Riesgo y una <strong>Impresión Diagnóstica Provisional</strong>, no un diagnóstico nosológico definitivo.
                         </AlertDescription>
                     </Alert>
 
                     <div className="space-y-12">
-                        {/* Módulo 2.1: Interfaz de Evaluación Clínica */}
                         <ClinicalAssessmentForm initialData={clinicalAssessment} />
-
-                        {/* Módulo 2.3: Análisis Funcional (AF) y Formulación */}
                         <FunctionalAnalysisForm studentName={student.name} initialData={functionalAnalysis} />
-
-                        {/* Módulo 3: Generador de Plan de Tratamiento */}
                         <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
-
-                        {/* Acciones de Crisis y Derivación */}
                         <CrisisManagementActions studentName={student.name} riskLevel={student.suicideRiskLevel} />
-
-                        {/* Módulo 4: Seguimiento y Trazabilidad del Progreso */}
                         <ProgressTracker initialData={progressTracking} />
                     </div>
                 </div>

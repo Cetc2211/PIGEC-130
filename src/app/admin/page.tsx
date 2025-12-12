@@ -6,14 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UserPlus, RefreshCw } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 // Simulación de la función que guardaría en Firestore
-async function addNewStudent(data: { studentId: string; studentName: string; group: string; }) {
+async function addNewStudent(data: { studentId: string; studentName: string; group: string; dualRelationship: string; }) {
     console.log("Iniciando guardado de nuevo estudiante...");
-    
-    // Aquí iría la lógica para guardar en Firestore:
-    // const db = getFirestore();
-    // await setDoc(doc(db, "students", data.studentId), { ... });
     
     // Simulación de una llamada a API
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -23,7 +20,7 @@ async function addNewStudent(data: { studentId: string; studentName: string; gro
         name: data.studentName,
         demographics: {
             group: data.group,
-            age: 0, // Se podría solicitar o dejar en 0
+            age: 0,
         },
         academicData: {
             gpa: 0,
@@ -33,7 +30,9 @@ async function addNewStudent(data: { studentId: string; studentName: string; gro
         emergencyContact: {
             name: '',
             phone: '',
-        }
+        },
+        // Nuevo campo para trazabilidad de relación dual
+        dualRelationshipNote: data.dualRelationship, 
     });
 
     return { success: true, studentId: data.studentId };
@@ -44,6 +43,7 @@ function AddNewStudentForm() {
     const [studentId, setStudentId] = useState('');
     const [studentName, setStudentName] = useState('');
     const [group, setGroup] = useState('');
+    const [dualRelationship, setDualRelationship] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
@@ -53,19 +53,19 @@ function AddNewStudentForm() {
         setFeedback(null);
 
         if (!studentId || !studentName || !group) {
-            setFeedback({ type: 'error', message: 'Todos los campos son obligatorios.' });
+            setFeedback({ type: 'error', message: 'Los campos de ID, Nombre y Grupo son obligatorios.' });
             setIsLoading(false);
             return;
         }
 
         try {
-            const result = await addNewStudent({ studentId, studentName, group });
+            const result = await addNewStudent({ studentId, studentName, group, dualRelationship });
             if (result.success) {
                 setFeedback({ type: 'success', message: `Estudiante "${studentName}" ingresado con éxito. ID: ${result.studentId}` });
-                // Limpiar formulario
                 setStudentId('');
                 setStudentName('');
                 setGroup('');
+                setDualRelationship('');
             } else {
                  setFeedback({ type: 'error', message: 'Ocurrió un error al guardar el estudiante.' });
             }
@@ -101,6 +101,10 @@ function AddNewStudentForm() {
                         <Label htmlFor="group">Grupo</Label>
                         <Input id="group" value={group} onChange={(e) => setGroup(e.target.value)} placeholder="Ej. 5B" required />
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="dual-relationship">Trazabilidad de Relación Dual (Cap. 4.3)</Label>
+                        <Textarea id="dual-relationship" value={dualRelationship} onChange={(e) => setDualRelationship(e.target.value)} placeholder="¿Existe relación académica o familiar directa con el tutor/clínico asignado? Documentar aquí para evitar conflicto de interés." />
+                    </div>
                     <div className="flex justify-end">
                         <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
                             {isLoading ? 'Guardando...' : 'Crear Expediente'}
@@ -124,7 +128,6 @@ function SyncMockCard() {
     const handleSync = async () => {
         setIsSyncing(true);
         console.log("Iniciando simulación de sincronización masiva desde API de AcademicTracker...");
-        // Simular una llamada a API
         await new Promise(resolve => setTimeout(resolve, 2000));
         console.log("Simulación completa: 250 estudiantes han sido actualizados/ingresados.");
         alert("Sincronización masiva (simulación) completada. Revisa la consola para más detalles.");

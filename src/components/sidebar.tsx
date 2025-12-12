@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Scale, Home, Wrench, Settings, ClipboardList } from 'lucide-react';
+import { Scale, Home, Wrench, Settings, ClipboardList, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSession, SessionProvider } from '@/context/SessionContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Label } from './ui/label';
 
 const navItems = [
   { href: '/', label: 'Dashboard de Riesgo', icon: Home },
@@ -12,8 +15,28 @@ const navItems = [
   { href: '/admin', label: 'Administración', icon: Settings },
 ];
 
-export function Sidebar() {
+function RoleSwitcher() {
+  const { role, setRole } = useSession();
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="role-switcher" className="text-xs text-gray-500">Simular Rol de Usuario</Label>
+      <Select value={role} onValueChange={(value) => setRole(value as 'Orientador' | 'Clinico')}>
+        <SelectTrigger id="role-switcher" className="w-full h-9 text-xs">
+          <SelectValue placeholder="Seleccionar Rol" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="Clinico">Rol: Clínico (Total)</SelectItem>
+          <SelectItem value="Orientador">Rol: Orientador (Restringido)</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
+function SidebarInner() {
   const pathname = usePathname();
+  const { role } = useSession();
 
   return (
     <aside className="w-64 h-screen bg-white shadow-md flex flex-col">
@@ -43,10 +66,21 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
-      <div className="p-4 border-t">
-        {/* TODO: Implementar autenticación y perfiles */}
-        <p className="text-sm text-gray-500">Usuario: Admin</p>
+      <div className="p-4 border-t space-y-4">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-gray-500" />
+          <p className="text-sm font-semibold text-gray-700">Usuario: {role}</p>
+        </div>
+        <RoleSwitcher />
       </div>
     </aside>
   );
+}
+
+export function Sidebar() {
+  return (
+    <SessionProvider>
+      <SidebarInner />
+    </SessionProvider>
+  )
 }
