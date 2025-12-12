@@ -40,7 +40,7 @@ export default function SafetyPlan({ studentName }: SafetyPlanProps) {
         console.log("Guardando Plan de Seguridad en 'safety_plans':", planData);
         alert("Plan de Seguridad guardado (simulación). Preparando para imprimir...");
 
-        // Aquí iría la lógica para generar un PDF o abrir la ventana de impresión.
+        // En una aplicación real, aquí iría la lógica para generar un PDF o abrir la ventana de impresión.
         // window.print();
     };
 
