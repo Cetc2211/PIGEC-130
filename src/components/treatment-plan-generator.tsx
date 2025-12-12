@@ -46,14 +46,18 @@ El progreso será monitoreado semanalmente, evaluando el cumplimiento de las met
     };
 
     const handleSavePlan = () => {
-        const planData = {
-            studentId: 'S001', // ID de estudiante (debe ser dinámico)
+        const planData: Omit<TreatmentPlan, 'studentId'> = {
             plan_narrativo_final: plan,
             fecha_aprobacion: new Date().toISOString(),
         };
 
+        const finalData = {
+            studentId: 'S001', // ID de estudiante (debe ser dinámico)
+            ...planData,
+        };
+
         // Simulación de actualización de documento en 'session_data'
-        console.log("Guardando en 'session_data' (actualización):", planData);
+        console.log("Guardando en 'session_data' (actualización):", finalData);
         alert("Plan de Tratamiento guardado con éxito en el expediente del estudiante (simulación).");
     };
 

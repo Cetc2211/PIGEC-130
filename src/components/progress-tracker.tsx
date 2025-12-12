@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { ProgressData } from '@/lib/store';
+import { ProgressData, ProgressRecord } from '@/lib/store';
 
 const chartConfig = {
     suicidalIdeation: {
@@ -36,14 +36,14 @@ export default function ProgressTracker({ initialData = [] }: ProgressTrackerPro
 
     const handleAddProgress = () => {
         const newWeekNumber = progress.length + 1;
-        const newWeekData = {
+        const newWeekData: ProgressData = {
             week: newWeekNumber,
             suicidalIdeation: newIdeation[0],
             suds: newSuds[0],
             taskAchievement: newAchievement[0],
         };
 
-        const progressDataToSave = {
+        const progressDataToSave: ProgressRecord = {
             studentId: 'S001', // ID de estudiante (debe ser dinámico)
             semana_numero: newWeekNumber,
             fecha_registro: new Date().toISOString(),

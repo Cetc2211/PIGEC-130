@@ -52,6 +52,7 @@ export interface ClinicalAssessment {
 export interface FunctionalAnalysis {
     studentId: string;
     session_number: number;
+    fecha_sesion: string;
     analisis_funcional: {
         antecedente_principal: string;
         conducta_problema: string;
@@ -62,9 +63,20 @@ export interface FunctionalAnalysis {
 
 export interface TreatmentPlan {
     studentId: string;
+    fecha_aprobacion: string;
     plan_narrativo_final: string;
 }
 
+export interface ProgressRecord {
+    studentId: string;
+    semana_numero: number;
+    fecha_registro: string;
+    ideacion_suicida_score: number;
+    suds_score: number;
+    logro_tarea_score: number;
+}
+
+// Tipo para el componente de gráfico
 export interface ProgressData {
     week: number;
     suicidalIdeation: number;
@@ -131,6 +143,7 @@ const functionalAnalysesDB: FunctionalAnalysis[] = [
     {
         studentId: 'S001',
         session_number: 1,
+        fecha_sesion: '2024-05-16',
         analisis_funcional: {
             antecedente_principal: 'Recibir una tarea académica que percibe como difícil.',
             conducta_problema: 'Procrastinar la tarea, aislarse y rumiar sobre el fracaso.',
@@ -143,6 +156,7 @@ const functionalAnalysesDB: FunctionalAnalysis[] = [
 const treatmentPlansDB: TreatmentPlan[] = [
     {
         studentId: 'S001',
+        fecha_aprobacion: '2024-05-17',
         plan_narrativo_final: `
 Párrafo 1 (Estabilización y Activación Conductual):
 El objetivo inicial es la estabilización y reducción del riesgo. Se priorizará la psicoeducación sobre el modelo de Activación Conductual (AC) para romper el ciclo de evitación. Se creará una jerarquía de actividades placenteras y de dominio, comenzando con tareas de baja dificultad (ej. "Organizar el escritorio por 10 minutos") para generar momentum y autoeficacia. El monitoreo será diario.
