@@ -15,10 +15,10 @@ interface SafetyPlanProps {
 const safetyPlanSteps = [
     { id: 'step1', label: 'Paso 1: Señales de Advertencia (Triggers)', placeholder: 'Ej. "Sentirme solo", "Recibir una mala calificación", "Pensar que no puedo con todo"...' },
     { id: 'step2', label: 'Paso 2: Estrategias de Afrontamiento Internas', placeholder: 'Ej. "Usar la habilidad de Mindfulness de 5 minutos", "Escribir en mi diario", "Escuchar música relajante"...' },
-    { id, 'step3', label: 'Paso 3: Contactos Sociales que Brindan Distracción', placeholder: 'Ej. "Llamar a [Amigo/a]", "Ir a la sala y hablar con [Familiar]", "Enviar mensaje a [Tutor/a]"...' },
-    { id, 'step4', label: 'Paso 4: Contactos de Ayuda Profesional', placeholder: 'Ej. "Psicólogo(a) [Nombre]: [Teléfono]", "Psiquiatra [Nombre]: [Teléfono]"...' },
-    { id, 'step5', label: 'Paso 5: Sitios o Clínicas de Emergencia', placeholder: 'Ej. "Línea de la Vida: 800 911 2000", "Llamar al 911", "Acudir al Hospital General más cercano"...' },
-    { id, 'step6', label: 'Paso 6: Restricción de Medios Letales', placeholder: 'Ej. "Le he pedido a [Familiar] que guarde bajo llave los medicamentos", "Me comprometo a no estar solo(a) en [Lugar específico]"...' },
+    { id: 'step3', label: 'Paso 3: Contactos Sociales que Brindan Distracción', placeholder: 'Ej. "Llamar a [Amigo/a]", "Ir a la sala y hablar con [Familiar]", "Enviar mensaje a [Tutor/a]"...' },
+    { id: 'step4', label: 'Paso 4: Contactos de Ayuda Profesional', placeholder: 'Ej. "Psicólogo(a) [Nombre]: [Teléfono]", "Psiquiatra [Nombre]: [Teléfono]"...' },
+    { id: 'step5', label: 'Paso 5: Sitios o Clínicas de Emergencia', placeholder: 'Ej. "Línea de la Vida: 800 911 2000", "Llamar al 911", "Acudir al Hospital General más cercano"...' },
+    { id: 'step6', label: 'Paso 6: Restricción de Medios Letales', placeholder: 'Ej. "Le he pedido a [Familiar] que guarde bajo llave los medicamentos", "Me comprometo a no estar solo(a) en [Lugar específico]"...' },
 ];
 
 export default function SafetyPlan({ studentName }: SafetyPlanProps) {
