@@ -5,11 +5,14 @@ import FunctionalAnalysisForm from "@/components/functional-analysis-form";
 import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
 import ProgressTracker from "@/components/progress-tracker";
 import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId } from "@/lib/store";
-import { notFound, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import ReferralFlow from "@/components/referral-flow";
+import SafetyPlan from "@/components/safety-plan";
 import { useMemo } from "react";
+
 
 export default function StudentFilePage() {
     const params = useParams();
@@ -44,6 +47,9 @@ export default function StudentFilePage() {
                     </Alert>
 
                     <div className="space-y-12">
+                        {/* Módulo de Plan de Seguridad y Crisis */}
+                        <SafetyPlan studentName={student.name} />
+                        
                         {/* Módulo 2.1: Interfaz de Evaluación Clínica */}
                         <ClinicalAssessmentForm initialData={clinicalAssessment} />
 
