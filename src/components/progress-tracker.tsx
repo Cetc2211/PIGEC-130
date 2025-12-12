@@ -79,7 +79,7 @@ export default function ProgressTracker() {
                             <Slider id="ideation-slider" value={newIdeation} onValueChange={setNewIdeation} max={10} step={1} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="suds-slider">SUDS (Malestar Subjetivo 0-100): {newSuds[0]}</Label>
+                            <Label htmlFor="suds-slider">SUDS (Unidades Subjetivas de Malestar 0-100): {newSuds[0]}</Label>
                             <Slider id="suds-slider" value={newSuds} onValueChange={setNewSuds} max={100} step={5} />
                         </div>
                         <div className="grid gap-2">
