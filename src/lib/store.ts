@@ -77,12 +77,12 @@ export interface ProgressData {
 
 const studentsDB: Student[] = [
     { 
-        id: 'S001', name: 'Ana M. Pérez (Riesgo Alto)', 
+        id: 'S001', name: 'Ana M. Pérez (Caso de Prueba: Riesgo Crítico)', 
         demographics: { age: 17, group: '5A' },
         emergencyContact: { name: 'Mariana López', phone: '5512345678' },
-        suicideRiskLevel: 'Alto',
-        academicData: { gpa: 6.2, absences: 25 },
-        ansiedadScore: 18,
+        suicideRiskLevel: 'Crítico',
+        academicData: { gpa: 6.2, absences: 35 },
+        ansiedadScore: 21, // Puntuación máxima para forzar riesgo alto
         dualRelationshipNote: 'Sin relación dual reportada.'
     },
     { 
@@ -104,7 +104,7 @@ const studentsDB: Student[] = [
 ];
 
 const evaluationsDB: Evaluation[] = [
-    { id: 'eval-01', studentId: 'S001', type: 'GAD-7', score: 18, date: new Date('2024-05-01') },
+    { id: 'eval-01', studentId: 'S001', type: 'GAD-7', score: 21, date: new Date('2024-05-01') },
     { id: 'eval-02', studentId: 'S002', type: 'GAD-7', score: 10, date: new Date('2024-05-10') },
     { id: 'eval-03', studentId: 'S003', type: 'GAD-7', score: 4, date: new Date('2024-05-12') },
 ];
@@ -114,16 +114,16 @@ const clinicalAssessmentsDB: ClinicalAssessment[] = [
     {
         studentId: 'S001',
         fecha_evaluacion: '2024-05-15',
-        bdi_ii_score: 28,
-        bai_score: 24,
-        riesgo_suicida_beck_score: 12,
+        bdi_ii_score: 35, // Puntuación elevada
+        bai_score: 28, // Puntuación elevada
+        riesgo_suicida_beck_score: 15, // Puntuación elevada
         neuro_mt_score: 82,
         neuro_as_score: 88,
         neuro_vp_score: 79,
-        contexto_carga_cognitiva: 'Presión por exámenes finales y conflicto con su pareja.',
+        contexto_carga_cognitiva: 'Presión por exámenes finales y conflicto con su pareja. Expresa desesperanza.',
         assist_result: 'Negativo',
-        conducta_autolesiva_score: 4,
-        impresion_diagnostica: 'Sintomatología depresiva y ansiosa severa, con ideación suicida activa. El rendimiento cognitivo parece afectado por la carga emocional. La conducta problema parece mantenida por evitación del malestar.',
+        conducta_autolesiva_score: 8, // Frecuencia alta
+        impresion_diagnostica: 'Sintomatología depresiva y ansiosa severa, con ideación suicida activa y planificada. El rendimiento cognitivo parece afectado por la carga emocional. La conducta problema parece mantenida por evitación del malestar. Criterio de Riesgo Vital (Código Rojo) activado.',
     }
 ];
 

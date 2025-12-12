@@ -77,6 +77,8 @@ export default function StudentFilePage() {
         return notFound();
     }
 
+    const isHighRisk = student.suicideRiskLevel === 'Alto' || student.suicideRiskLevel === 'Crítico';
+
     // El rol de Orientador tiene acceso restringido al expediente
     if (role === 'Orientador') {
         return (
@@ -119,14 +121,19 @@ export default function StudentFilePage() {
                         <h1 className="text-3xl font-extrabold text-gray-800">{student.name}</h1>
                         <p className="text-md text-gray-500">Expediente Clínico y Evaluación Funcional</p>
                     </div>
+                    
+                    {isHighRisk && (
+                        <Alert variant="destructive" className="mb-8">
+                            <ShieldAlert className="h-4 w-4" />
+                            <AlertTitle>
+                                {student.suicideRiskLevel === 'Crítico' ? 'Alerta de Riesgo Crítico (Código Rojo)' : 'Alerta de Riesgo Alto'}
+                            </AlertTitle>
+                            <AlertDescription>
+                                Este caso está marcado con Riesgo Suicida '{student.suicideRiskLevel}'. Se debe priorizar la aplicación inmediata del Plan de Seguridad y la canalización externa de emergencia (Criterio A/B).
+                            </AlertDescription>
+                        </Alert>
+                    )}
 
-                     <Alert variant="destructive" className="mb-8">
-                        <ShieldAlert className="h-4 w-4" />
-                        <AlertTitle>Alerta de Riesgo Alto</AlertTitle>
-                        <AlertDescription>
-                            Este caso está marcado con Riesgo Suicida '{student.suicideRiskLevel}'. Se debe priorizar la aplicación del Plan de Seguridad y considerar la canalización externa (Criterio A/B).
-                        </AlertDescription>
-                    </Alert>
 
                     <Alert className="mb-8 border-yellow-500 text-yellow-800">
                         <Terminal className="h-4 w-4" />
