@@ -6,13 +6,14 @@ import FunctionalAnalysisForm from "@/components/functional-analysis-form";
 import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
 import ProgressTracker from "@/components/progress-tracker";
 import { getStudentById, Student } from "@/lib/store";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import ReferralFlow from "@/components/referral-flow";
 
-export default function StudentFilePage({ params }: { params: { id: string } }) {
-    const student = getStudentById(params.id);
+export default function StudentFilePage() {
+    const params = useParams();
+    const student = getStudentById(params.id as string);
 
     if (!student) {
         return notFound();
