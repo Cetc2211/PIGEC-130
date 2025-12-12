@@ -74,13 +74,13 @@ export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalys
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="consequence">C (Consecuencia/Función): ¿Cuál es el efecto inmediato?</Label>
-                                 <Select onValueChange={handleSelectChange} required>
+                                 <Select name="consequence" onValueChange={handleSelectChange} required>
                                     <SelectTrigger id="consequence">
                                         <SelectValue placeholder="Selecciona la función de la conducta..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Refuerzo Negativo (Escape/Evitación)">Refuerzo Negativo (Escape/Evitación)</SelectItem>
-                                        <SelectItem value="Refuerzo Positivo (Ganancia/Atención)">Refuerzo Positivo (Ganancia/Atención)</SelectItem>
+                                        <SelectItem value="Refuerzo Negativo (Trampa de Evitación/Escape)">Refuerzo Negativo (Trampa de Evitación/Escape)</SelectItem>
+                                        <SelectItem value="Refuerzo Positivo (Ganancia/Obtención)">Refuerzo Positivo (Ganancia/Obtención)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

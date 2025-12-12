@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "./ui/textarea";
 
 export default function ClinicalAssessmentForm() {
 
@@ -14,19 +15,25 @@ export default function ClinicalAssessmentForm() {
         const data = {
             studentId: 'S001', // ID de estudiante (debe ser dinámico en una app real)
             fecha_evaluacion: new Date().toISOString(),
+            // Screening Emocional
             bdi_ii_score: Number(formData.get('bdi_score')),
             bai_score: Number(formData.get('bai_score')),
-            ssi_score: Number(formData.get('ssi_score')),
+            riesgo_suicida_beck_score: Number(formData.get('beck_suicide_score')), // Nuevo campo
+            // Tamizaje Neuropsicológico
             neuro_mt_score: Number(formData.get('mt_index')),
             neuro_as_score: Number(formData.get('as_index')),
             neuro_vp_score: Number(formData.get('vp_index')),
+            contexto_carga_cognitiva: formData.get('cognitive_load_context'), // Nuevo campo
+            // Conductas de Riesgo
             assist_result: formData.get('assist_result'),
-            self_harm_score: Number(formData.get('self_harm_score')),
+            conducta_autolesiva_score: Number(formData.get('self_harm_score')),
+            // Impresión Diagnóstica
+            impresion_diagnostica: formData.get('diagnostic_impression'),
         };
 
         // Simulación de llamada a saveClinicalAssessment(data)
         console.log("Guardando en 'clinical_assessments':", data);
-        alert("Perfil Clínico actualizado (simulación). Los datos se han guardado en la consola.");
+        alert("Perfil Clínico y Evaluación guardados (simulación). Revisa la consola.");
     };
 
     return (
@@ -34,7 +41,7 @@ export default function ClinicalAssessmentForm() {
             <CardHeader>
                 <CardTitle>Módulo 2.1: Evaluación Clínica</CardTitle>
                 <CardDescription>
-                    Registro de puntajes de screening y tamizaje neuropsicológico.
+                    Registro de puntajes de screening, tamizaje neuropsicológico e impresión diagnóstica.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -52,8 +59,8 @@ export default function ClinicalAssessmentForm() {
                                 <Input id="bai-score" name="bai_score" type="number" placeholder="Ej. 21" />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="ssi-score">Puntuación Escala Ideación Suicida (SSI)</Label>
-                                <Input id="ssi-score" name="ssi_score" type="number" placeholder="Ej. 10" />
+                                <Label htmlFor="beck-suicide-score">Puntaje Riesgo Suicida (Beck)</Label>
+                                <Input id="beck-suicide-score" name="beck_suicide_score" type="number" placeholder="Ej. 10" />
                             </div>
                         </div>
                     </div>
@@ -77,6 +84,10 @@ export default function ClinicalAssessmentForm() {
                                 <Input id="vp-index" name="vp_index" type="number" placeholder="Ej. 80" />
                             </div>
                         </div>
+                         <div className="mt-6 space-y-2">
+                            <Label htmlFor="cognitive-load-context">Contexto de Carga Cognitiva / Estrés</Label>
+                            <Textarea id="cognitive-load-context" name="cognitive_load_context" placeholder="Describir situación actual que impacta el desempeño (ej. 'Exámenes finales', 'Conflicto familiar')." />
+                        </div>
                     </div>
                     
                     <Separator />
@@ -95,6 +106,18 @@ export default function ClinicalAssessmentForm() {
                             </div>
                         </div>
                     </div>
+
+                    <Separator />
+                    
+                    {/* SECCIÓN IV: IMPRESIÓN DIAGNÓSTICA */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-700 mb-4">IV. Impresión Diagnóstica (Provisional)</h3>
+                         <div className="space-y-2">
+                            <Label htmlFor="diagnostic-impression">Hipótesis Clínica Basada en la Evidencia Recopilada</Label>
+                            <Textarea id="diagnostic-impression" name="diagnostic_impression" placeholder="Ej. 'Sintomatología depresiva y ansiosa severa, posiblemente exacerbada por déficit en memoria de trabajo y estresores académicos. Riesgo suicida activo a monitorear.'" />
+                        </div>
+                    </div>
+
 
                     <div className="flex justify-end pt-4">
                         <Button type="submit" className="bg-pink-600 hover:bg-pink-700 text-white font-bold">
