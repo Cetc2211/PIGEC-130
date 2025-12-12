@@ -31,6 +31,47 @@ export interface Evaluation {
     date: Date;
 }
 
+
+// --- NUEVOS TIPOS PARA DATOS DE SEGUIMIENTO ---
+export interface ClinicalAssessment {
+    studentId: string;
+    fecha_evaluacion: string;
+    bdi_ii_score: number;
+    bai_score: number;
+    riesgo_suicida_beck_score: number;
+    neuro_mt_score: number;
+    neuro_as_score: number;
+    neuro_vp_score: number;
+    contexto_carga_cognitiva: string;
+    assist_result: string;
+    conducta_autolesiva_score: number;
+    impresion_diagnostica: string;
+}
+
+export interface FunctionalAnalysis {
+    studentId: string;
+    session_number: number;
+    analisis_funcional: {
+        antecedente_principal: string;
+        conducta_problema: string;
+        funcion_mantenimiento: string;
+        creencia_esquema: string;
+    }
+}
+
+export interface TreatmentPlan {
+    studentId: string;
+    plan_narrativo_final: string;
+}
+
+export interface ProgressData {
+    week: number;
+    suicidalIdeation: number;
+    suds: number;
+    taskAchievement: number;
+}
+
+
 // --- Simulación de la Base de Datos (Firestore) en Memoria ---
 
 const studentsDB: Student[] = [
@@ -66,11 +107,66 @@ const evaluationsDB: Evaluation[] = [
     { id: 'eval-03', studentId: 'S003', type: 'GAD-7', score: 4, date: new Date('2024-05-12') },
 ];
 
+// --- DATOS SIMULADOS PARA EL CASO DE ANA PÉREZ ---
+const clinicalAssessmentsDB: ClinicalAssessment[] = [
+    {
+        studentId: 'S001',
+        fecha_evaluacion: '2024-05-15',
+        bdi_ii_score: 28,
+        bai_score: 24,
+        riesgo_suicida_beck_score: 12,
+        neuro_mt_score: 82,
+        neuro_as_score: 88,
+        neuro_vp_score: 79,
+        contexto_carga_cognitiva: 'Presión por exámenes finales y conflicto con su pareja.',
+        assist_result: 'Negativo',
+        conducta_autolesiva_score: 4,
+        impresion_diagnostica: 'Sintomatología depresiva y ansiosa severa, con ideación suicida activa. El rendimiento cognitivo parece afectado por la carga emocional. La conducta problema parece mantenida por evitación del malestar.',
+    }
+];
+
+const functionalAnalysesDB: FunctionalAnalysis[] = [
+    {
+        studentId: 'S001',
+        session_number: 1,
+        analisis_funcional: {
+            antecedente_principal: 'Recibir una tarea académica que percibe como difícil.',
+            conducta_problema: 'Procrastinar la tarea, aislarse y rumiar sobre el fracaso.',
+            funcion_mantenimiento: 'Refuerzo Negativo (Trampa de Evitación/Escape)',
+            creencia_esquema: '"Soy incompetente y no puedo con la presión, es mejor no intentarlo."',
+        }
+    }
+];
+
+const treatmentPlansDB: TreatmentPlan[] = [
+    {
+        studentId: 'S001',
+        plan_narrativo_final: `
+Párrafo 1 (Estabilización y Activación Conductual):
+El objetivo inicial es la estabilización y reducción del riesgo. Se priorizará la psicoeducación sobre el modelo de Activación Conductual (AC) para romper el ciclo de evitación. Se creará una jerarquía de actividades placenteras y de dominio, comenzando con tareas de baja dificultad (ej. "Organizar el escritorio por 10 minutos") para generar momentum y autoeficacia. El monitoreo será diario.
+
+Párrafo 2 (Intervención Cognitiva y Regulación Emocional):
+Se introducirán técnicas de Mindfulness para la observación de pensamientos sin juicio. Se trabajará en la identificación de distorsiones cognitivas asociadas a la creencia de "incompetencia". Se usarán registros de pensamiento para desafiar la evidencia a favor y en contra de pensamientos como "nunca lo lograré".
+
+Párrafo 3 (Monitoreo y Prevención de Recaídas):
+El progreso se medirá con SUDS, BDI-II semanal y el logro de tareas de AC. Se establecerá un plan de manejo de crisis que incluya contacto de emergencia y técnicas de auto-calma. La intervención se mantendrá en Nivel 3 (Intensivo) con reevaluación en 4 semanas.
+        `.trim(),
+    }
+];
+
+const progressTrackingDB: { [studentId: string]: ProgressData[] } = {
+    'S001': [
+        { week: 1, suicidalIdeation: 8, suds: 80, taskAchievement: 3 },
+        { week: 2, suicidalIdeation: 7, suds: 75, taskAchievement: 5 },
+        { week: 3, suicidalIdeation: 5, suds: 60, taskAchievement: 7 },
+        { week: 4, suicidalIdeation: 4, suds: 50, taskAchievement: 8 },
+    ]
+};
+
 
 // --- Funciones de Acceso a Datos (Simulan llamadas a Firestore) ---
 
 export function getStudents(): Student[] {
-    // En una app real: return await db.collection('Estudiantes').get();
     return studentsDB;
 }
 
@@ -78,8 +174,23 @@ export function getStudentById(id: string): Student | undefined {
     return studentsDB.find(s => s.id === id);
 }
 
-
 export function getEvaluations(): Evaluation[] {
-    // En una app real: return await db.collection('Evaluaciones').get();
     return evaluationsDB;
+}
+
+// --- NUEVAS FUNCIONES PARA OBTENER DATOS DE SEGUIMIENTO ---
+export function getClinicalAssessmentByStudentId(studentId: string): ClinicalAssessment | undefined {
+    return clinicalAssessmentsDB.find(a => a.studentId === studentId);
+}
+
+export function getFunctionalAnalysisByStudentId(studentId: string): FunctionalAnalysis | undefined {
+    return functionalAnalysesDB.find(a => a.studentId === studentId);
+}
+
+export function getTreatmentPlanByStudentId(studentId: string): TreatmentPlan | undefined {
+    return treatmentPlansDB.find(a => a.studentId === studentId);
+}
+
+export function getProgressTrackingByStudentId(studentId: string): ProgressData[] {
+    return progressTrackingDB[studentId] || [];
 }

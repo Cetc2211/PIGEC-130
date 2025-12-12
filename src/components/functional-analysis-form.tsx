@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -8,18 +8,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { FunctionalAnalysis } from '@/lib/store';
 
 interface FunctionalAnalysisFormProps {
     studentName: string;
+    initialData?: FunctionalAnalysis;
 }
 
-export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalysisFormProps) {
+export default function FunctionalAnalysisForm({ studentName, initialData }: FunctionalAnalysisFormProps) {
     const [formData, setFormData] = useState({
-        antecedent: '',
-        behavior: '',
-        consequence: '',
-        cognitiveSchema: '',
+        antecedent: initialData?.analisis_funcional.antecedente_principal || '',
+        behavior: initialData?.analisis_funcional.conducta_problema || '',
+        consequence: initialData?.analisis_funcional.funcion_mantenimiento || '',
+        cognitiveSchema: initialData?.analisis_funcional.creencia_esquema || '',
     });
+
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                antecedent: initialData.analisis_funcional.antecedente_principal,
+                behavior: initialData.analisis_funcional.conducta_problema,
+                consequence: initialData.analisis_funcional.funcion_mantenimiento,
+                cognitiveSchema: initialData.analisis_funcional.creencia_esquema,
+            });
+        }
+    }, [initialData]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -35,7 +48,7 @@ export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalys
 
         const analysisData = {
             studentId: 'S001', // ID de estudiante (debe ser dinámico en una app real)
-            session_number: 1, // Número de sesión (debe ser dinámico)
+            session_number: (initialData?.session_number || 0) + 1,
             fecha_sesion: new Date().toISOString(),
             analisis_funcional: {
                 antecedente_principal: formData.antecedent,
@@ -45,7 +58,6 @@ export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalys
             }
         };
 
-        // Simulación de llamada a saveFunctionalAnalysis(analysisData)
         console.log("Guardando en 'session_data':", analysisData);
         alert("Análisis Funcional guardado (simulación). Revisa la consola para ver los datos enviados.");
     };
@@ -74,7 +86,7 @@ export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalys
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="consequence">C (Consecuencia/Función): ¿Cuál es el efecto inmediato?</Label>
-                                 <Select name="consequence" onValueChange={handleSelectChange} required>
+                                 <Select name="consequence" onValueChange={handleSelectChange} value={formData.consequence} required>
                                     <SelectTrigger id="consequence">
                                         <SelectValue placeholder="Selecciona la función de la conducta..." />
                                     </SelectTrigger>
@@ -107,7 +119,7 @@ export default function FunctionalAnalysisForm({ studentName }: FunctionalAnalys
                     
                     <div className="flex justify-end pt-4">
                         <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                           Guardar Análisis Funcional
+                           Actualizar Análisis Funcional
                         </Button>
                     </div>
                 </form>

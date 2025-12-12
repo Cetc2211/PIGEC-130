@@ -1,18 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from './ui/separator';
+import { TreatmentPlan } from '@/lib/store';
 
 interface TreatmentPlanGeneratorProps {
     studentName: string;
+    initialData?: TreatmentPlan;
 }
 
-export default function TreatmentPlanGenerator({ studentName }: TreatmentPlanGeneratorProps) {
-    const [plan, setPlan] = useState('');
+export default function TreatmentPlanGenerator({ studentName, initialData }: TreatmentPlanGeneratorProps) {
+    const [plan, setPlan] = useState(initialData?.plan_narrativo_final || '');
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (initialData?.plan_narrativo_final) {
+            setPlan(initialData.plan_narrativo_final);
+        }
+    }, [initialData]);
 
     const handleGeneratePlan = async () => {
         setIsLoading(true);
@@ -61,14 +69,14 @@ El progreso será monitoreado semanalmente, evaluando el cumplimiento de las met
                 <div className="flex justify-center">
                     <Button 
                         onClick={handleGeneratePlan} 
-                        disabled={isLoading}
+                        disabled={isLoading || !!plan}
                         className="bg-green-600 hover:bg-green-700 text-white font-bold"
                     >
                         {isLoading ? 'Generando Plan...' : 'Generar Plan de Tratamiento (IA)'}
                     </Button>
                 </div>
 
-                {plan && (
+                {(plan || isLoading) && (
                     <div className="space-y-4">
                         <Separator />
                         <div>

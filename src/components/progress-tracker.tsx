@@ -7,14 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-
-// Simulación de datos de progreso semanal
-const mockProgressData = [
-  { week: 1, suicidalIdeation: 8, suds: 80, taskAchievement: 3 },
-  { week: 2, suicidalIdeation: 7, suds: 75, taskAchievement: 5 },
-  { week: 3, suicidalIdeation: 5, suds: 60, taskAchievement: 7 },
-  { week: 4, suicidalIdeation: 4, suds: 50, taskAchievement: 8 },
-];
+import { ProgressData } from '@/lib/store';
 
 const chartConfig = {
     suicidalIdeation: {
@@ -31,8 +24,12 @@ const chartConfig = {
     }
 };
 
-export default function ProgressTracker() {
-    const [progress, setProgress] = useState(mockProgressData);
+interface ProgressTrackerProps {
+    initialData?: ProgressData[];
+}
+
+export default function ProgressTracker({ initialData = [] }: ProgressTrackerProps) {
+    const [progress, setProgress] = useState(initialData);
     const [newIdeation, setNewIdeation] = useState([5]);
     const [newSuds, setNewSuds] = useState([50]);
     const [newAchievement, setNewAchievement] = useState([5]);
@@ -89,7 +86,7 @@ export default function ProgressTracker() {
                     </div>
                     <div className="flex justify-end pt-6">
                         <Button onClick={handleAddProgress} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
-                            Guardar Semana
+                            Guardar Semana {progress.length + 1}
                         </Button>
                     </div>
                 </div>
