@@ -45,9 +45,9 @@ export default function SafetyPlan({ studentName }: SafetyPlanProps) {
     };
 
     return (
-        <Card className="shadow-lg border-red-500">
-            <CardHeader className="bg-red-50 text-red-800 rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
+        <Card className="shadow-none border-none">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-800">
                     <ShieldCheck className="h-6 w-6" />
                     Módulo de Plan de Seguridad y Crisis (DBT/TCS)
                 </CardTitle>

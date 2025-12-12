@@ -8,10 +8,50 @@ import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysis
 import { useParams } from "next/navigation";
 import { notFound } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, ShieldAlert } from "lucide-react";
 import ReferralFlow from "@/components/referral-flow";
 import SafetyPlan from "@/components/safety-plan";
 import { useMemo } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+
+function CrisisManagementActions({ studentName, riskLevel }: { studentName: string, riskLevel: 'Bajo' | 'Medio' | 'Alto' | 'Crítico' }) {
+    // El botón se muestra más prominente si el riesgo es alto o crítico
+    const isHighRisk = riskLevel === 'Alto' || riskLevel === 'Crítico';
+
+    return (
+        <Card className="shadow-lg border-amber-500">
+            <CardHeader>
+                <CardTitle>Acciones de Crisis y Derivación</CardTitle>
+                <CardDescription>Protocolos para manejo de riesgo y canalización a especialistas.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col md:flex-row gap-4 justify-around items-center">
+                 <Dialog>
+                    <DialogTrigger asChild>
+                         <Button variant={isHighRisk ? "destructive" : "secondary"} className="font-bold w-full md:w-auto">
+                            <ShieldAlert className="mr-2 h-4 w-4" />
+                            Activar Plan de Seguridad
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl">
+                        <SafetyPlan studentName={studentName} />
+                    </DialogContent>
+                </Dialog>
+
+                <ReferralFlow studentName={studentName} />
+            </CardContent>
+        </Card>
+    )
+}
 
 
 export default function StudentFilePage() {
@@ -47,9 +87,6 @@ export default function StudentFilePage() {
                     </Alert>
 
                     <div className="space-y-12">
-                        {/* Módulo de Plan de Seguridad y Crisis */}
-                        <SafetyPlan studentName={student.name} />
-                        
                         {/* Módulo 2.1: Interfaz de Evaluación Clínica */}
                         <ClinicalAssessmentForm initialData={clinicalAssessment} />
 
@@ -59,11 +96,11 @@ export default function StudentFilePage() {
                         {/* Módulo 3: Generador de Plan de Tratamiento */}
                         <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
 
+                        {/* Acciones de Crisis y Derivación */}
+                        <CrisisManagementActions studentName={student.name} riskLevel={student.suicideRiskLevel} />
+
                         {/* Módulo 4: Seguimiento y Trazabilidad del Progreso */}
                         <ProgressTracker initialData={progressTracking} />
-
-                        {/* Flujo de Derivación */}
-                        <ReferralFlow studentName={student.name} />
                     </div>
                 </div>
             </main>
