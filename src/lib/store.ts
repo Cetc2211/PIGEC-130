@@ -71,7 +71,7 @@ export interface ProgressRecord {
     studentId: string;
     semana_numero: number;
     fecha_registro: string;
-    ideacion_suicida_score: number;
+ideacion_suicida_score: number;
     suds_score: number;
     logro_tarea_score: number;
 }
