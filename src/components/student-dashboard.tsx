@@ -5,8 +5,9 @@ import { calculateRisk } from '../lib/risk-analysis';
 import RiskIndicator from './RiskIndicator';
 import { getStudents } from '@/lib/store';
 import { useSession } from '@/context/SessionContext';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
 const StudentDashboard: React.FC = () => {
     const { role } = useSession();
@@ -84,15 +85,17 @@ const StudentDashboard: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                         <Link href={`/student/${student.id}`} passHref>
-                                            <button
+                                             <Button
+                                                variant="default"
+                                                size="sm"
                                                 className={cn(
-                                                    'px-3 py-1 text-white text-xs font-semibold rounded flex items-center justify-center mx-auto',
-                                                    isHighRisk ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-500 hover:bg-gray-600'
+                                                    'font-semibold',
+                                                    isHighRisk && role === 'Clinico' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'
                                                 )}
                                             >
                                                 {isHighRisk && <AlertTriangle className="mr-2 h-4 w-4" />}
-                                                {role === 'Clinico' ? 'Abrir Expediente' : 'Ver Resumen'}
-                                            </button>
+                                                {role === 'Clinico' ? 'Abrir Expediente' : 'Ver PIEI'}
+                                            </Button>
                                         </Link>
                                     </td>
                                 </tr>
@@ -106,3 +109,5 @@ const StudentDashboard: React.FC = () => {
 };
 
 export default StudentDashboard;
+
+    
