@@ -23,6 +23,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "@/context/SessionContext";
+import PIEIGenerator from "@/components/piei-generator";
+import PIEIFeedback from "@/components/piei-feedback";
 
 
 function CrisisManagementActions({ studentName, riskLevel }: { studentName: string, riskLevel: 'Bajo' | 'Medio' | 'Alto' | 'Crítico' }) {
@@ -86,27 +88,26 @@ export default function StudentFilePage() {
                 <div className="max-w-4xl mx-auto">
                     <div className="mb-8">
                         <h1 className="text-3xl font-extrabold text-gray-800">{student.name}</h1>
-                        <p className="text-md text-gray-500">Expediente Clínico y Evaluación Funcional</p>
+                        <p className="text-md text-gray-500">Plan de Intervención Educativa Individualizada (PIEI)</p>
                     </div>
-
-                    <Card className="bg-yellow-50 border-yellow-500">
+                     <Card className="mb-8 bg-yellow-50 border-yellow-500">
                         <CardHeader className="flex-row items-center gap-4">
                             <Lock className="h-8 w-8 text-yellow-700" />
                             <div>
-                                <CardTitle className="text-yellow-800">Acceso Restringido</CardTitle>
+                                <CardTitle className="text-yellow-800">Acceso Restringido (Rol Orientador)</CardTitle>
                                 <CardDescription className="text-yellow-700">
-                                    Su rol de <strong>Orientador</strong> solo permite el acceso a la vista general de riesgo.
+                                   Su rol solo permite el acceso al <strong>Plan de Intervención Educativa (PIEI)</strong> y al registro de su efectividad, de acuerdo al Capítulo 7 (Cortafuegos Ético Digital).
                                 </CardDescription>
                             </div>
                         </CardHeader>
-                        <CardContent>
+                         <CardContent>
                             <p className="text-sm text-gray-800">
-                                La visualización de puntajes detallados, notas clínicas, planes de tratamiento y la activación de planes de seguridad está reservada para el <strong>Rol Clínico</strong>, de acuerdo con los Perfiles de Competencia (Cap. 4.5) y la NOM-004.
-                                <br /><br />
-                                Si se requiere una intervención clínica, por favor canalice el caso al personal especializado.
+                               Los datos clínicos (scores, notas, plan de tratamiento) están protegidos y solo son visibles para el Rol Clínico, en cumplimiento de la NOM-004. A continuación se muestran únicamente las <strong>instrucciones pedagógicas</strong> aprobadas por el clínico.
                             </p>
                         </CardContent>
                     </Card>
+
+                    <PIEIFeedback />
                 </div>
             </div>
         )
@@ -147,6 +148,7 @@ export default function StudentFilePage() {
                         <ClinicalAssessmentForm initialData={clinicalAssessment} />
                         <FunctionalAnalysisForm studentName={student.name} initialData={functionalAnalysis} />
                         <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
+                        <PIEIGenerator clinicalData={clinicalAssessment} />
                         <CrisisManagementActions studentName={student.name} riskLevel={student.suicideRiskLevel} />
                         <ProgressTracker initialData={progressTracking} />
                     </div>
@@ -155,3 +157,5 @@ export default function StudentFilePage() {
         </div>
     );
 }
+
+    
