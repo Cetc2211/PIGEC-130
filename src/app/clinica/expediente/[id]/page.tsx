@@ -1,31 +1,23 @@
 'use client';
 
+import { useMemo } from "react";
+import { useParams, notFound, redirect } from "next/navigation";
+
 import ClinicalAssessmentForm from "@/components/clinical-assessment-form";
 import FunctionalAnalysisForm from "@/components/functional-analysis-form";
 import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
 import ProgressTracker from "@/components/progress-tracker";
-import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId } from "@/lib/store";
-import { useParams } from "next/navigation";
-import { notFound } from "next/navigation";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert, Lock } from "lucide-react";
 import ReferralFlow from "@/components/referral-flow";
 import SafetyPlan from "@/components/safety-plan";
-import { useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import PIEIGenerator from "@/components/piei-generator";
+import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId } from "@/lib/store";
+import { useSession } from "@/context/SessionContext";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal, ShieldAlert, Lock } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSession } from "@/context/SessionContext";
-import PIEIGenerator from "@/components/piei-generator";
-import PIEIFeedback from "@/components/piei-feedback";
-
 
 function CrisisManagementActions({ studentName, riskLevel }: { studentName: string, riskLevel: 'Bajo' | 'Medio' | 'Alto' | 'Crítico' }) {
     const isHighRisk = riskLevel === 'Alto' || riskLevel === 'Crítico';
@@ -64,10 +56,18 @@ function CrisisManagementActions({ studentName, riskLevel }: { studentName: stri
 }
 
 
-export default function StudentFilePage() {
+export default function ClinicalFilePage() {
     const params = useParams();
     const studentId = params.id as string;
     const { role } = useSession();
+
+    // Guardia de Ruta Estricta
+    if (role !== 'Clinico') {
+        // Idealmente, redirigir a una página de "acceso denegado" o al dashboard principal.
+        // Por ahora, redirigimos a la raíz.
+        redirect('/');
+        return null; // El redirect se encarga de todo, pero es buena práctica no renderizar nada.
+    }
 
     const student = useMemo(() => getStudentById(studentId), [studentId]);
     const clinicalAssessment = useMemo(() => getClinicalAssessmentByStudentId(studentId), [studentId]);
@@ -81,39 +81,6 @@ export default function StudentFilePage() {
 
     const isHighRisk = student.suicideRiskLevel === 'Alto' || student.suicideRiskLevel === 'Crítico';
 
-    // El rol de Orientador tiene acceso restringido al expediente
-    if (role === 'Orientador') {
-        return (
-            <div className="p-8">
-                <div className="max-w-4xl mx-auto">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-extrabold text-gray-800">{student.name}</h1>
-                        <p className="text-md text-gray-500">Plan de Intervención Educativa Individualizada (PIEI)</p>
-                    </div>
-                     <Card className="mb-8 bg-yellow-50 border-yellow-500">
-                        <CardHeader className="flex-row items-center gap-4">
-                            <Lock className="h-8 w-8 text-yellow-700" />
-                            <div>
-                                <CardTitle className="text-yellow-800">Acceso Restringido (Rol Orientador)</CardTitle>
-                                <CardDescription className="text-yellow-700">
-                                   Su rol solo permite el acceso al <strong>Plan de Intervención Educativa (PIEI)</strong> y al registro de su efectividad, de acuerdo al Capítulo 7 (Cortafuegos Ético Digital).
-                                </CardDescription>
-                            </div>
-                        </CardHeader>
-                         <CardContent>
-                            <p className="text-sm text-gray-800">
-                               Los datos clínicos (scores, notas, plan de tratamiento) están protegidos y solo son visibles para el Rol Clínico, en cumplimiento de la NOM-004. A continuación se muestran únicamente las <strong>instrucciones pedagógicas</strong> aprobadas por el clínico.
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <PIEIFeedback />
-                </div>
-            </div>
-        )
-    }
-
-    // Vista completa para el Rol Clínico
     return (
         <div className="min-h-screen bg-gray-50">
             <main className="p-8">
@@ -134,7 +101,6 @@ export default function StudentFilePage() {
                             </AlertDescription>
                         </Alert>
                     )}
-
 
                     <Alert className="mb-8 border-yellow-500 text-yellow-800">
                         <Terminal className="h-4 w-4" />

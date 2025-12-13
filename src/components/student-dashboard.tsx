@@ -5,7 +5,7 @@ import { calculateRisk } from '../lib/risk-analysis';
 import RiskIndicator from './RiskIndicator';
 import { getStudents } from '@/lib/store';
 import { useSession } from '@/context/SessionContext';
-import { AlertTriangle, Lock } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 
@@ -61,6 +61,11 @@ const StudentDashboard: React.FC = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {studentsWithRisk.map((student) => {
                             const isHighRisk = student.suicideRiskLevel === 'Alto' || student.suicideRiskLevel === 'Crítico';
+                            const linkHref = role === 'Clinico' 
+                                ? `/clinica/expediente/${student.id}` 
+                                : `/educativa/estudiante/${student.id}`;
+                            const buttonText = role === 'Clinico' ? 'Abrir Expediente' : 'Ver PIEI';
+
                             return (
                                 <tr key={student.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -84,7 +89,7 @@ const StudentDashboard: React.FC = () => {
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        <Link href={`/student/${student.id}`} passHref>
+                                        <Link href={linkHref} passHref>
                                              <Button
                                                 variant="default"
                                                 size="sm"
@@ -93,8 +98,8 @@ const StudentDashboard: React.FC = () => {
                                                     isHighRisk && role === 'Clinico' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'
                                                 )}
                                             >
-                                                {isHighRisk && <AlertTriangle className="mr-2 h-4 w-4" />}
-                                                {role === 'Clinico' ? 'Abrir Expediente' : 'Ver PIEI'}
+                                                {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-2 h-4 w-4" />}
+                                                {buttonText}
                                             </Button>
                                         </Link>
                                     </td>
@@ -109,5 +114,3 @@ const StudentDashboard: React.FC = () => {
 };
 
 export default StudentDashboard;
-
-    
