@@ -15,7 +15,7 @@ const StudentDashboard: React.FC = () => {
     const studentsWithRisk = students.map(student => {
         const ausentismo_norm = student.academicData.absences / 100;
         const bajo_rendimiento_bin = student.academicData.gpa < 7.0 ? 1 : 0;
-        const ansiedad_norm = (student.ansiedadScore || 0) / 21;
+        const ansiedad_norm = (student.ansiedadScore || 0) / 21; // Normaliza score de ansiedad (0-21)
 
         const riskResult = calculateRisk({ ausentismo_norm, bajo_rendimiento_bin, ansiedad_norm });
 
