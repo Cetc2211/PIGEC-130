@@ -63,10 +63,8 @@ export default function ClinicalFilePage() {
 
     // Guardia de Ruta Estricta: Si el rol no es Clínico, se deniega el acceso.
     if (role !== 'Clinico') {
-        // En una app real, podría redirigirse a una página de "acceso denegado".
-        // Por ahora, redirigimos a la raíz para asegurar la protección.
         redirect('/');
-        return null; // Es buena práctica no renderizar nada después de un redirect.
+        return null; 
     }
 
     const student = useMemo(() => getStudentById(studentId), [studentId]);
