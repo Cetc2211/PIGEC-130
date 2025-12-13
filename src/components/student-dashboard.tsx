@@ -61,7 +61,7 @@ const StudentDashboard: React.FC = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {studentsWithRisk.map((student) => {
                             const isHighRisk = student.suicideRiskLevel === 'Alto' || student.suicideRiskLevel === 'Crítico';
-                            const linkHref = role === 'Clinico' 
+                             const linkHref = role === 'Clinico' 
                                 ? `/clinica/expediente/${student.id}` 
                                 : `/educativa/estudiante/${student.id}`;
                             const buttonText = role === 'Clinico' ? 'Abrir Expediente' : 'Ver PIEI';

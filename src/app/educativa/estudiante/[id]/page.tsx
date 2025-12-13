@@ -35,8 +35,7 @@ export default function EducationalFilePage() {
     const studentId = params.id as string;
     const { role } = useSession();
 
-    // Guardia de ruta: aunque la navegación principal no debería permitirlo,
-    // esta es una segunda capa de seguridad si se accede por URL directa.
+    // Guardia de ruta: si un clínico intenta acceder, lo redirigimos a la vista correcta.
     if (role === 'Clinico') {
         redirect(`/clinica/expediente/${studentId}`);
         return null;
