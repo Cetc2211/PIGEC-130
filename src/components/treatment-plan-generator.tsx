@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from './ui/separator';
 import { TreatmentPlan } from '@/lib/store';
+import PIEIValidation from './PIEIValidation';
+import { Bot, Check } from 'lucide-react';
 
 interface TreatmentPlanGeneratorProps {
     studentName: string;
@@ -15,6 +17,7 @@ interface TreatmentPlanGeneratorProps {
 export default function TreatmentPlanGenerator({ studentName, initialData }: TreatmentPlanGeneratorProps) {
     const [plan, setPlan] = useState(initialData?.plan_narrativo_final || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [isPieiModalOpen, setIsPieiModalOpen] = useState(false);
 
     useEffect(() => {
         if (initialData?.plan_narrativo_final) {
@@ -44,6 +47,12 @@ El progreso será monitoreado semanalmente, evaluando el cumplimiento de las met
         setPlan(generatedPlan);
         setIsLoading(false);
     };
+    
+    const handleTriggerSave = () => {
+        // Abre el modal de validación PIEI antes de guardar
+        setIsPieiModalOpen(true);
+    };
+
 
     const handleSavePlan = () => {
         const planData: Omit<TreatmentPlan, 'studentId'> = {
@@ -59,47 +68,58 @@ El progreso será monitoreado semanalmente, evaluando el cumplimiento de las met
         // Simulación de actualización de documento en 'session_data'
         console.log("Guardando en 'session_data' (actualización):", finalData);
         alert("Plan de Tratamiento guardado con éxito en el expediente del estudiante (simulación).");
+        setIsPieiModalOpen(false); // Cierra el modal después de guardar
     };
 
     return (
-        <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle>Módulo 3: Generador de Plan de Tratamiento</CardTitle>
-                <CardDescription>
-                    Generar y refinar el plan de intervención inicial basado en la formulación del caso.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="flex justify-center">
-                    <Button 
-                        onClick={handleGeneratePlan} 
-                        disabled={isLoading || !!plan}
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold"
-                    >
-                        {isLoading ? 'Generando Plan...' : 'Generar Plan de Tratamiento (IA)'}
-                    </Button>
-                </div>
-
-                {(plan || isLoading) && (
-                    <div className="space-y-4">
-                        <Separator />
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-700 mb-2">Plan Clínico Narrativo (Editable)</h3>
-                            <Textarea
-                                value={plan}
-                                onChange={(e) => setPlan(e.target.value)}
-                                className="min-h-[300px] bg-white text-sm"
-                                placeholder="El plan generado por la IA aparecerá aquí..."
-                            />
-                        </div>
-                        <div className="flex justify-end">
-                            <Button onClick={handleSavePlan} className="bg-purple-600 hover:bg-purple-700 text-white font-bold">
-                                Guardar Plan al Expediente
-                            </Button>
-                        </div>
+        <>
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle>Módulo 3: Generador de Plan de Tratamiento</CardTitle>
+                    <CardDescription>
+                        Generar y refinar el plan de intervención inicial basado en la formulación del caso.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex justify-center">
+                        <Button 
+                            onClick={handleGeneratePlan} 
+                            disabled={isLoading || !!plan}
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                        >
+                            <Bot className="mr-2" />
+                            {isLoading ? 'Generando Plan...' : 'Generar Plan de Tratamiento (IA)'}
+                        </Button>
                     </div>
-                )}
-            </CardContent>
-        </Card>
+
+                    {(plan || isLoading) && (
+                        <div className="space-y-4">
+                            <Separator />
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-700 mb-2">Plan Clínico Narrativo (Editable)</h3>
+                                <Textarea
+                                    value={plan}
+                                    onChange={(e) => setPlan(e.target.value)}
+                                    className="min-h-[300px] bg-white text-sm"
+                                    placeholder="El plan generado por la IA aparecerá aquí..."
+                                />
+                            </div>
+                            <div className="flex justify-end">
+                                <Button onClick={handleTriggerSave} disabled={!plan} className="bg-purple-600 hover:bg-purple-700 text-white font-bold">
+                                    <Check className="mr-2" />
+                                    Finalizar y Guardar Plan al Expediente
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <PIEIValidation 
+                isOpen={isPieiModalOpen}
+                onClose={() => setIsPieiModalOpen(false)}
+                onConfirm={handleSavePlan}
+            />
+        </>
     );
 }

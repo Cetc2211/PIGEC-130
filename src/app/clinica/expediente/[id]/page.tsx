@@ -11,6 +11,9 @@ import ProgressTracker from "@/components/progress-tracker";
 import PIEIGenerator from "@/components/piei-generator";
 import ReportGenerator from "@/components/ReportGenerator";
 import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId } from "@/lib/store";
+import ClinicalKPILogger from '@/components/ClinicalKPILogger';
+import RiskTimelineChart from '@/components/RiskTimelineChart';
+import SOAPNotesForm from '@/components/SOAPNotesForm';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, ShieldAlert } from "lucide-react";
@@ -88,6 +91,14 @@ export default function ClinicalFilePage() {
                     <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
                     <PIEIGenerator clinicalData={clinicalAssessment} />
                     <ProgressTracker initialData={progressTracking} />
+                    
+                    {/* Nuevos componentes del Módulo de Trazabilidad */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <ClinicalKPILogger />
+                        <RiskTimelineChart />
+                    </div>
+                    <SOAPNotesForm />
+
                     <ReportGenerator student={student} clinicalAssessment={clinicalAssessment} />
                 </div>
             </div>
