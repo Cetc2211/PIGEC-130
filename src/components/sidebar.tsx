@@ -11,7 +11,7 @@ import { Label } from './ui/label';
 const navItems = [
   { href: '/', label: 'Dashboard de Riesgo', icon: Home, roles: ['Clinico', 'Orientador'] },
   { href: '/screening', label: 'Módulo de Tamizaje', icon: ClipboardList, roles: ['Clinico'] },
-  { href: '/educativa/evaluacion', label: 'Evaluación Educativa', icon: BookText, roles: ['Orientador'] },
+  { href: '/educativa/evaluacion', label: 'Evaluación Educativa', icon: BookText, roles: ['Orientador', 'Clinico'] },
   { href: '/admin', label: 'Administración', icon: Settings, roles: ['Clinico'] },
   { href: '/tools', label: 'Herramientas', icon: Wrench, roles: ['Clinico', 'Orientador'] },
 ];

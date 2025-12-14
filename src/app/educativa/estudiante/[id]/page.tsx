@@ -5,9 +5,12 @@ import { useSession } from '@/context/SessionContext';
 import React, { useEffect, useState } from 'react';
 import { getStudentById, getEducationalAssessmentByStudentId } from '@/lib/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock } from 'lucide-react';
+import { Lock, Send } from 'lucide-react';
 import PIEIFeedback from '@/components/piei-feedback';
 import EducationalDataSummary from '@/components/EducationalDataSummary';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import ReferralFlow from '@/components/referral-flow';
 
 
 export default function EducationalFilePage() {
@@ -16,6 +19,8 @@ export default function EducationalFilePage() {
     const { role } = useSession();
 
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isReferralOpen, setIsReferralOpen] = useState(false);
+
 
     useEffect(() => {
         if (role && role !== 'loading') {
@@ -52,15 +57,30 @@ export default function EducationalFilePage() {
                     <p className="text-md text-gray-500">{student.name}</p>
                 </div>
 
-                <Card className="mb-8 bg-purple-50 border-purple-500">
-                    <CardHeader className="flex-row items-center gap-4">
-                        <Lock className="h-8 w-8 text-purple-700" />
-                        <div>
-                            <CardTitle className="text-purple-800">Ambiente Educativo (Rol: {role})</CardTitle>
-                            <CardDescription className="text-purple-700">
-                               Esta vista muestra únicamente los componentes pedagógicos y de seguimiento académico, protegiendo la información clínica sensible de acuerdo al Capítulo 7 (Cortafuegos Ético Digital).
-                            </CardDescription>
+                 <Card className="mb-8 bg-purple-50 border-purple-500">
+                    <CardHeader className="flex-row items-center justify-between">
+                         <div className="flex items-center gap-4">
+                            <Lock className="h-8 w-8 text-purple-700" />
+                            <div>
+                                <CardTitle className="text-purple-800">Ambiente Educativo (Rol: {role})</CardTitle>
+                                <CardDescription className="text-purple-700">
+                                   Esta vista muestra únicamente los componentes pedagógicos y de seguimiento académico, protegiendo la información clínica sensible.
+                                </CardDescription>
+                            </div>
                         </div>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="bg-white">
+                                    <Send className="mr-2" />
+                                    Iniciar Derivación Espontánea
+                                </Button>
+                            </DialogTrigger>
+                             <ReferralFlow 
+                                studentName={student.name}
+                                // Se deja vacío para que el orientador lo llene
+                                diagnosticImpression={''} 
+                            />
+                        </Dialog>
                     </CardHeader>
                 </Card>
 

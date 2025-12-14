@@ -16,7 +16,9 @@ import RiskTimelineChart from '@/components/RiskTimelineChart';
 import SOAPNotesForm from '@/components/SOAPNotesForm';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert, Loader } from "lucide-react";
+import { Terminal, ShieldAlert, Loader, ClipboardList } from "lucide-react";
+import ScreeningManagement from '@/components/screening-management';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 
 export default function ClinicalFilePage() {
@@ -85,12 +87,24 @@ export default function ClinicalFilePage() {
 
                 <div className="space-y-12">
                     <ClinicalAssessmentForm initialData={clinicalAssessment} />
+                    
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <ClipboardList />
+                                Aplicar Instrumento de Tamizaje Individual
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             <ScreeningManagement />
+                        </CardContent>
+                    </Card>
+
                     <FunctionalAnalysisForm studentName={student.name} initialData={functionalAnalysis} />
                     <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
                     <PIEIGenerator clinicalData={clinicalAssessment} />
                     <ProgressTracker initialData={progressTracking} />
                     
-                    {/* Nuevos componentes del Módulo de Trazabilidad */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <ClinicalKPILogger />
                         <RiskTimelineChart />

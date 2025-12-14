@@ -1,6 +1,7 @@
 'use client';
 
 import EducationalAssessmentForm from "@/components/educational-assessment-form";
+import ScreeningManagement from "@/components/screening-management";
 import { useSession } from "@/context/SessionContext";
 import { redirect } from "next/navigation";
 
@@ -9,6 +10,7 @@ export default function EducationalAssessmentPage() {
     
     // Solo el orientador puede acceder a esta página
     if (role === 'Clinico') {
+        // Redirigir al dashboard o a una página permitida para el clínico
         redirect('/');
         return null;
     }
@@ -19,14 +21,14 @@ export default function EducationalAssessmentPage() {
 
     return (
         <div className="p-8">
-            <div className="max-w-4xl mx-auto">
-                <div className="mb-8">
+            <div className="max-w-4xl mx-auto space-y-12">
+                 <div>
                     <h1 className="text-3xl font-extrabold text-gray-800">Evaluación Educativa (Nivel 1 y 2)</h1>
                     <p className="mt-2 text-sm text-gray-600">
-                        Registro de resultados de la Batería de Evaluación Complementaria (BEC-130) para el análisis pedagógico y neuropsicológico.
+                        Este módulo permite la aplicación masiva de instrumentos de tamizaje educativo (CHTE, Neuropsicológico) para ingestar datos automáticamente al sistema.
                     </p>
                 </div>
-                
+                <ScreeningManagement />
                 <EducationalAssessmentForm />
             </div>
         </div>
