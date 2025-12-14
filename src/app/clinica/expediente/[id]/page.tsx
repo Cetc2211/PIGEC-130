@@ -79,7 +79,7 @@ export default function ClinicalFilePage() {
                     <AlertTitle>Disclaimer Deontológico (Cap. 1.5)</AlertTitle>
                     <AlertDescription>
                         El resultado de este expediente (IRC, BDI, etc.) constituye una Alerta de Riesgo y una <strong>Impresión Diagnóstica Provisional</strong>, no un diagnóstico nosológico definitivo.
-                    </Description>
+                    </AlertDescription>
                 </Alert>
 
                 <div className="space-y-12">
