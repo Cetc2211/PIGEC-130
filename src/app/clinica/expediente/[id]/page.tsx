@@ -14,7 +14,7 @@ import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysis
 import { useSession } from "@/context/SessionContext";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert, Lock } from "lucide-react";
+import { Terminal, ShieldAlert } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,8 +63,8 @@ export default function ClinicalFilePage() {
 
     // Guardia de Ruta Estricta: Si el rol no es Clínico, se deniega el acceso.
     if (role !== 'Clinico') {
-        redirect('/');
-        return null; 
+        redirect('/'); // Redirige a la página principal o a una de acceso denegado.
+        return null; // No renderizar nada más.
     }
 
     const student = useMemo(() => getStudentById(studentId), [studentId]);
