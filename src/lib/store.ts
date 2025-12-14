@@ -1,3 +1,4 @@
+'use client';
 // --- Tipos de Datos (Schemas de la Base de Datos) ---
 
 export type SuicideRiskLevel = 'Bajo' | 'Medio' | 'Alto' | 'Crítico';
@@ -87,13 +88,6 @@ export interface ProgressData {
 
 
 // --- TIPOS PARA LA EVALUACIÓN EDUCATIVA ---
-export interface ChteaScores {
-    activo: number;
-    reflexivo: number;
-    teorico: number;
-    pragmatico: number;
-}
-
 export interface ChteScores {
     planificacion: number;
     concentracion: number;
@@ -109,7 +103,6 @@ export interface NeuropsychScreening {
 export interface EducationalAssessment {
     studentId: string; // FK
     fecha_evaluacion: string;
-    chteaScores: ChteaScores;
     chteScores: ChteScores;
     neuropsychScreening: NeuropsychScreening;
 }
@@ -155,14 +148,12 @@ const educationalAssessmentsDB: EducationalAssessment[] = [
     {
         studentId: 'S001',
         fecha_evaluacion: '2024-05-18',
-        chteaScores: { activo: 80, reflexivo: 40, teorico: 30, pragmatico: 60 },
         chteScores: { planificacion: 35, concentracion: 50, tomaDeApuntes: 45 },
-        neuropsychScreening: { atencionPercentil: 55, memoriaTrabajoPercentil: 45, controlInhibitorioPercentil: 60 }
+        neuropsychScreening: { atencionPercentil: 55, memoriaTrabajoPercentil: 20, controlInhibitorioPercentil: 60 }
     },
     {
         studentId: 'S002',
         fecha_evaluacion: '2024-05-20',
-        chteaScores: { activo: 60, reflexivo: 70, teorico: 80, pragmatico: 50 },
         chteScores: { planificacion: 60, concentracion: 75, tomaDeApuntes: 80 },
         neuropsychScreening: { atencionPercentil: 70, memoriaTrabajoPercentil: 65, controlInhibitorioPercentil: 75 }
     }

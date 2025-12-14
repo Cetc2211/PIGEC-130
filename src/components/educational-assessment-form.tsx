@@ -18,14 +18,11 @@ export default function EducationalAssessmentForm() {
         const formData = new FormData(event.currentTarget);
         
         const chteScorePlanificacion = Number(formData.get('chte-planificacion'));
+        const memoriaTrabajoPercentil = Number(formData.get('neuro-memoria'));
+        const controlInhibitorioPercentil = Number(formData.get('neuro-inhibicion'));
+
 
         const dataToSave: Omit<EducationalAssessment, 'studentId' | 'fecha_evaluacion'> = {
-            chteaScores: {
-                activo: Number(formData.get('chtea-activo')),
-                reflexivo: Number(formData.get('chtea-reflexivo')),
-                teorico: Number(formData.get('chtea-teorico')),
-                pragmatico: Number(formData.get('chtea-pragmatico')),
-            },
             chteScores: {
                 planificacion: chteScorePlanificacion,
                 concentracion: Number(formData.get('chte-concentracion')),
@@ -33,8 +30,8 @@ export default function EducationalAssessmentForm() {
             },
             neuropsychScreening: {
                 atencionPercentil: Number(formData.get('neuro-atencion')),
-                memoriaTrabajoPercentil: Number(formData.get('neuro-memoria')),
-                controlInhibitorioPercentil: Number(formData.get('neuro-inhibicion')),
+                memoriaTrabajoPercentil: memoriaTrabajoPercentil,
+                controlInhibitorioPercentil: controlInhibitorioPercentil,
             }
         };
 
@@ -47,17 +44,27 @@ export default function EducationalAssessmentForm() {
         // Simulación de guardado
         console.log("Guardando Evaluación Educativa en 'educational_assessments':", finalData);
 
+        let feedbackMessages: string[] = ['Evaluación Educativa guardada con éxito.'];
+
         // Lógica de Triage Educativo (Cap. 6.2.2)
         if (chteScorePlanificacion < 40) {
-            console.log(`TRIAGE EDUCATIVO AUTOMÁTICO: Puntaje de Planificación (${chteScorePlanificacion}) es bajo. Creando tarea para asignar al micro-curso de 'Técnicas de Estudio'.`);
-            setFeedback(`Evaluación guardada. ¡ALERTA DE TRIAGE!: Se ha detectado un área de oportunidad en 'Planificación'. Se recomienda la asignación al micro-curso de 'Técnicas de Estudio'.`);
-        } else {
-            setFeedback('Evaluación Educativa guardada con éxito.');
+            const triageMsg = `TRIAGE EDUCATIVO AUTOMÁTICO: Puntaje de Planificación (${chteScorePlanificacion}) es bajo. Se recomienda la asignación al micro-curso de 'Técnicas de Estudio'.`;
+            console.log(triageMsg);
+            feedbackMessages.push(triageMsg);
         }
+
+        // Lógica de Alerta Cognitiva
+        if (memoriaTrabajoPercentil < 25 || controlInhibitorioPercentil < 25) {
+             const alertMsg = `ALERTA COGNITIVA: Percentiles bajos detectados (MT: ${memoriaTrabajoPercentil}, CI: ${controlInhibitorioPercentil}). Se ha enviado una notificación al Rol Clínico para una evaluación de Nivel 3.`;
+            console.log(alertMsg);
+            feedbackMessages.push(alertMsg);
+        }
+        
+        setFeedback(feedbackMessages.join(' '));
 
         // Limpiar el formulario o mostrar un mensaje de éxito
         (event.target as HTMLFormElement).reset();
-        setTimeout(() => setFeedback(null), 8000);
+        setTimeout(() => setFeedback(null), 10000);
     };
 
     return (
@@ -79,40 +86,12 @@ export default function EducationalAssessmentForm() {
                     </div>
 
                     <Separator />
-                    
-                    {/* SECCIÓN I: CHTEA */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                            <BookOpen />
-                            I. Cuestionario Honey-Alonso de Estilos de Aprendizaje (CHAEA)
-                        </h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="chtea-activo">Puntaje Activo</Label>
-                                <Input id="chtea-activo" name="chtea-activo" type="number" placeholder="Ej. 75" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="chtea-reflexivo">Puntaje Reflexivo</Label>
-                                <Input id="chtea-reflexivo" name="chtea-reflexivo" type="number" placeholder="Ej. 60" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="chtea-teorico">Puntaje Teórico</Label>
-                                <Input id="chtea-teorico" name="chtea-teorico" type="number" placeholder="Ej. 80" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="chtea-pragmatico">Puntaje Pragmático</Label>
-                                <Input id="chtea-pragmatico" name="chtea-pragmatico" type="number" placeholder="Ej. 45" />
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <Separator />
 
                     {/* SECCIÓN II: CHTE */}
                     <div>
                         <h3 className="text-lg font.semibold text-gray-700 mb-4 flex items-center gap-2">
                             <Sparkles />
-                            II. Cuestionario de Hábitos y Técnicas de Estudio (CHTE)
+                            I. Cuestionario de Hábitos y Técnicas de Estudio (CHTE)
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                              <div className="space-y-2">
@@ -136,7 +115,7 @@ export default function EducationalAssessmentForm() {
                     <div>
                         <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
                             <BrainCircuit />
-                            III. Tamizaje Neuropsicológico (Puntajes Normalizados)
+                            II. Tamizaje Neuropsicológico (Puntajes Normalizados)
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                              <div className="space-y-2">
