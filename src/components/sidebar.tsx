@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Scale, Home, Wrench, Settings, ClipboardList, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSession, SessionProvider } from '@/context/SessionContext';
+import { useSession } from '@/context/SessionContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 
@@ -18,10 +18,15 @@ const navItems = [
 function RoleSwitcher() {
   const { role, setRole } = useSession();
 
+  // No renderizar hasta que el rol esté cargado
+  if (role === 'loading') {
+    return null;
+  }
+
   return (
     <div className="space-y-2">
       <Label htmlFor="role-switcher" className="text-xs text-gray-500">Simular Rol de Usuario</Label>
-      <Select value={role} onValueChange={(value) => setRole(value as 'Orientador' | 'Clinico')}>
+      <Select value={role || ''} onValueChange={(value) => setRole(value as 'Orientador' | 'Clinico')}>
         <SelectTrigger id="role-switcher" className="w-full h-9 text-xs">
           <SelectValue placeholder="Seleccionar Rol" />
         </SelectTrigger>
@@ -34,9 +39,18 @@ function RoleSwitcher() {
   )
 }
 
-function SidebarInner() {
+export function Sidebar() {
   const pathname = usePathname();
   const { role } = useSession();
+
+  // No renderizar el contenido principal hasta que el rol esté cargado
+  if (role === 'loading') {
+      return (
+        <aside className="w-64 h-screen bg-white shadow-md flex flex-col p-4">
+            <div className="text-sm text-gray-500">Cargando...</div>
+        </aside>
+      );
+  }
 
   return (
     <aside className="w-64 h-screen bg-white shadow-md flex flex-col">
@@ -75,12 +89,4 @@ function SidebarInner() {
       </div>
     </aside>
   );
-}
-
-export function Sidebar() {
-  return (
-    <SessionProvider>
-      <SidebarInner />
-    </SessionProvider>
-  )
 }
