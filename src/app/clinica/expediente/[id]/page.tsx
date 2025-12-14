@@ -61,7 +61,8 @@ export default function ClinicalFilePage() {
     const studentId = params.id as string;
     const { role } = useSession();
 
-    // Guardia de Ruta Estricta: Si el rol no es Clínico, se deniega el acceso.
+    // -- GUARDIA DE RUTA ESTRICTA --
+    // Si el rol no es 'Clinico', se deniega el acceso y se redirige.
     if (role !== 'Clinico') {
         redirect('/'); // Redirige a la página principal o a una de acceso denegado.
         return null; // No renderizar nada más.

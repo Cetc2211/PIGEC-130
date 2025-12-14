@@ -35,7 +35,8 @@ export default function EducationalFilePage() {
     const studentId = params.id as string;
     const { role } = useSession();
 
-    // Guardia de ruta: si un clínico intenta acceder, lo redirigimos a la vista correcta.
+    // -- GUARDIA DE RUTA INTELIGENTE --
+    // Si un clínico accede a esta vista, lo redirigimos a la vista clínica completa.
     if (role === 'Clinico') {
         redirect(`/clinica/expediente/${studentId}`);
         return null;
