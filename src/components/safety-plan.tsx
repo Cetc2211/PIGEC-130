@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 import { Separator } from './ui/separator';
 
 interface SafetyPlanProps {
@@ -41,7 +40,7 @@ export default function SafetyPlan({ studentName }: SafetyPlanProps) {
         alert("Plan de Seguridad guardado (simulación). Preparando para imprimir...");
 
         // En una aplicación real, aquí iría la lógica para generar un PDF o abrir la ventana de impresión.
-        // window.print();
+        window.print();
     };
 
     return (

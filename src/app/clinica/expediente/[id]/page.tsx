@@ -9,11 +9,12 @@ import FunctionalAnalysisForm from "@/components/functional-analysis-form";
 import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
 import ProgressTracker from "@/components/progress-tracker";
 import PIEIGenerator from "@/components/piei-generator";
+import ReportGenerator from "@/components/report-generator";
 import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId } from "@/lib/store";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, ShieldAlert } from "lucide-react";
-import CrisisManagementActions from '@/components/crisis-management-actions';
+
 
 export default function ClinicalFilePage() {
     const params = useParams();
@@ -23,7 +24,7 @@ export default function ClinicalFilePage() {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        if (role !== null && role !== 'loading') {
+        if (role !== 'loading') {
             setIsLoaded(true);
         }
     }, [role]);
@@ -78,7 +79,7 @@ export default function ClinicalFilePage() {
                     <AlertTitle>Disclaimer Deontológico (Cap. 1.5)</AlertTitle>
                     <AlertDescription>
                         El resultado de este expediente (IRC, BDI, etc.) constituye una Alerta de Riesgo y una <strong>Impresión Diagnóstica Provisional</strong>, no un diagnóstico nosológico definitivo.
-                    </AlertDescription>
+                    </Description>
                 </Alert>
 
                 <div className="space-y-12">
@@ -86,8 +87,8 @@ export default function ClinicalFilePage() {
                     <FunctionalAnalysisForm studentName={student.name} initialData={functionalAnalysis} />
                     <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
                     <PIEIGenerator clinicalData={clinicalAssessment} />
-                    <CrisisManagementActions studentName={student.name} riskLevel={student.suicideRiskLevel} />
                     <ProgressTracker initialData={progressTracking} />
+                    <ReportGenerator student={student} clinicalAssessment={clinicalAssessment} />
                 </div>
             </div>
         </div>
