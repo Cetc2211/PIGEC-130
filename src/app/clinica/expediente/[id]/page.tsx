@@ -9,7 +9,7 @@ import FunctionalAnalysisForm from "@/components/functional-analysis-form";
 import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
 import ProgressTracker from "@/components/progress-tracker";
 import PIEIGenerator from "@/components/piei-generator";
-import ReportGenerator from "@/components/report-generator";
+import ReportGenerator from "@/components/ReportGenerator";
 import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId } from "@/lib/store";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
