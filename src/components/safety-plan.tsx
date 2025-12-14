@@ -45,40 +45,29 @@ export default function SafetyPlan({ studentName }: SafetyPlanProps) {
     };
 
     return (
-        <Card className="shadow-none border-none">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-800">
-                    <ShieldCheck className="h-6 w-6" />
-                    Módulo de Plan de Seguridad y Crisis (DBT/TCS)
-                </CardTitle>
-                <CardDescription className="text-red-700">
-                    Herramienta para el manejo activo del riesgo suicida y de autolesiones (Cap. 11.2).
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-                <form onSubmit={handleSaveAndPrint} className="space-y-8">
-                    {safetyPlanSteps.map((step, index) => (
-                        <div key={step.id} className="space-y-2">
-                            <Label htmlFor={step.id} className="text-md font-semibold text-gray-800">{step.label}</Label>
-                            <Textarea
-                                id={step.id}
-                                name={step.id}
-                                placeholder={step.placeholder}
-                                className="min-h-[100px] text-base"
-                                required
-                            />
-                             {index < safetyPlanSteps.length - 1 && <Separator className="mt-6"/>}
-                        </div>
-                    ))}
-                    
-                    <div className="flex justify-end pt-4">
-                        <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-6 py-3">
-                            <Printer className="mr-2 h-5 w-5" />
-                            Guardar y Generar Contrato de Seguridad
-                        </Button>
+        <div className="pt-6">
+            <form onSubmit={handleSaveAndPrint} className="space-y-8">
+                {safetyPlanSteps.map((step, index) => (
+                    <div key={step.id} className="space-y-2">
+                        <Label htmlFor={step.id} className="text-md font-semibold text-gray-800">{step.label}</Label>
+                        <Textarea
+                            id={step.id}
+                            name={step.id}
+                            placeholder={step.placeholder}
+                            className="min-h-[100px] text-base"
+                            required
+                        />
+                            {index < safetyPlanSteps.length - 1 && <Separator className="mt-6"/>}
                     </div>
-                </form>
-            </CardContent>
-        </Card>
+                ))}
+                
+                <div className="flex justify-end pt-4">
+                    <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-6 py-3">
+                        <Printer className="mr-2 h-5 w-5" />
+                        Guardar y Generar Contrato de Seguridad
+                    </Button>
+                </div>
+            </form>
+        </div>
     );
 }

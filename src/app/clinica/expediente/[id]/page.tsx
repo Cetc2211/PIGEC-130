@@ -8,71 +8,38 @@ import ClinicalAssessmentForm from "@/components/clinical-assessment-form";
 import FunctionalAnalysisForm from "@/components/functional-analysis-form";
 import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
 import ProgressTracker from "@/components/progress-tracker";
-import ReferralFlow from "@/components/referral-flow";
-import SafetyPlan from "@/components/safety-plan";
 import PIEIGenerator from "@/components/piei-generator";
 import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId } from "@/lib/store";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, ShieldAlert } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-function CrisisManagementActions({ studentName, riskLevel }: { studentName: string, riskLevel: 'Bajo' | 'Medio' | 'Alto' | 'Crítico' }) {
-    const isHighRisk = riskLevel === 'Alto' || riskLevel === 'Crítico';
-
-    return (
-        <Card className="shadow-lg border-amber-500">
-            <CardHeader>
-                <CardTitle>Acciones de Crisis y Derivación</CardTitle>
-                <CardDescription>Protocolos para manejo de riesgo y canalización a especialistas.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col md:flex-row gap-4 justify-around items-center">
-                 <Dialog>
-                    <DialogTrigger asChild>
-                         <Button variant={isHighRisk ? "destructive" : "secondary"} className="font-bold w-full md:w-auto">
-                            <ShieldAlert className="mr-2 h-4 w-4" />
-                            Activar Plan de Seguridad
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-                        <DialogHeader>
-                          <DialogTitle>Módulo de Plan de Seguridad y Crisis</DialogTitle>
-                          <DialogDescription>
-                            Herramienta para el manejo activo del riesgo suicida y de autolesiones (Cap. 11.2).
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="flex-grow overflow-y-auto">
-                           <SafetyPlan studentName={studentName} />
-                        </div>
-                    </DialogContent>
-                </Dialog>
-
-                <ReferralFlow studentName={studentName} />
-            </CardContent>
-        </Card>
-    )
-}
-
+import CrisisManagementActions from '@/components/crisis-management-actions';
 
 export default function ClinicalFilePage() {
     const params = useParams();
     const studentId = params.id as string;
     const { role } = useSession();
     
-    // GUARDIA DE RUTA ESTRICTA
-    if (role === 'loading') {
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        if (role !== null && role !== 'loading') {
+            setIsLoaded(true);
+        }
+    }, [role]);
+
+    if (isLoaded) {
+        if (role !== 'Clinico') {
+            console.error(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica.`);
+            redirect(`/educativa/estudiante/${studentId}`); 
+            return null;
+        }
+    }
+
+    if (!isLoaded) {
         return <div className="p-8 text-center text-xl">Verificando Permisos de Seguridad...</div>;
     }
 
-    if (role !== 'Clinico') {
-        console.error(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica.`);
-        redirect(`/educativa/estudiante/${studentId}`); 
-        return null;
-    }
-
-    // El resto del componente solo se ejecuta si el rol es 'Clinico'
     const student = getStudentById(studentId);
     const clinicalAssessment = getClinicalAssessmentByStudentId(studentId);
     const functionalAnalysis = getFunctionalAnalysisByStudentId(studentId);
