@@ -16,32 +16,30 @@ import RiskTimelineChart from '@/components/RiskTimelineChart';
 import SOAPNotesForm from '@/components/SOAPNotesForm';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert } from "lucide-react";
+import { Terminal, ShieldAlert, Loader } from "lucide-react";
 
 
 export default function ClinicalFilePage() {
     const params = useParams();
     const studentId = params.id as string;
     const { role } = useSession();
-    
-    const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        if (role !== 'loading') {
-            setIsLoaded(true);
+        if (role && role !== 'loading' && role !== 'Clinico') {
+            console.error(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica. Redirigiendo.`);
+            redirect(`/educativa/estudiante/${studentId}`);
         }
-    }, [role]);
+    }, [role, studentId]);
 
-    if (isLoaded) {
-        if (role !== 'Clinico') {
-            console.error(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica.`);
-            redirect(`/educativa/estudiante/${studentId}`); 
-            return null;
-        }
-    }
-
-    if (!isLoaded) {
-        return <div className="p-8 text-center text-xl">Verificando Permisos de Seguridad...</div>;
+    if (role === 'loading' || role !== 'Clinico') {
+        return (
+            <div className="flex h-screen w-full items-center justify-center p-8">
+                <div className="flex items-center gap-2 text-xl text-gray-600">
+                    <Loader className="animate-spin" />
+                    Verificando Permisos de Seguridad...
+                </div>
+            </div>
+        );
     }
 
     const student = getStudentById(studentId);

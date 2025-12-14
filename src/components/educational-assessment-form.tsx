@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { BookOpen, BrainCircuit, CheckSquare, Sparkles } from 'lucide-react';
+import { BookOpen, BrainCircuit, CheckSquare, Sparkles, AlertCircle, CheckCircle } from 'lucide-react';
 import { EducationalAssessment } from '@/lib/store';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export default function EducationalAssessmentForm() {
-    const [feedback, setFeedback] = useState<string | null>(null);
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'triage' | 'alert', message: string }[]>([]);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -44,27 +45,27 @@ export default function EducationalAssessmentForm() {
         // Simulación de guardado
         console.log("Guardando Evaluación Educativa en 'educational_assessments':", finalData);
 
-        let feedbackMessages: string[] = ['Evaluación Educativa guardada con éxito.'];
+        let feedbackMessages: { type: 'success' | 'triage' | 'alert', message: string }[] = [{type: 'success', message: 'Evaluación Educativa guardada con éxito.'}];
 
-        // Lógica de Triage Educativo (Cap. 6.2.2)
+        // Lógica de Triage Educativo (Cap. 6.2.2 y Cap. 9)
         if (chteScorePlanificacion < 40) {
-            const triageMsg = `TRIAGE EDUCATIVO AUTOMÁTICO: Puntaje de Planificación (${chteScorePlanificacion}) es bajo. Se recomienda la asignación al micro-curso de 'Técnicas de Estudio'.`;
+            const triageMsg = `TRIAGE EDUCATIVO AUTOMÁTICO: Puntaje de Planificación (${chteScorePlanificacion}) es bajo. Se ha registrado la inscripción automática al micro-curso de 'Técnicas de Estudio'.`;
             console.log(triageMsg);
-            feedbackMessages.push(triageMsg);
+            feedbackMessages.push({ type: 'triage', message: triageMsg });
         }
 
         // Lógica de Alerta Cognitiva
         if (memoriaTrabajoPercentil < 25 || controlInhibitorioPercentil < 25) {
              const alertMsg = `ALERTA COGNITIVA: Percentiles bajos detectados (MT: ${memoriaTrabajoPercentil}, CI: ${controlInhibitorioPercentil}). Se ha enviado una notificación al Rol Clínico para una evaluación de Nivel 3.`;
             console.log(alertMsg);
-            feedbackMessages.push(alertMsg);
+            feedbackMessages.push({ type: 'alert', message: alertMsg });
         }
         
-        setFeedback(feedbackMessages.join(' '));
+        setFeedback(feedbackMessages);
 
         // Limpiar el formulario o mostrar un mensaje de éxito
         (event.target as HTMLFormElement).reset();
-        setTimeout(() => setFeedback(null), 10000);
+        setTimeout(() => setFeedback([]), 15000);
     };
 
     return (
@@ -139,9 +140,22 @@ export default function EducationalAssessmentForm() {
                         </Button>
                     </div>
 
-                    {feedback && (
-                        <div className="mt-4 p-3 rounded-md text-sm bg-green-100 text-green-800 border border-green-300">
-                           {feedback}
+                    {feedback.length > 0 && (
+                        <div className="mt-6 space-y-4">
+                            {feedback.map((item, index) => (
+                                <Alert key={index} variant={item.type === 'success' ? 'default' : 'destructive'} className={`${item.type === 'success' ? 'bg-green-50 border-green-300 text-green-800' : ''} ${item.type === 'triage' ? 'bg-yellow-50 border-yellow-300 text-yellow-800' : ''} ${item.type === 'alert' ? 'bg-red-50 border-red-300 text-red-800' : ''}`}>
+                                    {item.type === 'success' && <CheckCircle className="h-4 w-4" />}
+                                    {(item.type === 'triage' || item.type === 'alert') && <AlertCircle className="h-4 w-4" />}
+                                    <AlertTitle>
+                                        {item.type === 'success' && 'Éxito'}
+                                        {item.type === 'triage' && 'Validación de Triage Educativo'}
+                                        {item.type === 'alert' && 'Validación de Alerta Cognitiva'}
+                                    </AlertTitle>
+                                    <AlertDescription>
+                                       {item.message}
+                                    </AlertDescription>
+                                </Alert>
+                            ))}
                         </div>
                     )}
                 </form>

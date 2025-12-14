@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -14,6 +13,32 @@ interface ReferralFlowProps {
     studentName: string;
     diagnosticImpression: string;
 }
+
+/**
+ * Validates that sensitive data is not included in the referral letter.
+ * @param template The letter template to check.
+ * @returns boolean - True if the template is clean, false otherwise.
+ */
+function validateReferralContent(template: string): boolean {
+    const lowerCaseTemplate = template.toLowerCase();
+    const forbiddenTerms = ['bdi', 'bai', 'soap', 'beck Depression Inventory']; // Terms to exclude
+    
+    for (const term of forbiddenTerms) {
+        if (lowerCaseTemplate.includes(term)) {
+            console.error(`VALIDATION FAILED: El término prohibido "${term}" fue encontrado en la carta de referencia.`);
+            return false;
+        }
+    }
+    
+    // Test de Integridad Documental (Cap. 8): La impresión diagnóstica debe estar presente.
+    if (!lowerCaseTemplate.includes('impresión diagnóstica provisional')) {
+        console.error("VALIDATION FAILED: La Impresión Diagnóstica Provisional es obligatoria y no fue encontrada.");
+        return false;
+    }
+    
+    return true;
+}
+
 
 export default function ReferralFlow({ studentName, diagnosticImpression }: ReferralFlowProps) {
 
@@ -46,6 +71,17 @@ Psicólogo(a) del Departamento de Orientación Educativa
 CBTA 130
 `.trim();
 
+    const isContentValid = validateReferralContent(referralLetterTemplate);
+
+    const handleCopy = () => {
+         if (isContentValid) {
+            navigator.clipboard.writeText(referralLetterTemplate);
+            alert("Plantilla copiada al portapapeles. El contenido ha sido validado.");
+         } else {
+             alert("ERROR DE VALIDACIÓN: No se puede copiar la plantilla. Contiene datos sensibles o le falta información requerida. Revise la consola.");
+         }
+    };
+
     return (
         <DialogContent className="max-w-2xl">
              <DialogHeader>
@@ -59,11 +95,16 @@ CBTA 130
                 <Textarea
                     value={referralLetterTemplate}
                     readOnly
-                    className="min-h-[400px] bg-gray-50 text-sm font-mono"
+                    className={`min-h-[400px] bg-gray-50 text-sm font-mono ${!isContentValid ? 'border-red-500 ring-2 ring-red-500' : ''}`}
                 />
+                {!isContentValid && (
+                    <p className="text-sm text-red-600 font-bold">
+                        Error de validación: Se detectaron datos clínicos sensibles o falta la impresión diagnóstica. La copia está deshabilitada.
+                    </p>
+                )}
                     <div className="flex justify-end">
-                    <Button onClick={() => navigator.clipboard.writeText(referralLetterTemplate)}>
-                        Copiar Plantilla
+                    <Button onClick={handleCopy} disabled={!isContentValid}>
+                        Copiar Plantilla Validada
                     </Button>
                 </div>
             </div>
