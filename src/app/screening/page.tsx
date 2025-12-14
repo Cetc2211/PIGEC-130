@@ -1,3 +1,5 @@
+'use client';
+
 import ScreeningManagement from '@/components/screening-management';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
