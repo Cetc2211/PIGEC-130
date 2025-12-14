@@ -2,23 +2,23 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Scale, Home, Wrench, Settings, ClipboardList, Users } from 'lucide-react';
+import { Scale, Home, Wrench, Settings, ClipboardList, Users, BookText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/context/SessionContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 
 const navItems = [
-  { href: '/', label: 'Dashboard de Riesgo', icon: Home },
-  { href: '/screening', label: 'Módulo de Tamizaje', icon: ClipboardList },
-  { href: '/tools', label: 'Herramientas', icon: Wrench },
-  { href: '/admin', label: 'Administración', icon: Settings },
+  { href: '/', label: 'Dashboard de Riesgo', icon: Home, roles: ['Clinico', 'Orientador'] },
+  { href: '/screening', label: 'Módulo de Tamizaje', icon: ClipboardList, roles: ['Clinico'] },
+  { href: '/educativa/evaluacion', label: 'Evaluación Educativa', icon: BookText, roles: ['Orientador'] },
+  { href: '/admin', label: 'Administración', icon: Settings, roles: ['Clinico'] },
+  { href: '/tools', label: 'Herramientas', icon: Wrench, roles: ['Clinico', 'Orientador'] },
 ];
 
 function RoleSwitcher() {
   const { role, setRole } = useSession();
 
-  // No renderizar hasta que el rol esté cargado
   if (role === 'loading') {
     return null;
   }
@@ -43,7 +43,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const { role } = useSession();
 
-  // No renderizar el contenido principal hasta que el rol esté cargado
   if (role === 'loading') {
       return (
         <aside className="w-64 h-screen bg-white shadow-md flex flex-col p-4">
@@ -51,6 +50,8 @@ export function Sidebar() {
         </aside>
       );
   }
+  
+  const filteredNavItems = navItems.filter(item => item.roles.includes(role as string));
 
   return (
     <aside className="w-64 h-screen bg-white shadow-md flex flex-col">
@@ -66,7 +67,7 @@ export function Sidebar() {
         </Link>
       </div>
       <nav className="flex-1 px-4 py-4 space-y-2">
-        {navItems.map((item) => (
+        {filteredNavItems.map((item) => (
           <Link
             key={item.label}
             href={item.href}

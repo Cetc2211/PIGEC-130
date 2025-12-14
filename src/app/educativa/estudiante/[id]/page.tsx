@@ -2,32 +2,12 @@
 
 import { useParams, redirect } from 'next/navigation';
 import { useSession } from '@/context/SessionContext';
-import React from 'react';
-import { getStudentById } from '@/lib/store';
+import React, { useEffect, useState } from 'react';
+import { getStudentById, getEducationalAssessmentByStudentId } from '@/lib/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock, BarChartHorizontal } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import PIEIFeedback from '@/components/piei-feedback';
-
-function ChteaRadarChartPlaceholder() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <BarChartHorizontal />
-                    Gráfico de Radar (CHAEA)
-                </CardTitle>
-                <CardDescription>
-                    Visualización de los Estilos de Aprendizaje dominantes del estudiante.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="h-60 flex items-center justify-center bg-gray-100 rounded-lg">
-                    <p className="text-gray-500 text-sm">(Placeholder para el Gráfico de Radar de Estilos de Aprendizaje)</p>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
+import ChteaRadarChart from '@/components/chtea-radar-chart';
 
 
 export default function EducationalFilePage() {
@@ -35,17 +15,29 @@ export default function EducationalFilePage() {
     const studentId = params.id as string;
     const { role } = useSession();
 
-    // GUARDIA DE RUTA
-    if (role === 'loading') {
-        return <div className="p-8 text-center text-xl">Verificando Permisos Educativos...</div>;
-    }
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    if (role === 'Clinico') {
-        redirect(`/clinica/expediente/${studentId}`);
-        return null;
+    useEffect(() => {
+        if (role && role !== 'loading') {
+            setIsLoaded(true);
+        }
+    }, [role]);
+
+    // GUARDIA DE RUTA INVERSA: Si eres Clínico, ve a tu vista completa
+    if (isLoaded) {
+        if (role === 'Clinico') {
+            redirect(`/clinica/expediente/${studentId}`);
+            return null; 
+        }
+    }
+    
+    if (role === 'loading' || !isLoaded) {
+        return <div className="p-8 text-center text-xl">Verificando Permisos Educativos...</div>;
     }
     
     const student = getStudentById(studentId);
+    const educationalAssessment = getEducationalAssessmentByStudentId(studentId);
+
 
     if (!student) {
         // En una app real, esto sería una página 404
@@ -74,7 +66,7 @@ export default function EducationalFilePage() {
 
                 <div className="space-y-12">
                    <PIEIFeedback />
-                   <ChteaRadarChartPlaceholder />
+                   <ChteaRadarChart initialData={educationalAssessment?.chteaScores} />
                 </div>
             </div>
         </div>

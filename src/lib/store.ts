@@ -8,6 +8,7 @@ export interface Student {
     demographics: {
         age: number;
         group: string; // ej. "3B"
+        semester: number; // Semestre actual
     };
     emergencyContact: {
         name: string;
@@ -85,12 +86,41 @@ export interface ProgressData {
 }
 
 
+// --- TIPOS PARA LA EVALUACIÓN EDUCATIVA ---
+export interface ChteaScores {
+    activo: number;
+    reflexivo: number;
+    teorico: number;
+    pragmatico: number;
+}
+
+export interface ChteScores {
+    planificacion: number;
+    concentracion: number;
+    tomaDeApuntes: number;
+}
+
+export interface NeuropsychScreening {
+    atencionPercentil: number;
+    memoriaTrabajoPercentil: number;
+    controlInhibitorioPercentil: number;
+}
+
+export interface EducationalAssessment {
+    studentId: string; // FK
+    fecha_evaluacion: string;
+    chteaScores: ChteaScores;
+    chteScores: ChteScores;
+    neuropsychScreening: NeuropsychScreening;
+}
+
+
 // --- Simulación de la Base de Datos (Firestore) en Memoria ---
 
 const studentsDB: Student[] = [
     { 
         id: 'S001', name: 'Ana M. Pérez (Caso de Prueba: Riesgo Crítico)', 
-        demographics: { age: 17, group: '5A' },
+        demographics: { age: 17, group: '5A', semester: 5 },
         emergencyContact: { name: 'Mariana López', phone: '5512345678' },
         suicideRiskLevel: 'Crítico',
         academicData: { gpa: 6.2, absences: 35 },
@@ -99,7 +129,7 @@ const studentsDB: Student[] = [
     },
     { 
         id: 'S002', name: 'Carlos V. Ruiz (Riesgo Medio)', 
-        demographics: { age: 16, group: '3B' },
+        demographics: { age: 16, group: '3B', semester: 3 },
         emergencyContact: { name: 'Juan Mendoza', phone: '5587654321' },
         suicideRiskLevel: 'Medio',
         academicData: { gpa: 7.8, absences: 15 },
@@ -107,7 +137,7 @@ const studentsDB: Student[] = [
     },
     { 
         id: 'S003', name: 'Laura J. García (Riesgo Bajo)', 
-        demographics: { age: 18, group: '5A' },
+        demographics: { age: 18, group: '5A', semester: 6 },
         emergencyContact: { name: 'Lucía Jiménez', phone: '5555555555' },
         suicideRiskLevel: 'Bajo',
         academicData: { gpa: 9.1, absences: 5 },
@@ -119,6 +149,23 @@ const evaluationsDB: Evaluation[] = [
     { id: 'eval-01', studentId: 'S001', type: 'GAD-7', score: 21, date: new Date('2024-05-01') },
     { id: 'eval-02', studentId: 'S002', type: 'GAD-7', score: 10, date: new Date('2024-05-10') },
     { id: 'eval-03', studentId: 'S003', type: 'GAD-7', score: 4, date: new Date('2024-05-12') },
+];
+
+const educationalAssessmentsDB: EducationalAssessment[] = [
+    {
+        studentId: 'S001',
+        fecha_evaluacion: '2024-05-18',
+        chteaScores: { activo: 80, reflexivo: 40, teorico: 30, pragmatico: 60 },
+        chteScores: { planificacion: 35, concentracion: 50, tomaDeApuntes: 45 },
+        neuropsychScreening: { atencionPercentil: 55, memoriaTrabajoPercentil: 45, controlInhibitorioPercentil: 60 }
+    },
+    {
+        studentId: 'S002',
+        fecha_evaluacion: '2024-05-20',
+        chteaScores: { activo: 60, reflexivo: 70, teorico: 80, pragmatico: 50 },
+        chteScores: { planificacion: 60, concentracion: 75, tomaDeApuntes: 80 },
+        neuropsychScreening: { atencionPercentil: 70, memoriaTrabajoPercentil: 65, controlInhibitorioPercentil: 75 }
+    }
 ];
 
 // --- DATOS SIMULADOS PARA EL CASO DE ANA PÉREZ ---
@@ -209,4 +256,8 @@ export function getTreatmentPlanByStudentId(studentId: string): TreatmentPlan | 
 
 export function getProgressTrackingByStudentId(studentId: string): ProgressData[] {
     return progressTrackingDB[studentId] || [];
+}
+
+export function getEducationalAssessmentByStudentId(studentId: string): EducationalAssessment | undefined {
+    return educationalAssessmentsDB.find(a => a.studentId === studentId);
 }
