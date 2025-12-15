@@ -107,6 +107,17 @@ export interface EducationalAssessment {
     neuropsychScreening: NeuropsychScreening;
 }
 
+// --- TIPO PARA EL REPOSITORIO DE EVIDENCIA ---
+export interface EvidenceReference {
+    id: string;
+    titulo: string;
+    autor: string;
+    ano: number;
+    modeloIntervencion: 'TCC' | 'AC' | 'DBT' | 'Adaptación Educativa';
+    aplicabilidad: string;
+    tags: string[];
+}
+
 
 // --- Simulación de la Base de Datos (Firestore) en Memoria ---
 
@@ -217,6 +228,46 @@ const progressTrackingDB: { [studentId: string]: ProgressData[] } = {
     ]
 };
 
+// --- NUEVA COLECCIÓN: REPOSITORIO DE EVIDENCIA ---
+const evidenceRepositoryDB: EvidenceReference[] = [
+    {
+        id: 'ref_ac_01',
+        titulo: 'Overcoming avoidance through activation: A practitioner\'s guide to behavioral activation for depression.',
+        autor: 'Lejuez, C. W., Hopko, D. R., & Hopko, S. D.',
+        ano: 2001,
+        modeloIntervencion: 'AC',
+        aplicabilidad: 'Fundamento de la Activación Conductual para síntomas depresivos, anhedonia, y evitación conductual. Útil para el Módulo 3 (Plan Narrativo).',
+        tags: ['activacion-conductual', 'depresion']
+    },
+    {
+        id: 'ref_tcc_01',
+        titulo: 'Cognitive therapy: Basics and beyond.',
+        autor: 'Beck, J. S.',
+        ano: 2011,
+        modeloIntervencion: 'TCC',
+        aplicabilidad: 'Guía para la reestructuración cognitiva, identificación de pensamientos automáticos y modificación de creencias nucleares. Justifica el Módulo 2.3 (Análisis Funcional).',
+        tags: ['tcc', 'reestructuracion-cognitiva']
+    },
+    {
+        id: 'ref_dbt_01',
+        titulo: 'DBT® Skills Training Manual, Second Edition.',
+        autor: 'Linehan, M. M.',
+        ano: 2014,
+        modeloIntervencion: 'DBT',
+        aplicabilidad: 'Manual de referencia para habilidades de regulación emocional, tolerancia al malestar y efectividad interpersonal. Justifica el Módulo 4 (Seguimiento de Progreso).',
+        tags: ['dbt', 'regulacion-emocional']
+    },
+    {
+        id: 'ref_edu_01',
+        titulo: 'Promoting self-regulated learning in the classroom.',
+        autor: 'Zimmerman, B. J.',
+        ano: 2002,
+        modeloIntervencion: 'Adaptación Educativa',
+        aplicabilidad: 'Base para el diseño de intervenciones pedagógicas que fomentan la autonomía, como la técnica de los 5 minutos y la segmentación de tareas. Justifica el Módulo 7 (Generador PIEI).',
+        tags: ['educativa', 'planificacion', 'procrastinacion']
+    }
+];
+
 
 // --- Funciones de Acceso a Datos (Simulan llamadas a Firestore) ---
 
@@ -251,4 +302,8 @@ export function getProgressTrackingByStudentId(studentId: string): ProgressData[
 
 export function getEducationalAssessmentByStudentId(studentId: string): EducationalAssessment | undefined {
     return educationalAssessmentsDB.find(a => a.studentId === studentId);
+}
+
+export function getEvidenceRepository(): EvidenceReference[] {
+    return evidenceRepositoryDB;
 }

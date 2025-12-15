@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ClinicalAssessment } from '@/lib/store';
+import { ClinicalAssessment, getEvidenceRepository, EvidenceReference } from '@/lib/store';
 import { Lightbulb, BookOpen, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 
 interface PIEIGeneratorProps {
     clinicalData?: ClinicalAssessment;
@@ -15,31 +16,33 @@ interface PIEIGeneratorProps {
 
 // --- Algoritmo de Traducción (Simulación) ---
 // Mapea hallazgos clínicos a instrucciones pedagógicas NO clínicas.
-const translationMap: { [key: string]: { condition: (data: ClinicalAssessment) => boolean; instructions: { id: string, text: string }[] } } = {
+const translationMap: { [key: string]: { condition: (data: ClinicalAssessment) => boolean; instructions: { id: string, text: string, evidenceTag: string }[] } } = {
     AjustesMetodologicos: {
         condition: (data) => data.neuro_mt_score < 85, // Memoria de Trabajo baja
         instructions: [
-            { id: 'met_1', text: 'Entregar instrucciones de forma segmentada (un paso a la vez).' },
-            { id: 'met_2', text: 'Utilizar apoyos visuales (diagramas, mapas conceptuales) para las tareas.' },
-            { id: 'met_3', text: 'Confirmar la comprensión de las instrucciones pidiendo que las repita.' },
+            { id: 'met_1', text: 'Entregar instrucciones de forma segmentada (un paso a la vez).', evidenceTag: 'educativa' },
+            { id: 'met_2', text: 'Utilizar apoyos visuales (diagramas, mapas conceptuales) para las tareas.', evidenceTag: 'educativa' },
+            { id: 'met_3', text: 'Confirmar la comprensión de las instrucciones pidiendo que las repita.', evidenceTag: 'educativa' },
         ]
     },
     AjustesActivacion: {
         condition: (data) => data.bdi_ii_score > 20, // Síntomas depresivos significativos (apatía, anhedonia)
         instructions: [
-            { id: 'act_1', text: 'Aplicar la "técnica de los 5 minutos" para iniciar tareas académicas.' },
-            { id: 'act_2', text: 'Establecer metas de tarea muy pequeñas y concretas (ej. "leer 2 párrafos").' },
-            { id: 'act_3', text: 'Permitir una pausa activa breve (2-3 min) entre bloques de trabajo.' },
+            { id: 'act_1', text: 'Aplicar la "técnica de los 5 minutos" para iniciar tareas académicas.', evidenceTag: 'activacion-conductual' },
+            { id: 'act_2', text: 'Establecer metas de tarea muy pequeñas y concretas (ej. "leer 2 párrafos").', evidenceTag: 'activacion-conductual' },
+            { id: 'act_3', text: 'Permitir una pausa activa breve (2-3 min) entre bloques de trabajo.', evidenceTag: 'dbt' },
         ]
     },
     AjustesAcceso: {
         condition: (data) => data.bai_score > 16, // Síntomas de ansiedad significativos
         instructions: [
-            { id: 'acc_1', text: 'Permitir el uso de audífonos con música instrumental durante el trabajo individual.' },
-            { id: 'acc_2', text: 'Ofrecer un espacio tranquilo y con menos estímulos para presentar exámenes.' },
+            { id: 'acc_1', text: 'Permitir el uso de audífonos con música instrumental durante el trabajo individual.', evidenceTag: 'educativa' },
+            { id: 'acc_2', text: 'Ofrecer un espacio tranquilo y con menos estímulos para presentar exámenes.', evidenceTag: 'educativa' },
         ]
     }
 };
+
+const allEvidence = getEvidenceRepository();
 
 export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
     const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +51,7 @@ export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
     const generatedSuggestions = useMemo(() => {
         if (!clinicalData) return [];
         
-        let suggestions = [];
+        let suggestions: { id: string, text: string, evidenceTag: string }[] = [];
         for (const key in translationMap) {
             if (translationMap[key].condition(clinicalData)) {
                 suggestions.push(...translationMap[key].instructions);
@@ -69,21 +72,27 @@ export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
         setIsLoading(true);
         const finalPlan = generatedSuggestions.filter(instr => selectedInstructions.includes(instr.id));
         
-        console.log("--- CORTAFUEGOS ÉTICO ACTIVADO ---");
+        const evidenceTags = new Set(finalPlan.map(instr => instr.evidenceTag));
+        const supportingEvidence = allEvidence.filter(ref => ref.tags.some(tag => evidenceTags.has(tag)));
+
+        console.log("--- CORTAFUEGOS ÉTICO Y VALIDACIÓN DE EVIDENCIA ---");
         console.log("Generando PIEI para Rol Orientador/Docente...");
         console.log("Datos Clínicos (Privados, no se envían):", clinicalData);
         console.log("Instrucciones Pedagógicas (Públicas, filtradas):", finalPlan);
+        console.log("Justificación Bibliográfica (Automática):", supportingEvidence.map(e => `${e.autor} (${e.ano})`));
+
         console.log("Guardando en 'piei_plans' (simulación):", {
             studentId: clinicalData?.studentId,
             approved_instructions: finalPlan,
+            supporting_evidence: supportingEvidence.map(e => e.id),
             approved_at: new Date().toISOString(),
             approved_by: 'Rol Clínico'
         });
         
         setTimeout(() => {
             setIsLoading(false);
-            alert("PIEI finalizado y enviado al Rol Orientador (simulación).");
-        }, 1000);
+            alert("PIEI finalizado y enviado al Rol Orientador (simulación). La justificación bibliográfica ha sido adjuntada automáticamente.");
+        }, 1500);
     };
 
     return (
@@ -91,7 +100,7 @@ export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
             <CardHeader>
                 <CardTitle>Módulo 7: Generador de Plan de Intervención Educativa (PIEI)</CardTitle>
                 <CardDescription>
-                    Traducción de hallazgos clínicos a instrucciones pedagógicas para el personal de apoyo (Rol Orientador/Docente).
+                    Traducción de hallazgos clínicos a instrucciones pedagógicas para el personal de apoyo. Las intervenciones se justifican con la evidencia del <Link href="/tools" className="underline text-blue-600">Repositorio</Link>.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -138,5 +147,3 @@ export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
         </Card>
     );
 }
-
-    
