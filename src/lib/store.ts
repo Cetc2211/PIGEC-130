@@ -232,16 +232,16 @@ const progressTrackingDB: { [studentId: string]: ProgressData[] } = {
 const evidenceRepositoryDB: EvidenceReference[] = [
     {
         id: 'ref_ac_01',
-        titulo: 'Overcoming avoidance through activation: A practitioner\'s guide to behavioral activation for depression.',
+        titulo: 'Guía práctica de activación conductual para la depresión',
         autor: 'Lejuez, C. W., Hopko, D. R., & Hopko, S. D.',
         ano: 2001,
         modeloIntervencion: 'AC',
-        aplicabilidad: 'Fundamento de la Activación Conductual para síntomas depresivos, anhedonia, y evitación conductual. Útil para el Módulo 3 (Plan Narrativo).',
+        aplicabilidad: 'Fundamento de la Activación Conductual para síntomas depresivos, anhedonia y evitación. Útil para el Módulo 3 (Plan Narrativo).',
         tags: ['activacion-conductual', 'depresion']
     },
     {
         id: 'ref_tcc_01',
-        titulo: 'Cognitive therapy: Basics and beyond.',
+        titulo: 'Terapia Cognitiva: Conceptos Básicos y Profundización',
         autor: 'Beck, J. S.',
         ano: 2011,
         modeloIntervencion: 'TCC',
@@ -250,16 +250,16 @@ const evidenceRepositoryDB: EvidenceReference[] = [
     },
     {
         id: 'ref_dbt_01',
-        titulo: 'DBT® Skills Training Manual, Second Edition.',
+        titulo: 'Manual de Entrenamiento en Habilidades DBT (2ª Ed.)',
         autor: 'Linehan, M. M.',
         ano: 2014,
         modeloIntervencion: 'DBT',
-        aplicabilidad: 'Manual de referencia para habilidades de regulación emocional, tolerancia al malestar y efectividad interpersonal. Justifica el Módulo 4 (Seguimiento de Progreso).',
+        aplicabilidad: 'Referencia para habilidades de regulación emocional, tolerancia al malestar y efectividad interpersonal. Justifica el Módulo 4 (Seguimiento de Progreso).',
         tags: ['dbt', 'regulacion-emocional']
     },
     {
         id: 'ref_edu_01',
-        titulo: 'Promoting self-regulated learning in the classroom.',
+        titulo: 'Fomentando el aprendizaje autorregulado en el aula',
         autor: 'Zimmerman, B. J.',
         ano: 2002,
         modeloIntervencion: 'Adaptación Educativa',
