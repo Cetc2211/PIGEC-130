@@ -16,9 +16,10 @@ import RiskTimelineChart from '@/components/RiskTimelineChart';
 import SOAPNotesForm from '@/components/SOAPNotesForm';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert, Loader, ClipboardList } from "lucide-react";
+import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen } from "lucide-react";
 import ScreeningManagement from '@/components/screening-management';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import WISCScoringConsole from '@/components/WISC-VScoringConsole';
 
 
 export default function ClinicalFilePage() {
@@ -99,6 +100,19 @@ export default function ClinicalFilePage() {
                              <ScreeningManagement />
                         </CardContent>
                     </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <BookOpen />
+                                Evaluación Psicométrica (WISC-V)
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <WISCScoringConsole studentAge={student.demographics.age} />
+                        </CardContent>
+                    </Card>
+
 
                     <FunctionalAnalysisForm studentName={student.name} initialData={functionalAnalysis} />
                     <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
