@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "lucide-react";
+import { Link, Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useSession } from '@/context/SessionContext';
+import { Separator } from './ui/separator';
 
 const allScreenings = [
     {
@@ -23,35 +24,57 @@ const allScreenings = [
         title: 'CHTE (Hábitos y Técnicas de Estudio)',
         description: 'Mide las estrategias de planificación, concentración y toma de apuntes del estudiante.',
         chapter: 'Cap. 6.2.1',
-        roles: ['Orientador', 'Clinico']
+        roles: ['Orientador', 'Clinico'],
+        sampleQuestions: [
+            "Cuando tengo que estudiar, ¿hago un plan de lo que voy a hacer?",
+            "¿Me distraigo fácilmente con el ruido o mis pensamientos?",
+            "Cuando un profesor explica algo, ¿tomo notas para revisarlas después?"
+        ]
     },
     {
         id: 'neuro-screen',
         title: 'Tamizaje Neuropsicológico (Gamificado)',
         description: 'Tarea interactiva para medir atención sostenida, memoria de trabajo y control inhibitorio.',
         chapter: 'Cap. 6.2.3',
-        roles: ['Orientador', 'Clinico']
+        roles: ['Orientador', 'Clinico'],
+        sampleQuestions: [
+            "Tarea Go/No-Go: 'Presiona la pantalla cuando veas un círculo verde, pero no cuando veas uno rojo'.",
+            "Span de Dígitos: 'Repite la siguiente secuencia de números: 8-3-5-1-9'.",
+        ]
     },
     {
         id: 'bdi-ii',
         title: 'BDI-II (Inventario de Depresión de Beck)',
         description: 'Evalúa la severidad de los síntomas depresivos. Instrumento clave para el Nivel 3.',
         chapter: 'Cap. 7.1',
-        roles: ['Clinico']
+        roles: ['Clinico'],
+        sampleQuestions: [
+            "Tristeza: '0. No me siento triste.', '1. Me siento triste gran parte del tiempo.', '2. Estoy triste todo el tiempo.'",
+            "Pérdida de Placer: '0. Disfruto de las cosas como siempre.', '1. No disfruto de las cosas tanto como antes.', '2. Obtengo muy poco placer de las cosas que solía disfrutar.'"
+        ]
     },
     {
         id: 'bai',
         title: 'BAI (Inventario de Ansiedad de Beck)',
         description: 'Mide la severidad de los síntomas de ansiedad en adultos y adolescentes.',
         chapter: 'Cap. 7.1',
-        roles: ['Clinico']
+        roles: ['Clinico'],
+        sampleQuestions: [
+            "¿Sentiste temblores en las manos?",
+            "¿Sentiste que te ahogabas?",
+            "¿Tuviste miedo a morir?"
+        ]
     },
     {
         id: 'assist',
         title: 'ASSIST (Consumo de Sustancias)',
         description: 'Detecta el riesgo asociado al consumo de alcohol, tabaco y otras drogas.',
         chapter: 'Cap. 7.1',
-        roles: ['Clinico']
+        roles: ['Clinico'],
+        sampleQuestions: [
+            "En los últimos 3 meses, ¿con qué frecuencia ha consumido productos de tabaco?",
+            "En los últimos 3 meses, ¿con qué frecuencia ha tenido un fuerte deseo o ansia de consumir [sustancia]?",
+        ]
     },
 ];
 
@@ -81,7 +104,7 @@ function GenerateLinkDialog({ screeningTitle }: { screeningTitle: string }) {
             <DialogTrigger asChild>
                 <Button className="w-full">
                     <Link className="mr-2 h-4 w-4" />
-                    Generar Enlace de Aplicación
+                    Generar Enlace
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -125,6 +148,39 @@ function GenerateLinkDialog({ screeningTitle }: { screeningTitle: string }) {
     );
 }
 
+function ScreeningPreviewDialog({ screening }: { screening: (typeof allScreenings)[0] }) {
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Revisar Prueba
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Vista Previa: {screening.title}</DialogTitle>
+                    <DialogDescription>
+                        {screening.description}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <h4 className="font-semibold text-gray-800">Preguntas de Ejemplo:</h4>
+                    <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
+                        {screening.sampleQuestions.map((q, index) => (
+                            <li key={index}>"{q}"</li>
+                        ))}
+                    </ul>
+                </div>
+                <DialogFooter>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">Cerrar</Button>
+                    </DialogTrigger>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export default function ScreeningManagement() {
     const { role } = useSession();
@@ -144,9 +200,10 @@ export default function ScreeningManagement() {
                             <CardContent className="flex-grow">
                                 <p className="text-sm text-gray-600">{screening.description}</p>
                             </CardContent>
-                            <div className="p-6 pt-0">
+                            <CardFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+                                <ScreeningPreviewDialog screening={screening} />
                                 <GenerateLinkDialog screeningTitle={screening.title} />
-                            </div>
+                            </CardFooter>
                         </Card>
                     ))}
                 </div>
