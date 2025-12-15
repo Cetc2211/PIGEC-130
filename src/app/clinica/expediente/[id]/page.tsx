@@ -19,7 +19,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen } from "lucide-react";
 import ScreeningManagement from '@/components/screening-management';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import WISCScoringConsole from '@/components/WISC-VScoringConsole';
+import WAISScoringConsole from '@/components/WAIS-IVScoringConsole';
 
 
 export default function ClinicalFilePage() {
@@ -105,11 +107,27 @@ export default function ClinicalFilePage() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <BookOpen />
-                                Evaluación Psicométrica (WISC-V)
+                                Evaluación Psicométrica (Escalas Wechsler)
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <WISCScoringConsole studentAge={student.demographics.age} />
+                            <Accordion type="single" collapsible className="w-full">
+                                <AccordionItem value="item-1">
+                                    <AccordionTrigger>
+                                        {student.demographics.age < 16 
+                                            ? 'Abrir Consola de Calificación WISC-V (Edad: ' + student.demographics.age + ')'
+                                            : 'Abrir Consola de Calificación WAIS-IV (Edad: ' + student.demographics.age + ')'
+                                        }
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        {student.demographics.age < 16 ? (
+                                            <WISCScoringConsole studentAge={student.demographics.age} />
+                                        ) : (
+                                            <WAISScoringConsole studentAge={student.demographics.age} />
+                                        )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
                         </CardContent>
                     </Card>
 
