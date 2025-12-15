@@ -16,11 +16,12 @@ import RiskTimelineChart from '@/components/RiskTimelineChart';
 import SOAPNotesForm from '@/components/SOAPNotesForm';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen } from "lucide-react";
+import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen, FileText, FileDown, Activity, UserCheck } from "lucide-react";
 import ScreeningManagement from '@/components/screening-management';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import WISCScoringConsole from '@/components/WISC-VScoringConsole';
 import WAISScoringConsole from '@/components/WAIS-IVScoringConsole';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 export default function ClinicalFilePage() {
@@ -87,57 +88,73 @@ export default function ClinicalFilePage() {
                     </AlertDescription>
                 </Alert>
 
-                <div className="space-y-12">
-                    <ClinicalAssessmentForm initialData={clinicalAssessment} />
+                <Tabs defaultValue="resumen" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="resumen"><UserCheck className="mr-2"/>Resumen Ejecutivo</TabsTrigger>
+                        <TabsTrigger value="pruebas"><ClipboardList className="mr-2"/>Gestión de Pruebas</TabsTrigger>
+                        <TabsTrigger value="soap"><FileText className="mr-2"/>Notas SOAP</TabsTrigger>
+                        <TabsTrigger value="documentacion"><FileDown className="mr-2"/>Documentación y Cierre</TabsTrigger>
+                    </TabsList>
                     
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <ClipboardList />
-                                Aplicar Instrumento de Tamizaje Individual
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                             <ScreeningManagement />
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <BookOpen />
-                                Evaluación Psicométrica (Escalas Wechsler)
-                            </CardTitle>
-                            <CardDescription>
-                                {student.demographics.age < 16 
-                                    ? `Se muestra la consola WISC-V porque la edad del estudiante (${student.demographics.age}) es menor a 16.`
-                                    : `Se muestra la consola WAIS-IV porque la edad del estudiante (${student.demographics.age}) es 16 o mayor.`
-                                }
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {student.demographics.age < 16 ? (
-                                <WISCScoringConsole studentAge={student.demographics.age} />
-                            ) : (
-                                <WAISScoringConsole studentAge={student.demographics.age} />
-                            )}
-                        </CardContent>
-                    </Card>
-
-
-                    <FunctionalAnalysisForm studentName={student.name} initialData={functionalAnalysis} />
-                    <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
-                    <PIEIGenerator clinicalData={clinicalAssessment} />
-                    <ProgressTracker initialData={progressTracking} />
+                    <TabsContent value="resumen" className="mt-6 space-y-12">
+                        <ClinicalAssessmentForm initialData={clinicalAssessment} />
+                        <FunctionalAnalysisForm studentName={student.name} initialData={functionalAnalysis} />
+                        <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
+                        <PIEIGenerator clinicalData={clinicalAssessment} />
+                        <ProgressTracker initialData={progressTracking} />
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <ClinicalKPILogger />
+                            <RiskTimelineChart />
+                        </div>
+                    </TabsContent>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <ClinicalKPILogger />
-                        <RiskTimelineChart />
-                    </div>
-                    <SOAPNotesForm />
+                    <TabsContent value="pruebas" className="mt-6 space-y-12">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <ClipboardList />
+                                    Aplicar Instrumento de Tamizaje Individual
+                                </CardTitle>
+                                <CardDescription>
+                                    Genera un enlace para que el estudiante responda a un instrumento clínico específico.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                 <ScreeningManagement />
+                            </CardContent>
+                        </Card>
 
-                    <ReportGenerator student={student} clinicalAssessment={clinicalAssessment} />
-                </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <BookOpen />
+                                    Evaluación Psicométrica (Escalas Wechsler)
+                                </CardTitle>
+                                <CardDescription>
+                                    {student.demographics.age < 16 
+                                        ? `Se muestra la consola WISC-V porque la edad del estudiante (${student.demographics.age}) es menor a 16.`
+                                        : `Se muestra la consola WAIS-IV porque la edad del estudiante (${student.demographics.age}) es 16 o mayor.`
+                                    }
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {student.demographics.age < 16 ? (
+                                    <WISCScoringConsole studentAge={student.demographics.age} />
+                                ) : (
+                                    <WAISScoringConsole studentAge={student.demographics.age} />
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="soap" className="mt-6">
+                        <SOAPNotesForm />
+                    </TabsContent>
+
+                    <TabsContent value="documentacion" className="mt-6">
+                         <ReportGenerator student={student} clinicalAssessment={clinicalAssessment} />
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );
