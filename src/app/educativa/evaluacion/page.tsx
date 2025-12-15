@@ -8,16 +8,13 @@ import { redirect } from "next/navigation";
 export default function EducationalAssessmentPage() {
     const { role } = useSession();
     
-    // Solo el orientador puede acceder a esta página
-    if (role === 'Clinico') {
-        // Redirigir al dashboard o a una página permitida para el clínico
-        redirect('/');
-        return null;
-    }
-
+    // El rol 'loading' se maneja en el provider, pero una comprobación aquí es segura.
     if (role === 'loading') {
         return <div className="p-8">Cargando...</div>
     }
+    
+    // Ambos roles, 'Clinico' y 'Orientador', tienen acceso a esta página según la barra lateral.
+    // No se necesita una redirección para el clínico.
 
     return (
         <div className="p-8">
