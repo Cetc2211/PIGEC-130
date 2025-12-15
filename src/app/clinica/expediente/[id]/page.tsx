@@ -18,8 +18,7 @@ import SOAPNotesForm from '@/components/SOAPNotesForm';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen } from "lucide-react";
 import ScreeningManagement from '@/components/screening-management';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import WISCScoringConsole from '@/components/WISC-VScoringConsole';
 import WAISScoringConsole from '@/components/WAIS-IVScoringConsole';
 
@@ -109,25 +108,19 @@ export default function ClinicalFilePage() {
                                 <BookOpen />
                                 Evaluación Psicométrica (Escalas Wechsler)
                             </CardTitle>
+                            <CardDescription>
+                                {student.demographics.age < 16 
+                                    ? `Se muestra la consola WISC-V porque la edad del estudiante (${student.demographics.age}) es menor a 16.`
+                                    : `Se muestra la consola WAIS-IV porque la edad del estudiante (${student.demographics.age}) es 16 o mayor.`
+                                }
+                            </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Accordion type="single" collapsible className="w-full">
-                                <AccordionItem value="item-1">
-                                    <AccordionTrigger>
-                                        {student.demographics.age < 16 
-                                            ? 'Abrir Consola de Calificación WISC-V (Edad: ' + student.demographics.age + ')'
-                                            : 'Abrir Consola de Calificación WAIS-IV (Edad: ' + student.demographics.age + ')'
-                                        }
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        {student.demographics.age < 16 ? (
-                                            <WISCScoringConsole studentAge={student.demographics.age} />
-                                        ) : (
-                                            <WAISScoringConsole studentAge={student.demographics.age} />
-                                        )}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
+                            {student.demographics.age < 16 ? (
+                                <WISCScoringConsole studentAge={student.demographics.age} />
+                            ) : (
+                                <WAISScoringConsole studentAge={student.demographics.age} />
+                            )}
                         </CardContent>
                     </Card>
 
