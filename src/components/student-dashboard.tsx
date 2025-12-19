@@ -89,7 +89,7 @@ const StudentDashboard: React.FC = () => {
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        <Link href={linkHref} passHref>
+                                        <Link href={linkHref} passHref legacyBehavior>
                                              <Button
                                                 variant="default"
                                                 size="sm"
