@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link, Eye } from "lucide-react";
+import { Link, Eye, FolderPlus, Send, CheckSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,197 +17,172 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useSession } from '@/context/SessionContext';
 import { Separator } from './ui/separator';
+import { Checkbox } from './ui/checkbox';
+import { Badge } from './ui/badge';
 
 const allScreenings = [
+    {
+        id: 'ficha-id',
+        title: 'Ficha de Identificación del Estudiante',
+        description: 'Recopila datos demográficos, sociofamiliares y de contacto.',
+        chapter: 'Cap. 4.1',
+        category: 'Ficha de Identificación',
+        roles: ['Orientador', 'Clinico'],
+    },
     {
         id: 'chte',
         title: 'CHTE (Hábitos y Técnicas de Estudio)',
         description: 'Mide las estrategias de planificación, concentración y toma de apuntes del estudiante.',
         chapter: 'Cap. 6.2.1',
+        category: 'Habilidades Académicas',
         roles: ['Orientador', 'Clinico'],
-        sampleQuestions: [
-            "Cuando tengo que estudiar, ¿hago un plan de lo que voy a hacer?",
-            "¿Me distraigo fácilmente con el ruido o mis pensamientos?",
-            "Cuando un profesor explica algo, ¿tomo notas para revisarlas después?"
-        ]
     },
     {
         id: 'neuro-screen',
         title: 'Tamizaje Neuropsicológico (Gamificado)',
         description: 'Tarea interactiva para medir atención sostenida, memoria de trabajo y control inhibitorio.',
         chapter: 'Cap. 6.2.3',
+        category: 'Habilidades Académicas',
         roles: ['Orientador', 'Clinico'],
-        sampleQuestions: [
-            "Tarea Go/No-Go: 'Presiona la pantalla cuando veas un círculo verde, pero no cuando veas uno rojo'.",
-            "Span de Dígitos: 'Repite la siguiente secuencia de números: 8-3-5-1-9'.",
-        ]
     },
     {
         id: 'bdi-ii',
         title: 'BDI-II (Inventario de Depresión de Beck)',
         description: 'Evalúa la severidad de los síntomas depresivos. Instrumento clave para el Nivel 3.',
         chapter: 'Cap. 7.1',
+        category: 'Socioemocionales',
         roles: ['Clinico'],
-        sampleQuestions: [
-            "Tristeza: '0. No me siento triste.', '1. Me siento triste gran parte del tiempo.', '2. Estoy triste todo el tiempo.'",
-            "Pérdida de Placer: '0. Disfruto de las cosas como siempre.', '1. No disfruto de las cosas tanto como antes.', '2. Obtengo muy poco placer de las cosas que solía disfrutar.'"
-        ]
     },
     {
         id: 'bai',
         title: 'BAI (Inventario de Ansiedad de Beck)',
         description: 'Mide la severidad de los síntomas de ansiedad en adultos y adolescentes.',
         chapter: 'Cap. 7.1',
+        category: 'Socioemocionales',
         roles: ['Clinico'],
-        sampleQuestions: [
-            "¿Sentiste temblores en las manos?",
-            "¿Sentiste que te ahogabas?",
-            "¿Tuviste miedo a morir?"
-        ]
     },
     {
         id: 'assist',
         title: 'ASSIST (Consumo de Sustancias)',
         description: 'Detecta el riesgo asociado al consumo de alcohol, tabaco y otras drogas.',
         chapter: 'Cap. 7.1',
+        category: 'Socioemocionales',
         roles: ['Clinico'],
-        sampleQuestions: [
-            "En los últimos 3 meses, ¿con qué frecuencia ha consumido productos de tabaco?",
-            "En los últimos 3 meses, ¿con qué frecuencia ha tenido un fuerte deseo o ansia de consumir [sustancia]?",
-        ]
     },
 ];
 
-function GenerateLinkDialog({ screeningTitle }: { screeningTitle: string }) {
-    const [groupName, setGroupName] = useState('');
-    const [generatedLink, setGeneratedLink] = useState('');
-
-    const handleGenerate = () => {
-        if (!groupName) {
-            alert("Por favor, especifica un grupo o ID de estudiante.");
-            return;
-        }
-        // Simulación de la generación de un enlace único
-        const uniqueId = Math.random().toString(36).substring(2, 10);
-        const link = `https://escalaweb.app/survey/${screeningTitle.toLowerCase().replace(/ /g, '-')}/${uniqueId}?target=${encodeURIComponent(groupName)}`;
-        setGeneratedLink(link);
-        console.log(`Enlace generado para ${screeningTitle} - Grupo/ID ${groupName}: ${link}`);
-    };
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(generatedLink);
-        alert("Enlace copiado al portapapeles.");
-    };
-
-    return (
-        <Dialog onOpenChange={() => { setGroupName(''); setGeneratedLink(''); }}>
-            <DialogTrigger asChild>
-                <Button className="w-full">
-                    <Link className="mr-2 h-4 w-4" />
-                    Generar Enlace
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Generar Enlace de Tamizaje</DialogTitle>
-                    <DialogDescription>
-                        Crea un enlace único para que un grupo o individuo responda a "{screeningTitle}".
-                    </DialogDescription>
-                </DialogHeader>
-                {!generatedLink ? (
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="group-name" className="text-right">
-                                Grupo / ID
-                            </Label>
-                            <Input
-                                id="group-name"
-                                value={groupName}
-                                onChange={(e) => setGroupName(e.target.value)}
-                                placeholder="Ej. 3B, 5A, S001..."
-                                className="col-span-3"
-                            />
-                        </div>
-                    </div>
-                ) : (
-                     <div className="py-4 space-y-4">
-                         <p className="text-sm text-gray-700">Enlace generado para <strong>{groupName}</strong>:</p>
-                         <Input
-                            readOnly
-                            value={generatedLink}
-                            className="bg-gray-100"
-                        />
-                        <Button onClick={copyToClipboard} className="w-full">Copiar Enlace</Button>
-                    </div>
-                )}
-                <DialogFooter>
-                    {!generatedLink && <Button type="button" onClick={handleGenerate}>Generar</Button>}
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-function ScreeningPreviewDialog({ screening }: { screening: (typeof allScreenings)[0] }) {
-    return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Revisar Prueba
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Vista Previa: {screening.title}</DialogTitle>
-                    <DialogDescription>
-                        {screening.description}
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="py-4 space-y-4">
-                    <h4 className="font-semibold text-gray-800">Preguntas de Ejemplo:</h4>
-                    <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
-                        {screening.sampleQuestions.map((q, index) => (
-                            <li key={index}>"{q}"</li>
-                        ))}
-                    </ul>
-                </div>
-                <DialogFooter>
-                    <DialogTrigger asChild>
-                        <Button variant="outline">Cerrar</Button>
-                    </DialogTrigger>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
+const categories = [
+    'Ficha de Identificación',
+    'Habilidades Académicas',
+    'Socioemocionales',
+    'Orientación Educativa, Vocacional y Profesional',
+];
 
 export default function ScreeningManagement() {
     const { role } = useSession();
+    const [selectedTests, setSelectedTests] = useState<string[]>([]);
+
+    const toggleTestSelection = (testId: string) => {
+        setSelectedTests(prev => 
+            prev.includes(testId) 
+                ? prev.filter(id => id !== testId) 
+                : [...prev, testId]
+        );
+    };
+
     const availableScreenings = allScreenings.filter(s => s.roles.includes(role as string));
+    const categorizedTests = categories.map(category => ({
+        name: category,
+        tests: availableScreenings.filter(test => test.category === category)
+    })).filter(cat => cat.tests.length > 0);
+
+    const handleCreateProcess = () => {
+        if (selectedTests.length === 0) {
+            alert("Por favor, seleccione al menos una prueba para crear un proceso de tamizaje.");
+            return;
+        }
+        console.log("Creando carpeta de trabajo con las siguientes pruebas:", selectedTests);
+        alert(`Proceso de tamizaje creado con ${selectedTests.length} prueba(s). Siguiente paso: Asignar a grupo.`);
+    };
+
 
     return (
-        <div className="space-y-8">
-            <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-700">Instrumentos de Tamizaje Disponibles</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {availableScreenings.map((screening) => (
-                        <Card key={screening.id} className="flex flex-col">
-                            <CardHeader>
-                                <CardTitle>{screening.title}</CardTitle>
-                                <CardDescription>{screening.chapter}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                <p className="text-sm text-gray-600">{screening.description}</p>
-                            </CardContent>
-                            <CardFooter className="flex flex-col sm:flex-row gap-2 pt-4">
-                                <ScreeningPreviewDialog screening={screening} />
-                                <GenerateLinkDialog screeningTitle={screening.title} />
-                            </CardFooter>
-                        </Card>
-                    ))}
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <CheckSquare />
+                    Crear Proceso de Tamizaje
+                </CardTitle>
+                <CardDescription>
+                    Seleccione uno o más instrumentos para crear una "carpeta de trabajo" y asignarla a un grupo o estudiante.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* Columna de Selección de Pruebas */}
+                    <div className="md:col-span-2 space-y-6">
+                        {categorizedTests.map(category => (
+                            <div key={category.name}>
+                                <h3 className="text-lg font-semibold mb-3 text-gray-700">{category.name}</h3>
+                                <div className="space-y-3">
+                                    {category.tests.map(test => (
+                                        <div key={test.id} className="flex items-center p-3 border rounded-md bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                                            <Checkbox
+                                                id={test.id}
+                                                checked={selectedTests.includes(test.id)}
+                                                onCheckedChange={() => toggleTestSelection(test.id)}
+                                                className="mr-4"
+                                            />
+                                            <div className="flex-1">
+                                                <Label htmlFor={test.id} className="font-semibold text-base cursor-pointer">
+                                                    {test.title}
+                                                </Label>
+                                                <p className="text-sm text-gray-500">{test.description}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Columna de Carpeta de Trabajo */}
+                    <div className="md:col-span-1">
+                        <div className="sticky top-8 border rounded-lg p-4 shadow-sm bg-white">
+                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                <FolderPlus />
+                                Carpeta de Trabajo
+                            </h3>
+                            {selectedTests.length === 0 ? (
+                                <p className="text-sm text-gray-500 text-center py-8">Seleccione las pruebas que desea añadir.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {selectedTests.map(testId => {
+                                        const test = availableScreenings.find(t => t.id === testId);
+                                        return test ? (
+                                            <Badge key={testId} variant="secondary" className="w-full justify-start text-left py-2">
+                                                {test.title}
+                                            </Badge>
+                                        ) : null;
+                                    })}
+                                </div>
+                            )}
+                            <Separator className="my-4" />
+                            <Button 
+                                onClick={handleCreateProcess} 
+                                className="w-full" 
+                                disabled={selectedTests.length === 0}
+                            >
+                                <Send className="mr-2" />
+                                Crear Proceso de Tamizaje
+                            </Button>
+                            <p className="text-xs text-gray-500 mt-2">
+                                El siguiente paso será asignar este proceso a un grupo de la lista.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 }
