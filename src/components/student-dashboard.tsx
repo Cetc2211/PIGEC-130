@@ -8,6 +8,7 @@ import { useSession } from '@/context/SessionContext';
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
+import { cva } from "class-variance-authority";
 
 const StudentDashboard: React.FC = () => {
     const { role } = useSession();
@@ -89,8 +90,8 @@ const StudentDashboard: React.FC = () => {
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        <Link href={linkHref} passHref legacyBehavior>
-                                            <a
+                                        <Link href={linkHref} legacyBehavior passHref>
+                                             <a
                                                 className={cn(
                                                     buttonVariants({ variant: 'default', size: 'sm' }),
                                                     'font-semibold',
