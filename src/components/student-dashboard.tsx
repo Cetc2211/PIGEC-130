@@ -8,7 +8,6 @@ import { useSession } from '@/context/SessionContext';
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import { cva } from "class-variance-authority";
 
 const StudentDashboard: React.FC = () => {
     const { role } = useSession();
@@ -90,17 +89,21 @@ const StudentDashboard: React.FC = () => {
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        <Link href={linkHref} legacyBehavior passHref>
-                                             <a
+                                        <Link href={linkHref}>
+                                            <Button
+                                                asChild
+                                                variant="default"
+                                                size="sm"
                                                 className={cn(
-                                                    buttonVariants({ variant: 'default', size: 'sm' }),
                                                     'font-semibold',
                                                     isHighRisk && role === 'Clinico' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'
                                                 )}
                                             >
-                                                {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-2 h-4 w-4" />}
-                                                {buttonText}
-                                            </a>
+                                                <a>
+                                                    {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-2 h-4 w-4" />}
+                                                    {buttonText}
+                                                </a>
+                                            </Button>
                                         </Link>
                                     </td>
                                 </tr>
@@ -112,35 +115,5 @@ const StudentDashboard: React.FC = () => {
         </div>
     );
 };
-
-// This helper function is needed to properly type the button variants
-// when they are used inside the <a> tag.
-// You can define it here or in your utils file.
-const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-);
-
 
 export default StudentDashboard;
