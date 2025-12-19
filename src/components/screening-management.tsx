@@ -3,22 +3,17 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link, Eye, FolderPlus, Send, CheckSquare } from "lucide-react";
+import { FolderPlus, Send, CheckSquare, Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog"
-import { Input } from './ui/input';
-import { Label } from './ui/label';
 import { useSession } from '@/context/SessionContext';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
+import ScreeningInstrumentDialog from './ScreeningInstrumentDialog';
 
 const allScreenings = [
     {
@@ -126,20 +121,29 @@ export default function ScreeningManagement() {
                                 <h3 className="text-lg font-semibold mb-3 text-gray-700">{category.name}</h3>
                                 <div className="space-y-3">
                                     {category.tests.map(test => (
-                                        <div key={test.id} className="flex items-center p-3 border rounded-md bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                                            <Checkbox
-                                                id={test.id}
-                                                checked={selectedTests.includes(test.id)}
-                                                onCheckedChange={() => toggleTestSelection(test.id)}
-                                                className="mr-4"
-                                            />
-                                            <div className="flex-1">
-                                                <Label htmlFor={test.id} className="font-semibold text-base cursor-pointer">
-                                                    {test.title}
-                                                </Label>
-                                                <p className="text-sm text-gray-500">{test.description}</p>
+                                        <Dialog key={test.id}>
+                                            <div className="flex items-center p-3 border rounded-md bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                                                <Checkbox
+                                                    id={test.id}
+                                                    checked={selectedTests.includes(test.id)}
+                                                    onCheckedChange={() => toggleTestSelection(test.id)}
+                                                    className="mr-4"
+                                                />
+                                                <div className="flex-1">
+                                                    <label htmlFor={test.id} className="font-semibold text-base cursor-pointer">
+                                                        {test.title}
+                                                    </label>
+                                                    <p className="text-sm text-gray-500">{test.description}</p>
+                                                </div>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="ghost" size="sm">
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        Visualizar
+                                                    </Button>
+                                                </DialogTrigger>
                                             </div>
-                                        </div>
+                                            <ScreeningInstrumentDialog instrumentId={test.id} instrumentTitle={test.title} />
+                                        </Dialog>
                                     ))}
                                 </div>
                             </div>
