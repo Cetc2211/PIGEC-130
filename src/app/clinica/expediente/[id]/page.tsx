@@ -31,7 +31,7 @@ export default function ClinicalFilePage() {
 
     useEffect(() => {
         if (role && role !== 'loading' && role !== 'Clinico') {
-            console.error(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica. Redirigiendo.`);
+            console.log(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica. Redirigiendo.`);
             redirect(`/educativa/estudiante/${studentId}`);
         }
     }, [role, studentId]);
