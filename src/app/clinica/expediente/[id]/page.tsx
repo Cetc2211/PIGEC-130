@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import WISCScoringConsole from '@/components/WISC-VScoringConsole';
 import WAISScoringConsole from '@/components/WAIS-IVScoringConsole';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NeuroScreeningConsole } from '@/components/NeuroScreeningConsole';
 
 
 export default function ClinicalFilePage() {
@@ -145,6 +146,9 @@ export default function ClinicalFilePage() {
                                 )}
                             </CardContent>
                         </Card>
+
+                        <NeuroScreeningConsole studentId={studentId} />
+
                     </TabsContent>
 
                     <TabsContent value="soap" className="mt-6">

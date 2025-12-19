@@ -118,6 +118,22 @@ export interface EvidenceReference {
     tags: string[];
 }
 
+export interface NeuroScreeningResult {
+  studentId: string;
+  date: Date;
+  scores: {
+    attention: number; // Aciertos
+    workingMemory: number; // Span
+    inhibitoryControl: number; // Errores de comisión
+  };
+  percentiles: {
+    attention: number; // Calculado vía manual
+    workingMemory: number;
+    inhibitoryControl: number;
+  };
+  status: 'Normal' | 'Alerta' | 'Riesgo'; // Basado en < P25
+}
+
 
 // --- Simulación de la Base de Datos (Firestore) en Memoria ---
 
