@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 import { SessionProvider } from "@/context/SessionContext";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Suite Integral - Sistema de Soporte a la Decisión",
@@ -22,12 +23,8 @@ export default function RootLayout({
       </head>
       <body className="font-sans bg-gray-50 text-gray-900">
         <SessionProvider>
-          <div className="flex">
-            <Sidebar />
-            <main className="flex-1">
-              {children}
-            </main>
-          </div>
+          {children}
+          <Toaster />
         </SessionProvider>
       </body>
     </html>

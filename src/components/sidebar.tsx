@@ -1,15 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Scale, Home, Wrench, Settings, ClipboardList, Users, BookText } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Scale, Home, Wrench, Settings, ClipboardList, Users, BookText, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/context/SessionContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
+import { Button } from './ui/button';
 
 const navItems = [
-  { href: '/', label: 'Dashboard de Riesgo', icon: Home, roles: ['Clinico', 'Orientador'] },
+  { href: '/dashboard', label: 'Dashboard de Riesgo', icon: Home, roles: ['Clinico', 'Orientador'] },
+  { href: '/orientacion', label: 'Panel de Orientación', icon: BookText, roles: ['Orientador'] },
   { href: '/educativa/evaluacion', label: 'Evaluación Educativa', icon: BookText, roles: ['Orientador', 'Clinico'] },
   { href: '/screening', label: 'Módulo de Tamizaje', icon: ClipboardList, roles: ['Clinico'] },
   { href: '/admin', label: 'Administración', icon: Settings, roles: ['Clinico'] },
@@ -41,28 +43,30 @@ function RoleSwitcher() {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { role } = useSession();
+  const router = useRouter();
+  const { role, setRole } = useSession();
 
-  if (role === 'loading') {
-      return (
-        <aside className="w-64 h-screen bg-white shadow-md flex flex-col p-4">
-            <div className="text-sm text-gray-500">Cargando...</div>
-        </aside>
-      );
+  if (role === 'loading' || role === 'unauthenticated') {
+      return null;
   }
   
   const filteredNavItems = navItems.filter(item => item.roles.includes(role as string));
 
+  const handleLogout = () => {
+    setRole('unauthenticated');
+    router.push('/');
+  }
+
   return (
-    <aside className="w-64 h-screen bg-white shadow-md flex flex-col">
+    <aside className="w-64 h-screen bg-white shadow-md flex flex-col sticky top-0">
       <div className="p-4 border-b">
         <Link href="/" className="flex items-center gap-3">
           <div className="p-2 bg-pink-100 text-pink-600 rounded-lg">
             <Scale className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-lg font-extrabold text-gray-800">Suite Integral</h1>
-            <p className="text-xs text-gray-500">Soporte a la Decisión</p>
+            <h1 className="text-lg font-extrabold text-gray-800">PIGEC-130</h1>
+            <p className="text-xs text-gray-500">Suite Integral</p>
           </div>
         </Link>
       </div>
@@ -82,11 +86,11 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="p-4 border-t space-y-4">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-gray-500" />
-          <p className="text-sm font-semibold text-gray-700">Usuario: {role}</p>
-        </div>
         <RoleSwitcher />
+        <Button variant="ghost" className="w-full justify-start text-gray-600" onClick={handleLogout}>
+            <LogOut className="mr-3 h-5 w-5"/>
+            Cerrar Sesión
+        </Button>
       </div>
     </aside>
   );
