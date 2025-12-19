@@ -27,14 +27,14 @@ function validateReferralContent(template: string, impression: string): boolean 
     
     for (const term of forbiddenTerms) {
         if (lowerCaseTemplate.includes(term)) {
-            console.error(`VALIDATION FAILED: El término prohibido "${term}" fue encontrado en la carta de referencia.`);
+            console.log(`VALIDATION FAILED: El término prohibido "${term}" fue encontrado en la carta de referencia.`);
             return false;
         }
     }
     
     // Test de Integridad Documental (Cap. 8): La impresión diagnóstica debe estar presente.
     if (!impression.trim()) {
-        console.error("VALIDATION FAILED: La Impresión Diagnóstica Provisional es obligatoria y no fue encontrada.");
+        console.log("VALIDATION FAILED: La Impresión Diagnóstica Provisional es obligatoria y no fue encontrada.");
         return false;
     }
     
