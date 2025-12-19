@@ -33,6 +33,8 @@ export default function InstitutionalLandingPage() {
 
     const handleRoleSelection = (role: 'Orientador' | 'Clinico') => {
         setRole(role);
+        // La lógica de redirección se manejará en el contexto o en un paso posterior de autenticación.
+        // Por ahora, solo se establece el rol.
         if (role === 'Orientador') {
             router.push('/orientacion');
         } else {
@@ -43,9 +45,9 @@ export default function InstitutionalLandingPage() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
             <header className="text-center mb-12">
-                {/* Aquí irían los logos institucionales */}
                 <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">PIGEC-130</h1>
-                <p className="mt-2 text-lg text-gray-600">Plataforma Integral para la Gestión Ética y Clínica del CBTA 130</p>
+                <p className="mt-2 text-xl text-gray-600">Centro de Bachillerato Tecnológico Agropecuario No. 130</p>
+                <p className='text-lg text-gray-500'>"Eutimio Plantillas Avelar"</p>
             </header>
 
             <main className="w-full max-w-4xl mx-auto">
@@ -66,8 +68,8 @@ export default function InstitutionalLandingPage() {
             </main>
 
             <footer className="mt-12 text-center text-xs text-gray-400">
-                <p>Sistema de Soporte a la Decisión para el protocolo MTSS del CBTA 130.</p>
-                <p>Una colaboración entre el Departamento de Orientación y el Componente Clínico.</p>
+                <p>Una iniciativa de la Secretaría de Educación Pública y la Dirección General de Educación Tecnológica Agropecuaria y Ciencias del Mar (DGETAyCM).</p>
+                 <p>Sistema de Soporte a la Decisión para el protocolo MTSS del CBTA 130.</p>
             </footer>
         </div>
     );
