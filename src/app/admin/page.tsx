@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UserPlus, RefreshCw } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import Link from 'next/link';
 
 // Simulación de la función que guardaría en Firestore
 async function addNewStudent(data: { studentId: string; studentName: string; group: string; dualRelationship: string; }) {
@@ -106,9 +107,11 @@ function AddNewStudentForm() {
                         <Textarea id="dual-relationship" value={dualRelationship} onChange={(e) => setDualRelationship(e.target.value)} placeholder="¿Existe relación académica o familiar directa con el tutor/clínico asignado? Documentar aquí para evitar conflicto de interés." />
                     </div>
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                            {isLoading ? 'Guardando...' : 'Crear Expediente'}
-                        </Button>
+                        <Link href="/educativa/evaluacion" passHref>
+                            <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
+                                {isLoading ? 'Guardando...' : 'Crear Expediente'}
+                            </Button>
+                        </Link>
                     </div>
                 </form>
 

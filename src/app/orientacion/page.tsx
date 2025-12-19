@@ -4,6 +4,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, ClipboardList, FolderKanban, PlusCircle } from "lucide-react";
+import Link from "next/link";
 
 export default function OrientadorDashboard() {
     return (
@@ -27,11 +28,15 @@ export default function OrientadorDashboard() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
-                        <Button variant="outline">Ver/Editar Grupos</Button>
-                        <Button>
-                            <PlusCircle className="mr-2" />
-                            Registrar Nuevo Estudiante
-                        </Button>
+                        <Link href="/admin" passHref>
+                           <Button variant="outline" className="w-full">Ver/Editar Grupos</Button>
+                        </Link>
+                        <Link href="/admin" passHref>
+                            <Button>
+                                <PlusCircle className="mr-2" />
+                                Registrar Nuevo Estudiante
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
 
@@ -47,12 +52,16 @@ export default function OrientadorDashboard() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
-                        <Button variant="default" className="bg-blue-600 hover:bg-blue-700">
-                           Generar Sesión Grupal
-                        </Button>
-                         <Button variant="secondary">
-                           Aplicar a Estudiante Específico
-                        </Button>
+                        <Link href="/educativa/evaluacion" passHref>
+                            <Button variant="default" className="w-full bg-blue-600 hover:bg-blue-700">
+                               Generar Sesión Grupal
+                            </Button>
+                        </Link>
+                         <Link href="/educativa/evaluacion" passHref>
+                            <Button variant="secondary" className="w-full">
+                               Aplicar a Estudiante Específico
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
                 
@@ -68,9 +77,11 @@ export default function OrientadorDashboard() {
                         </CardDescription>
                     </CardHeader>
                      <CardContent>
-                        <Button variant="outline" className="w-full">
-                           Ver Todos los Expedientes
-                        </Button>
+                        <Link href="/dashboard" passHref>
+                            <Button variant="outline" className="w-full">
+                               Ver Todos los Expedientes
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
 
