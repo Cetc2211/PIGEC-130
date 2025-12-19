@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { Sidebar } from '@/components/sidebar';
 
 type Role = 'Clinico' | 'Orientador' | 'loading' | 'unauthenticated' | null;
 
@@ -40,30 +41,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const showSidebar = role !== 'unauthenticated' && role !== 'loading' && pathname !== '/';
 
   const value = { role, setRole: handleSetRole as (role: Role) => void, showSidebar };
-
-  const renderContent = () => {
-    if (role === 'loading' && pathname !== '/') {
-      return <div className="flex h-screen w-full items-center justify-center"><p>Cargando Sesión...</p></div>;
-    }
-    
-    if (showSidebar) {
-      return (
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 h-screen overflow-y-auto">
-            {children}
-          </main>
-        </div>
-      )
-    }
-    
-    return children;
-  };
-
-
+  
+  if (role === 'loading' && pathname !== '/') {
+    return <div className="flex h-screen w-full items-center justify-center"><p>Cargando Sesión...</p></div>;
+  }
+  
   return (
     <SessionContext.Provider value={value}>
-      {renderContent()}
+      {children}
     </SessionContext.Provider>
   );
 }

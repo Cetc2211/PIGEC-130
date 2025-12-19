@@ -23,8 +23,13 @@ export default function RootLayout({
       </head>
       <body className="font-sans bg-gray-50 text-gray-900">
         <SessionProvider>
-          {children}
-          <Toaster />
+            <div className="flex">
+              <Sidebar />
+              <main className="flex-1 h-screen overflow-y-auto">
+                {children}
+              </main>
+            </div>
+            <Toaster />
         </SessionProvider>
       </body>
     </html>
