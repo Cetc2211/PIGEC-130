@@ -11,7 +11,7 @@ import { EducationalAssessment } from '@/lib/store';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export default function EducationalAssessmentForm() {
-    const [feedback, setFeedback] = useState<{ type: 'success' | 'triage' | 'alert', message: string }[]>([]);
+    const [feedback, setFeedback] = useState<string | null>(null);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -44,28 +44,23 @@ export default function EducationalAssessmentForm() {
         
         // Simulación de guardado
         console.log("Guardando Evaluación Educativa en 'educational_assessments':", finalData);
+        setFeedback('Evaluación Educativa guardada con éxito.');
 
-        let feedbackMessages: { type: 'success' | 'triage' | 'alert', message: string }[] = [{type: 'success', message: 'Evaluación Educativa guardada con éxito.'}];
 
         // Lógica de Triage Educativo (Cap. 6.2.2 y Cap. 9)
         if (chteScorePlanificacion < 40) {
             const triageMsg = `TRIAGE EDUCATIVO AUTOMÁTICO: Puntaje de Planificación (${chteScorePlanificacion}) es bajo. Se ha registrado la inscripción automática al micro-curso de 'Técnicas de Estudio'.`;
             console.log(triageMsg);
-            feedbackMessages.push({ type: 'triage', message: triageMsg });
         }
 
         // Lógica de Alerta Cognitiva
         if (memoriaTrabajoPercentil < 25 || controlInhibitorioPercentil < 25) {
              const alertMsg = `ALERTA COGNITIVA: Percentiles bajos detectados (MT: ${memoriaTrabajoPercentil}, CI: ${controlInhibitorioPercentil}). Se ha enviado una notificación al Rol Clínico para una evaluación de Nivel 3.`;
             console.log(alertMsg);
-            feedbackMessages.push({ type: 'alert', message: alertMsg });
         }
         
-        setFeedback(feedbackMessages);
-
-        // Limpiar el formulario o mostrar un mensaje de éxito
         (event.target as HTMLFormElement).reset();
-        setTimeout(() => setFeedback([]), 15000);
+        setTimeout(() => setFeedback(null), 5000);
     };
 
     return (
@@ -76,14 +71,14 @@ export default function EducationalAssessmentForm() {
                     Registrar Puntuaciones BEC-130
                 </CardTitle>
                 <CardDescription>
-                    Ingrese los puntajes obtenidos por el estudiante en los instrumentos correspondientes.
+                    Ingrese los puntajes obtenidos por el estudiante en los instrumentos correspondientes para el cálculo automático.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-8">
                      <div className="space-y-2">
                         <Label htmlFor="student-id">ID del Estudiante (Matrícula)</Label>
-                        <Input id="student-id" name="student-id" placeholder="Ej. S001" required />
+                        <Input id="student-id" name="student-id" placeholder="Ej. S001, S002..." required />
                     </div>
 
                     <Separator />
@@ -116,16 +111,16 @@ export default function EducationalAssessmentForm() {
                     <div>
                         <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
                             <BrainCircuit />
-                            II. Tamizaje Neuropsicológico (Puntajes Normalizados)
+                            II. Tamizaje Neuropsicológico (Percentiles)
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                              <div className="space-y-2">
-                                <Label htmlFor="neuro-atencion">Atención (Percentil)</Label>
+                                <Label htmlFor="neuro-atencion">Atención Sostenida (Percentil)</Label>
                                 <Input id="neuro-atencion" name="neuro-atencion" type="number" placeholder="Ej. 60" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="neuro-memoria">Memoria de Trabajo (Percentil)</Label>
-                                <Input id="neuro-memoria" name="neuro-memoria" type="number" placeholder="Ej. 45" />
+                                <Input id="neuro-memoria" name="neuro-memoria" type="number" placeholder="Ej. 20" />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="neuro-inhibicion">Control Inhibitorio (Percentil)</Label>
@@ -136,26 +131,19 @@ export default function EducationalAssessmentForm() {
 
                     <div className="flex justify-end pt-4">
                         <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                            Guardar Evaluación Educativa
+                            Guardar y Calcular Resultados
                         </Button>
                     </div>
 
-                    {feedback.length > 0 && (
-                        <div className="mt-6 space-y-4">
-                            {feedback.map((item, index) => (
-                                <Alert key={index} variant={item.type === 'success' ? 'default' : 'destructive'} className={`${item.type === 'success' ? 'bg-green-50 border-green-300 text-green-800' : ''} ${item.type === 'triage' ? 'bg-yellow-50 border-yellow-300 text-yellow-800' : ''} ${item.type === 'alert' ? 'bg-red-50 border-red-300 text-red-800' : ''}`}>
-                                    {item.type === 'success' && <CheckCircle className="h-4 w-4" />}
-                                    {(item.type === 'triage' || item.type === 'alert') && <AlertCircle className="h-4 w-4" />}
-                                    <AlertTitle>
-                                        {item.type === 'success' && 'Éxito'}
-                                        {item.type === 'triage' && 'Validación de Triage Educativo'}
-                                        {item.type === 'alert' && 'Validación de Alerta Cognitiva'}
-                                    </AlertTitle>
-                                    <AlertDescription>
-                                       {item.message}
-                                    </AlertDescription>
-                                </Alert>
-                            ))}
+                    {feedback && (
+                        <div className="mt-6">
+                            <Alert className='bg-green-50 border-green-300 text-green-800'>
+                                <CheckCircle className="h-4 w-4" />
+                                <AlertTitle>Éxito</AlertTitle>
+                                <AlertDescription>
+                                    {feedback}
+                                </AlertDescription>
+                            </Alert>
                         </div>
                     )}
                 </form>

@@ -85,8 +85,8 @@ export default function EducationalFilePage() {
                 </Card>
 
                 <div className="space-y-12">
-                   <PIEIFeedback />
                    <EducationalDataSummary educationalAssessment={educationalAssessment} />
+                   <PIEIFeedback />
                 </div>
             </div>
         </div>
