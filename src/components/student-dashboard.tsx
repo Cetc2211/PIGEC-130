@@ -89,9 +89,8 @@ const StudentDashboard: React.FC = () => {
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        <Link href={linkHref}>
+                                        <Link href={linkHref} asChild>
                                             <Button
-                                                asChild
                                                 variant="default"
                                                 size="sm"
                                                 className={cn(
@@ -99,10 +98,8 @@ const StudentDashboard: React.FC = () => {
                                                     isHighRisk && role === 'Clinico' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'
                                                 )}
                                             >
-                                                <a>
-                                                    {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-2 h-4 w-4" />}
-                                                    {buttonText}
-                                                </a>
+                                                {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-2 h-4 w-4" />}
+                                                {buttonText}
                                             </Button>
                                         </Link>
                                     </td>
