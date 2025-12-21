@@ -88,7 +88,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         { pair: 'ICV - IVE', diff: icv.score - ive.score, significant: Math.abs(icv.score - ive.score) >= valoresCriticos['ICV-IVE'] },
         { pair: 'ICV - IRF', diff: icv.score - irf.score, significant: Math.abs(icv.score - irf.score) >= valoresCriticos['ICV-IRF'] },
         { pair: 'IMT - IVP', diff: imt.score - ivp.score, significant: Math.abs(imt.score - ivp.score) >= valoresCriticos['IMT-IVP'] },
-        { pair: 'ICV - IMT', diff: icv.score - imt.score, significant: Math.abs(icv.score - imt.score) >= valoresCriticos['ICV-IMT'] },
+        { pair: 'ICV - IMT', diff: imt.score - ivp.score, significant: Math.abs(icv.score - imt.score) >= valoresCriticos['ICV-IMT'] },
     ];
     
     const meanPE = getSum(citSubtestsIds) / citSubtestsIds.length;
@@ -159,8 +159,9 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     return (
         <div className="w-full shadow-md border rounded-lg p-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Columna Izquierda: Protocolo y Resultados */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Protocolo de Registro Digital</h3>
+                    <h3 className="font-semibold text-lg">Protocolo de Registro Digital (Psicólogo)</h3>
                      <Accordion type="multiple" className="w-full">
                         {Object.entries(subtestsByDomain).map(([domain, tests]) => (
                             <AccordionItem value={domain} key={domain}>
@@ -201,12 +202,9 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                         <Calculator className="mr-2" />
                         Calcular Puntuaciones (WISC-V)
                     </Button>
-                </div>
-
-                <div className="space-y-6">
-                     <h3 className="font-semibold text-lg">Perfil de Puntuaciones (Calculado)</h3>
-                    {results ? (
-                        <div className="space-y-8">
+                     {results && (
+                        <div className="space-y-8 pt-4">
+                            <h3 className="font-semibold text-lg">Perfil de Puntuaciones (Calculado)</h3>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -259,25 +257,28 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                     </TableBody>
                                 </Table>
                             </div>
-
-                            <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-md">
-                                <p className="text-xs text-yellow-800 flex items-start gap-2">
-                                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                                    <span>
-                                        <strong>Nota de Simulación:</strong> Las Puntuaciones y análisis se basan en una conversión simplificada, no en las tablas normativas reales del WISC-V.
-                                    </span>
-                                </p>
-                            </div>
                            <Button onClick={handleFinalizeAndSeal} variant="default" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold">
                                 <FileLock2 className="mr-2" />
                                 Finalizar y Sellar Protocolo (Auditoría)
                             </Button>
                         </div>
-                    ) : (
-                        <div className="flex items-center justify-center h-full p-8 bg-gray-50 rounded-md border-dashed border-2">
-                            <p className="text-sm text-gray-500">Los resultados aparecerán aquí después del cálculo.</p>
-                        </div>
                     )}
+                </div>
+
+                 {/* Columna Derecha: Visor de Estímulos */}
+                <div className="space-y-6">
+                    <h3 className="font-semibold text-lg">Visor de Estímulos (Alumno)</h3>
+                    <div className="flex items-center justify-center h-full p-8 bg-gray-900 text-white rounded-md border-dashed border-2 border-gray-400">
+                        <p className="text-center text-lg">El Visor de Estímulos para el Alumno aparecerá aquí.<br/> (Modo Espejo Sincronizado)</p>
+                    </div>
+                     <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-md mt-auto">
+                        <p className="text-xs text-yellow-800 flex items-start gap-2">
+                            <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <span>
+                                <strong>Nota de Simulación:</strong> Las Puntuaciones y análisis se basan en una conversión simplificada, no en las tablas normativas reales del WISC-V.
+                            </span>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

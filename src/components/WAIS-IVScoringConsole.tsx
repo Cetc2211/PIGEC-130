@@ -160,9 +160,10 @@ export default function WAISScoringConsole({ studentAge }: WAISScoringConsolePro
 
     return (
         <div className="w-full shadow-md border rounded-lg p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Columna Izquierda: Protocolo y Resultados */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Protocolo de Registro Digital</h3>
+                    <h3 className="font-semibold text-lg">Protocolo de Registro Digital (Psicólogo)</h3>
                     <Accordion type="multiple" className="w-full">
                         {Object.entries(subtestsByDomain).map(([domain, tests]) => (
                             <AccordionItem value={domain} key={domain}>
@@ -212,11 +213,9 @@ export default function WAISScoringConsole({ studentAge }: WAISScoringConsolePro
                         <Calculator className="mr-2" />
                         Calcular Puntuaciones (WAIS-IV)
                     </Button>
-                </div>
-                <div className="space-y-6">
-                    <h3 className="font-semibold text-lg">Perfil de Puntuaciones (Calculado)</h3>
-                    {results ? (
-                        <div className="space-y-4">
+                     {results && (
+                         <div className="space-y-4 pt-4">
+                            <h3 className="font-semibold text-lg">Perfil de Puntuaciones (Calculado)</h3>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -239,24 +238,28 @@ export default function WAISScoringConsole({ studentAge }: WAISScoringConsolePro
                                     ))}
                                 </TableBody>
                             </Table>
-                            <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-md">
-                                <p className="text-xs text-yellow-800 flex items-start gap-2">
-                                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                                    <span>
-                                        <strong>Nota de Simulación:</strong> Las puntuaciones se basan en una conversión lineal simplificada, no en las tablas normativas reales del WAIS-IV.
-                                    </span>
-                                </p>
-                            </div>
                            <Button onClick={handleFinalizeAndSeal} variant="default" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold">
                                 <FileLock2 className="mr-2" />
                                 Finalizar y Sellar Protocolo (Auditoría)
                             </Button>
                         </div>
-                    ) : (
-                        <div className="flex items-center justify-center h-full p-8 bg-gray-50 rounded-md border-dashed border-2">
-                            <p className="text-sm text-gray-500">Los resultados aparecerán aquí.</p>
-                        </div>
                     )}
+                </div>
+
+                {/* Columna Derecha: Visor de Estímulos */}
+                <div className="space-y-6">
+                    <h3 className="font-semibold text-lg">Visor de Estímulos (Alumno)</h3>
+                    <div className="flex items-center justify-center h-full p-8 bg-gray-900 text-white rounded-md border-dashed border-2 border-gray-400">
+                        <p className="text-center text-lg">El Visor de Estímulos para el Alumno aparecerá aquí.<br/> (Modo Espejo Sincronizado)</p>
+                    </div>
+                     <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-md mt-auto">
+                        <p className="text-xs text-yellow-800 flex items-start gap-2">
+                            <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <span>
+                                <strong>Nota de Simulación:</strong> Las puntuaciones se basan en una conversión lineal simplificada, no en las tablas normativas reales del WAIS-IV.
+                            </span>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
