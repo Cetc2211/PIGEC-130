@@ -88,7 +88,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         { pair: 'ICV - IVE', diff: icv.score - ive.score, significant: Math.abs(icv.score - ive.score) >= valoresCriticos['ICV-IVE'] },
         { pair: 'ICV - IRF', diff: icv.score - irf.score, significant: Math.abs(icv.score - irf.score) >= valoresCriticos['ICV-IRF'] },
         { pair: 'IMT - IVP', diff: imt.score - ivp.score, significant: Math.abs(imt.score - ivp.score) >= valoresCriticos['IMT-IVP'] },
-        { pair: 'ICV - IMT', diff: imt.score - ivp.score, significant: Math.abs(icv.score - imt.score) >= valoresCriticos['ICV-IMT'] },
+        { pair: 'ICV - IMT', diff: icv.score - imt.score, significant: Math.abs(icv.score - imt.score) >= valoresCriticos['ICV-IMT'] },
     ];
     
     const meanPE = getSum(citSubtestsIds) / citSubtestsIds.length;
@@ -231,7 +231,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Comparación</TableHead><TableHead>Diferencia</TableHead><TableHead>Significancia</TableHead></TableRow></TableHeader>
                                     <TableBody>
-                                        {results.discrepancies.map(d => (
+                                        {results.discrepancias.map(d => (
                                             <TableRow key={d.pair}>
                                                 <TableCell>{d.pair}</TableCell>
                                                 <TableCell>{d.diff.toFixed(2)}</TableCell>
