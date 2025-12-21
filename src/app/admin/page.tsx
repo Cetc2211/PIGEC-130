@@ -107,11 +107,9 @@ function AddNewStudentForm() {
                         <Textarea id="dual-relationship" value={dualRelationship} onChange={(e) => setDualRelationship(e.target.value)} placeholder="¿Existe relación académica o familiar directa con el tutor/clínico asignado? Documentar aquí para evitar conflicto de interés." />
                     </div>
                     <div className="flex justify-end">
-                        <Link href="/educativa/evaluacion" passHref>
-                            <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                                {isLoading ? 'Guardando...' : 'Crear Expediente'}
-                            </Button>
-                        </Link>
+                        <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
+                            {isLoading ? 'Guardando...' : 'Crear Expediente'}
+                        </Button>
                     </div>
                 </form>
 
