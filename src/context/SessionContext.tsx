@@ -26,14 +26,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setRole('unauthenticated');
       }
     } catch (error) {
-      // Si localStorage no está disponible (p. ej., en SSR), 
-      // se mantiene en 'unauthenticated' o 'loading'.
+      // If localStorage is not available (e.g., in SSR),
+      // it remains 'unauthenticated' or 'loading'.
       setRole('unauthenticated');
     }
   }, []);
 
   useEffect(() => {
-    // Si no está autenticado y no está en la página de inicio, redirige al inicio.
+    // If not authenticated and not on the home page, redirect to home.
     if (role === 'unauthenticated' && pathname !== '/') {
         router.replace('/');
     }
@@ -46,13 +46,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       } else {
         localStorage.removeItem('userRole');
       }
-      setRole(newRole);
     }
+    setRole(newRole);
   };
 
   const value = { role, setRole: handleSetRole as (role: Role) => void };
   
-  // Muestra un loader genérico si la sesión aún se está cargando en cualquier página protegida.
+  // Show a generic loader if the session is still loading on any protected page.
   if (role === 'loading' && pathname !== '/') {
     return (
         <div className="flex h-screen w-full items-center justify-center p-8">
