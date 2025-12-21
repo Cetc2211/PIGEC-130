@@ -4,16 +4,15 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyBliGErw1WiGhY6lZeCSh6WU0Kg2ZK7oa0",
+  authDomain: "academic-tracker-qeoxi.firebaseapp.com",
+  projectId: "academic-tracker-qeoxi",
+  storageBucket: "academic-tracker-qeoxi.appspot.com",
+  messagingSenderId: "263108580734",
+  appId: "1:263108580734:web:316c14f8e71c20aa038f2f"
 };
+
 
 // Initialize Firebase
 // Using a singleton pattern to avoid re-initialization
