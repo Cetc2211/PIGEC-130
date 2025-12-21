@@ -31,7 +31,6 @@ export default function ClinicalFilePage() {
     const { role } = useSession();
 
     useEffect(() => {
-        // Redirige solo si el rol está cargado y no es el correcto.
         if (role && role !== 'loading' && role !== 'Clinico') {
             console.log(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica. Redirigiendo.`);
             redirect(`/educativa/estudiante/${studentId}`);
@@ -40,7 +39,6 @@ export default function ClinicalFilePage() {
 
     const student = getStudentById(studentId);
     
-    // Muestra un estado de carga mientras se verifica el rol, en lugar de redirigir.
     if (role === 'loading' || !student) {
         return (
             <div className="flex h-screen w-full items-center justify-center p-8">
@@ -52,7 +50,6 @@ export default function ClinicalFilePage() {
         );
     }
     
-    // Si el rol ya está cargado y NO es 'Clinico', no renderiza nada mientras useEffect redirige.
     if (role !== 'Clinico') {
         return null;
     }
