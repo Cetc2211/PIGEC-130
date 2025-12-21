@@ -129,13 +129,16 @@ export default function ClinicalFilePage() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <BookOpen />
-                                    Evaluación Psicométrica (Escalas Wechsler)
+                                    Evaluación Psicométrica (Motor de Enrutamiento por Edad)
                                 </CardTitle>
                                 <CardDescription>
-                                    {student.demographics.age < 16 
-                                        ? `Se muestra la consola WISC-V porque la edad del estudiante (${student.demographics.age}) es menor a 16.`
-                                        : `Se muestra la consola WAIS-IV porque la edad del estudiante (${student.demographics.age}) es 16 o mayor.`
+                                    El sistema selecciona automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado.
+                                     <span className="block font-semibold mt-2">
+                                     {student.demographics.age < 16 
+                                        ? `Se muestra la consola WISC-V porque la edad del estudiante (${student.demographics.age} años) es menor a 16.`
+                                        : `Se muestra la consola WAIS-IV porque la edad del estudiante (${student.demographics.age} años) es 16 o mayor.`
                                     }
+                                     </span>
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
