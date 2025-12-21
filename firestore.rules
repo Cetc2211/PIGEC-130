@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función para verificar si el usuario es Clínico
+    function isClinico() {
+      return request.auth.token.role == 'clinico';
+    }
+
+    // Datos académicos: Visibles para docentes y clínicos
+    match /students/{studentId} {
+      allow read: if request.auth != null;
+      allow write: if isClinico() || request.auth.token.role == 'admin';
+
+      // SUBCOLECCIÓN CLÍNICA: Solo accesible para el psicólogo
+      match /clinical_records/{recordId} {
+        allow read, write: if isClinico();
+      }
+    }
+
+    // Repositorio de Baremos y Manuales
+    match /test_norms/{testId} {
+      allow read: if request.auth != null; // Para que la app calcule resultados
+      allow write: if request.auth.token.role == 'admin'; // Solo el admin sube tablas
+    }
+  }
+}

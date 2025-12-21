@@ -1,0 +1,15 @@
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Los manuales técnicos solo los descarga el personal autorizado
+    match /clinica/manuales/{allPaths=**} {
+      allow read: if request.auth.token.role == 'clinico';
+      allow write: if request.auth.token.role == 'admin';
+    }
+
+    // Fotos o firmas de los protocolos aplicados
+    match /clinica/protocolos_aplicados/{studentId}/{allPaths=**} {
+      allow read, write: if request.auth.token.role == 'clinico';
+    }
+  }
+}
