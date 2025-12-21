@@ -16,7 +16,7 @@ import RiskTimelineChart from '@/components/RiskTimelineChart';
 import SOAPNotesForm from '@/components/SOAPNotesForm';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen, FileText, FileDown, Activity, UserCheck } from "lucide-react";
+import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen, FileText, FileDown, Activity, UserCheck, BrainCircuit } from "lucide-react";
 import ScreeningManagement from '@/components/screening-management';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import WISCScoringConsole from '@/components/WISC-VScoringConsole';
@@ -149,8 +149,19 @@ export default function ClinicalFilePage() {
                                 )}
                             </CardContent>
                         </Card>
-
-                        <NeuroScreeningConsole studentId={studentId} />
+                        
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <BrainCircuit />
+                                    Consola de Aplicación: Tamizaje Neuropsicológico
+                                </CardTitle>
+                                <CardDescription>Herramienta para el registro en tiempo real de pruebas de atención y funciones ejecutivas.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <NeuroScreeningConsole studentId={studentId} />
+                            </CardContent>
+                        </Card>
 
                     </TabsContent>
 
