@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Calculator, AlertTriangle, FileLock2 } from 'lucide-react';
+import { BarChart, Calculator, AlertTriangle, FileLock2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Checkbox } from './ui/checkbox';
+import { Textarea } from './ui/textarea';
 
 interface WAISScoringConsoleProps {
     studentAge: number;
@@ -169,42 +170,43 @@ export default function WAISScoringConsole({ studentAge }: WAISScoringConsolePro
                             <AccordionItem value={domain} key={domain}>
                                 <AccordionTrigger className="font-semibold">{domain}</AccordionTrigger>
                                 <AccordionContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Subprueba</TableHead>
-                                                <TableHead>P. Bruta</TableHead>
-                                                <TableHead>Tiempo (s)</TableHead>
-                                                <TableHead>Errores</TableHead>
-                                                <TableHead>Discont.</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {tests.map(subtest => (
-                                                <TableRow key={subtest.id}>
-                                                    <TableCell className="py-2">
-                                                        <Label htmlFor={`wais-${subtest.id}`} className="text-sm">
-                                                            {subtest.name}
-                                                            {subtest.optional && <span className="text-xs text-gray-500"> (Op)</span>}
-                                                        </Label>
-                                                    </TableCell>
-                                                    <TableCell className="py-2">
-                                                        <Input
-                                                            id={`wais-${subtest.id}`}
-                                                            type="number"
-                                                            value={rawScores[subtest.id] || ''}
-                                                            onChange={e => handleScoreChange(subtest.id, e.target.value)}
-                                                            placeholder="PB"
-                                                            className="h-8 w-20"
-                                                        />
-                                                    </TableCell>
-                                                     <TableCell className="py-2"><Input type="number" placeholder="s" className="h-8 w-20" /></TableCell>
-                                                    <TableCell className="py-2"><Input type="number" placeholder="n" className="h-8 w-20" /></TableCell>
-                                                    <TableCell className="py-2"><Checkbox /></TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                    <div className="space-y-4 p-2">
+                                        <div className="p-3 bg-gray-100 rounded-md border">
+                                            <p className="font-semibold text-sm">CONSIGNA (Script para el psicólogo):</p>
+                                            <p className="text-sm text-gray-700 mt-1">"Ahora vamos a hacer algo diferente. Mira estos cubos..."</p>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div className="col-span-2 space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`response-${domain}`} className="text-xs">Respuesta del Sujeto (Cualitativa)</Label>
+                                                    <Textarea id={`response-${domain}`} placeholder="Anotar respuesta literal..." className="h-20" />
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor={`time-${domain}`} className="text-xs">Tiempo (s)</Label>
+                                                        <Input id={`time-${domain}`} type="number" placeholder="s" className="h-8 w-20" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor={`score-${domain}`} className="text-xs">Puntaje</Label>
+                                                        <Input id={`score-${domain}`} type="number" placeholder="0, 1, 2" className="h-8 w-20" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                             <div className="col-span-1">
+                                                <p className="text-xs font-semibold mb-2">Miniatura de Estímulo:</p>
+                                                <div className="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
+                                                    <p className="text-xs text-gray-500">Img. aquí</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between items-center mt-4">
+                                            <Button variant="outline" size="sm"><ChevronLeft className="mr-2 h-4 w-4" /> Anterior</Button>
+                                            <p className="text-xs text-gray-500">Ítem 5 de 14</p>
+                                            <Button variant="outline" size="sm">Siguiente <ChevronRight className="ml-2 h-4 w-4" /></Button>
+                                        </div>
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
                         ))}
