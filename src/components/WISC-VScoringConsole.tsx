@@ -42,6 +42,7 @@ const subtestsByDomain = {
 
 // --- SIMULACIÓN DE LÓGICA DE CÁLCULO ---
 const getScaledScore = (rawScore: number): number => {
+    // Simulación simplificada. Una app real buscaría en una tabla de baremos por edad.
     if (rawScore === 0) return 1;
     const scaled = Math.round((rawScore / 50) * 19); 
     return Math.max(1, Math.min(19, scaled));
@@ -56,18 +57,16 @@ const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     const imt = getSum(['D', 'LN']);
     const ivp = getSum(['Cl', 'BS']);
     
-    // CIT se calcula sobre las 7 subpruebas principales
+    // CIT se calcula sobre las 7 subpruebas principales del WISC-V
     const citSum = icv + ive + irf + getSum(['D']);
 
+    // Simulación muy simplificada de conversión a CI.
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (sum === 0 && numSubtests > 0) return 40;
         if (sum === 0) return 0;
-        // This is a highly simplified linear scaling for simulation.
-        // A real implementation would use lookup tables based on age.
-        const avg = sum / numSubtests;
-        const composite = 50 + (avg - 7) * (50 / 8); // scales 1-19 avg to 50-150 range
-        return Math.round(Math.max(40, Math.min(160, composite)));
-    }
+        const meanScaled = sum / numSubtests;
+        return Math.round(100 + 15 * (meanScaled - 10) / 3);
+    };
 
     return { 
         ICV: scaleToComposite(icv, 2), 

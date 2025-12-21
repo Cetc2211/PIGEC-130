@@ -41,8 +41,8 @@ const subtestsByDomain = {
 
 
 const getScaledScore = (rawScore: number): number => {
+    // Simulación muy simplificada. En una app real, esto sería una consulta a una tabla de baremos.
     if (rawScore === 0) return 1;
-    // Simulación muy simplificada
     const scaled = Math.round((rawScore / 30) * 19); 
     return Math.max(1, Math.min(19, scaled));
 };
@@ -58,23 +58,15 @@ const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     // CIT se calcula sobre las 10 subpruebas principales
     const citSum = icv + irp + imt + ivp;
 
-    const convertToCI = (sumOfScaled: number, numTests: number) => {
-        if (sumOfScaled === 0) return 0;
-        // Simulación muy simplificada. CI = 100 + 15 * ( (suma_escalares/num_tests) - 10 ) / 3
-        const meanScaled = sumOfScaled / numTests;
-        return Math.round(100 + 15 * (meanScaled - 10) / 3);
-    };
-    
+    // Simulación muy simplificada de conversión a CI. Una app real usaría tablas normativas.
+    // Fórmula de ejemplo: CI = 100 + 15 * ( (suma_escalares / num_tests) - 10 ) / 3
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (sum === 0 && numSubtests > 0) return 40;
         if (sum === 0) return 0;
-        // This is a highly simplified linear scaling for simulation.
-        // A real implementation would use lookup tables based on age.
-        const avg = sum / numSubtests;
-        const composite = 50 + (avg - 7) * (50 / 8); // scales 1-19 avg to 50-150 range
-        return Math.round(Math.max(40, Math.min(160, composite)));
-    }
-
+        const meanScaled = sum / numSubtests;
+        return Math.round(100 + 15 * (meanScaled - 10) / 3);
+    };
+    
 
     return {
         ICV: scaleToComposite(icv, 3),
