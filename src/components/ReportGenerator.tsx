@@ -21,15 +21,22 @@ export default function ReportGenerator({ student, clinicalAssessment }: ReportG
     if (!student) return null;
 
     const handleGenerateIntegralReport = () => {
+        // Simulación de la estructura de datos que se usaría para el PDF.
         const reportData = {
             studentInfo: student,
             clinicalData: clinicalAssessment,
-            // ... Aquí se consumirían los datos de otras colecciones
+            // ... Aquí se consumirían los datos de otras colecciones: análisis funcional, plan de tratamiento, etc.
             generatedAt: new Date().toISOString(),
+            reportStructure: {
+                motivoConsulta: `Derivado por ${student.academicData.gpa < 7 ? 'bajo rendimiento' : 'preocupaciones conductuales'}...`,
+                pruebasAplicadas: ['Escala Wechsler de Inteligencia', 'Tamizaje Neuropsicológico'],
+                analisisResultados: 'El perfil cognitivo se encuentra en el rango promedio...',
+                recomendaciones: ['Usar apoyos visuales', 'Técnica de los 5 minutos'],
+            }
         };
 
         console.log("--- SIMULACIÓN: Generando Informe de Valoración Integral (Cap. 8.2) ---");
-        console.log("Datos ensamblados:", reportData);
+        console.log("Datos ensamblados para el motor de PDF:", reportData);
         alert("Simulación de exportación de Informe Integral completada. Revisa la consola para ver la estructura de datos.");
     };
 
