@@ -1,15 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { Sidebar } from '@/components/sidebar';
+import { usePathname, useRouter } from 'next/navigation';
 
 type Role = 'Clinico' | 'Orientador' | 'loading' | 'unauthenticated' | null;
 
 interface SessionContextType {
   role: Role;
   setRole: (role: Role) => void;
-  showSidebar: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -17,15 +15,29 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<Role>('loading');
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
-    const storedRole = localStorage.getItem('userRole') as Role;
-    if (storedRole && (storedRole === 'Clinico' || storedRole === 'Orientador')) {
-      setRole(storedRole);
-    } else {
+    try {
+      const storedRole = localStorage.getItem('userRole') as Role;
+      if (storedRole && (storedRole === 'Clinico' || storedRole === 'Orientador')) {
+        setRole(storedRole);
+      } else {
+        setRole('unauthenticated');
+      }
+    } catch (error) {
+      // Si localStorage no está disponible (p. ej., en SSR), 
+      // se mantiene en 'unauthenticated' o 'loading'.
       setRole('unauthenticated');
     }
   }, []);
+
+  useEffect(() => {
+    // Si no está autenticado y no está en la página de inicio, redirige al inicio.
+    if (role === 'unauthenticated' && pathname !== '/') {
+        router.replace('/');
+    }
+  }, [role, pathname, router]);
 
   const handleSetRole = (newRole: Role) => {
     if (newRole) {
@@ -38,12 +50,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const showSidebar = role !== 'unauthenticated' && role !== 'loading' && pathname !== '/';
-
-  const value = { role, setRole: handleSetRole as (role: Role) => void, showSidebar };
+  const value = { role, setRole: handleSetRole as (role: Role) => void };
   
+  // Muestra un loader genérico si la sesión aún se está cargando en cualquier página protegida.
   if (role === 'loading' && pathname !== '/') {
-    return <div className="flex h-screen w-full items-center justify-center"><p>Cargando Sesión...</p></div>;
+    return (
+        <div className="flex h-screen w-full items-center justify-center p-8">
+            <div className="flex items-center gap-2 text-xl text-gray-600">
+                Cargando Sesión...
+            </div>
+        </div>
+    );
   }
   
   return (

@@ -31,33 +31,36 @@ export default function ClinicalFilePage() {
     const { role } = useSession();
 
     useEffect(() => {
+        // Redirige solo si el rol está cargado y no es el correcto.
         if (role && role !== 'loading' && role !== 'Clinico') {
             console.log(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica. Redirigiendo.`);
             redirect(`/educativa/estudiante/${studentId}`);
         }
     }, [role, studentId]);
 
-    if (role === 'loading' || role !== 'Clinico') {
+    const student = getStudentById(studentId);
+    
+    // Muestra un estado de carga mientras se verifica el rol, en lugar de redirigir.
+    if (role === 'loading' || !student) {
         return (
             <div className="flex h-screen w-full items-center justify-center p-8">
                 <div className="flex items-center gap-2 text-xl text-gray-600">
                     <Loader className="animate-spin" />
-                    Verificando Permisos de Seguridad...
+                    {role === 'loading' ? 'Verificando Permisos de Seguridad...' : 'Cargando datos del estudiante...'}
                 </div>
             </div>
         );
     }
+    
+    // Si el rol ya está cargado y NO es 'Clinico', no renderiza nada mientras useEffect redirige.
+    if (role !== 'Clinico') {
+        return null;
+    }
 
-    const student = getStudentById(studentId);
     const clinicalAssessment = getClinicalAssessmentByStudentId(studentId);
     const functionalAnalysis = getFunctionalAnalysisByStudentId(studentId);
     const treatmentPlan = getTreatmentPlanByStudentId(studentId);
     const progressTracking = getProgressTrackingByStudentId(studentId);
-
-    if (!student) {
-        // En una app real, esto sería una página 404.
-        return <div className="p-8">Estudiante no encontrado.</div>;
-    }
 
     const isHighRisk = student.suicideRiskLevel === 'Alto' || student.suicideRiskLevel === 'Crítico';
 
