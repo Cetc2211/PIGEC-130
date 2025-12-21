@@ -96,8 +96,8 @@ export default function ClinicalFilePage() {
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="resumen"><UserCheck className="mr-2"/>Resumen Ejecutivo</TabsTrigger>
                         <TabsTrigger value="pruebas"><ClipboardList className="mr-2"/>Gestión de Pruebas</TabsTrigger>
-                        <TabsTrigger value="soap"><FileText className="mr-2"/>Notas SOAP</TabsTrigger>
-                        <TabsTrigger value="documentacion"><FileDown className="mr-2"/>Documentación y Cierre</TabsTrigger>
+                        <TabsTrigger value="soap"><FileText className="mr-2"/>Evolución y Notas</TabsTrigger>
+                        <TabsTrigger value="documentacion"><FileDown className="mr-2"/>Documentación Legal</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="resumen" className="mt-6 space-y-12">

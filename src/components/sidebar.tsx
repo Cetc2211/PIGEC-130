@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Scale, Home, Wrench, Settings, ClipboardList, Users, BookText, LogOut } from 'lucide-react';
+import { Scale, Home, Wrench, Settings, ClipboardList, Users, BookText, LogOut, FolderKanban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/context/SessionContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -13,9 +13,9 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard de Riesgo', icon: Home, roles: ['Clinico', 'Orientador'] },
   { href: '/orientacion', label: 'Panel de Orientación', icon: BookText, roles: ['Orientador'] },
   { href: '/educativa/evaluacion', label: 'Evaluación Educativa', icon: BookText, roles: ['Orientador', 'Clinico'] },
-  { href: '/screening', label: 'Módulo de Tamizaje', icon: ClipboardList, roles: ['Clinico'] },
+  { href: '/screening', label: 'Gestión de Pruebas', icon: ClipboardList, roles: ['Clinico'] },
+  { href: '/tools', label: 'Repositorio de Recursos', icon: FolderKanban, roles: ['Clinico', 'Orientador'] },
   { href: '/admin', label: 'Administración', icon: Settings, roles: ['Clinico'] },
-  { href: '/tools', label: 'Herramientas', icon: Wrench, roles: ['Clinico', 'Orientador'] },
 ];
 
 function RoleSwitcher() {
