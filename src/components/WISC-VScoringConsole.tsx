@@ -82,33 +82,44 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
     const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
     const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
     
-    const mainSubtestsIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
-    const citSum = getSum(mainSubtestsIds);
-    const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 7));
+    const mainSubtestsIds = ['S', 'V', 'C', 'P', 'M', 'B', 'D', 'LN', 'Cl', 'BS'];
+    const citSubtestsIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
+    const citSum = getSum(citSubtestsIds);
+    const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, citSubtestsIds.length));
 
     const compositeScores = [icv, ive, irf, imt, ivp, cit];
 
-    // --- Simulación de Análisis de Discrepancias ---
+    // --- Análisis de Discrepancias con Valores Críticos ---
+    const valoresCriticos = {
+        'ICV-IVE': 11.5,
+        'ICV-IRF': 10.8,
+        'IMT-IVP': 12.3,
+        'ICV-IMT': 11.2,
+    };
+
     const discrepancies = [
-        { pair: 'ICV - IVE', diff: icv.score - ive.score, significant: Math.abs(icv.score - ive.score) > 12 },
-        { pair: 'IRF - IMT', diff: irf.score - imt.score, significant: Math.abs(irf.score - imt.score) > 14 },
+        { pair: 'ICV - IVE', diff: icv.score - ive.score, significant: Math.abs(icv.score - ive.score) >= valoresCriticos['ICV-IVE'] },
+        { pair: 'ICV - IRF', diff: icv.score - irf.score, significant: Math.abs(icv.score - irf.score) >= valoresCriticos['ICV-IRF'] },
+        { pair: 'IMT - IVP', diff: imt.score - ivp.score, significant: Math.abs(imt.score - ivp.score) >= valoresCriticos['IMT-IVP'] },
+        { pair: 'ICV - IMT', diff: icv.score - imt.score, significant: Math.abs(icv.score - imt.score) >= valoresCriticos['ICV-IMT'] },
     ];
     
     // --- Simulación de Fortalezas y Debilidades ---
-    const meanPE = citSum / mainSubtestsIds.length;
+    const meanPE = citSum / citSubtestsIds.length;
     const strengthsAndWeaknesses = mainSubtestsIds.map(id => {
         const score = scaledScores[id] || 0;
         const diff = score - meanPE;
         let classification = '-';
         if (diff > 3) classification = 'Fortaleza (F)';
         if (diff < -3) classification = 'Debilidad (D)';
+        const subtestInfo = Object.values(subtestsByDomain).flat().find(t => t.id === id);
         return {
-            name: subtestsByDomain[Object.keys(subtestsByDomain).find(d => subtestsByDomain[d as keyof typeof subtestsByDomain].some(t => t.id === id))!]?.find(t => t.id === id)?.name,
+            name: subtestInfo?.name,
             score,
             diff: diff.toFixed(2),
             classification,
         };
-    });
+    }).filter(s => s.name); // Filtrar por si alguna subprueba no se encuentra
 
     return { compositeScores, discrepancies, strengthsAndWeaknesses };
 };
@@ -124,9 +135,10 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
 
     const handleCalculate = () => {
         const scaledScores: { [key: string]: number } = {};
-        Object.keys(rawScores).forEach(subtestId => {
-            const rawScore = parseInt(rawScores[subtestId] || '0', 10);
-            scaledScores[subtestId] = getScaledScore(rawScore);
+        // Incluir todas las subpruebas en el cálculo de puntuaciones escalares
+        Object.values(subtestsByDomain).flat().forEach(subtest => {
+            const rawScore = parseInt(rawScores[subtest.id] || '0', 10);
+            scaledScores[subtest.id] = getScaledScore(rawScore);
         });
 
         const clinicalProfile = calculateClinicalProfile(scaledScores);
@@ -215,7 +227,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                         {results.discrepancies.map(d => (
                                             <TableRow key={d.pair}>
                                                 <TableCell>{d.pair}</TableCell>
-                                                <TableCell>{d.diff}</TableCell>
+                                                <TableCell>{d.diff.toFixed(2)}</TableCell>
                                                 <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? 'Sí' : 'No'}</TableCell>
                                             </TableRow>
                                         ))}
@@ -232,7 +244,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                             <TableRow key={s.name}>
                                                 <TableCell>{s.name}</TableCell>
                                                 <TableCell>{s.score}</TableCell>
-                                                <TableCell className={s.classification.startsWith('F') ? 'text-green-600' : s.classification.startsWith('D') ? 'text-orange-600' : ''}>{s.classification}</TableCell>
+                                                <TableCell className={s.classification.startsWith('F') ? 'font-bold text-green-600' : s.classification.startsWith('D') ? 'font-bold text-orange-600' : ''}>{s.classification}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -262,5 +274,3 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
-
-    
