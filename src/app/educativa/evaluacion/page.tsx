@@ -1,9 +1,7 @@
 'use client';
 
-import EducationalAssessmentForm from "@/components/educational-assessment-form";
 import ScreeningManagement from "@/components/screening-management";
 import { useSession } from "@/context/SessionContext";
-import { redirect } from "next/navigation";
 
 export default function EducationalAssessmentPage() {
     const { role } = useSession();
@@ -22,11 +20,10 @@ export default function EducationalAssessmentPage() {
                  <div>
                     <h1 className="text-3xl font-extrabold text-gray-800">Evaluación Educativa (Nivel 1 y 2)</h1>
                     <p className="mt-2 text-sm text-gray-600">
-                        Este módulo permite la aplicación masiva de instrumentos de tamizaje educativo (CHTE, Neuropsicológico) para ingestar datos automáticamente al sistema.
+                        Este módulo permite la aplicación masiva de instrumentos de tamizaje (CHTE, Neuropsicológico, etc.) para ingestar datos automáticamente al sistema. Cree un proceso de tamizaje, genere un enlace y asígnelo a un grupo o estudiante.
                     </p>
                 </div>
                 <ScreeningManagement />
-                <EducationalAssessmentForm />
             </div>
         </div>
     );
