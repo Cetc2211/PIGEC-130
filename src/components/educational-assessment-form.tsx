@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { BookOpen, BrainCircuit, CheckSquare, Sparkles, AlertCircle, CheckCircle } from 'lucide-react';
-import { EducationalAssessment } from '@/lib/store';
+import { EducationalAssessment, ChteScores } from '@/lib/store';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export default function EducationalAssessmentForm() {
@@ -18,17 +18,32 @@ export default function EducationalAssessmentForm() {
         
         const formData = new FormData(event.currentTarget);
         
-        const chteScorePlanificacion = Number(formData.get('chte-planificacion'));
+        const scores: ChteScores = {
+            lugar: Number(formData.get('chte-lugar')),
+            planificacion: Number(formData.get('chte-planificacion')),
+            atencion: Number(formData.get('chte-atencion')),
+            metodo: Number(formData.get('chte-metodo')),
+            actitud: Number(formData.get('chte-actitud')),
+        };
+
+        const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+
+        let interpretation: 'Bajo' | 'Medio' | 'Alto';
+        if (totalScore <= 36) {
+            interpretation = 'Bajo';
+        } else if (totalScore <= 49) {
+            interpretation = 'Medio';
+        } else {
+            interpretation = 'Alto';
+        }
+        
         const memoriaTrabajoPercentil = Number(formData.get('neuro-memoria'));
         const controlInhibitorioPercentil = Number(formData.get('neuro-inhibicion'));
 
-
         const dataToSave: Omit<EducationalAssessment, 'studentId' | 'fecha_evaluacion'> = {
-            chteScores: {
-                planificacion: chteScorePlanificacion,
-                concentracion: Number(formData.get('chte-concentracion')),
-                tomaDeApuntes: Number(formData.get('chte-apuntes')),
-            },
+            chteScores: scores,
+            totalScore: totalScore,
+            interpretation: interpretation,
             neuropsychScreening: {
                 atencionPercentil: Number(formData.get('neuro-atencion')),
                 memoriaTrabajoPercentil: memoriaTrabajoPercentil,
@@ -37,7 +52,7 @@ export default function EducationalAssessmentForm() {
         };
 
         const finalData = {
-            studentId: formData.get('student-id') as string, // Asegúrate de tener un input para esto
+            studentId: formData.get('student-id') as string,
             fecha_evaluacion: new Date().toISOString(),
             ...dataToSave
         };
@@ -46,14 +61,11 @@ export default function EducationalAssessmentForm() {
         console.log("Guardando Evaluación Educativa en 'educational_assessments':", finalData);
         setFeedback('Evaluación Educativa guardada con éxito.');
 
-
-        // Lógica de Triage Educativo (Cap. 6.2.2 y Cap. 9)
-        if (chteScorePlanificacion < 40) {
-            const triageMsg = `TRIAGE EDUCATIVO AUTOMÁTICO: Puntaje de Planificación (${chteScorePlanificacion}) es bajo. Se ha registrado la inscripción automática al micro-curso de 'Técnicas de Estudio'.`;
+        if (scores.planificacion < 8) { // Ejemplo de regla de triage
+            const triageMsg = `TRIAGE EDUCATIVO AUTOMÁTICO: Puntaje de Planificación (${scores.planificacion}) es bajo. Se ha registrado la inscripción automática al micro-curso de 'Técnicas de Estudio'.`;
             console.log(triageMsg);
         }
 
-        // Lógica de Alerta Cognitiva
         if (memoriaTrabajoPercentil < 25 || controlInhibitorioPercentil < 25) {
              const alertMsg = `ALERTA COGNITIVA: Percentiles bajos detectados (MT: ${memoriaTrabajoPercentil}, CI: ${controlInhibitorioPercentil}). Se ha enviado una notificación al Rol Clínico para una evaluación de Nivel 3.`;
             console.log(alertMsg);
@@ -68,10 +80,10 @@ export default function EducationalAssessmentForm() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <CheckSquare />
-                    Registrar Puntuaciones BEC-130
+                    Registrar Puntuaciones IHE/BEC-130
                 </CardTitle>
                 <CardDescription>
-                    Ingrese los puntajes obtenidos por el estudiante en los instrumentos correspondientes para el cálculo automático.
+                    Ingrese los puntajes obtenidos por el estudiante para el cálculo automático y la asignación de nivel.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -83,31 +95,37 @@ export default function EducationalAssessmentForm() {
 
                     <Separator />
 
-                    {/* SECCIÓN II: CHTE */}
                     <div>
                         <h3 className="text-lg font.semibold text-gray-700 mb-4 flex items-center gap-2">
                             <Sparkles />
-                            I. Cuestionario de Hábitos y Técnicas de Estudio (CHTE)
+                            I. Cuestionario de Hábitos y Técnicas de Estudio (IHE)
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                              <div className="space-y-2">
-                                <Label htmlFor="chte-planificacion">Sub-escala Planificación</Label>
-                                <Input id="chte-planificacion" name="chte-planificacion" type="number" placeholder="Ej. 35" />
+                                <Label htmlFor="chte-lugar">Lugar</Label>
+                                <Input id="chte-lugar" name="chte-lugar" type="number" placeholder="Puntaje" required />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="chte-concentracion">Sub-escala Concentración</Label>
-                                <Input id="chte-concentracion" name="chte-concentracion" type="number" placeholder="Ej. 50" />
+                                <Label htmlFor="chte-planificacion">Planificación</Label>
+                                <Input id="chte-planificacion" name="chte-planificacion" type="number" placeholder="Puntaje" required />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="chte-apuntes">Sub-escala Toma de Apuntes</Label>
-                                <Input id="chte-apuntes" name="chte-apuntes" type="number" placeholder="Ej. 65" />
+                                <Label htmlFor="chte-atencion">Atención</Label>
+                                <Input id="chte-atencion" name="chte-atencion" type="number" placeholder="Puntaje" required />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="chte-metodo">Método</Label>
+                                <Input id="chte-metodo" name="chte-metodo" type="number" placeholder="Puntaje" required />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="chte-actitud">Actitud</Label>
+                                <Input id="chte-actitud" name="chte-actitud" type="number" placeholder="Puntaje" required />
                             </div>
                         </div>
                     </div>
 
                     <Separator />
 
-                    {/* SECCIÓN III: TAMIZAJE NEUROPSICOLÓGICO */}
                     <div>
                         <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
                             <BrainCircuit />

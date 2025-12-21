@@ -88,11 +88,15 @@ export interface ProgressData {
 
 
 // --- TIPOS PARA LA EVALUACIÓN EDUCATIVA ---
+// Actualizado según Fase 2 para reflejar las 5 áreas del IHE
 export interface ChteScores {
+    lugar: number;
     planificacion: number;
-    concentracion: number;
-    tomaDeApuntes: number;
+    atencion: number;
+    metodo: number;
+    actitud: number;
 }
+
 
 export interface NeuropsychScreening {
     atencionPercentil: number;
@@ -104,6 +108,8 @@ export interface EducationalAssessment {
     studentId: string; // FK
     fecha_evaluacion: string;
     chteScores: ChteScores;
+    totalScore: number;
+    interpretation: 'Bajo' | 'Medio' | 'Alto';
     neuropsychScreening: NeuropsychScreening;
 }
 
@@ -180,13 +186,17 @@ const educationalAssessmentsDB: EducationalAssessment[] = [
     {
         studentId: 'S001',
         fecha_evaluacion: '2024-05-18',
-        chteScores: { planificacion: 35, concentracion: 50, tomaDeApuntes: 45 },
+        chteScores: { lugar: 8, planificacion: 7, atencion: 6, metodo: 8, actitud: 7 }, // Total: 36
+        totalScore: 36,
+        interpretation: 'Bajo',
         neuropsychScreening: { atencionPercentil: 55, memoriaTrabajoPercentil: 20, controlInhibitorioPercentil: 60 }
     },
     {
         studentId: 'S002',
         fecha_evaluacion: '2024-05-20',
-        chteScores: { planificacion: 60, concentracion: 75, tomaDeApuntes: 80 },
+        chteScores: { lugar: 10, planificacion: 10, atencion: 9, metodo: 9, actitud: 10 }, // Total: 48
+        totalScore: 48,
+        interpretation: 'Medio',
         neuropsychScreening: { atencionPercentil: 70, memoriaTrabajoPercentil: 65, controlInhibitorioPercentil: 75 }
     }
 ];
