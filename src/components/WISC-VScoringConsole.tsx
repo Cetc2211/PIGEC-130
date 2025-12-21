@@ -42,7 +42,7 @@ const subtestsByDomain = {
 
 // Simulación de la función getScaledScore
 const getScaledScore = (rawScore: number): number => {
-    if (rawScore === 0) return 1;
+    if (rawScore === 0) return 1; // Manejo de "Piso de Prueba"
     // Conversión lineal simplificada para simulación.
     const scaled = Math.round((rawScore / 50) * 18) + 1; 
     return Math.max(1, Math.min(19, scaled));
@@ -82,7 +82,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
     const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
     const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
     
-    const mainSubtestsIds = ['S', 'V', 'C', 'P', 'M', 'B', 'D', 'LN', 'Cl', 'BS'];
+    // BLINDAJE DE SEGURIDAD: CIT se calcula solo con las 7 subpruebas obligatorias
     const citSubtestsIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
     const citSum = getSum(citSubtestsIds);
     const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, citSubtestsIds.length));
@@ -106,20 +106,21 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
     
     // --- Simulación de Fortalezas y Debilidades ---
     const meanPE = citSum / citSubtestsIds.length;
-    const strengthsAndWeaknesses = mainSubtestsIds.map(id => {
+    const allSubtests = Object.values(subtestsByDomain).flat();
+    const strengthsAndWeaknesses = citSubtestsIds.map(id => {
         const score = scaledScores[id] || 0;
         const diff = score - meanPE;
         let classification = '-';
         if (diff > 3) classification = 'Fortaleza (F)';
         if (diff < -3) classification = 'Debilidad (D)';
-        const subtestInfo = Object.values(subtestsByDomain).flat().find(t => t.id === id);
+        const subtestInfo = allSubtests.find(t => t.id === id);
         return {
             name: subtestInfo?.name,
             score,
             diff: diff.toFixed(2),
             classification,
         };
-    }).filter(s => s.name); // Filtrar por si alguna subprueba no se encuentra
+    }).filter(s => s.name);
 
     return { compositeScores, discrepancies, strengthsAndWeaknesses };
 };

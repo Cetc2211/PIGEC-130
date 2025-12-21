@@ -24,16 +24,6 @@ export default function FichaIdentificacionForm() {
                         <Label htmlFor="birth-date">Fecha de Nacimiento</Label>
                         <Input id="birth-date" name="birth-date" type="date" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="age-years">Edad (Años)</Label>
-                            <Input id="age-years" name="age-years" type="number" placeholder="Ej. 17" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="age-months">Meses</Label>
-                            <Input id="age-months" name="age-months" type="number" placeholder="Ej. 6" />
-                        </div>
-                    </div>
                     <div className="space-y-2">
                         <Label>Sexo</Label>
                          <RadioGroup name="sexo" className="flex gap-4">
@@ -131,4 +121,3 @@ export default function FichaIdentificacionForm() {
         </form>
     );
 }
-
