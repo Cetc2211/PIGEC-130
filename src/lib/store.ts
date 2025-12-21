@@ -107,16 +107,21 @@ export interface EducationalAssessment {
     neuropsychScreening: NeuropsychScreening;
 }
 
-// --- TIPO PARA EL REPOSITORIO DE EVIDENCIA ---
+// --- TIPO PARA EL REPOSITORIO DE EVIDENCIA (ACTUALIZADO) ---
 export interface EvidenceReference {
     id: string;
     titulo: string;
     autor: string;
     ano: number;
     modeloIntervencion: 'TCC' | 'AC' | 'DBT' | 'Adaptación Educativa';
-    aplicabilidad: string;
+    fileUrl: string; // URL al PDF en Cloud Storage
+    estrategias: {
+        nombre: string;
+        pagina: number;
+    }[];
     tags: string[];
 }
+
 
 export interface NeuroScreeningResult {
   studentId: string;
@@ -244,7 +249,7 @@ const progressTrackingDB: { [studentId: string]: ProgressData[] } = {
     ]
 };
 
-// --- NUEVA COLECCIÓN: REPOSITORIO DE EVIDENCIA ---
+// --- NUEVA COLECCIÓN: REPOSITORIO DE EVIDENCIA (DATOS ACTUALIZADOS) ---
 const evidenceRepositoryDB: EvidenceReference[] = [
     {
         id: 'ref_ac_01',
@@ -252,7 +257,11 @@ const evidenceRepositoryDB: EvidenceReference[] = [
         autor: 'Lejuez, C. W., Hopko, D. R., & Hopko, S. D.',
         ano: 2001,
         modeloIntervencion: 'AC',
-        aplicabilidad: 'Fundamento de la Activación Conductual para síntomas depresivos, anhedonia y evitación. Útil para el Módulo 3 (Plan Narrativo).',
+        fileUrl: 'https://storage.googleapis.com/example-bucket/Lejuez_Activacion_Conductual.pdf',
+        estrategias: [
+            { nombre: 'Jerarquía de Actividades', pagina: 45 },
+            { nombre: 'Monitoreo de Actividades', pagina: 52 }
+        ],
         tags: ['activacion-conductual', 'depresion']
     },
     {
@@ -261,7 +270,11 @@ const evidenceRepositoryDB: EvidenceReference[] = [
         autor: 'Beck, J. S.',
         ano: 2011,
         modeloIntervencion: 'TCC',
-        aplicabilidad: 'Guía para la reestructuración cognitiva, identificación de pensamientos automáticos y modificación de creencias nucleares. Justifica el Módulo 2.3 (Análisis Funcional).',
+        fileUrl: 'https://storage.googleapis.com/example-bucket/Beck_Terapia_Cognitiva.pdf',
+        estrategias: [
+            { nombre: 'Registro de Pensamientos Disfuncionales', pagina: 112 },
+            { nombre: 'Experimentos Conductuales', pagina: 180 }
+        ],
         tags: ['tcc', 'reestructuracion-cognitiva']
     },
     {
@@ -270,7 +283,11 @@ const evidenceRepositoryDB: EvidenceReference[] = [
         autor: 'Linehan, M. M.',
         ano: 2014,
         modeloIntervencion: 'DBT',
-        aplicabilidad: 'Referencia para habilidades de regulación emocional, tolerancia al malestar y efectividad interpersonal. Justifica el Módulo 4 (Seguimiento de Progreso).',
+        fileUrl: 'https://storage.googleapis.com/example-bucket/Linehan_Habilidades_DBT.pdf',
+        estrategias: [
+            { nombre: 'Habilidad TIP (Tolerancia al Malestar)', pagina: 250 },
+            { nombre: 'Mindfulness Qués y Cómos', pagina: 78 }
+        ],
         tags: ['dbt', 'regulacion-emocional']
     },
     {
@@ -279,10 +296,15 @@ const evidenceRepositoryDB: EvidenceReference[] = [
         autor: 'Zimmerman, B. J.',
         ano: 2002,
         modeloIntervencion: 'Adaptación Educativa',
-        aplicabilidad: 'Base para el diseño de intervenciones pedagógicas que fomentan la autonomía, como la técnica de los 5 minutos y la segmentación de tareas. Justifica el Módulo 7 (Generador PIEI).',
+        fileUrl: 'https://storage.googleapis.com/example-bucket/Zimmerman_Autorregulacion.pdf',
+        estrategias: [
+            { nombre: 'Técnica de los 5 minutos (Inicio de Tarea)', pagina: 92 },
+            { nombre: 'Segmentación de Tareas (Chunking)', pagina: 104 }
+        ],
         tags: ['educativa', 'planificacion', 'procrastinacion']
     }
 ];
+
 
 
 // --- Funciones de Acceso a Datos (Simulan llamadas a Firestore) ---
