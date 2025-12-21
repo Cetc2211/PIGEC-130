@@ -83,7 +83,7 @@ const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
         };
     };
     
-    // Suma de las subpruebas principales para cada índice del WAIS-IV
+    // Suma de las subpruebas para cada índice del WAIS-IV
     const icvSum = getSum(['S', 'V', 'I']);
     const irpSum = getSum(['C', 'M', 'P']);
     const imtSum = getSum(['D', 'A']);
@@ -95,8 +95,9 @@ const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     const ivp = scaleToComposite(ivpSum, 2);
 
     // CIT se basa en 10 subpruebas principales
-    const citSum = icvSum + irpSum + imtSum + ivpSum;
-    const cit = scaleToComposite(citSum, 10);
+    const citSubtestsIds = ['S', 'V', 'I', 'C', 'M', 'P', 'D', 'A', 'BS', 'Cl'];
+    const citSum = getSum(citSubtestsIds);
+    const cit = scaleToComposite(citSum, citSubtestsIds.length);
     
     return [
         createProfile("Comprensión Verbal (ICV)", icv),
