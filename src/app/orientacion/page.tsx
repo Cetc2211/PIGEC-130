@@ -1,10 +1,16 @@
 
 'use client';
-
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, ClipboardList, FolderKanban, PlusCircle } from "lucide-react";
 import Link from "next/link";
+
+// eslint-disable-next-line react/display-name
+const ForwardedLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentProps<typeof Link>
+>((props, ref) => <Link ref={ref} {...props} />);
 
 export default function OrientadorDashboard() {
     return (
@@ -29,13 +35,13 @@ export default function OrientadorDashboard() {
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
                         <Button asChild variant="outline" className="w-full">
-                           <Link href="/admin">Ver/Editar Grupos</Link>
+                           <ForwardedLink href="/admin">Ver/Editar Grupos</ForwardedLink>
                         </Button>
                          <Button asChild>
-                            <Link href="/admin">
+                            <ForwardedLink href="/admin">
                                 <PlusCircle className="mr-2" />
                                 Registrar Nuevo Estudiante
-                            </Link>
+                            </ForwardedLink>
                         </Button>
                     </CardContent>
                 </Card>
@@ -53,10 +59,10 @@ export default function OrientadorDashboard() {
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
                         <Button asChild variant="default" className="w-full bg-blue-600 hover:bg-blue-700">
-                           <Link href="/educativa/evaluacion">Generar Sesión Grupal</Link>
+                           <ForwardedLink href="/educativa/evaluacion">Generar Sesión Grupal</ForwardedLink>
                         </Button>
                          <Button asChild variant="secondary" className="w-full">
-                               <Link href="/educativa/evaluacion">Aplicar a Estudiante Específico</Link>
+                               <ForwardedLink href="/educativa/evaluacion">Aplicar a Estudiante Específico</ForwardedLink>
                         </Button>
                     </CardContent>
                 </Card>
@@ -74,7 +80,7 @@ export default function OrientadorDashboard() {
                     </CardHeader>
                      <CardContent>
                         <Button asChild variant="outline" className="w-full">
-                            <Link href="/dashboard">Ver Todos los Expedientes</Link>
+                            <ForwardedLink href="/dashboard">Ver Todos los Expedientes</ForwardedLink>
                         </Button>
                     </CardContent>
                 </Card>

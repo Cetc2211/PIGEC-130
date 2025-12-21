@@ -9,6 +9,12 @@ import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 
+// eslint-disable-next-line react/display-name
+const ForwardedLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentProps<typeof Link>
+>((props, ref) => <Link ref={ref} {...props} />);
+
 const StudentDashboard: React.FC = () => {
     const { role } = useSession();
     const students = getStudents();
@@ -98,10 +104,10 @@ const StudentDashboard: React.FC = () => {
                                                 isHighRisk && role === 'Clinico' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'
                                             )}
                                         >
-                                            <Link href={linkHref}>
+                                            <ForwardedLink href={linkHref}>
                                                 {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-2 h-4 w-4" />}
                                                 {buttonText}
-                                            </Link>
+                                            </ForwardedLink>
                                         </Button>
                                     </td>
                                 </tr>
