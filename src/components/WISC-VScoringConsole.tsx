@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Calculator, BrainCircuit, AlertTriangle, Check, Timer } from 'lucide-react';
+import { BarChart, Calculator, AlertTriangle } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from './ui/checkbox';
 
@@ -56,15 +55,28 @@ const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     const irf = getSum(['M', 'B']);
     const imt = getSum(['D', 'LN']);
     const ivp = getSum(['Cl', 'BS']);
-    const cit = icv + ive + irf + imt + ivp;
+    
+    // CIT se calcula sobre las 7 subpruebas principales
+    const citSum = icv + ive + irf + getSum(['D']);
 
-    const convertToCI = (sumOfScaled: number, numTests: number) => {
-        if (sumOfScaled === 0) return 0;
-        const meanScaled = sumOfScaled / numTests;
-        return Math.round(100 + (meanScaled - 10) * 3 * numTests / 2);
+    const scaleToComposite = (sum: number, numSubtests: number) => {
+        if (sum === 0 && numSubtests > 0) return 40;
+        if (sum === 0) return 0;
+        // This is a highly simplified linear scaling for simulation.
+        // A real implementation would use lookup tables based on age.
+        const avg = sum / numSubtests;
+        const composite = 50 + (avg - 7) * (50 / 8); // scales 1-19 avg to 50-150 range
+        return Math.round(Math.max(40, Math.min(160, composite)));
+    }
+
+    return { 
+        ICV: scaleToComposite(icv, 2), 
+        IVE: scaleToComposite(ive, 2), 
+        IRF: scaleToComposite(irf, 2), 
+        IMT: scaleToComposite(imt, 2), 
+        IVP: scaleToComposite(ivp, 2), 
+        CIT: scaleToComposite(citSum, 7) 
     };
-
-    return { ICV: convertToCI(icv, 2), IVE: convertToCI(ive, 2), IRF: convertToCI(irf, 2), IMT: convertToCI(imt, 2), IVP: convertToCI(ivp, 2), CIT: convertToCI(cit, 7) };
 };
 // --- FIN DE SIMULACIÓN ---
 
@@ -115,7 +127,10 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                             {tests.map(subtest => (
                                                 <TableRow key={subtest.id}>
                                                     <TableCell className="py-2">
-                                                        <Label htmlFor={subtest.id} className="text-sm">{subtest.name}{subtest.optional && ' (Op)'}</Label>
+                                                        <Label htmlFor={subtest.id} className="text-sm">
+                                                          {subtest.name}
+                                                          {subtest.optional && <span className="text-xs text-gray-500"> (Op)</span>}
+                                                        </Label>
                                                     </TableCell>
                                                     <TableCell className="py-2"><Input id={subtest.id} type="number" value={rawScores[subtest.id] || ''} onChange={e => handleScoreChange(subtest.id, e.target.value)} placeholder="PB" className="h-8 w-20" /></TableCell>
                                                     <TableCell className="py-2"><Input type="number" placeholder="s" className="h-8 w-20" /></TableCell>
