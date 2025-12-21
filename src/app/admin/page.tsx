@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { UserPlus, RefreshCw } from 'lucide-react';
+import { UserPlus, RefreshCw, UserCog } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Simulación de la función que guardaría en Firestore
 async function addNewStudent(data: { studentId: string; studentName: string; group: string; dualRelationship: string; }) {
@@ -82,10 +83,10 @@ function AddNewStudentForm() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <UserPlus className="h-6 w-6" />
-                    Ingresar Nuevo Estudiante al Sistema
+                    Ingresar Nuevo Estudiante
                 </CardTitle>
                 <CardDescription>
-                    Este formulario crea un nuevo expediente digital en la base de datos (Firestore).
+                    Crea un nuevo expediente digital en la base de datos (Firestore).
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -104,7 +105,7 @@ function AddNewStudentForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="dual-relationship">Trazabilidad de Relación Dual (Cap. 4.3)</Label>
-                        <Textarea id="dual-relationship" value={dualRelationship} onChange={(e) => setDualRelationship(e.target.value)} placeholder="¿Existe relación académica o familiar directa con el tutor/clínico asignado? Documentar aquí para evitar conflicto de interés." />
+                        <Textarea id="dual-relationship" value={dualRelationship} onChange={(e) => setDualRelationship(e.target.value)} placeholder="¿Existe relación académica o familiar directa con el tutor/clínico asignado? Documentar aquí." />
                     </div>
                     <div className="flex justify-end">
                         <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
@@ -123,41 +124,60 @@ function AddNewStudentForm() {
     );
 }
 
-function SyncMockCard() {
-    const [isSyncing, setIsSyncing] = useState(false);
+function RoleManagementCard() {
+    const [users, setUsers] = useState([
+        { uid: 'user001', email: 'psic.martinez@example.com', role: 'Clinico' },
+        { uid: 'user002', email: 'orientador.gomez@example.com', role: 'Orientador' },
+        { uid: 'user003', email: 'nuevo.docente@example.com', role: '' },
+    ]);
 
-    const handleSync = async () => {
-        setIsSyncing(true);
-        console.log("Iniciando simulación de sincronización masiva desde API de AcademicTracker...");
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        console.log("Simulación completa: 250 estudiantes han sido actualizados/ingresados.");
-        alert("Sincronización masiva (simulación) completada. Revisa la consola para más detalles.");
-        setIsSyncing(false);
+    const handleRoleChange = (uid: string, newRole: string) => {
+        setUsers(users.map(user => user.uid === uid ? { ...user, role: newRole } : user));
+    };
+    
+    const handleSaveChanges = () => {
+        console.log("--- SIMULACIÓN: Guardando Cambios de Roles ---");
+        console.log("Estos datos serían enviados a una Cloud Function para establecer Custom Claims en Firebase Auth.");
+        console.log(users);
+        alert("Simulación de guardado de roles completada. Revisa la consola para más detalles.");
     };
 
     return (
         <Card className="w-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <RefreshCw className="h-6 w-6" />
-                    Sincronización Masiva
+                    <UserCog className="h-6 w-6" />
+                    Gestión de Roles de Usuario
                 </CardTitle>
                 <CardDescription>
-                    Importar y actualizar datos académicos (GPA, faltas) para toda la población estudiantil desde una fuente externa (API).
+                    Asigne los roles de 'Clinico' u 'Orientador' a los usuarios del sistema.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                 <p className="text-sm text-gray-600 mb-4">
-                    Esta acción simula una conexión con la API de AcademicTracker para ingestar los datos de cientos de estudiantes a la vez, actualizando el sistema de riesgo (SDTBE).
-                </p>
-                <Button onClick={handleSync} disabled={isSyncing} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                    {isSyncing ? 'Sincronizando...' : 'Sincronizar Datos Académicos (API Mock)'}
-                </Button>
+                <div className="space-y-4">
+                    {users.map(user => (
+                        <div key={user.uid} className="flex items-center justify-between p-2 border rounded-md">
+                            <span className="text-sm font-medium">{user.email}</span>
+                            <Select value={user.role} onValueChange={(newRole) => handleRoleChange(user.uid, newRole)}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Seleccionar rol" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Clinico">Clínico</SelectItem>
+                                    <SelectItem value="Orientador">Orientador</SelectItem>
+                                    <SelectItem value="">Sin Rol</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ))}
+                </div>
+                 <div className="flex justify-end mt-6">
+                    <Button onClick={handleSaveChanges}>Guardar Cambios de Roles</Button>
+                </div>
             </CardContent>
         </Card>
-    )
+    );
 }
-
 
 export default function AdminPage() {
     return (
@@ -166,12 +186,12 @@ export default function AdminPage() {
                 Módulo de Administración
             </h1>
             <p className="mb-8 text-sm text-gray-600">
-                Gestión de expedientes y sincronización de datos masivos del sistema MTSS.
+                Gestión de expedientes, usuarios y roles del sistema MTSS.
             </p>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 <AddNewStudentForm />
-                <SyncMockCard />
+                <RoleManagementCard />
             </div>
         </div>
     );
