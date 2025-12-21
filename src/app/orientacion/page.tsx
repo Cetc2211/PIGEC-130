@@ -31,7 +31,7 @@ export default function OrientadorDashboard() {
                         <Link href="/admin" passHref>
                            <Button variant="outline" className="w-full">Ver/Editar Grupos</Button>
                         </Link>
-                        <Link href="/admin" passHref>
+                         <Link href="/admin" passHref>
                             <Button>
                                 <PlusCircle className="mr-2" />
                                 Registrar Nuevo Estudiante
