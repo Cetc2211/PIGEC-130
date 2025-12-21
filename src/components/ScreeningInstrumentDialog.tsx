@@ -5,7 +5,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
 import FichaIdentificacionForm from "./FichaIdentificacionForm";
@@ -48,7 +49,9 @@ export default function ScreeningInstrumentDialog({ instrumentId, instrumentTitl
                 <InstrumentComponent id={instrumentId} />
             </div>
             <DialogFooter>
-                <Button variant="outline" type="button">Cerrar</Button>
+                <DialogClose asChild>
+                    <Button variant="outline" type="button">Cerrar</Button>
+                </DialogClose>
             </DialogFooter>
         </DialogContent>
     )
