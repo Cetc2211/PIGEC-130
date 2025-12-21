@@ -87,8 +87,8 @@ const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
     const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
     
-    // CIT se calcula sobre las 7 subpruebas principales del WISC-V
-    const citSum = getSum(['S', 'V', 'C', 'P', 'M', 'B', 'D']);
+    // CIT se calcula sobre las 7 subpruebas principales del WISC-V: S, V, C, M, B, D, Cl
+    const citSum = getSum(['S', 'V', 'C', 'M', 'B', 'D', 'Cl']);
     const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 7));
 
     return [icv, ive, irf, imt, ivp, cit];
