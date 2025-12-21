@@ -40,9 +40,11 @@ const subtestsByDomain = {
     ]
 };
 
+// Simulación de la función getScaledScore
 const getScaledScore = (rawScore: number): number => {
     if (rawScore === 0) return 1;
-    const scaled = Math.round((rawScore / 50) * 19); 
+    // Conversión lineal simplificada para simulación.
+    const scaled = Math.round((rawScore / 50) * 18) + 1; 
     return Math.max(1, Math.min(19, scaled));
 };
 
@@ -56,18 +58,18 @@ const getDescriptiveClassification = (score: number) => {
     return "Extremadamente Bajo";
 };
 
+// Simulación del motor de cálculo de índices
 const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     const getSum = (ids: string[]) => ids.reduce((sum, id) => sum + (scaledScores[id] || 0), 0);
 
     const scaleToComposite = (sum: number, numSubtests: number) => {
-        if (sum === 0 && numSubtests > 0) return 40;
-        if (sum === 0) return 0;
+        if (numSubtests === 0 || sum === 0) return 40;
         const meanScaled = sum / numSubtests;
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
 
     const createProfile = (name: string, score: number) => {
-        const percentile = Math.round((score - 40) / 110 * 99); // Rough simulation
+        const percentile = Math.round(((score - 50) / 100) * 98) + 1;
         const confidence = [score - 5, score + 5];
         return {
             name,

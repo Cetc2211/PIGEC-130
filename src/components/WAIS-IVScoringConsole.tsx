@@ -40,9 +40,12 @@ const subtestsByDomain = {
 };
 
 
+// Simulación de la función getScaledScore
 const getScaledScore = (rawScore: number): number => {
     if (rawScore === 0) return 1;
-    const scaled = Math.round((rawScore / 30) * 19); 
+    // Esta es una conversión lineal simplificada, no basada en baremos reales.
+    // Asume que un puntaje bruto máximo (ej. 30) corresponde a un puntaje escalar de 19.
+    const scaled = Math.round((rawScore / 30) * 18) + 1; 
     return Math.max(1, Math.min(19, scaled));
 };
 
@@ -56,19 +59,21 @@ const getDescriptiveClassification = (score: number) => {
     return "Extremadamente Bajo";
 };
 
+// Simulación del motor de cálculo de índices
 const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     const getSum = (ids: string[]) => ids.reduce((sum, id) => sum + (scaledScores[id] || 0), 0);
     
     const scaleToComposite = (sum: number, numSubtests: number) => {
-        if (sum === 0 && numSubtests > 0) return 40;
-        if (sum === 0) return 0;
+        if (numSubtests === 0 || sum === 0) return 40; // Puntaje mínimo si no hay datos
         const meanScaled = sum / numSubtests;
+        // Simulación de conversión a PC (media 100, DE 15)
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
 
     const createProfile = (name: string, score: number) => {
-        const percentile = Math.round((score - 40) / 110 * 99); // Rough simulation
-        const confidence = [score - 5, score + 5];
+        // Simulación muy aproximada del percentil
+        const percentile = Math.round(((score - 50) / 100) * 98) + 1;
+        const confidence = [score - 5, score + 5]; // Simulación IC 95%
         return {
             name,
             score,
@@ -78,16 +83,19 @@ const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
         };
     };
     
+    // Suma de las subpruebas principales para cada índice del WAIS-IV
     const icvSum = getSum(['S', 'V', 'I']);
     const irpSum = getSum(['C', 'M', 'P']);
     const imtSum = getSum(['D', 'A']);
     const ivpSum = getSum(['BS', 'Cl']);
-    const citSum = icvSum + irpSum + imtSum + ivpSum;
-
+    
     const icv = scaleToComposite(icvSum, 3);
     const irp = scaleToComposite(irpSum, 3);
     const imt = scaleToComposite(imtSum, 2);
     const ivp = scaleToComposite(ivpSum, 2);
+
+    // CIT se basa en 10 subpruebas principales
+    const citSum = icvSum + irpSum + imtSum + ivpSum;
     const cit = scaleToComposite(citSum, 10);
     
     return [
