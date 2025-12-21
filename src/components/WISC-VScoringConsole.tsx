@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Calculator, AlertTriangle } from 'lucide-react';
+import { BarChart, Calculator, AlertTriangle, FileLock2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from './ui/checkbox';
 
@@ -31,7 +31,7 @@ const subtestsByDomain = {
     ],
     IMT: [
         { id: 'D', name: 'Dígitos' },
-        { id: 'LN', name: 'Letras y Números' },
+        { id: 'LN', name: 'Letras y Números', optional: true },
     ],
     IVP: [
         { id: 'Cl', name: 'Claves' },
@@ -40,10 +40,8 @@ const subtestsByDomain = {
     ]
 };
 
-// Simulación de la función getScaledScore
 const getScaledScore = (rawScore: number): number => {
-    if (rawScore === 0) return 1; // Manejo de "Piso de Prueba"
-    // Conversión lineal simplificada para simulación.
+    if (rawScore === 0) return 1;
     const scaled = Math.round((rawScore / 50) * 18) + 1; 
     return Math.max(1, Math.min(19, scaled));
 };
@@ -58,7 +56,6 @@ const getDescriptiveClassification = (score: number) => {
     return "Extremadamente Bajo";
 };
 
-// Simulación del motor de cálculo de índices y análisis
 const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
     const getSum = (ids: string[]) => ids.reduce((sum, id) => sum + (scaledScores[id] || 0), 0);
 
@@ -76,27 +73,17 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         classification: getDescriptiveClassification(score),
     });
 
+    const citSubtestsIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
     const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
     const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'P']), 2));
     const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
     const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
     const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
-    
-    // BLINDAJE DE SEGURIDAD: CIT se calcula solo con las 7 subpruebas obligatorias
-    const citSubtestsIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
-    const citSum = getSum(citSubtestsIds);
-    const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, citSubtestsIds.length));
+    const cit = createProfile("C.I. Total (CIT)", scaleToComposite(getSum(citSubtestsIds), citSubtestsIds.length));
 
     const compositeScores = [icv, ive, irf, imt, ivp, cit];
 
-    // --- Análisis de Discrepancias con Valores Críticos ---
-    const valoresCriticos = {
-        'ICV-IVE': 11.5,
-        'ICV-IRF': 10.8,
-        'IMT-IVP': 12.3,
-        'ICV-IMT': 11.2,
-    };
-
+    const valoresCriticos = { 'ICV-IVE': 11.5, 'ICV-IRF': 10.8, 'IMT-IVP': 12.3, 'ICV-IMT': 11.2 };
     const discrepancies = [
         { pair: 'ICV - IVE', diff: icv.score - ive.score, significant: Math.abs(icv.score - ive.score) >= valoresCriticos['ICV-IVE'] },
         { pair: 'ICV - IRF', diff: icv.score - irf.score, significant: Math.abs(icv.score - irf.score) >= valoresCriticos['ICV-IRF'] },
@@ -104,8 +91,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         { pair: 'ICV - IMT', diff: icv.score - imt.score, significant: Math.abs(icv.score - imt.score) >= valoresCriticos['ICV-IMT'] },
     ];
     
-    // --- Simulación de Fortalezas y Debilidades ---
-    const meanPE = citSum / citSubtestsIds.length;
+    const meanPE = getSum(citSubtestsIds) / citSubtestsIds.length;
     const allSubtests = Object.values(subtestsByDomain).flat();
     const strengthsAndWeaknesses = citSubtestsIds.map(id => {
         const score = scaledScores[id] || 0;
@@ -114,12 +100,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         if (diff > 3) classification = 'Fortaleza (F)';
         if (diff < -3) classification = 'Debilidad (D)';
         const subtestInfo = allSubtests.find(t => t.id === id);
-        return {
-            name: subtestInfo?.name,
-            score,
-            diff: diff.toFixed(2),
-            classification,
-        };
+        return { name: subtestInfo?.name, score, diff: diff.toFixed(2), classification };
     }).filter(s => s.name);
 
     return { compositeScores, discrepancies, strengthsAndWeaknesses };
@@ -136,7 +117,6 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
 
     const handleCalculate = () => {
         const scaledScores: { [key: string]: number } = {};
-        // Incluir todas las subpruebas en el cálculo de puntuaciones escalares
         Object.values(subtestsByDomain).flat().forEach(subtest => {
             const rawScore = parseInt(rawScores[subtest.id] || '0', 10);
             scaledScores[subtest.id] = getScaledScore(rawScore);
@@ -146,6 +126,34 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         setResults(clinicalProfile);
 
         console.log("--- WISC-V Scoring (Simulación Avanzada) ---", { studentAge, rawScores, scaledScores, clinicalProfile });
+    };
+
+    const handleFinalizeAndSeal = () => {
+        console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---");
+
+        // 1. Generación del Payload de Integridad
+        const integrityPayload = {
+            studentId: "S002_WISC", // Debería ser dinámico
+            timestamp: new Date().toISOString(),
+            rawResponses: rawScores,
+            calculatedProfile: results,
+            testVersion: "WISC-V"
+        };
+        console.log("1. Payload de Integridad (JSON) creado:", integrityPayload);
+
+        // 2. Cálculo del Hash (Huella Digital)
+        const hashSimulado = "a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890"; // Simulación
+        console.log(`2. Hash SHA-256 calculado: ${hashSimulado}`);
+
+        // 3. Renderizado del PDF Institucional
+        console.log("3. Renderizando PDF de auditoría con logo institucional (Blanco y Verde)...");
+        console.log(`   - El pie de página contendrá el ID de Integridad: ${hashSimulado}`);
+        
+        // 4. Flujo de Almacenamiento
+        console.log("4. Guardando PDF en Firebase Storage en '/expedientes_clínicos/auditoria/...'");
+        console.log("   - Cambiando estado de la evaluación a 'LOCKED' en Firestore.");
+
+        alert("CIERRE SEGURO (SIMULACIÓN):\n\nEl protocolo ha sido finalizado, sellado con Hash de integridad y guardado como evidencia de auditoría. El registro ya no es editable.");
     };
 
     return (
@@ -260,9 +268,9 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                     </span>
                                 </p>
                             </div>
-                            <Button variant="outline" className="w-full">
-                                <BarChart className="mr-2"/>
-                                Generar Perfil Gráfico y Exportar
+                           <Button onClick={handleFinalizeAndSeal} variant="default" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold">
+                                <FileLock2 className="mr-2" />
+                                Finalizar y Sellar Protocolo (Auditoría)
                             </Button>
                         </div>
                     ) : (

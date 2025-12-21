@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Calculator, AlertTriangle } from 'lucide-react';
+import { BarChart, Calculator, AlertTriangle, FileLock2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Checkbox } from './ui/checkbox';
 
@@ -128,6 +128,35 @@ export default function WAISScoringConsole({ studentAge }: WAISScoringConsolePro
         console.log("--- WAIS-IV Scoring (Simulación) ---", { studentAge, rawScores, scaledScores, indexScores });
     };
 
+    const handleFinalizeAndSeal = () => {
+        console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---");
+
+        // 1. Generación del Payload de Integridad
+        const integrityPayload = {
+            studentId: "S001_WAIS", // Debería ser dinámico
+            timestamp: new Date().toISOString(),
+            rawResponses: rawScores,
+            calculatedProfile: results,
+            testVersion: "WAIS-IV"
+        };
+        console.log("1. Payload de Integridad (JSON) creado:", integrityPayload);
+
+        // 2. Cálculo del Hash (Huella Digital)
+        const hashSimulado = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; // Hash de un string vacío para simulación
+        console.log(`2. Hash SHA-256 calculado: ${hashSimulado}`);
+
+        // 3. Renderizado del PDF Institucional
+        console.log("3. Renderizando PDF de auditoría con logo institucional (Blanco y Verde)...");
+        console.log(`   - El pie de página contendrá el ID de Integridad: ${hashSimulado}`);
+        
+        // 4. Flujo de Almacenamiento
+        console.log("4. Guardando PDF en Firebase Storage en '/expedientes_clínicos/auditoria/...'");
+        console.log("   - Cambiando estado de la evaluación a 'LOCKED' en Firestore.");
+
+        alert("CIERRE SEGURO (SIMULACIÓN):\n\nEl protocolo ha sido finalizado, sellado con Hash de integridad y guardado como evidencia de auditoría. El registro ya no es editable.");
+    };
+
+
     return (
         <div className="w-full shadow-md border rounded-lg p-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -217,9 +246,9 @@ export default function WAISScoringConsole({ studentAge }: WAISScoringConsolePro
                                     </span>
                                 </p>
                             </div>
-                            <Button variant="outline" className="w-full">
-                                <BarChart className="mr-2" />
-                                Generar Perfil Gráfico y Exportar
+                           <Button onClick={handleFinalizeAndSeal} variant="default" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold">
+                                <FileLock2 className="mr-2" />
+                                Finalizar y Sellar Protocolo (Auditoría)
                             </Button>
                         </div>
                     ) : (
