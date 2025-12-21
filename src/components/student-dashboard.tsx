@@ -89,19 +89,20 @@ const StudentDashboard: React.FC = () => {
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        <Link href={linkHref} asChild>
-                                             <Button
-                                                variant="default"
-                                                size="sm"
-                                                className={cn(
-                                                    'font-semibold',
-                                                    isHighRisk && role === 'Clinico' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'
-                                                )}
-                                            >
+                                        <Button
+                                            asChild
+                                            variant="default"
+                                            size="sm"
+                                            className={cn(
+                                                'font-semibold',
+                                                isHighRisk && role === 'Clinico' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'
+                                            )}
+                                        >
+                                            <Link href={linkHref}>
                                                 {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-2 h-4 w-4" />}
                                                 {buttonText}
-                                            </Button>
-                                        </Link>
+                                            </Link>
+                                        </Button>
                                     </td>
                                 </tr>
                             );

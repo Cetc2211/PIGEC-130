@@ -28,15 +28,15 @@ export default function OrientadorDashboard() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
-                        <Link href="/admin" passHref>
-                           <Button variant="outline" className="w-full">Ver/Editar Grupos</Button>
-                        </Link>
-                         <Link href="/admin" passHref>
-                            <Button>
+                        <Button asChild variant="outline" className="w-full">
+                           <Link href="/admin">Ver/Editar Grupos</Link>
+                        </Button>
+                         <Button asChild>
+                            <Link href="/admin">
                                 <PlusCircle className="mr-2" />
                                 Registrar Nuevo Estudiante
-                            </Button>
-                        </Link>
+                            </Link>
+                        </Button>
                     </CardContent>
                 </Card>
 
@@ -52,16 +52,12 @@ export default function OrientadorDashboard() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
-                        <Link href="/educativa/evaluacion" passHref>
-                            <Button variant="default" className="w-full bg-blue-600 hover:bg-blue-700">
-                               Generar Sesión Grupal
-                            </Button>
-                        </Link>
-                         <Link href="/educativa/evaluacion" passHref>
-                            <Button variant="secondary" className="w-full">
-                               Aplicar a Estudiante Específico
-                            </Button>
-                        </Link>
+                        <Button asChild variant="default" className="w-full bg-blue-600 hover:bg-blue-700">
+                           <Link href="/educativa/evaluacion">Generar Sesión Grupal</Link>
+                        </Button>
+                         <Button asChild variant="secondary" className="w-full">
+                               <Link href="/educativa/evaluacion">Aplicar a Estudiante Específico</Link>
+                        </Button>
                     </CardContent>
                 </Card>
                 
@@ -77,11 +73,9 @@ export default function OrientadorDashboard() {
                         </CardDescription>
                     </CardHeader>
                      <CardContent>
-                        <Link href="/dashboard" passHref>
-                            <Button variant="outline" className="w-full">
-                               Ver Todos los Expedientes
-                            </Button>
-                        </Link>
+                        <Button asChild variant="outline" className="w-full">
+                            <Link href="/dashboard">Ver Todos los Expedientes</Link>
+                        </Button>
                     </CardContent>
                 </Card>
 
