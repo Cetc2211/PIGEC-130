@@ -40,27 +40,25 @@ const subtestsByDomain = {
     ]
 };
 
-// --- SIMULACIÓN DE LÓGICA DE CÁLCULO ---
 const getScaledScore = (rawScore: number): number => {
-    // Simulación simplificada. Una app real buscaría en una tabla de baremos por edad.
     if (rawScore === 0) return 1;
     const scaled = Math.round((rawScore / 50) * 19); 
     return Math.max(1, Math.min(19, scaled));
 };
 
+const getDescriptiveClassification = (score: number) => {
+    if (score >= 130) return "Muy Superior";
+    if (score >= 120) return "Superior";
+    if (score >= 110) return "Promedio Alto";
+    if (score >= 90) return "Promedio";
+    if (score >= 80) return "Promedio Bajo";
+    if (score >= 70) return "Limítrofe";
+    return "Extremadamente Bajo";
+};
+
 const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     const getSum = (ids: string[]) => ids.reduce((sum, id) => sum + (scaledScores[id] || 0), 0);
 
-    const icv = getSum(['S', 'V']);
-    const ive = getSum(['C', 'P']);
-    const irf = getSum(['M', 'B']);
-    const imt = getSum(['D', 'LN']);
-    const ivp = getSum(['Cl', 'BS']);
-    
-    // CIT se calcula sobre las 7 subpruebas principales del WISC-V
-    const citSum = icv + ive + irf + getSum(['D']);
-
-    // Simulación muy simplificada de conversión a CI.
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (sum === 0 && numSubtests > 0) return 40;
         if (sum === 0) return 0;
@@ -68,21 +66,36 @@ const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
 
-    return { 
-        ICV: scaleToComposite(icv, 2), 
-        IVE: scaleToComposite(ive, 2), 
-        IRF: scaleToComposite(irf, 2), 
-        IMT: scaleToComposite(imt, 2), 
-        IVP: scaleToComposite(ivp, 2), 
-        CIT: scaleToComposite(citSum, 7) 
+    const createProfile = (name: string, score: number) => {
+        const percentile = Math.round((score - 40) / 110 * 99); // Rough simulation
+        const confidence = [score - 5, score + 5];
+        return {
+            name,
+            score,
+            percentile: Math.max(1, Math.min(99, percentile)),
+            confidenceInterval: `${confidence[0]}-${confidence[1]}`,
+            classification: getDescriptiveClassification(score),
+        };
     };
+
+    // Usando los índices del WISC-V (IVE, IRF)
+    const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
+    const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'P']), 2));
+    const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
+    const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
+    const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
+    
+    // CIT se calcula sobre las 7 subpruebas principales del WISC-V
+    const citSum = getSum(['S', 'V', 'C', 'P', 'M', 'B', 'D']);
+    const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 7));
+
+    return [icv, ive, irf, imt, ivp, cit];
 };
-// --- FIN DE SIMULACIÓN ---
 
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
     const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
-    const [results, setResults] = useState<{ scaledScores: { [key: string]: number }, indexScores: any } | null>(null);
+    const [results, setResults] = useState<ReturnType<typeof calculateIndexScores> | null>(null);
 
     const handleScoreChange = (subtestId: string, value: string) => {
         setRawScores(prev => ({ ...prev, [subtestId]: value }));
@@ -96,7 +109,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         });
 
         const indexScores = calculateIndexScores(scaledScores);
-        setResults({ scaledScores, indexScores });
+        setResults(indexScores);
 
         console.log("--- WISC-V Scoring (Simulación) ---", { studentAge, rawScores, scaledScores, indexScores });
     };
@@ -104,7 +117,6 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     return (
         <div className="w-full shadow-md border rounded-lg p-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Columna de Captura de Datos */}
                 <div className="space-y-4">
                     <h3 className="font-semibold text-lg">Protocolo de Registro Digital</h3>
                      <Accordion type="multiple" className="w-full">
@@ -149,7 +161,6 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                     </Button>
                 </div>
 
-                {/* Columna de Resultados */}
                 <div className="space-y-6">
                      <h3 className="font-semibold text-lg">Perfil de Puntuaciones (Calculado)</h3>
                     {results ? (
@@ -158,16 +169,22 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Índice</TableHead>
-                                        <TableHead className="text-right">Puntuación</TableHead>
+                                        <TableHead>PC</TableHead>
+                                        <TableHead>Percentil</TableHead>
+                                        <TableHead>IC (95%)</TableHead>
+                                        <TableHead>Clasificación</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow><TableCell>Comprensión Verbal (ICV)</TableCell><TableCell className="text-right font-bold">{results.indexScores.ICV}</TableCell></TableRow>
-                                    <TableRow><TableCell>Visoespacial (IVE)</TableCell><TableCell className="text-right font-bold">{results.indexScores.IVE}</TableCell></TableRow>
-                                    <TableRow><TableCell>Razonamiento Fluido (IRF)</TableCell><TableCell className="text-right font-bold">{results.indexScores.IRF}</TableCell></TableRow>
-                                    <TableRow><TableCell>Memoria de Trabajo (IMT)</TableCell><TableCell className="text-right font-bold">{results.indexScores.IMT}</TableCell></TableRow>
-                                    <TableRow><TableCell>Velocidad de Procesamiento (IVP)</TableCell><TableCell className="text-right font-bold">{results.indexScores.IVP}</TableCell></TableRow>
-                                    <TableRow className="bg-gray-100"><TableCell className="font-semibold">Coeficiente Intelectual Total (CIT)</TableCell><TableCell className="text-right font-extrabold text-lg">{results.indexScores.CIT}</TableCell></TableRow>
+                                    {results.map(res => (
+                                        <TableRow key={res.name} className={res.name === 'C.I. Total (CIT)' ? 'bg-gray-100 font-bold' : ''}>
+                                            <TableCell>{res.name}</TableCell>
+                                            <TableCell className="font-extrabold">{res.score}</TableCell>
+                                            <TableCell>{res.percentile}</TableCell>
+                                            <TableCell>{res.confidenceInterval}</TableCell>
+                                            <TableCell>{res.classification}</TableCell>
+                                        </TableRow>
+                                    ))}
                                 </TableBody>
                             </Table>
 

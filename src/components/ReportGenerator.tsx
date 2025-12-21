@@ -25,13 +25,13 @@ export default function ReportGenerator({ student, clinicalAssessment }: ReportG
         const reportData = {
             studentInfo: student,
             clinicalData: clinicalAssessment,
-            // ... Aquí se consumirían los datos de otras colecciones: análisis funcional, plan de tratamiento, etc.
+            // ... Aquí se consumirían los datos de otras colecciones: análisis funcional, plan de tratamiento, resultados WISC/WAIS, etc.
             generatedAt: new Date().toISOString(),
             reportStructure: {
-                motivoConsulta: `Derivado por ${student.academicData.gpa < 7 ? 'bajo rendimiento' : 'preocupaciones conductuales'}...`,
-                pruebasAplicadas: ['Escala Wechsler de Inteligencia', 'Tamizaje Neuropsicológico'],
-                analisisResultados: 'El perfil cognitivo se encuentra en el rango promedio...',
-                recomendaciones: ['Usar apoyos visuales', 'Técnica de los 5 minutos'],
+                motivoConsulta: `El estudiante es derivado por el área de Orientación debido a ${student.academicData.gpa < 7 ? 'bajo rendimiento académico' : 'preocupaciones conductuales observadas en el aula'}.`,
+                pruebasAplicadas: ['Escala Wechsler de Inteligencia', 'Tamizaje Neuropsicológico', 'Inventarios de Beck (Depresión y Ansiedad)'],
+                analisisResultados: 'El perfil cognitivo del estudiante se encuentra dentro del rango promedio para su edad. Se observan, sin embargo, indicadores de dificultades en la memoria de trabajo que podrían impactar su desempeño académico. Clínicamente, se reporta sintomatología ansioso-depresiva de carácter moderado a severo.',
+                recomendaciones: ['Implementar técnica de "pausas activas" de 2 minutos.', 'Utilizar organizadores gráficos para tareas complejas.', 'Establecer metas a corto plazo para proyectos (contrato de contingencias).'],
             }
         };
 

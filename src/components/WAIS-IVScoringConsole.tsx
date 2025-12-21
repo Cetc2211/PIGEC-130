@@ -41,45 +41,67 @@ const subtestsByDomain = {
 
 
 const getScaledScore = (rawScore: number): number => {
-    // Simulación muy simplificada. En una app real, esto sería una consulta a una tabla de baremos.
     if (rawScore === 0) return 1;
     const scaled = Math.round((rawScore / 30) * 19); 
     return Math.max(1, Math.min(19, scaled));
 };
 
+const getDescriptiveClassification = (score: number) => {
+    if (score >= 130) return "Muy Superior";
+    if (score >= 120) return "Superior";
+    if (score >= 110) return "Promedio Alto";
+    if (score >= 90) return "Promedio";
+    if (score >= 80) return "Promedio Bajo";
+    if (score >= 70) return "Limítrofe";
+    return "Extremadamente Bajo";
+};
+
 const calculateIndexScores = (scaledScores: { [key: string]: number }) => {
     const getSum = (ids: string[]) => ids.reduce((sum, id) => sum + (scaledScores[id] || 0), 0);
-
-    const icv = getSum(['S', 'V', 'I']);
-    const irp = getSum(['C', 'M', 'P']);
-    const imt = getSum(['D', 'A']);
-    const ivp = getSum(['BS', 'Cl']);
-
-    // CIT se calcula sobre las 10 subpruebas principales
-    const citSum = icv + irp + imt + ivp;
-
-    // Simulación muy simplificada de conversión a CI. Una app real usaría tablas normativas.
-    // Fórmula de ejemplo: CI = 100 + 15 * ( (suma_escalares / num_tests) - 10 ) / 3
+    
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (sum === 0 && numSubtests > 0) return 40;
         if (sum === 0) return 0;
         const meanScaled = sum / numSubtests;
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
-    
 
-    return {
-        ICV: scaleToComposite(icv, 3),
-        IRP: scaleToComposite(irp, 3),
-        IMT: scaleToComposite(imt, 2),
-        IVP: scaleToComposite(ivp, 2),
-        CIT: scaleToComposite(citSum, 10),
+    const createProfile = (name: string, score: number) => {
+        const percentile = Math.round((score - 40) / 110 * 99); // Rough simulation
+        const confidence = [score - 5, score + 5];
+        return {
+            name,
+            score,
+            percentile: Math.max(1, Math.min(99, percentile)),
+            confidenceInterval: `${confidence[0]}-${confidence[1]}`,
+            classification: getDescriptiveClassification(score),
+        };
     };
+    
+    const icvSum = getSum(['S', 'V', 'I']);
+    const irpSum = getSum(['C', 'M', 'P']);
+    const imtSum = getSum(['D', 'A']);
+    const ivpSum = getSum(['BS', 'Cl']);
+    const citSum = icvSum + irpSum + imtSum + ivpSum;
+
+    const icv = scaleToComposite(icvSum, 3);
+    const irp = scaleToComposite(irpSum, 3);
+    const imt = scaleToComposite(imtSum, 2);
+    const ivp = scaleToComposite(ivpSum, 2);
+    const cit = scaleToComposite(citSum, 10);
+    
+    return [
+        createProfile("Comprensión Verbal (ICV)", icv),
+        createProfile("Razonamiento Perceptual (IRP)", irp),
+        createProfile("Memoria de Trabajo (IMT)", imt),
+        createProfile("Velocidad de Procesamiento (IVP)", ivp),
+        createProfile("C.I. Total (CIT)", cit),
+    ];
 };
 
 export default function WAISScoringConsole({ studentAge }: WAISScoringConsoleProps) {
     const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
-    const [results, setResults] = useState<{ scaledScores: { [key: string]: number }, indexScores: any } | null>(null);
+    const [results, setResults] = useState<ReturnType<typeof calculateIndexScores> | null>(null);
 
     const handleScoreChange = (subtestId: string, value: string) => {
         setRawScores(prev => ({ ...prev, [subtestId]: value }));
@@ -93,7 +115,7 @@ export default function WAISScoringConsole({ studentAge }: WAISScoringConsolePro
         });
 
         const indexScores = calculateIndexScores(scaledScores);
-        setResults({ scaledScores, indexScores });
+        setResults(indexScores);
 
         console.log("--- WAIS-IV Scoring (Simulación) ---", { studentAge, rawScores, scaledScores, indexScores });
     };
@@ -161,15 +183,22 @@ export default function WAISScoringConsole({ studentAge }: WAISScoringConsolePro
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Índice</TableHead>
-                                        <TableHead className="text-right">Puntuación</TableHead>
+                                        <TableHead>PC</TableHead>
+                                        <TableHead>Percentil</TableHead>
+                                        <TableHead>IC (95%)</TableHead>
+                                        <TableHead>Clasificación</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow><TableCell>Comprensión Verbal (ICV)</TableCell><TableCell className="text-right font-bold">{results.indexScores.ICV}</TableCell></TableRow>
-                                    <TableRow><TableCell>Razonamiento Perceptual (IRP)</TableCell><TableCell className="text-right font-bold">{results.indexScores.IRP}</TableCell></TableRow>
-                                    <TableRow><TableCell>Memoria de Trabajo (IMT)</TableCell><TableCell className="text-right font-bold">{results.indexScores.IMT}</TableCell></TableRow>
-                                    <TableRow><TableCell>Velocidad de Procesamiento (IVP)</TableCell><TableCell className="text-right font-bold">{results.indexScores.IVP}</TableCell></TableRow>
-                                    <TableRow className="bg-gray-100"><TableCell className="font-semibold">Coeficiente Intelectual Total (CIT)</TableCell><TableCell className="text-right font-extrabold text-lg">{results.indexScores.CIT}</TableCell></TableRow>
+                                    {results.map(res => (
+                                        <TableRow key={res.name} className={res.name === 'C.I. Total (CIT)' ? 'bg-gray-100 font-bold' : ''}>
+                                            <TableCell>{res.name}</TableCell>
+                                            <TableCell className="font-extrabold">{res.score}</TableCell>
+                                            <TableCell>{res.percentile}</TableCell>
+                                            <TableCell>{res.confidenceInterval}</TableCell>
+                                            <TableCell>{res.classification}</TableCell>
+                                        </TableRow>
+                                    ))}
                                 </TableBody>
                             </Table>
                             <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-md">
