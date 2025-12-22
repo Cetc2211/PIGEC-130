@@ -17,27 +17,27 @@ interface WISCScoringConsoleProps {
 const subtestsByDomain = {
     ICV: [
         { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'V', name: 'Vocabulario', renderType: 'DIRECT_INPUT', isCit: true },
-        { id: 'I', name: 'Información', renderType: 'DIRECT_INPUT', optional: true },
-        { id: 'Co', name: 'Comprensión', renderType: 'DIRECT_INPUT', optional: true },
+        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true },
     ],
     IVE: [
-        { id: 'C', name: 'Cubos', renderType: 'DIRECT_INPUT', isCit: true },
-        { id: 'P', name: 'Puzles Visuales', renderType: 'DIRECT_INPUT' },
+        { id: 'C', name: 'Cubos', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'P', name: 'Puzles Visuales', renderType: 'VERBAL_CRITERIO' },
     ],
     IRF: [
-        { id: 'M', name: 'Matrices', renderType: 'DIRECT_INPUT', isCit: true },
-        { id: 'B', name: 'Balanzas', renderType: 'DIRECT_INPUT', isCit: true },
-        { id: 'A', name: 'Aritmética', renderType: 'DIRECT_INPUT', optional: true },
+        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'B', name: 'Balanzas', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'A', name: 'Aritmética', renderType: 'VERBAL_CRITERIO', optional: true },
     ],
     IMT: [
-        { id: 'D', name: 'Dígitos', renderType: 'DIRECT_INPUT', isCit: true },
-        { id: 'LN', name: 'Letras y Números', renderType: 'DIRECT_INPUT', optional: true },
+        { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'LN', name: 'Letras y Números', renderType: 'VERBAL_CRITERIO', optional: true },
     ],
     IVP: [
-        { id: 'Cl', name: 'Claves', renderType: 'DIRECT_INPUT', isCit: true },
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'DIRECT_INPUT', optional: true },
-        { id: 'Ca', name: 'Cancelación', renderType: 'DIRECT_INPUT', optional: true },
+        { id: 'Cl', name: 'Claves', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'Ca', name: 'Cancelación', renderType: 'VERBAL_CRITERIO', optional: true },
     ]
 };
 
@@ -124,7 +124,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
 
 
 // Componente para simular la aplicación de una subprueba verbal
-function VerbalCriterionSubtest({ subtestName, onRawScoreChange }: { subtestName: string, onRawScoreChange: (score: number) => void }) {
+function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestName: string, onRawScoreChange: (score: number) => void }) {
     const [currentItem, setCurrentItem] = useState(1);
     const [scores, setScores] = useState<{[key: number]: number}>({});
     const [notes, setNotes] = useState("");
@@ -224,32 +224,10 @@ function VerbalCriterionSubtest({ subtestName, onRawScoreChange }: { subtestName
     );
 }
 
-// Componente para entrada directa de puntaje bruto
-function DirectInputSubtest({ subtestName, subtestId, rawScores, onScoreChange }: { subtestName: string, subtestId: string, rawScores: {[key: string]: string}, onScoreChange: (id: string, value: string) => void }) {
-    return (
-        <div className="p-4 border rounded-lg bg-gray-50/70">
-            <Label htmlFor={`pb-${subtestId}`}>Puntaje Bruto (PB) para {subtestName}</Label>
-            <Input 
-                id={`pb-${subtestId}`}
-                type="number"
-                value={rawScores[subtestId] || ''}
-                onChange={(e) => onScoreChange(subtestId, e.target.value)}
-                placeholder="Puntaje Bruto"
-                className="mt-1"
-            />
-        </div>
-    );
-}
-
-
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
     const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
     const [clinicalObservations, setClinicalObservations] = useState('');
-
-    const handleRawScoreChange = (subtestId: string, value: string) => {
-        setRawScores(prev => ({ ...prev, [subtestId]: value }));
-    };
 
     const handleSubtestScoreChange = (subtestId: string, score: number) => {
         setRawScores(prev => ({ ...prev, [subtestId]: String(score) }));
@@ -339,19 +317,10 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                                         {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional)</span>}
                                                     </AccordionTrigger>
                                                     <AccordionContent className="pt-2">
-                                                        {test.renderType === 'VERBAL_CRITERIO' ? (
-                                                            <VerbalCriterionSubtest 
-                                                                subtestName={test.name}
-                                                                onRawScoreChange={(score) => handleSubtestScoreChange(test.id, score)}
-                                                            />
-                                                        ) : (
-                                                            <DirectInputSubtest
-                                                                subtestName={test.name}
-                                                                subtestId={test.id}
-                                                                rawScores={rawScores}
-                                                                onScoreChange={handleRawScoreChange}
-                                                            />
-                                                        )}
+                                                        <SubtestApplicationConsole 
+                                                            subtestName={test.name}
+                                                            onRawScoreChange={(score) => handleSubtestScoreChange(test.id, score)}
+                                                        />
                                                     </AccordionContent>
                                                 </AccordionItem>
                                            </Accordion>
