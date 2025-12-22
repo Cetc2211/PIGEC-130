@@ -14,6 +14,7 @@ import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysis
 import ClinicalKPILogger from '@/components/ClinicalKPILogger';
 import RiskTimelineChart from '@/components/RiskTimelineChart';
 import SOAPNotesForm from '@/components/SOAPNotesForm';
+import WISCScoringConsole from '@/components/WISC-VScoringConsole';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen, FileText, FileDown, Activity, UserCheck, BrainCircuit } from "lucide-react";
@@ -143,10 +144,7 @@ export default function ClinicalFilePage() {
                                         </Link>
                                     </Button>
                                 ) : (
-                                    <div className='text-center p-8 bg-gray-100 rounded-md w-full'>
-                                        <p className='font-semibold'>Módulo WAIS-IV (Adultos)</p>
-                                        <p className='text-sm text-gray-500'>Este módulo se activará en un paso posterior.</p>
-                                    </div>
+                                     <WISCScoringConsole studentAge={student.demographics.age} />
                                 )}
                             </CardContent>
                         </Card>

@@ -64,7 +64,7 @@ const getDescriptiveClassification = (score: number) => {
     if (score >= 110) return "Promedio Alto";
     if (score >= 90) return "Promedio";
     if (score >= 80) return "Promedio Bajo";
-    if (score >= 70) return "Limítrofe";
+    if (score >= 70) return "Muy Bajo (Limítrofe)";
     return "Extremadamente Bajo";
 };
 
@@ -192,13 +192,13 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
     const [clinicalObservations, setClinicalObservations] = useState('');
 
+    const handleRawScoreChange = (subtestId: string, value: string) => {
+        setRawScores(prev => ({ ...prev, [subtestId]: value }));
+    };
+
     const handleCalculate = () => {
-        // En una implementación real, los puntajes brutos se obtendrían del estado de cada SubtestApplication.
-        // Por ahora, usamos una simulación para la validación.
-        const simulatedRawScores = { 'S': "22", 'V': "25", 'C': "18", 'M': "15", 'B': "14", 'D': "20", 'BS': "22" };
-        
         const scaledScores: { [key: string]: number } = {};
-        Object.entries(simulatedRawScores).forEach(([key, value]) => {
+        Object.entries(rawScores).forEach(([key, value]) => {
             const rawScore = parseInt(value, 10);
             if (!isNaN(rawScore)) {
                 scaledScores[key] = getScaledScore(rawScore, key);
@@ -219,11 +219,11 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         const citScore = results.compositeScores.find(s => s.name.includes('CIT'))?.score || 0;
 
         if (citScore > 115) {
-            resumen_ejecutivo = "El evaluado presenta una capacidad intelectual significativamente superior al promedio de su grupo de edad...";
+            resumen_ejecutivo = "El evaluado presenta una capacidad intelectual significativamente superior al promedio de su grupo de edad. Posee habilidades destacadas para la resolución de problemas complejos y el aprendizaje autónomo.";
         } else if (citScore >= 90) {
-            resumen_ejecutivo = "El funcionamiento cognitivo global se sitúa dentro de la normalidad...";
+            resumen_ejecutivo = "El funcionamiento cognitivo global se sitúa dentro de la normalidad, mostrando una capacidad adecuada para cumplir con las exigencias académicas de nivel bachillerato.";
         } else {
-            resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información...";
+            resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información que podrían impactar el rendimiento escolar. Se recomienda una intervención psicopedagógica focalizada y adecuaciones en el aula.";
         }
 
         const narrativeReportObject = {
@@ -280,7 +280,21 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                                         {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional)</span>}
                                                     </AccordionTrigger>
                                                     <AccordionContent className="pt-2">
-                                                        <SubtestApplication subtestName={test.name}/>
+                                                        {test.id === 'S' ? (
+                                                            <SubtestApplication subtestName={test.name}/>
+                                                        ) : (
+                                                            <div className="p-4 border rounded-lg bg-gray-50/70">
+                                                                <Label htmlFor={`pb-${test.id}`}>Puntaje Bruto (PB)</Label>
+                                                                <Input 
+                                                                    id={`pb-${test.id}`}
+                                                                    type="number"
+                                                                    value={rawScores[test.id] || ''}
+                                                                    onChange={(e) => handleRawScoreChange(test.id, e.target.value)}
+                                                                    placeholder="Puntaje Bruto"
+                                                                    className="mt-1"
+                                                                />
+                                                            </div>
+                                                        )}
                                                     </AccordionContent>
                                                 </AccordionItem>
                                            </Accordion>
