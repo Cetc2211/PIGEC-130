@@ -9,6 +9,7 @@ import { Calculator, FileLock2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from './ui/checkbox';
 import { Textarea } from './ui/textarea';
+import { Separator } from './ui/separator';
 
 interface WISCScoringConsoleProps {
     studentAge: number;
@@ -141,8 +142,9 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, subst
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
     const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
-    const [substitutions, setSubstitutions] = useState<{[key: string]: string}>({ 'BS': 'Cl' });
+    const [substitutions, setSubstitutions] = useState<{[key: string]: string}>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
+    const [clinicalObservations, setClinicalObservations] = useState('');
 
     const handleScoreChange = (subtestId: string, value: string) => {
         setRawScores(prev => ({ ...prev, [subtestId]: value }));
@@ -166,7 +168,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         const scaledScores: { [key: string]: number } = {};
         Object.values(subtestsByDomain).flat().forEach(subtest => {
             const rawScore = parseInt(rawScores[subtest.id] || '0', 10);
-            if (!isNaN(rawScore)) { // Ensure we only process actual numbers
+            if (!isNaN(rawScore)) { 
                 scaledScores[subtest.id] = getScaledScore(rawScore, subtest.id);
             }
         });
@@ -176,21 +178,55 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     };
 
     const handleFinalizeAndSeal = () => {
+        if (!results) {
+            alert("Primero debe calcular los resultados antes de finalizar.");
+            return;
+        }
+
+        // --- MOTOR DE CONCLUSIONES IA (SIMULACIÓN) ---
+        let resumen_ejecutivo = '';
+        const citScore = results.compositeScores.find(s => s.name === 'C.I. Total (CIT)')?.score || 0;
+
+        if (citScore > 115) {
+            resumen_ejecutivo = "El evaluado presenta una capacidad intelectual significativamente superior al promedio de su grupo de edad. Posee habilidades destacadas para la resolución de problemas complejos y el aprendizaje autónomo.";
+        } else if (citScore >= 90) {
+            resumen_ejecutivo = "El funcionamiento cognitivo global se sitúa dentro de la normalidad, mostrando una capacidad adecuada para cumplir con las exigencias académicas de nivel bachillerato.";
+        } else {
+            resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información que podrían impactar el rendimiento escolar. Se recomienda una intervención psicopedagógica focalizada y adecuaciones en el aula.";
+        }
+
+        const narrativeReportObject = {
+            resumen_ejecutivo: `${resumen_ejecutivo}\n\nObservaciones Clínicas Adicionales:\n${clinicalObservations}`,
+            analisis_indices: {
+                fortalezas: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('F')).map(s => s.name),
+                debilidades: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('D')).map(s => s.name)
+            },
+            plan_intervencion: [
+                ...(results.strengthsAndWeaknesses.some(s => s.name === 'Cubos' && s.classification.startsWith('D'))
+                    ? [{ area: 'Visoespacial', sugerencia: 'Implementar estrategias de organización espacial y planificación.', fuente: 'Manual de Intervención Psicopedagógica, pág. 88' }]
+                    : [])
+            ]
+        };
+
+
         console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---");
+        console.log("1. Objeto Reporte Narrativo (JSON) creado:", narrativeReportObject);
+
         const integrityPayload = {
-            studentId: "STUDENT_ID_HERE", // Should be dynamic
+            studentId: "STUDENT_ID_HERE",
             timestamp: new Date().toISOString(),
             rawScores,
             substitutions,
             calculatedProfile: results,
+            narrativeReport: narrativeReportObject,
             testVersion: "WISC-V"
         };
-        console.log("1. Payload de Integridad (JSON) creado:", integrityPayload);
-
+        console.log("2. Payload de Integridad final para PDF:", integrityPayload);
+        
         const hashSimulado = "a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890";
-        console.log(`2. Hash SHA-256 calculado: ${hashSimulado}`);
-        console.log("3. Renderizando PDF de auditoría con nota de sustitución y pie de página de integridad.");
-        console.log("4. Guardando PDF en Firebase Storage y bloqueando el registro en Firestore ('LOCKED').");
+        console.log(`3. Hash SHA-256 calculado: ${hashSimulado}`);
+        console.log("4. Renderizando PDF de auditoría con nota de sustitución y pie de página de integridad.");
+        console.log("5. Guardando PDF en Firebase Storage y bloqueando el registro en Firestore ('LOCKED').");
 
         alert("CIERRE SEGURO (SIMULACIÓN):\nEl protocolo ha sido finalizado y sellado con Hash de integridad. El registro ya no es editable.");
     };
@@ -290,6 +326,23 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                     </TableBody>
                                 </Table>
                             </div>
+
+                             <Separator className="my-6" />
+
+                            <div>
+                                <h3 className="text-lg font-semibold mb-3">Informe Narrativo y Observaciones</h3>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="clinical-observations">Observaciones y Análisis Cualitativo (Manual)</Label>
+                                    <Textarea
+                                        id="clinical-observations"
+                                        placeholder="Añadir aquí observaciones conductuales, rapport, fatiga, lenguaje no verbal, etc."
+                                        className="min-h-[120px]"
+                                        value={clinicalObservations}
+                                        onChange={(e) => setClinicalObservations(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                           
                            <Button onClick={handleFinalizeAndSeal} variant="default" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold">
                                 <FileLock2 className="mr-2" />
                                 Finalizar y Sellar Protocolo (Auditoría)
