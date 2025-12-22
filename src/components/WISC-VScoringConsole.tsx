@@ -35,7 +35,7 @@ const subtestsByDomainWISC = {
     ],
     IMT: [
         { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'LN', name: 'Letras y Números', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true },
     ],
     IVP: [
         { id: 'Cl', name: 'Claves', renderType: 'VERBAL_CRITERIO', isCit: true },
@@ -61,7 +61,7 @@ const subtestsByDomainWAIS = {
     IMT: [
         { id: 'D', name: 'Retención de Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true },
         { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', isCit: true },
-        { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true },
     ],
     IVP: [
         { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'VERBAL_CRITERIO', isCit: true },
@@ -214,6 +214,10 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
     const [scores, setScores] = useState<{[key: number]: { score: number, notes: string, errorTags: string[] }}>({});
     const [timer, setTimer] = useState(0);
     const [isTimerActive, setIsTimerActive] = useState(false);
+    
+    // Estado para "Sucesión de Letras y Números"
+    const [trialScores, setTrialScores] = useState<{ [itemId: number]: { [trial: number]: number | null } }>({});
+
 
     // --- LÓGICA DE PERSISTENCIA Y RECUPERACIÓN ---
     const updateAndPersistScores = useCallback((newScores: typeof scores, newCurrentItem: number) => {
@@ -269,7 +273,12 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
         return () => { if (interval) clearInterval(interval); };
     }, [isTimerActive, currentItem]);
 
-    const totalScore = useMemo(() => Object.values(scores).reduce((sum, item) => sum + (item?.score || 0), 0), [scores]);
+    const totalScore = useMemo(() => {
+        if (renderType === 'LETTER_NUMBER_SEQUENCING') {
+            return Object.values(trialScores).flatMap(trials => Object.values(trials)).reduce((sum, score) => sum + (score || 0), 0);
+        }
+        return Object.values(scores).reduce((sum, item) => sum + (item?.score || 0), 0);
+    }, [scores, trialScores, renderType]);
 
     // Lógica de Alerta de Proceso (Cap. 13.1.2)
     useEffect(() => {
@@ -296,6 +305,16 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
     const setNotes = (item: number, notes: string) => {
         const newScores = {...scores, [item]: { ...(scores[item] || { score: 0, errorTags: [] }), notes }};
         updateAndPersistScores(newScores, item);
+    };
+    
+    const handleTrialScore = (item: number, trial: number, score: number) => {
+        setTrialScores(prev => ({
+            ...prev,
+            [item]: {
+                ...(prev[item] || {}),
+                [trial]: score
+            }
+        }));
     };
 
     const handleErrorTagChange = (item: number, tag: string, isChecked: boolean) => {
@@ -391,6 +410,49 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                         </div>
                     </div>
                 );
+            case 'LETTER_NUMBER_SEQUENCING':
+                const trials = [1, 2, 3];
+                // Simulación de datos para este ítem
+                const lnItemData = { id: currentItem, stimulus: 'L-2-C-7', correctAnswer: '2-7-C-L' };
+
+                return (
+                    <div className="space-y-4 mt-2">
+                        {trials.map(trial => {
+                            const currentTrialScore = trialScores[currentItem]?.[trial];
+                            const isTrialScored = currentTrialScore !== undefined && currentTrialScore !== null;
+                            const isNextTrialDisabled = trial > 1 && (trialScores[currentItem]?.[trial - 1] === undefined || trialScores[currentItem]?.[trial-1] === null);
+
+                            return (
+                                <div key={trial} className={`p-3 border rounded-md ${isNextTrialDisabled ? 'bg-gray-100 opacity-50' : 'bg-white'}`}>
+                                    <div className="flex justify-between items-center">
+                                        <Label className="font-semibold">Intento {trial}</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Button 
+                                                size="sm"
+                                                variant={currentTrialScore === 1 ? 'default' : 'outline'}
+                                                onClick={() => handleTrialScore(currentItem, trial, 1)}
+                                                disabled={isNextTrialDisabled}
+                                            >
+                                                Acierto
+                                            </Button>
+                                            <Button 
+                                                size="sm" 
+                                                variant={currentTrialScore === 0 ? 'destructive' : 'outline'}
+                                                onClick={() => handleTrialScore(currentItem, trial, 0)}
+                                                disabled={isNextTrialDisabled}
+                                            >
+                                                Error
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    {isTrialScored && (
+                                        <p className="text-xs text-gray-500 mt-2">Respuesta Correcta: <span className="font-mono">{lnItemData.correctAnswer}</span></p>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
             default:
                 return <p>Tipo de renderizado no configurado.</p>;
         }
@@ -410,7 +472,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                  {/* Columna Izquierda: Estímulo y Aplicación */}
                 <div className="space-y-4">
                     <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
-                        {renderType !== 'ARITHMETIC' ? (
+                        {renderType !== 'ARITHMETIC' && renderType !== 'LETTER_NUMBER_SEQUENCING' ? (
                             <img 
                                 src={stimulusImageUrl} 
                                 alt={`Estímulo para el ítem ${currentItem}`}
