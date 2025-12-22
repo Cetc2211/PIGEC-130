@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
@@ -38,8 +38,8 @@ const subtestsByDomainWISC = {
         { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true },
     ],
     IVP: [
-        { id: 'Cl', name: 'Claves', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', optional: true },
         { id: 'Ca', name: 'Cancelación', renderType: 'VERBAL_CRITERIO', optional: true },
     ]
 };
@@ -64,9 +64,9 @@ const subtestsByDomainWAIS = {
         { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true },
     ],
     IVP: [
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'Cl', name: 'Claves', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'Ca', name: 'Cancelación', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true },
+        { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true },
+        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true },
     ]
 };
 
@@ -218,6 +218,10 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
     // Estado para "Sucesión de Letras y Números"
     const [trialScores, setTrialScores] = useState<{ [itemId: number]: { [trial: number]: number | null } }>({});
 
+    // Estado para "Pruebas de Velocidad"
+    const [correctAnswers, setCorrectAnswers] = useState(0);
+    const [incorrectAnswers, setIncorrectAnswers] = useState(0);
+
 
     // --- LÓGICA DE PERSISTENCIA Y RECUPERACIÓN ---
     const updateAndPersistScores = useCallback((newScores: typeof scores, newCurrentItem: number) => {
@@ -257,12 +261,20 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
             interval = setInterval(() => {
                 setTimer(t => {
                     const newTime = t + 1;
-                    // Lógica de Timeout (Simulada)
-                    const timeLimit = 30; // Límite de ejemplo, debería venir de la config de cada item.
-                    if (newTime >= timeLimit) {
+                    // Lógica de Timeout para pruebas que lo requieran
+                    const timeLimitConfig: {[key: string]: number} = {
+                        A: 30, // Aritmética
+                        PV: 30, // Puzles Visuales (ejemplo)
+                        B: 20, // Balanzas (ejemplo)
+                    };
+                    const timeLimit = renderType === 'SPEED_TEST' ? 120 : timeLimitConfig[subtestId];
+
+                    if (timeLimit && newTime >= timeLimit) {
                         setIsTimerActive(false);
-                        alert(`Tiempo límite de ${timeLimit}s excedido. Puntaje = 0.`);
-                        setScore(currentItem, 0);
+                        alert(`Tiempo límite de ${timeLimit}s excedido.`);
+                        if(renderType !== 'SPEED_TEST') {
+                             setScore(currentItem, 0);
+                        }
                     }
                     return newTime;
                 });
@@ -271,14 +283,21 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
             clearInterval(interval);
         }
         return () => { if (interval) clearInterval(interval); };
-    }, [isTimerActive, currentItem]);
+    }, [isTimerActive, currentItem, renderType, subtestId]);
+
 
     const totalScore = useMemo(() => {
         if (renderType === 'LETTER_NUMBER_SEQUENCING') {
             return Object.values(trialScores).flatMap(trials => Object.values(trials)).reduce((sum, score) => sum + (score || 0), 0);
         }
+        if (renderType === 'SPEED_TEST') {
+            if (subtestId === 'BS') { // Búsqueda de Símbolos
+                return Math.max(0, correctAnswers - incorrectAnswers);
+            }
+            return correctAnswers; // Claves
+        }
         return Object.values(scores).reduce((sum, item) => sum + (item?.score || 0), 0);
-    }, [scores, trialScores, renderType]);
+    }, [scores, trialScores, renderType, correctAnswers, incorrectAnswers, subtestId]);
 
     // Lógica de Alerta de Proceso (Cap. 13.1.2)
     useEffect(() => {
@@ -356,6 +375,42 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
 
     const renderInputInterface = () => {
         switch(renderType) {
+            case 'SPEED_TEST':
+                return (
+                    <div className="space-y-6">
+                        <div className="p-6 border rounded-lg bg-gray-900 flex flex-col items-center justify-center text-white">
+                            <Timer className="h-12 w-12" />
+                            <p className="text-6xl font-mono mt-2">{timer}s</p>
+                            <p className="text-lg text-gray-300">/ 120s</p>
+                        </div>
+                         <Button size="lg" variant={isTimerActive ? "destructive" : "default"} onClick={() => setIsTimerActive(!isTimerActive)} className="w-full">
+                            {isTimerActive ? <Pause className="mr-2 h-5 w-5"/> : <Play className="mr-2 h-5 w-5"/>}
+                            {isTimerActive ? 'Pausar Cronómetro' : 'Iniciar Cronómetro'}
+                        </Button>
+                        <Separator />
+                        {subtestId === 'BS' ? (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="correct-answers">Aciertos</Label>
+                                    <Input id="correct-answers" type="number" value={correctAnswers} onChange={e => setCorrectAnswers(Number(e.target.value))} placeholder="Correctos" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="incorrect-answers">Errores</Label>
+                                    <Input id="incorrect-answers" type="number" value={incorrectAnswers} onChange={e => setIncorrectAnswers(Number(e.target.value))} placeholder="Incorrectos" />
+                                </div>
+                            </div>
+                        ) : (
+                             <div className="space-y-2">
+                                <Label htmlFor="total-score">Total de Aciertos (Claves)</Label>
+                                <Input id="total-score" type="number" value={correctAnswers} onChange={e => setCorrectAnswers(Number(e.target.value))} placeholder="Total correctos" />
+                            </div>
+                        )}
+                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-md text-center">
+                            <p className="text-sm text-blue-800">Puntaje Bruto Final</p>
+                            <p className="text-3xl font-bold text-blue-900">{totalScore}</p>
+                         </div>
+                    </div>
+                );
             case 'VERBAL_CRITERIO':
                 return (
                     <div className="flex gap-2 mt-1">
@@ -457,6 +512,20 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                 return <p>Tipo de renderizado no configurado.</p>;
         }
     }
+    
+    if (renderType === 'SPEED_TEST') {
+        return (
+            <div className="p-4 space-y-4">
+                <h4 className="font-semibold text-lg">{subtestName} - Registro de Totales</h4>
+                {renderInputInterface()}
+                <Separator className="!mt-6" />
+                <div className="flex justify-end items-center">
+                    <p className="text-md font-bold">Puntaje Bruto Final: <span className="text-blue-600">{totalScore}</span></p>
+                </div>
+            </div>
+        );
+    }
+
 
     return (
         <div className="p-1 space-y-4">
