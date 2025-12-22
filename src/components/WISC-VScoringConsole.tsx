@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
+import { Checkbox } from './ui/checkbox';
+
 
 interface WISCScoringConsoleProps {
     studentAge: number;
@@ -167,9 +169,14 @@ const GuiaCalificacion = () => {
 // Componente para simular la aplicación de una subprueba verbal
 function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestName: string, onRawScoreChange: (score: number) => void }) {
     const [currentItem, setCurrentItem] = useState(1);
-    const [scores, setScores] = useState<{[key: number]: { score: number, notes: string }}>({});
+    const [scores, setScores] = useState<{[key: number]: { score: number, notes: string, errorTags: string[] }}>({});
     const [timer, setTimer] = useState(0);
     const [isTimerActive, setIsTimerActive] = useState(false);
+
+    const errorCategories = [
+        "Respuesta Tangencial", "Perseveración", "Concreción Excesiva", 
+        "Respuesta Personalizada", "Neologismos / Ensalada de Palabras"
+    ];
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
@@ -181,11 +188,28 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
         return () => { if (interval) clearInterval(interval); };
     }, [isTimerActive]);
 
-    const totalScore = useMemo(() => Object.values(scores).reduce((sum, item) => sum + item.score, 0), [scores]);
+    const totalScore = useMemo(() => Object.values(scores).reduce((sum, item) => sum + (item.score || 0), 0), [scores]);
 
     useEffect(() => {
         onRawScoreChange(totalScore);
     }, [totalScore, onRawScoreChange]);
+
+    // Lógica de Alerta de Proceso (Cap. 13.1.2)
+    useEffect(() => {
+        const allTags = Object.values(scores).flatMap(s => s.errorTags || []);
+        if (allTags.length > 0) {
+            const tagCounts = allTags.reduce((acc, tag) => {
+                acc[tag] = (acc[tag] || 0) + 1;
+                return acc;
+            }, {} as {[key: string]: number});
+            
+            for (const tag in tagCounts) {
+                if (tagCounts[tag] >= 3) {
+                     console.warn(`Alerta de Proceso: Se detecta un patrón recurrente de '${tag}'. Considere evaluar funciones ejecutivas adicionales.`);
+                }
+            }
+        }
+    }, [scores]);
 
     const setScore = (item: number, score: number) => {
         const newScores = {...scores, [item]: { ...scores[item], score }};
@@ -194,6 +218,18 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
 
     const setNotes = (item: number, notes: string) => {
         const newScores = {...scores, [item]: { ...scores[item], notes }};
+        setScores(newScores);
+    };
+
+    const handleErrorTagChange = (item: number, tag: string, isChecked: boolean) => {
+        const currentTags = scores[item]?.errorTags || [];
+        let newTags;
+        if (isChecked) {
+            newTags = [...currentTags, tag];
+        } else {
+            newTags = currentTags.filter(t => t !== tag);
+        }
+        const newScores = {...scores, [item]: { ...scores[item], errorTags: newTags }};
         setScores(newScores);
     };
 
@@ -208,6 +244,8 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
         setTimer(0);
         setCurrentItem(p => Math.max(1, p - 1));
     };
+    
+    const currentItemScore = scores[currentItem]?.score;
 
     return (
         <div className="p-1 space-y-4">
@@ -255,7 +293,7 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
                                 <Button 
                                     key={score} 
                                     type="button"
-                                    variant={(scores[currentItem]?.score) === score ? 'default' : 'outline'}
+                                    variant={currentItemScore === score ? 'default' : 'outline'}
                                     onClick={() => setScore(currentItem, score)}
                                 >
                                     {score}
@@ -263,6 +301,27 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
                             ))}
                         </div>
                     </div>
+
+                    {/* Módulo de Etiquetado de Errores */}
+                    {currentItemScore === 0 && (
+                        <div className="p-4 border-l-4 border-orange-400 bg-orange-50 rounded-md mt-4">
+                            <h5 className="font-semibold text-orange-800">Análisis Cualitativo del Error (Opcional)</h5>
+                            <div className="mt-3 space-y-2">
+                                {errorCategories.map(tag => (
+                                    <div key={tag} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                            id={`tag-${tag}-${currentItem}`}
+                                            checked={scores[currentItem]?.errorTags?.includes(tag)}
+                                            onCheckedChange={(checked) => handleErrorTagChange(currentItem, tag, !!checked)}
+                                        />
+                                        <Label htmlFor={`tag-${tag}-${currentItem}`} className="text-sm font-normal text-gray-700">
+                                            {tag}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Columna Derecha: Guía de Calificación */}
@@ -461,7 +520,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                            <Button onClick={handleFinalizeAndSeal} variant="default" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold">
                                 <FileLock2 className="mr-2" />
                                 Finalizar y Sellar Protocolo (Auditoría)
-                            </Button>
+                           </Button>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-gray-50 text-gray-500 rounded-md border-2 border-dashed">
