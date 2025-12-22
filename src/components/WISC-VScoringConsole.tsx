@@ -121,6 +121,48 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
     return { compositeScores, discrepancies, strengthsAndWeaknesses };
 };
 
+// Componente de guía de calificación para respuestas verbales
+const GuiaCalificacion = () => {
+    // Simulación de la base de datos de criterios para un ítem específico
+    const itemData = {
+        subprueba: "Semejanzas",
+        item: "Piano - Tambor",
+        criterios: {
+            "2_puntos": ["Instrumentos musicales", "Para hacer música", "Producen sonidos"],
+            "1_punto": ["Tienen teclas/parches", "Hacen ruido", "Se tocan", "Tienen ritmo"],
+            "0_puntos": ["Son de madera", "Están en una banda", "Son grandes"],
+        },
+    };
+
+    return (
+        <div className="guia-puntuacion-flotante p-4 border rounded-lg bg-slate-50 h-full">
+            <h4 className="font-semibold text-md mb-3 text-slate-800">Guía de Calificación (Ejemplos)</h4>
+            <div className="space-y-3 text-sm">
+                <div className="nivel-2">
+                    <strong className="text-green-700">2 Puntos (Concepto Abstracto):</strong>
+                    <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
+                        {itemData.criterios['2_puntos'].map((ex, i) => <li key={`2pt-${i}`}>{ex}</li>)}
+                    </ul>
+                </div>
+                <div className="nivel-1">
+                    <strong className="text-amber-700">1 Punto (Propiedad Concreta/Función):</strong>
+                    <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
+                        {itemData.criterios['1_punto'].map((ex, i) => <li key={`1pt-${i}`}>{ex}</li>)}
+                    </ul>
+                </div>
+                 <div className="nivel-0">
+                    <strong className="text-red-700">0 Puntos (Irrelevante/Erróneo):</strong>
+                    <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
+                        {itemData.criterios['0_puntos'].map((ex, i) => <li key={`0pt-${i}`}>{ex}</li>)}
+                    </ul>
+                </div>
+            </div>
+            <Separator className="my-4" />
+            <p className="text-xs text-slate-500 italic">Nota: Si la respuesta es vaga o ambigua, recuerde interrogar ("¿Qué quieres decir?") antes de puntuar.</p>
+        </div>
+    );
+};
+
 
 // Componente para simular la aplicación de una subprueba verbal
 function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestName: string, onRawScoreChange: (score: number) => void }) {
@@ -168,7 +210,7 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
     };
 
     return (
-        <div className="space-y-4 p-4 border rounded-lg bg-gray-50/70">
+        <div className="p-1 space-y-4">
             <div className="flex justify-between items-center">
                 <h4 className="font-semibold text-lg">{subtestName} - Ítem {currentItem}</h4>
                 <div className="flex gap-2">
@@ -176,51 +218,60 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
                     <Button size="sm" variant="outline" onClick={handleNextItem}>Sig <ChevronRight className="h-4 w-4" /></Button>
                 </div>
             </div>
-
-            <div className="p-4 bg-white rounded-md border min-h-[80px]">
-                <p className="text-sm text-gray-500">Consigna o estímulo del ítem {currentItem}:</p>
-                <p className="font-semibold mt-2">Ej: "¿En qué se parecen un lápiz y un bolígrafo?"</p>
-            </div>
-
-            <div className="p-3 border rounded-lg bg-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Timer className="text-gray-500"/>
-                    <span className="font-mono text-lg">{timer}s</span>
-                </div>
-                <Button size="sm" variant={isTimerActive ? "destructive" : "default"} onClick={() => setIsTimerActive(!isTimerActive)}>
-                   {isTimerActive ? <Pause className="mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>}
-                   {isTimerActive ? 'Pausar' : 'Iniciar'}
-                </Button>
-            </div>
             
-            <div>
-                <Label className="text-sm font-medium">Puntuación del Ítem (según manual)</Label>
-                <div className="flex gap-2 mt-1">
-                    {[0, 1, 2].map(score => (
-                        <Button 
-                            key={score} 
-                            type="button"
-                            variant={(scores[currentItem]?.score) === score ? 'default' : 'outline'}
-                            onClick={() => setScore(currentItem, score)}
-                        >
-                            {score}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Columna Izquierda: Aplicación */}
+                <div className="space-y-4">
+                     <div className="p-4 bg-white rounded-md border min-h-[80px]">
+                        <p className="text-sm text-gray-500">Consigna o estímulo del ítem {currentItem}:</p>
+                        <p className="font-semibold mt-2">Ej: "¿En qué se parecen un Piano y un Tambor?"</p>
+                    </div>
+
+                    <div className="p-3 border rounded-lg bg-white flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Timer className="text-gray-500"/>
+                            <span className="font-mono text-lg">{timer}s</span>
+                        </div>
+                        <Button size="sm" variant={isTimerActive ? "destructive" : "default"} onClick={() => setIsTimerActive(!isTimerActive)}>
+                        {isTimerActive ? <Pause className="mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>}
+                        {isTimerActive ? 'Pausar' : 'Iniciar'}
                         </Button>
-                    ))}
+                    </div>
+                    
+                    <div>
+                        <Label className="text-sm font-medium">Respuesta Cualitativa / Observaciones</Label>
+                        <Textarea 
+                            value={scores[currentItem]?.notes || ''}
+                            onChange={e => setNotes(currentItem, e.target.value)}
+                            placeholder="Anotar la respuesta textual del evaluado..."
+                            className="mt-1"
+                        />
+                    </div>
+                    
+                    <div>
+                        <Label className="text-sm font-medium">Puntuación del Ítem (según manual)</Label>
+                        <div className="flex gap-2 mt-1">
+                            {[0, 1, 2].map(score => (
+                                <Button 
+                                    key={score} 
+                                    type="button"
+                                    variant={(scores[currentItem]?.score) === score ? 'default' : 'outline'}
+                                    onClick={() => setScore(currentItem, score)}
+                                >
+                                    {score}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Columna Derecha: Guía de Calificación */}
+                <div>
+                   <GuiaCalificacion />
                 </div>
             </div>
-
-             <div>
-                <Label htmlFor={`notes-${subtestName}-${currentItem}`} className="text-sm font-medium">Respuesta Cualitativa / Observaciones</Label>
-                <Textarea 
-                    id={`notes-${subtestName}-${currentItem}`}
-                    value={scores[currentItem]?.notes || ''}
-                    onChange={e => setNotes(currentItem, e.target.value)}
-                    placeholder="Anotar la respuesta textual del evaluado..."
-                    className="mt-1"
-                />
-            </div>
             
-            <Separator />
+            <Separator className="!mt-6" />
 
             <div className="flex justify-end items-center">
                 <p className="text-md font-bold">Puntaje Bruto Acumulado: <span className="text-blue-600">{totalScore}</span></p>
@@ -228,6 +279,7 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
         </div>
     );
 }
+
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
     const [rawScores, setRawScores] = useState<{ [key: string]: number }>({});
