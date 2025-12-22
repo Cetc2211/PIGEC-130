@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -91,17 +90,17 @@ export default function UniversalScreeningPage() {
                     <Card>
                          <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-yellow-700">
-                                <Shield /> Consentimiento Informado Digital
+                                <Shield /> Consentimiento Informado Digital y Aviso de Privacidad
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 text-sm text-gray-700">
-                           <p>Usted está a punto de realizar una evaluación psicométrica o de orientación. Los datos recopilados serán tratados con estricta confidencialidad por el personal autorizado del CBTA 130.</p>
-                           <p>El propósito de esta evaluación es únicamente diagnóstico y de orientación. Los resultados se utilizarán para generar un reporte provisional que le servirá de guía. Esta evaluación no constituye un tratamiento psicológico.</p>
-                           <p>Al continuar, usted afirma ser mayor de edad o contar con el consentimiento de sus padres o tutores para realizar esta prueba.</p>
+                           <p>Usted está a punto de realizar una evaluación psicométrica o de orientación. Los datos recopilados serán tratados con estricta confidencialidad por el personal autorizado del CBTA 130, conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.</p>
+                           <p>El propósito de esta evaluación es únicamente de orientación y para generar una impresión diagnóstica provisional. No constituye un tratamiento psicológico. Los resultados se utilizarán para crear un reporte que servirá como guía y para canalizarlo al servicio adecuado si es necesario.</p>
+                           <p>Al continuar, usted afirma ser mayor de edad o contar con el consentimiento de sus padres o tutores para realizar esta prueba, y acepta que sus datos (sin información de identificación personal) puedan ser utilizados con fines estadísticos y de investigación para mejorar el servicio.</p>
                             <div className="flex items-center space-x-2 pt-4">
                                 <Checkbox id="terms" checked={isConsented} onCheckedChange={(checked) => setIsConsented(!!checked)} />
                                 <Label htmlFor="terms" className="font-semibold">
-                                    He leído y acepto los términos del consentimiento informado.
+                                    He leído, comprendido y acepto los términos del consentimiento informado.
                                 </Label>
                             </div>
                         </CardContent>
@@ -171,4 +170,3 @@ export default function UniversalScreeningPage() {
         </div>
     );
 }
-

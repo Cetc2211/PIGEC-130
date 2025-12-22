@@ -7,8 +7,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ClinicalAssessment, getEvidenceRepository, EvidenceReference } from '@/lib/store';
-import { Lightbulb, BookOpen, ShieldCheck } from 'lucide-react';
+import { Lightbulb, Bot, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
+import PIEIValidation from './PIEIValidation';
 
 interface PIEIGeneratorProps {
     clinicalData?: ClinicalAssessment;
@@ -47,6 +48,7 @@ const allEvidence = getEvidenceRepository();
 export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedInstructions, setSelectedInstructions] = useState<string[]>([]);
+    const [isPieiModalOpen, setIsPieiModalOpen] = useState(false);
 
     const generatedSuggestions = useMemo(() => {
         if (!clinicalData) return [];
@@ -59,6 +61,11 @@ export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
         }
         return suggestions;
     }, [clinicalData]);
+    
+    useEffect(() => {
+        // Pre-seleccionar todas las sugerencias generadas
+        setSelectedInstructions(generatedSuggestions.map(instr => instr.id));
+    }, [generatedSuggestions]);
 
     const handleCheckboxChange = (instructionId: string) => {
         setSelectedInstructions(prev => 
@@ -66,6 +73,10 @@ export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
                 ? prev.filter(id => id !== instructionId) 
                 : [...prev, instructionId]
         );
+    };
+
+    const handleTriggerFinalize = () => {
+        setIsPieiModalOpen(true);
     };
 
     const handleFinalizePiei = () => {
@@ -89,61 +100,84 @@ export default function PIEIGenerator({ clinicalData }: PIEIGeneratorProps) {
             approved_by: 'Rol Clínico'
         });
         
+        setIsPieiModalOpen(false);
         setTimeout(() => {
             setIsLoading(false);
             alert("PIEI finalizado y enviado al Rol Orientador (simulación). La justificación bibliográfica ha sido adjuntada automáticamente.");
-        }, 1500);
+        }, 500);
     };
 
+    if (!clinicalData) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Módulo 7: Generador de Plan de Intervención Educativa (PIEI)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-center text-gray-500">
+                        Complete la Evaluación Clínica para activar el generador de sugerencias del PIEI.
+                    </p>
+                </CardContent>
+            </Card>
+        );
+    }
+
     return (
-        <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle>Módulo 7: Generador de Plan de Intervención Educativa (PIEI)</CardTitle>
-                <CardDescription>
-                    Traducción de hallazgos clínicos a instrucciones pedagógicas para el personal de apoyo. Las intervenciones se justifican con la evidencia del <Link href="/tools" className="underline text-blue-600">Repositorio</Link>.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-6">
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h3 className="flex items-center gap-2 font-semibold text-blue-800">
-                            <Lightbulb />
-                            Sugerencias Generadas por el Algoritmo de Traducción
-                        </h3>
-                        <p className="text-sm text-blue-700 mt-2">
-                           Basado en los datos clínicos, el sistema sugiere las siguientes intervenciones pedagógicas. Seleccione las que considere apropiadas.
-                        </p>
-                    </div>
-
-                    {generatedSuggestions.length > 0 ? (
-                        <div className="space-y-4">
-                            {generatedSuggestions.map(instr => (
-                                <div key={instr.id} className="flex items-center space-x-3 p-3 rounded-md bg-gray-50 border">
-                                    <Checkbox
-                                        id={instr.id}
-                                        onCheckedChange={() => handleCheckboxChange(instr.id)}
-                                        checked={selectedInstructions.includes(instr.id)}
-                                    />
-                                    <Label htmlFor={instr.id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                        {instr.text}
-                                    </Label>
-                                </div>
-                            ))}
+        <>
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle>Módulo 7: Generador de Plan de Intervención Educativa (PIEI)</CardTitle>
+                    <CardDescription>
+                        Traducción de hallazgos clínicos a instrucciones pedagógicas para el personal de apoyo. Las intervenciones se justifican con la evidencia del <Link href="/tools" className="underline text-blue-600">Repositorio</Link>.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-6">
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h3 className="flex items-center gap-2 font-semibold text-blue-800">
+                                <Bot />
+                                Sugerencias del Algoritmo de Traducción Clínica
+                            </h3>
+                            <p className="text-sm text-blue-700 mt-2">
+                            Basado en los datos clínicos, el sistema sugiere las siguientes intervenciones pedagógicas. Desmarque las que no considere apropiadas.
+                            </p>
                         </div>
-                    ) : (
-                        <p className="text-sm text-gray-500 italic text-center">No se generaron sugerencias automáticas basadas en los datos clínicos actuales.</p>
-                    )}
 
-                    <Separator />
+                        {generatedSuggestions.length > 0 ? (
+                            <div className="space-y-4">
+                                {generatedSuggestions.map(instr => (
+                                    <div key={instr.id} className="flex items-start space-x-3 p-3 rounded-md bg-gray-50 border">
+                                        <Checkbox
+                                            id={instr.id}
+                                            onCheckedChange={() => handleCheckboxChange(instr.id)}
+                                            checked={selectedInstructions.includes(instr.id)}
+                                        />
+                                        <Label htmlFor={instr.id} className="text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                            {instr.text}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-500 italic text-center">No se generaron sugerencias automáticas basadas en los datos clínicos actuales.</p>
+                        )}
 
-                    <div className="flex justify-end">
-                        <Button onClick={handleFinalizePiei} disabled={isLoading || selectedInstructions.length === 0}>
-                            <ShieldCheck className="mr-2"/>
-                            {isLoading ? 'Finalizando...' : 'Finalizar y Enviar PIEI'}
-                        </Button>
+                        <Separator />
+
+                        <div className="flex justify-end">
+                            <Button onClick={handleTriggerFinalize} disabled={isLoading || selectedInstructions.length === 0}>
+                                <ShieldCheck className="mr-2"/>
+                                {isLoading ? 'Finalizando...' : 'Finalizar y Validar PIEI'}
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+            <PIEIValidation 
+                isOpen={isPieiModalOpen}
+                onClose={() => setIsPieiModalOpen(false)}
+                onConfirm={handleFinalizePiei}
+            />
+        </>
     );
 }

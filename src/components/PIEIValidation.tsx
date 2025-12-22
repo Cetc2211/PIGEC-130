@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface PIEIValidationProps {
@@ -21,17 +21,22 @@ const checklistItems = [
 ];
 
 export default function PIEIValidation({ isOpen, onClose, onConfirm }: PIEIValidationProps) {
-    const [checkedItems, setCheckedItems] = useState<string[]>([]);
+    const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+
+    const allChecked = Object.values(checkedItems).length === checklistItems.length && Object.values(checkedItems).every(Boolean);
+
+    useEffect(() => {
+        if (isOpen) {
+            setCheckedItems({});
+        }
+    }, [isOpen]);
 
     const handleCheckboxChange = (itemId: string, isChecked: boolean) => {
-        if (isChecked) {
-            setCheckedItems(prev => [...prev, itemId]);
-        } else {
-            setCheckedItems(prev => prev.filter(id => id !== itemId));
-        }
+        setCheckedItems(prev => ({
+            ...prev,
+            [itemId]: isChecked
+        }));
     };
-
-    const allChecked = checkedItems.length === checklistItems.length;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -51,22 +56,24 @@ export default function PIEIValidation({ isOpen, onClose, onConfirm }: PIEIValid
                             <Checkbox 
                                 id={item.id} 
                                 onCheckedChange={(checked) => handleCheckboxChange(item.id, !!checked)}
+                                checked={checkedItems[item.id] || false}
                             />
-                            <Label htmlFor={item.id} className="text-sm font-medium leading-snug">
+                            <Label htmlFor={item.id} className="text-sm font-medium leading-snug cursor-pointer">
                                 {item.label}
                             </Label>
                         </div>
                     ))}
                 </div>
                  {allChecked && (
-                    <div className="p-3 bg-green-100 border border-green-300 rounded-md text-sm text-green-800">
-                        ¡Gracias! Ha completado la validación de seguridad y confidencialidad.
+                    <div className="p-3 bg-green-100 border border-green-300 rounded-md text-sm text-green-800 flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4"/>
+                        <span>¡Validación de seguridad y confidencialidad completada! Puede proceder.</span>
                     </div>
                 )}
                 <DialogFooter>
                     <Button variant="ghost" onClick={onClose}>Cancelar</Button>
                     <Button onClick={onConfirm} disabled={!allChecked}>
-                        Confirmar y Guardar Plan
+                        Confirmar y Guardar PIEI
                     </Button>
                 </DialogFooter>
             </DialogContent>

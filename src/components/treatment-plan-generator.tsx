@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from './ui/separator';
 import { TreatmentPlan } from '@/lib/store';
 import PIEIValidation from './PIEIValidation';
-import { Bot, Check } from 'lucide-react';
+import { Bot, ShieldCheck } from 'lucide-react';
 
 interface TreatmentPlanGeneratorProps {
     studentName: string;
@@ -106,8 +106,8 @@ El progreso será monitoreado semanalmente, evaluando el cumplimiento de las met
                             </div>
                             <div className="flex justify-end">
                                 <Button onClick={handleTriggerSave} disabled={!plan} className="bg-purple-600 hover:bg-purple-700 text-white font-bold">
-                                    <Check className="mr-2" />
-                                    Finalizar y Guardar Plan al Expediente
+                                    <ShieldCheck className="mr-2" />
+                                    Finalizar y Validar Plan
                                 </Button>
                             </div>
                         </div>
