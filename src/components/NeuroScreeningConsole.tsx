@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Timer, CheckCircle, Plus, Minus, RotateCcw } from 'lucide-react';
+import { Timer, CheckCircle, Plus, Minus, RotateCcw, Play, Pause } from 'lucide-react';
 
 interface NeuroScreeningConsoleProps {
   studentId: string;
@@ -40,6 +40,10 @@ export const NeuroScreeningConsole: React.FC<NeuroScreeningConsoleProps> = ({ st
   }, []);
 
   const handleFinish = () => {
+      const timeLimit = 120; // Límite de 2 minutos para Búsqueda de Símbolos, por ejemplo.
+      if (timer > timeLimit) {
+          alert(`Tiempo límite de ${timeLimit}s excedido. La puntuación puede no ser válida.`);
+      }
       console.log(`Tamizaje finalizado para ${studentId}.`);
       console.log(`Tiempo total: ${timer}s, Aciertos: ${hits}.`);
       alert("Simulación: Tamizaje finalizado. Revisa la consola para ver los datos capturados.");
@@ -69,8 +73,8 @@ export const NeuroScreeningConsole: React.FC<NeuroScreeningConsoleProps> = ({ st
               variant={isActive ? 'destructive' : 'default'}
               className="w-full"
             >
-              <Timer className="mr-2 h-4 w-4" />
-              {isActive ? 'Detener' : 'Iniciar Tiempo'}
+              {isActive ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
+              {isActive ? 'Pausar Tiempo' : 'Iniciar Tiempo'}
             </Button>
           </div>
 

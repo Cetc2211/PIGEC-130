@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
@@ -128,6 +128,18 @@ function VerbalCriterionSubtest({ subtestName, onRawScoreChange }: { subtestName
     const [currentItem, setCurrentItem] = useState(1);
     const [scores, setScores] = useState<{[key: number]: number}>({});
     const [notes, setNotes] = useState("");
+    const [timer, setTimer] = useState(0);
+    const [isTimerActive, setIsTimerActive] = useState(false);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout | null = null;
+        if (isTimerActive) {
+            interval = setInterval(() => setTimer(t => t + 1), 1000);
+        } else if (interval) {
+            clearInterval(interval);
+        }
+        return () => { if (interval) clearInterval(interval); };
+    }, [isTimerActive]);
 
     const totalScore = useMemo(() => Object.values(scores).reduce((sum, score) => sum + score, 0), [scores]);
 
@@ -138,19 +150,42 @@ function VerbalCriterionSubtest({ subtestName, onRawScoreChange }: { subtestName
         onRawScoreChange(newTotalScore);
     };
 
+    const handleNextItem = () => {
+        setIsTimerActive(false);
+        setTimer(0);
+        setCurrentItem(p => p + 1);
+    };
+
+    const handlePrevItem = () => {
+        setIsTimerActive(false);
+        setTimer(0);
+        setCurrentItem(p => Math.max(1, p - 1));
+    };
+
     return (
         <div className="space-y-4 p-4 border rounded-lg bg-gray-50/70">
             <div className="flex justify-between items-center">
                 <h4 className="font-semibold text-lg">{subtestName} - Ítem {currentItem}</h4>
                 <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setCurrentItem(p => Math.max(1, p - 1))}><ChevronLeft className="h-4 w-4" /> Ant</Button>
-                    <Button size="sm" variant="outline" onClick={() => setCurrentItem(p => p + 1)}>Sig <ChevronRight className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="outline" onClick={handlePrevItem}><ChevronLeft className="h-4 w-4" /> Ant</Button>
+                    <Button size="sm" variant="outline" onClick={handleNextItem}>Sig <ChevronRight className="h-4 w-4" /></Button>
                 </div>
             </div>
 
             <div className="p-4 bg-white rounded-md border min-h-[80px]">
                 <p className="text-sm text-gray-500">Consigna o estímulo del ítem {currentItem}:</p>
                 <p className="font-semibold mt-2">Ej: "¿En qué se parecen un lápiz y un bolígrafo?"</p>
+            </div>
+
+            <div className="p-3 border rounded-lg bg-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Timer className="text-gray-500"/>
+                    <span className="font-mono text-lg">{timer}s</span>
+                </div>
+                <Button size="sm" variant={isTimerActive ? "destructive" : "default"} onClick={() => setIsTimerActive(!isTimerActive)}>
+                   {isTimerActive ? <Pause className="mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>}
+                   {isTimerActive ? 'Pausar' : 'Iniciar'}
+                </Button>
             </div>
             
             <div>
