@@ -5,11 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 
 interface WISCScoringConsoleProps {
@@ -25,12 +26,12 @@ const subtestsByDomainWISC = {
     ],
     IVE: [
         { id: 'C', name: 'Cubos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'PV', name: 'Puzles Visuales', renderType: 'VERBAL_CRITERIO' },
+        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: false },
     ],
     IRF: [
         { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'B', name: 'Balanzas', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'A', name: 'Aritmética', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', isCit: true },
+        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', optional: true },
     ],
     IMT: [
         { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true },
@@ -59,7 +60,7 @@ const subtestsByDomainWAIS = {
     ],
     IMT: [
         { id: 'D', name: 'Retención de Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'A', name: 'Aritmética', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', isCit: true },
         { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'VERBAL_CRITERIO', optional: true },
     ],
     IVP: [
@@ -253,7 +254,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                 setTimer(t => {
                     const newTime = t + 1;
                     // Lógica de Timeout (Simulada)
-                    const timeLimit = 30; // Límite de ejemplo, debería venir de la config
+                    const timeLimit = 30; // Límite de ejemplo, debería venir de la config de cada item.
                     if (newTime >= timeLimit) {
                         setIsTimerActive(false);
                         alert(`Tiempo límite de ${timeLimit}s excedido. Puntaje = 0.`);
@@ -355,7 +356,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                  return (
                     <div className="grid grid-cols-3 gap-2 mt-1">
                         {[1, 2, 3, 4, 5, 6].map(option => (
-                           <div key={option} className="flex items-center space-x-2">
+                           <div key={option} className="flex items-center space-x-2 p-2 rounded border bg-white">
                                 <Checkbox id={`pv-opt-${option}`} />
                                 <Label htmlFor={`pv-opt-${option}`}>Opción {option}</Label>
                             </div>
@@ -368,6 +369,26 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                        {[1, 2, 3, 4, 5].map(option => (
                             <Button key={option} type="button" variant="outline">{option}</Button>
                         ))}
+                    </div>
+                );
+            case 'ARITHMETIC':
+                return (
+                    <div className="space-y-4 mt-2">
+                        <Alert variant="default" className="border-yellow-500 text-yellow-800">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle className="font-bold">Recordatorio de Aplicación</AlertTitle>
+                            <AlertDescription>
+                                Prohibido usar papel, lápiz o calculadora.
+                            </AlertDescription>
+                        </Alert>
+                         <div className="flex items-end gap-2">
+                            <div className="flex-grow space-y-1">
+                                <Label htmlFor="arithmetic-answer">Respuesta del Sujeto</Label>
+                                <Input id="arithmetic-answer" type="number" placeholder="Ingresar respuesta" />
+                            </div>
+                            <Button>Registrar</Button>
+                            <Button variant="secondary">Repetir</Button>
+                        </div>
                     </div>
                 );
             default:
@@ -389,7 +410,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                  {/* Columna Izquierda: Estímulo y Aplicación */}
                 <div className="space-y-4">
                     <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
-                        {stimulusImageUrl ? (
+                        {renderType !== 'ARITHMETIC' ? (
                             <img 
                                 src={stimulusImageUrl} 
                                 alt={`Estímulo para el ítem ${currentItem}`}
@@ -397,7 +418,10 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                                 onContextMenu={(e) => e.preventDefault()}
                             />
                         ) : (
-                            <p className="text-white text-center">Cargando estímulo...</p>
+                            <div className="text-white text-center p-4">
+                                <p className="text-lg font-semibold">Consigna Oral</p>
+                                <p className="text-sm">(Lea el problema en voz alta desde el manual)</p>
+                            </div>
                         )}
                     </div>
 
@@ -517,7 +541,11 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
 
         // --- LIMPIEZA DE SESIÓN ---
         Object.values(subtestsByDomain).flat().forEach(subtest => {
-            localStorage.removeItem(`wisc_session_${subtest.id}`);
+            try {
+                localStorage.removeItem(`wisc_session_${subtest.id}`);
+            } catch (error) {
+                console.error("No se pudo limpiar el localStorage para la subprueba:", subtest.id, error);
+            }
         });
 
         console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---", narrativeReportObject);
