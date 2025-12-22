@@ -16,28 +16,28 @@ interface WISCScoringConsoleProps {
 
 const subtestsByDomain = {
     ICV: [
-        { id: 'S', name: 'Semejanzas', isCit: true },
-        { id: 'V', name: 'Vocabulario', isCit: true },
-        { id: 'I', name: 'Información', optional: true },
-        { id: 'Co', name: 'Comprensión', optional: true },
+        { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'V', name: 'Vocabulario', renderType: 'DIRECT_INPUT', isCit: true },
+        { id: 'I', name: 'Información', renderType: 'DIRECT_INPUT', optional: true },
+        { id: 'Co', name: 'Comprensión', renderType: 'DIRECT_INPUT', optional: true },
     ],
     IVE: [
-        { id: 'C', name: 'Cubos', isCit: true },
-        { id: 'P', name: 'Puzles Visuales' },
+        { id: 'C', name: 'Cubos', renderType: 'DIRECT_INPUT', isCit: true },
+        { id: 'P', name: 'Puzles Visuales', renderType: 'DIRECT_INPUT' },
     ],
     IRF: [
-        { id: 'M', name: 'Matrices', isCit: true },
-        { id: 'B', name: 'Balanzas', isCit: true },
-        { id: 'A', name: 'Aritmética', optional: true },
+        { id: 'M', name: 'Matrices', renderType: 'DIRECT_INPUT', isCit: true },
+        { id: 'B', name: 'Balanzas', renderType: 'DIRECT_INPUT', isCit: true },
+        { id: 'A', name: 'Aritmética', renderType: 'DIRECT_INPUT', optional: true },
     ],
     IMT: [
-        { id: 'D', name: 'Dígitos', isCit: true },
-        { id: 'LN', name: 'Letras y Números', optional: true },
+        { id: 'D', name: 'Dígitos', renderType: 'DIRECT_INPUT', isCit: true },
+        { id: 'LN', name: 'Letras y Números', renderType: 'DIRECT_INPUT', optional: true },
     ],
     IVP: [
-        { id: 'Cl', name: 'Claves', isCit: true },
-        { id: 'BS', name: 'Búsqueda de Símbolos', optional: true },
-        { id: 'Ca', name: 'Cancelación', optional: true },
+        { id: 'Cl', name: 'Claves', renderType: 'DIRECT_INPUT', isCit: true },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'DIRECT_INPUT', optional: true },
+        { id: 'Ca', name: 'Cancelación', renderType: 'DIRECT_INPUT', optional: true },
     ]
 };
 
@@ -123,8 +123,8 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
 };
 
 
-// Componente para simular la aplicación de una subprueba
-function SubtestApplication({ subtestName }: { subtestName: string }) {
+// Componente para simular la aplicación de una subprueba verbal
+function VerbalCriterionSubtest({ subtestName, onRawScoreChange }: { subtestName: string, onRawScoreChange: (score: number) => void }) {
     const [currentItem, setCurrentItem] = useState(1);
     const [scores, setScores] = useState<{[key: number]: number}>({});
     const [notes, setNotes] = useState("");
@@ -132,7 +132,10 @@ function SubtestApplication({ subtestName }: { subtestName: string }) {
     const totalScore = useMemo(() => Object.values(scores).reduce((sum, score) => sum + score, 0), [scores]);
 
     const setScore = (item: number, score: number) => {
-        setScores(prev => ({...prev, [item]: score}));
+        const newScores = {...scores, [item]: score};
+        setScores(newScores);
+        const newTotalScore = Object.values(newScores).reduce((sum, s) => sum + s, 0);
+        onRawScoreChange(newTotalScore);
     };
 
     return (
@@ -146,12 +149,12 @@ function SubtestApplication({ subtestName }: { subtestName: string }) {
             </div>
 
             <div className="p-4 bg-white rounded-md border min-h-[80px]">
-                <p className="text-sm text-gray-500">Consigna o estímulo visual del ítem {currentItem} iría aquí.</p>
-                 <p className="font-semibold mt-2">Ej: "¿En qué se parecen un lápiz y un bolígrafo?"</p>
+                <p className="text-sm text-gray-500">Consigna o estímulo del ítem {currentItem}:</p>
+                <p className="font-semibold mt-2">Ej: "¿En qué se parecen un lápiz y un bolígrafo?"</p>
             </div>
             
             <div>
-                <Label className="text-sm font-medium">Puntuación del Ítem</Label>
+                <Label className="text-sm font-medium">Puntuación del Ítem (según manual)</Label>
                 <div className="flex gap-2 mt-1">
                     {[0, 1, 2].map(score => (
                         <Button 
@@ -186,6 +189,23 @@ function SubtestApplication({ subtestName }: { subtestName: string }) {
     );
 }
 
+// Componente para entrada directa de puntaje bruto
+function DirectInputSubtest({ subtestName, subtestId, rawScores, onScoreChange }: { subtestName: string, subtestId: string, rawScores: {[key: string]: string}, onScoreChange: (id: string, value: string) => void }) {
+    return (
+        <div className="p-4 border rounded-lg bg-gray-50/70">
+            <Label htmlFor={`pb-${subtestId}`}>Puntaje Bruto (PB) para {subtestName}</Label>
+            <Input 
+                id={`pb-${subtestId}`}
+                type="number"
+                value={rawScores[subtestId] || ''}
+                onChange={(e) => onScoreChange(subtestId, e.target.value)}
+                placeholder="Puntaje Bruto"
+                className="mt-1"
+            />
+        </div>
+    );
+}
+
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
     const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
@@ -194,6 +214,10 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
 
     const handleRawScoreChange = (subtestId: string, value: string) => {
         setRawScores(prev => ({ ...prev, [subtestId]: value }));
+    };
+
+    const handleSubtestScoreChange = (subtestId: string, score: number) => {
+        setRawScores(prev => ({ ...prev, [subtestId]: String(score) }));
     };
 
     const handleCalculate = () => {
@@ -280,20 +304,18 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                                         {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional)</span>}
                                                     </AccordionTrigger>
                                                     <AccordionContent className="pt-2">
-                                                        {test.id === 'S' ? (
-                                                            <SubtestApplication subtestName={test.name}/>
+                                                        {test.renderType === 'VERBAL_CRITERIO' ? (
+                                                            <VerbalCriterionSubtest 
+                                                                subtestName={test.name}
+                                                                onRawScoreChange={(score) => handleSubtestScoreChange(test.id, score)}
+                                                            />
                                                         ) : (
-                                                            <div className="p-4 border rounded-lg bg-gray-50/70">
-                                                                <Label htmlFor={`pb-${test.id}`}>Puntaje Bruto (PB)</Label>
-                                                                <Input 
-                                                                    id={`pb-${test.id}`}
-                                                                    type="number"
-                                                                    value={rawScores[test.id] || ''}
-                                                                    onChange={(e) => handleRawScoreChange(test.id, e.target.value)}
-                                                                    placeholder="Puntaje Bruto"
-                                                                    className="mt-1"
-                                                                />
-                                                            </div>
+                                                            <DirectInputSubtest
+                                                                subtestName={test.name}
+                                                                subtestId={test.id}
+                                                                rawScores={rawScores}
+                                                                onScoreChange={handleRawScoreChange}
+                                                            />
                                                         )}
                                                     </AccordionContent>
                                                 </AccordionItem>
