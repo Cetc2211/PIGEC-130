@@ -167,11 +167,39 @@ const GuiaCalificacion = () => {
 
 
 // Componente para simular la aplicación de una subprueba verbal
-function SubtestApplicationConsole({ subtestName }: { subtestName: string }) {
+function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: string, subtestId: string }) {
+    const storageKey = `wisc_session_${subtestId}`;
+
     const [currentItem, setCurrentItem] = useState(1);
     const [scores, setScores] = useState<{[key: number]: { score: number, notes: string, errorTags: string[] }}>({});
     const [timer, setTimer] = useState(0);
     const [isTimerActive, setIsTimerActive] = useState(false);
+
+    // --- LÓGICA DE PERSISTENCIA Y RECUPERACIÓN ---
+    useEffect(() => {
+        try {
+            const savedSession = localStorage.getItem(storageKey);
+            if (savedSession) {
+                const { savedScores, savedCurrentItem } = JSON.parse(savedSession);
+                setScores(savedScores);
+                setCurrentItem(savedCurrentItem);
+                console.log(`Sesión de ${subtestName} recuperada.`);
+            }
+        } catch (error) {
+            console.error("Error al recuperar la sesión del localStorage:", error);
+        }
+    }, [storageKey, subtestName]);
+    
+    const updateAndPersistScores = (newScores: typeof scores) => {
+        setScores(newScores);
+        try {
+             localStorage.setItem(storageKey, JSON.stringify({ savedScores: newScores, savedCurrentItem: currentItem }));
+        } catch (error) {
+            console.error("Error al guardar la sesión en el localStorage:", error);
+        }
+    };
+    // --- FIN DE LÓGICA DE PERSISTENCIA ---
+
 
     const errorCategories = [
         "Respuesta Tangencial", "Perseveración", "Concreción Excesiva", 
@@ -188,11 +216,11 @@ function SubtestApplicationConsole({ subtestName }: { subtestName: string }) {
         return () => { if (interval) clearInterval(interval); };
     }, [isTimerActive]);
 
-    const totalScore = useMemo(() => Object.values(scores).reduce((sum, item) => sum + (item.score || 0), 0), [scores]);
+    const totalScore = useMemo(() => Object.values(scores).reduce((sum, item) => sum + (item?.score || 0), 0), [scores]);
 
     // Lógica de Alerta de Proceso (Cap. 13.1.2)
     useEffect(() => {
-        const allTags = Object.values(scores).flatMap(s => s.errorTags || []);
+        const allTags = Object.values(scores).flatMap(s => s?.errorTags || []);
         if (allTags.length > 0) {
             const tagCounts = allTags.reduce((acc, tag) => {
                 acc[tag] = (acc[tag] || 0) + 1;
@@ -208,13 +236,13 @@ function SubtestApplicationConsole({ subtestName }: { subtestName: string }) {
     }, [scores]);
 
     const setScore = (item: number, score: number) => {
-        const newScores = {...scores, [item]: { ...scores[item], score }};
-        setScores(newScores);
+        const newScores = {...scores, [item]: { ...(scores[item] || { notes: '', errorTags: [] }), score }};
+        updateAndPersistScores(newScores);
     };
 
     const setNotes = (item: number, notes: string) => {
-        const newScores = {...scores, [item]: { ...scores[item], notes }};
-        setScores(newScores);
+        const newScores = {...scores, [item]: { ...(scores[item] || { score: 0, errorTags: [] }), notes }};
+        updateAndPersistScores(newScores);
     };
 
     const handleErrorTagChange = (item: number, tag: string, isChecked: boolean) => {
@@ -225,8 +253,8 @@ function SubtestApplicationConsole({ subtestName }: { subtestName: string }) {
         } else {
             newTags = currentTags.filter(t => t !== tag);
         }
-        const newScores = {...scores, [item]: { ...scores[item], errorTags: newTags }};
-        setScores(newScores);
+        const newScores = {...scores, [item]: { ...(scores[item] || { score: 0, notes: '' }), errorTags: newTags }};
+        updateAndPersistScores(newScores);
     };
 
     const handleNextItem = () => {
@@ -395,8 +423,13 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             ]
         };
 
+        // --- LIMPIEZA DE SESIÓN ---
+        Object.values(subtestsByDomain).flat().forEach(subtest => {
+            localStorage.removeItem(`wisc_session_${subtest.id}`);
+        });
 
         console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---", narrativeReportObject);
+        console.log("--- SESIÓN LOCAL LIMPIADA ---");
         alert("CIERRE SEGURO (SIMULACIÓN): El protocolo ha sido finalizado. Revisa la consola.");
     };
 
@@ -438,6 +471,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                                     <AccordionContent className="pt-2">
                                                         <SubtestApplicationConsole 
                                                             subtestName={test.name}
+                                                            subtestId={test.id}
                                                         />
                                                     </AccordionContent>
                                                 </AccordionItem>
