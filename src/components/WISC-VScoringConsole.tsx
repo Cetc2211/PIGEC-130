@@ -16,7 +16,7 @@ interface WISCScoringConsoleProps {
     studentAge: number;
 }
 
-const subtestsByDomain = {
+const subtestsByDomainWISC = {
     ICV: [
         { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true },
         { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true },
@@ -25,7 +25,7 @@ const subtestsByDomain = {
     ],
     IVE: [
         { id: 'C', name: 'Cubos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'P', name: 'Puzles Visuales', renderType: 'VERBAL_CRITERIO' },
+        { id: 'PV', name: 'Puzles Visuales', renderType: 'VERBAL_CRITERIO' },
     ],
     IRF: [
         { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true },
@@ -42,6 +42,33 @@ const subtestsByDomain = {
         { id: 'Ca', name: 'Cancelación', renderType: 'VERBAL_CRITERIO', optional: true },
     ]
 };
+
+const subtestsByDomainWAIS = {
+    ICV: [
+        { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true },
+    ],
+    IRP: [
+        { id: 'C', name: 'Diseño con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'PV', name: 'Rompecabezas Visuales', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'B', name: 'Balanzas', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'FI', name: 'Figuras Incompletas', renderType: 'VERBAL_CRITERIO', optional: true },
+    ],
+    IMT: [
+        { id: 'D', name: 'Retención de Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'A', name: 'Aritmética', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'VERBAL_CRITERIO', optional: true },
+    ],
+    IVP: [
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'Cl', name: 'Claves', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'Ca', name: 'Cancelación', renderType: 'VERBAL_CRITERIO', optional: true },
+    ]
+};
+
 
 // Esta función simula la búsqueda en las tablas de baremos.
 const getScaledScore = (rawScore: number, subtestId: string): number => {
@@ -69,11 +96,9 @@ const getDescriptiveClassification = (score: number) => {
     return "Extremadamente Bajo";
 };
 
-const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
+const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWais: boolean) => {
     
     const getSum = (ids: string[]) => ids.reduce((sum, id) => sum + (scaledScores[id] || 0), 0);
-    
-    const citSum = getSum(['S', 'V', 'C', 'M', 'B', 'D', 'BS']); // Usando BS como sustituto
     
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (numSubtests === 0 || sum === 0) return 40;
@@ -83,8 +108,6 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
     
-    let citScaled = scaleToComposite(citSum, 7);
-    
     const createProfile = (name: string, score: number) => ({
         name,
         score,
@@ -93,35 +116,51 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         classification: getDescriptiveClassification(score),
     });
 
-    const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
-    const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'P']), 2));
-    const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
-    const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
-    const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['BS']), 1)); // Sustituida
-    const cit = createProfile("C.I. Total (CIT)", citScaled);
+    let compositeScores, discrepancies, strengthsAndWeaknesses;
 
-    const compositeScores = [icv, ive, irf, imt, ivp, cit];
-    
+    if (isWais) {
+        // Lógica de cálculo para WAIS-IV
+        const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V', 'I']), 3));
+        const irp = createProfile("Razonamiento Perceptual (IRP)", scaleToComposite(getSum(['C', 'M', 'PV']), 3));
+        const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'A']), 2));
+        const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['BS', 'Cl']), 2));
+        const citSum = getSum(['S', 'V', 'I', 'C', 'M', 'PV', 'D', 'A', 'BS', 'Cl']);
+        const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 10));
+        compositeScores = [icv, irp, imt, ivp, cit];
+    } else {
+        // Lógica de cálculo para WISC-V
+        const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
+        const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'PV']), 2));
+        const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
+        const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D']), 1)); // Solo Dígitos es esencial
+        const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl']), 1)); // Solo Claves es esencial
+        const citSum = getSum(['S', 'V', 'C', 'M', 'B', 'D', 'Cl']);
+        const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 7));
+        compositeScores = [icv, ive, irf, imt, ivp, cit];
+    }
+
     const valoresCriticos = { 'ICV-IRF': 10.8, 'D-C': 2.5 };
-    const discrepancies = [
-        { pair: 'ICV - IRF', diff: icv.score - irf.score, significant: Math.abs(icv.score - irf.score) >= valoresCriticos['ICV-IRF'] },
+    discrepancies = [
+        // La lógica de discrepancias puede necesitar ajuste por escala
     ];
     
-    const allIds = Object.values(subtestsByDomain).flat().map(t => t.id);
+    const allSubtests = isWais ? Object.values(subtestsByDomainWAIS).flat() : Object.values(subtestsByDomainWISC).flat();
+    const allIds = allSubtests.map(t => t.id);
     const meanPE = getSum(allIds) / allIds.filter(id => scaledScores[id]).length;
 
-    const strengthsAndWeaknesses = allIds.filter(id => scaledScores[id]).map(id => {
+    strengthsAndWeaknesses = allIds.filter(id => scaledScores[id]).map(id => {
         const score = scaledScores[id] || 0;
         const diff = score - meanPE;
         let classification = '-';
         if (diff >= valoresCriticos['D-C']) classification = 'Fortaleza (F)';
         if (diff <= -valoresCriticos['D-C']) classification = 'Debilidad (D)';
-        const subtestInfo = Object.values(subtestsByDomain).flat().find(t => t.id === id);
+        const subtestInfo = allSubtests.find(t => t.id === id);
         return { name: subtestInfo?.name, score, diff: diff.toFixed(2), classification };
-    }).filter(s => s.name);
+    }).filter(s => s.name && s.score > 0);
 
     return { compositeScores, discrepancies, strengthsAndWeaknesses };
 };
+
 
 // Componente de guía de calificación para respuestas verbales
 const GuiaCalificacion = () => {
@@ -190,10 +229,10 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
         }
     }, [storageKey, subtestName]);
     
-    const updateAndPersistScores = (newScores: typeof scores) => {
+    const updateAndPersistScores = (newScores: typeof scores, newCurrentItem: number) => {
         setScores(newScores);
         try {
-             localStorage.setItem(storageKey, JSON.stringify({ savedScores: newScores, savedCurrentItem: currentItem }));
+             localStorage.setItem(storageKey, JSON.stringify({ savedScores: newScores, savedCurrentItem: newCurrentItem }));
         } catch (error) {
             console.error("Error al guardar la sesión en el localStorage:", error);
         }
@@ -237,12 +276,12 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
 
     const setScore = (item: number, score: number) => {
         const newScores = {...scores, [item]: { ...(scores[item] || { notes: '', errorTags: [] }), score }};
-        updateAndPersistScores(newScores);
+        updateAndPersistScores(newScores, item);
     };
 
     const setNotes = (item: number, notes: string) => {
         const newScores = {...scores, [item]: { ...(scores[item] || { score: 0, errorTags: [] }), notes }};
-        updateAndPersistScores(newScores);
+        updateAndPersistScores(newScores, item);
     };
 
     const handleErrorTagChange = (item: number, tag: string, isChecked: boolean) => {
@@ -254,19 +293,25 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
             newTags = currentTags.filter(t => t !== tag);
         }
         const newScores = {...scores, [item]: { ...(scores[item] || { score: 0, notes: '' }), errorTags: newTags }};
-        updateAndPersistScores(newScores);
+        updateAndPersistScores(newScores, item);
     };
 
     const handleNextItem = () => {
         setIsTimerActive(false);
         setTimer(0);
-        setCurrentItem(p => p + 1);
+        const nextItem = currentItem + 1;
+        setCurrentItem(nextItem);
+        // Persist only the item change
+        updateAndPersistScores(scores, nextItem);
     };
 
     const handlePrevItem = () => {
         setIsTimerActive(false);
         setTimer(0);
-        setCurrentItem(p => Math.max(1, p - 1));
+        const prevItem = Math.max(1, currentItem - 1);
+        setCurrentItem(prevItem);
+        // Persist only the item change
+        updateAndPersistScores(scores, prevItem);
     };
     
     const currentItemScore = scores[currentItem]?.score;
@@ -377,6 +422,10 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
 
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
+    const isWais = studentAge >= 17;
+    const subtestsByDomain = isWais ? subtestsByDomainWAIS : subtestsByDomainWISC;
+    const scaleName = isWais ? "WAIS-IV" : "WISC-V";
+
     const [rawScores, setRawScores] = useState<{ [key: string]: number }>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
     const [clinicalObservations, setClinicalObservations] = useState('');
@@ -389,7 +438,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             }
         });
 
-        const clinicalProfile = calculateClinicalProfile(scaledScores);
+        const clinicalProfile = calculateClinicalProfile(scaledScores, isWais);
         setResults(clinicalProfile);
     };
 
@@ -437,7 +486,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         <div className="w-full shadow-md border rounded-lg bg-white">
              <div className="flex justify-between items-center p-4 border-b">
                 <div>
-                     <h2 className="text-xl font-bold text-gray-800">Consola de Aplicación WISC-V</h2>
+                     <h2 className="text-xl font-bold text-gray-800">Consola de Aplicación {scaleName}</h2>
                      <p className="text-sm text-gray-500">Edad del evaluado: {studentAge} años</p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -569,3 +618,5 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
+
+    
