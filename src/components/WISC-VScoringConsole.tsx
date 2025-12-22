@@ -45,8 +45,7 @@ const subtestsByDomain = {
 const getScaledScore = (rawScore: number, subtestId: string): number => {
     // Caso de Prueba Maestro
     const masterCase: { [key: string]: { [key: number]: number } } = {
-        C: { 18: 7 }, S: { 22: 10 }, M: { 15: 9 }, D: { 20: 11 },
-        V: { 25: 10 }, B: { 14: 8 }, BS: { 22: 11 }
+        S: { 22: 10 }, V: { 25: 10 }, C: { 18: 7 }, M: { 15: 9 }, B: { 14: 8 }, D: { 20: 11 }, BS: { 22: 11 }
     };
     if (masterCase[subtestId] && masterCase[subtestId][rawScore] !== undefined) {
         return masterCase[subtestId][rawScore];
@@ -126,8 +125,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
 // Componente para simular la aplicación de una subprueba verbal
 function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestName: string, onRawScoreChange: (score: number) => void }) {
     const [currentItem, setCurrentItem] = useState(1);
-    const [scores, setScores] = useState<{[key: number]: number}>({});
-    const [notes, setNotes] = useState("");
+    const [scores, setScores] = useState<{[key: number]: { score: number, notes: string }}>({});
     const [timer, setTimer] = useState(0);
     const [isTimerActive, setIsTimerActive] = useState(false);
 
@@ -141,13 +139,20 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
         return () => { if (interval) clearInterval(interval); };
     }, [isTimerActive]);
 
-    const totalScore = useMemo(() => Object.values(scores).reduce((sum, score) => sum + score, 0), [scores]);
+    const totalScore = useMemo(() => Object.values(scores).reduce((sum, item) => sum + item.score, 0), [scores]);
+
+    useEffect(() => {
+        onRawScoreChange(totalScore);
+    }, [totalScore, onRawScoreChange]);
 
     const setScore = (item: number, score: number) => {
-        const newScores = {...scores, [item]: score};
+        const newScores = {...scores, [item]: { ...scores[item], score }};
         setScores(newScores);
-        const newTotalScore = Object.values(newScores).reduce((sum, s) => sum + s, 0);
-        onRawScoreChange(newTotalScore);
+    };
+
+    const setNotes = (item: number, notes: string) => {
+        const newScores = {...scores, [item]: { ...scores[item], notes }};
+        setScores(newScores);
     };
 
     const handleNextItem = () => {
@@ -195,7 +200,7 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
                         <Button 
                             key={score} 
                             type="button"
-                            variant={scores[currentItem] === score ? 'default' : 'outline'}
+                            variant={(scores[currentItem]?.score) === score ? 'default' : 'outline'}
                             onClick={() => setScore(currentItem, score)}
                         >
                             {score}
@@ -205,11 +210,11 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
             </div>
 
              <div>
-                <Label htmlFor={`notes-${subtestName}`} className="text-sm font-medium">Respuesta Cualitativa / Observaciones</Label>
+                <Label htmlFor={`notes-${subtestName}-${currentItem}`} className="text-sm font-medium">Respuesta Cualitativa / Observaciones</Label>
                 <Textarea 
-                    id={`notes-${subtestName}`}
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
+                    id={`notes-${subtestName}-${currentItem}`}
+                    value={scores[currentItem]?.notes || ''}
+                    onChange={e => setNotes(currentItem, e.target.value)}
                     placeholder="Anotar la respuesta textual del evaluado..."
                     className="mt-1"
                 />
@@ -225,20 +230,19 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
 }
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
-    const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
+    const [rawScores, setRawScores] = useState<{ [key: string]: number }>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
     const [clinicalObservations, setClinicalObservations] = useState('');
 
     const handleSubtestScoreChange = (subtestId: string, score: number) => {
-        setRawScores(prev => ({ ...prev, [subtestId]: String(score) }));
+        setRawScores(prev => ({ ...prev, [subtestId]: score }));
     };
 
     const handleCalculate = () => {
         const scaledScores: { [key: string]: number } = {};
         Object.entries(rawScores).forEach(([key, value]) => {
-            const rawScore = parseInt(value, 10);
-            if (!isNaN(rawScore)) {
-                scaledScores[key] = getScaledScore(rawScore, key);
+            if (value !== undefined && !isNaN(value)) {
+                scaledScores[key] = getScaledScore(value, key);
             }
         });
 
@@ -251,7 +255,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             alert("Primero debe calcular los resultados antes de finalizar.");
             return;
         }
-
+        
         let resumen_ejecutivo = '';
         const citScore = results.compositeScores.find(s => s.name.includes('CIT'))?.score || 0;
 
