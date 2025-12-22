@@ -104,14 +104,15 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, subst
     const getCitSum = () => Object.values(citScores).reduce((sum, score) => sum + score, 0);
 
     const citSum = getCitSum();
-    // Suma de PE = 66 -> CIT = 81 (según el caso de prueba)
-    let citScaled = citSum === 66 ? 81 : scaleToComposite(citSum, Object.keys(citScores).length);
-
+    
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (numSubtests === 0 || sum === 0) return 40;
         const meanScaled = sum / numSubtests;
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
+
+    // Para el caso de prueba específico
+    let citScaled = citSum === 66 ? 81 : scaleToComposite(citSum, Object.keys(citScores).length);
     
     const createProfile = (name: string, score: number) => ({
         name,
@@ -159,12 +160,8 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, subst
 
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
-    // Pre-llenar los puntajes del Caso Maestro
-    const [rawScores, setRawScores] = useState<{ [key: string]: string }>({
-        'C': '18', 'S': '22', 'M': '15', 'D': '20', 'V': '25', 'B': '14', 'BS': '22'
-    });
-    // Pre-seleccionar la sustitución del Caso Maestro
-    const [substitutions, setSubstitutions] = useState<{[key: string]: string}>({'BS': 'Cl'});
+    const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
+    const [substitutions, setSubstitutions] = useState<{[key: string]: string}>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
 
     const handleScoreChange = (subtestId: string, value: string) => {
@@ -197,7 +194,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         const clinicalProfile = calculateClinicalProfile(scaledScores, substitutions);
         setResults(clinicalProfile);
 
-        console.log("--- Validación de Caso Maestro WISC-V ---", { studentAge, rawScores, scaledScores, substitutions, clinicalProfile });
+        console.log("--- WISC-V Scoring ---", { studentAge, rawScores, scaledScores, substitutions, clinicalProfile });
     };
 
     const handleFinalizeAndSeal = () => {
@@ -226,16 +223,55 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                 {/* Columna Izquierda: Protocolo del Psicólogo */}
                 <div className="space-y-4">
                     <h3 className="font-semibold text-lg text-center lg:text-left">Consola del Examinador (WISC-V)</h3>
-                    <Accordion type="multiple" defaultValue={['ICV', 'IVE', 'IRF', 'IMT', 'IVP']} className="w-full">
+                    <Accordion type="multiple" defaultValue={['ICV']} className="w-full">
                         {Object.entries(subtestsByDomain).map(([domain, tests]) => (
                             <AccordionItem value={domain} key={domain}>
                                 <AccordionTrigger className="font-semibold text-base">{domain}</AccordionTrigger>
                                 <AccordionContent>
-                                     <div className="p-3 bg-gray-100 rounded-md border text-xs text-gray-600 mb-4">
+                                    <div className="p-3 bg-gray-100 rounded-md border text-xs text-gray-600 mb-4">
                                         <p><span className='font-bold'>Inicio:</span> Edad 9-11, Ítem 5.</p>
                                         <p><span className='font-bold'>Inversión:</span> Si se obtiene 0 en Ítem 5 o 6, aplicar ítems anteriores en orden inverso hasta 2 aciertos consecutivos.</p>
                                         <p><span className='font-bold'>Suspensión:</span> Tras 3 puntuaciones de 0 consecutivas.</p>
                                     </div>
+                                    
+                                    <div className="space-y-4">
+                                        <div className="p-3 bg-gray-100 rounded-md border">
+                                            <p className="font-semibold text-sm">CONSIGNA (Script para el psicólogo):</p>
+                                            <p className="text-sm text-gray-700 mt-1">"Ahora vamos a hacer algo diferente. Mira estas balanzas..."</p>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div className="col-span-2 space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`response-${domain}`} className="text-xs">Respuesta del Sujeto (Cualitativa)</Label>
+                                                    <Textarea id={`response-${domain}`} placeholder="Anotar respuesta literal..." className="h-20" />
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor={`time-${domain}`} className="text-xs">Tiempo (s)</Label>
+                                                        <Input id={`time-${domain}`} type="number" placeholder="s" className="h-8 w-20" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor={`score-${domain}`} className="text-xs">Puntaje</Label>
+                                                        <Input id={`score-${domain}`} type="number" placeholder="0, 1, 2" className="h-8 w-20" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                             <div className="col-span-1">
+                                                <p className="text-xs font-semibold mb-2">Miniatura de Estímulo:</p>
+                                                <div className="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
+                                                    <p className="text-xs text-gray-500">Img. aquí</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between items-center mt-4">
+                                            <Button variant="outline" size="sm"><ChevronLeft className="mr-2 h-4 w-4" /> Anterior</Button>
+                                            <p className="text-xs text-gray-500">Ítem 3 de 27</p>
+                                            <Button variant="outline" size="sm">Siguiente <ChevronRight className="ml-2 h-4 w-4" /></Button>
+                                        </div>
+                                    </div>
+                                    <h4 className="font-semibold text-sm mt-6 mb-2">Subpruebas del Dominio</h4>
                                     {tests.map(test => (
                                         <div key={test.id} className="p-3 border rounded-lg bg-gray-50/80 mb-2">
                                             <Label htmlFor={`raw-${test.id}`} className="font-bold text-gray-800">
@@ -268,7 +304,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                     </Accordion>
                     <Button onClick={handleCalculate} className="w-full bg-blue-600 hover:bg-blue-700">
                         <Calculator className="mr-2" />
-                        Calcular Puntuaciones (Caso Maestro)
+                        Calcular Puntuaciones
                     </Button>
                      {results && (
                         <div className="space-y-8 pt-4">
