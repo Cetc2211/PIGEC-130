@@ -167,7 +167,7 @@ const GuiaCalificacion = () => {
 
 
 // Componente para simular la aplicación de una subprueba verbal
-function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestName: string, onRawScoreChange: (score: number) => void }) {
+function SubtestApplicationConsole({ subtestName }: { subtestName: string }) {
     const [currentItem, setCurrentItem] = useState(1);
     const [scores, setScores] = useState<{[key: number]: { score: number, notes: string, errorTags: string[] }}>({});
     const [timer, setTimer] = useState(0);
@@ -189,10 +189,6 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
     }, [isTimerActive]);
 
     const totalScore = useMemo(() => Object.values(scores).reduce((sum, item) => sum + (item.score || 0), 0), [scores]);
-
-    useEffect(() => {
-        onRawScoreChange(totalScore);
-    }, [totalScore, onRawScoreChange]);
 
     // Lógica de Alerta de Proceso (Cap. 13.1.2)
     useEffect(() => {
@@ -247,6 +243,9 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
     
     const currentItemScore = scores[currentItem]?.score;
 
+    // Simulación de la URL de la imagen del estímulo
+    const stimulusImageUrl = `https://picsum.photos/seed/stimulus${currentItem}/600/400`;
+
     return (
         <div className="p-1 space-y-4">
             <div className="flex justify-between items-center">
@@ -258,14 +257,35 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Columna Izquierda: Aplicación */}
+                 {/* Columna Izquierda: Estímulo y Aplicación */}
                 <div className="space-y-4">
-                     <div className="p-4 bg-white rounded-md border min-h-[80px]">
-                        <p className="text-sm text-gray-500">Consigna o estímulo del ítem {currentItem}:</p>
-                        <p className="font-semibold mt-2">Ej: "¿En qué se parecen un Piano y un Tambor?"</p>
+                    <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
+                        {stimulusImageUrl ? (
+                            <img 
+                                src={stimulusImageUrl} 
+                                alt={`Estímulo para el ítem ${currentItem}`}
+                                className="max-w-full max-h-full object-contain"
+                                onContextMenu={(e) => e.preventDefault()}
+                            />
+                        ) : (
+                            <p className="text-white text-center">Cargando estímulo...</p>
+                        )}
                     </div>
 
-                    <div className="p-3 border rounded-lg bg-white flex items-center justify-between">
+                    <div>
+                        <Label className="text-sm font-medium">Respuesta Cualitativa / Observaciones</Label>
+                        <Textarea 
+                            value={scores[currentItem]?.notes || ''}
+                            onChange={e => setNotes(currentItem, e.target.value)}
+                            placeholder="Anotar la respuesta textual del evaluado y observaciones conductuales..."
+                            className="mt-1"
+                        />
+                    </div>
+                </div>
+
+                {/* Columna Derecha: Controles y Guía */}
+                <div className="space-y-4">
+                     <div className="p-3 border rounded-lg bg-white flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Timer className="text-gray-500"/>
                             <span className="font-mono text-lg">{timer}s</span>
@@ -274,16 +294,6 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
                         {isTimerActive ? <Pause className="mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>}
                         {isTimerActive ? 'Pausar' : 'Iniciar'}
                         </Button>
-                    </div>
-                    
-                    <div>
-                        <Label className="text-sm font-medium">Respuesta Cualitativa / Observaciones</Label>
-                        <Textarea 
-                            value={scores[currentItem]?.notes || ''}
-                            onChange={e => setNotes(currentItem, e.target.value)}
-                            placeholder="Anotar la respuesta textual del evaluado..."
-                            className="mt-1"
-                        />
                     </div>
                     
                     <div>
@@ -301,34 +311,31 @@ function SubtestApplicationConsole({ subtestName, onRawScoreChange }: { subtestN
                             ))}
                         </div>
                     </div>
-
-                    {/* Módulo de Etiquetado de Errores */}
-                    {currentItemScore === 0 && (
-                        <div className="p-4 border-l-4 border-orange-400 bg-orange-50 rounded-md mt-4">
-                            <h5 className="font-semibold text-orange-800">Análisis Cualitativo del Error (Opcional)</h5>
-                            <div className="mt-3 space-y-2">
-                                {errorCategories.map(tag => (
-                                    <div key={tag} className="flex items-center space-x-2">
-                                        <Checkbox 
-                                            id={`tag-${tag}-${currentItem}`}
-                                            checked={scores[currentItem]?.errorTags?.includes(tag)}
-                                            onCheckedChange={(checked) => handleErrorTagChange(currentItem, tag, !!checked)}
-                                        />
-                                        <Label htmlFor={`tag-${tag}-${currentItem}`} className="text-sm font-normal text-gray-700">
-                                            {tag}
-                                        </Label>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Columna Derecha: Guía de Calificación */}
-                <div>
-                   <GuiaCalificacion />
+                    
+                    <GuiaCalificacion />
                 </div>
             </div>
+
+            {/* Módulo de Etiquetado de Errores */}
+            {currentItemScore === 0 && (
+                <div className="p-4 border-l-4 border-orange-400 bg-orange-50 rounded-md mt-4">
+                    <h5 className="font-semibold text-orange-800">Análisis Cualitativo del Error (Opcional)</h5>
+                    <div className="mt-3 space-y-2">
+                        {errorCategories.map(tag => (
+                            <div key={tag} className="flex items-center space-x-2">
+                                <Checkbox 
+                                    id={`tag-${tag}-${currentItem}`}
+                                    checked={scores[currentItem]?.errorTags?.includes(tag)}
+                                    onCheckedChange={(checked) => handleErrorTagChange(currentItem, tag, !!checked)}
+                                />
+                                <Label htmlFor={`tag-${tag}-${currentItem}`} className="text-sm font-normal text-gray-700">
+                                    {tag}
+                                </Label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
             
             <Separator className="!mt-6" />
 
@@ -344,10 +351,6 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     const [rawScores, setRawScores] = useState<{ [key: string]: number }>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
     const [clinicalObservations, setClinicalObservations] = useState('');
-
-    const handleSubtestScoreChange = (subtestId: string, score: number) => {
-        setRawScores(prev => ({ ...prev, [subtestId]: score }));
-    };
 
     const handleCalculate = () => {
         const scaledScores: { [key: string]: number } = {};
@@ -434,7 +437,6 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                                     <AccordionContent className="pt-2">
                                                         <SubtestApplicationConsole 
                                                             subtestName={test.name}
-                                                            onRawScoreChange={(score) => handleSubtestScoreChange(test.id, score)}
                                                         />
                                                     </AccordionContent>
                                                 </AccordionItem>
