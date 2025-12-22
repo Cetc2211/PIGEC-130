@@ -19,9 +19,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen, FileText, FileDown, Activity, UserCheck, BrainCircuit } from "lucide-react";
 import ScreeningManagement from '@/components/screening-management';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import WISCScoringConsole from '@/components/WISC-VScoringConsole';
 import { NeuroScreeningConsole } from '@/components/NeuroScreeningConsole';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 
 export default function ClinicalFilePage() {
@@ -131,14 +132,18 @@ export default function ClinicalFilePage() {
                                     Consola de Aplicación: Evaluación Psicométrica
                                 </CardTitle>
                                 <CardDescription>
-                                     El sistema selecciona automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado, que es de <strong>{student.demographics.age} años</strong>.
+                                     El sistema seleccionará automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado, que es de <strong>{student.demographics.age} años</strong>.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="flex flex-col items-center justify-center p-6">
                                 {student.demographics.age < 17 ? (
-                                    <WISCScoringConsole studentAge={student.demographics.age} />
+                                    <Button asChild size="lg">
+                                        <Link href={`/consola/${studentId}`} target="_blank">
+                                            Iniciar Aplicación Presencial (WISC-V)
+                                        </Link>
+                                    </Button>
                                 ) : (
-                                    <div className='text-center p-8 bg-gray-100 rounded-md'>
+                                    <div className='text-center p-8 bg-gray-100 rounded-md w-full'>
                                         <p className='font-semibold'>Módulo WAIS-IV (Adultos)</p>
                                         <p className='text-sm text-gray-500'>Este módulo se activará en un paso posterior.</p>
                                     </div>
