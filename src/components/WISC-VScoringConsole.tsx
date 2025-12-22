@@ -243,7 +243,9 @@ function SubtestApplicationConsole({ subtestName }: { subtestName: string }) {
     
     const currentItemScore = scores[currentItem]?.score;
 
-    // Simulación de la URL de la imagen del estímulo
+    // TODO: EQUIPO DE DESARROLLO - Esta URL debe ser reemplazada por la `imageUrl`
+    // que proviene del objeto de configuración de la subprueba, una vez que
+    // el script de carga masiva actualice la base de datos en Firestore.
     const stimulusImageUrl = `https://picsum.photos/seed/stimulus${currentItem}/600/400`;
 
     return (
@@ -264,7 +266,7 @@ function SubtestApplicationConsole({ subtestName }: { subtestName: string }) {
                             <img 
                                 src={stimulusImageUrl} 
                                 alt={`Estímulo para el ítem ${currentItem}`}
-                                className="max-w-full max-h-full object-contain"
+                                className="max-w-full max-h-full object-contain rounded-sm"
                                 onContextMenu={(e) => e.preventDefault()}
                             />
                         ) : (
@@ -316,7 +318,6 @@ function SubtestApplicationConsole({ subtestName }: { subtestName: string }) {
                 </div>
             </div>
 
-            {/* Módulo de Etiquetado de Errores */}
             {currentItemScore === 0 && (
                 <div className="p-4 border-l-4 border-orange-400 bg-orange-50 rounded-md mt-4">
                     <h5 className="font-semibold text-orange-800">Análisis Cualitativo del Error (Opcional)</h5>
