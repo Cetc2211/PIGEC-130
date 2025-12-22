@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams, redirect } from 'next/navigation';
@@ -20,9 +21,8 @@ import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen, FileText, FileD
 import ScreeningManagement from '@/components/screening-management';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import WISCScoringConsole from '@/components/WISC-VScoringConsole';
-import WAISScoringConsole from '@/components/WAIS-IVScoringConsole';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NeuroScreeningConsole } from '@/components/NeuroScreeningConsole';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 export default function ClinicalFilePage() {
@@ -110,7 +110,7 @@ export default function ClinicalFilePage() {
                     </TabsContent>
                     
                     <TabsContent value="pruebas" className="mt-6 space-y-12">
-                        <Card>
+                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <ClipboardList />
@@ -126,7 +126,7 @@ export default function ClinicalFilePage() {
                         </Card>
 
                         <Card>
-                            <CardHeader>
+                           <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <BookOpen />
                                     Evaluación Psicométrica (Motor de Enrutamiento por Edad)
@@ -134,18 +134,21 @@ export default function ClinicalFilePage() {
                                 <CardDescription>
                                      El sistema selecciona automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado.
                                      <span className="block font-semibold mt-2">
-                                     {student.demographics.age < 16 
-                                        ? `Se muestra la consola WISC-V porque la edad del estudiante (${student.demographics.age} años) es menor a 16.`
-                                        : `Se muestra la consola WAIS-IV porque la edad del estudiante (${student.demographics.age} años) es 16 o mayor.`
+                                     {student.demographics.age < 17 
+                                        ? `Se muestra la consola WISC-V porque la edad del estudiante (${student.demographics.age} años) es menor a 17.`
+                                        : `Se muestra la consola WAIS-IV porque la edad del estudiante (${student.demographics.age} años) es 17 o mayor.`
                                     }
                                      </span>
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {student.demographics.age < 16 ? (
+                                {student.demographics.age < 17 ? (
                                     <WISCScoringConsole studentAge={student.demographics.age} />
                                 ) : (
-                                    <WAISScoringConsole studentAge={student.demographics.age} />
+                                    <div className='text-center p-8 bg-gray-100 rounded-md'>
+                                        <p className='font-semibold'>Módulo WAIS-IV (Adultos)</p>
+                                        <p className='text-sm text-gray-500'>Este módulo se activará en un paso posterior.</p>
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>
@@ -162,7 +165,6 @@ export default function ClinicalFilePage() {
                                 <NeuroScreeningConsole studentId={studentId} />
                             </CardContent>
                         </Card>
-
                     </TabsContent>
 
                     <TabsContent value="soap" className="mt-6">
