@@ -128,7 +128,7 @@ function RoleManagementCard() {
     const [users, setUsers] = useState([
         { uid: 'user001', email: 'psic.martinez@example.com', role: 'Clinico' },
         { uid: 'user002', email: 'orientador.gomez@example.com', role: 'Orientador' },
-        { uid: 'user003', email: 'nuevo.docente@example.com', role: '' },
+        { uid: 'user003', email: 'nuevo.docente@example.com', role: 'none' },
     ]);
 
     const handleRoleChange = (uid: string, newRole: string) => {
@@ -165,7 +165,7 @@ function RoleManagementCard() {
                                 <SelectContent>
                                     <SelectItem value="Clinico">Clínico</SelectItem>
                                     <SelectItem value="Orientador">Orientador</SelectItem>
-                                    <SelectItem value="">Sin Rol</SelectItem>
+                                    <SelectItem value="none">Sin Rol</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
