@@ -1,4 +1,4 @@
-# Cómo Subir tu Proyecto a GitHub
+# Cómo Subir Tu Proyecto a GitHub
 
 Esta guía contiene dos métodos para subir tu proyecto a GitHub. Elige el que mejor se adapte a tu dispositivo:
 
