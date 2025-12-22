@@ -16,26 +16,26 @@ interface WISCScoringConsoleProps {
 
 const subtestsByDomain = {
     ICV: [
-        { id: 'S', name: 'Semejanzas' },
-        { id: 'V', name: 'Vocabulario' },
+        { id: 'S', name: 'Semejanzas', isCit: true },
+        { id: 'V', name: 'Vocabulario', isCit: true },
         { id: 'I', name: 'Información', optional: true },
         { id: 'Co', name: 'Comprensión', optional: true },
     ],
     IVE: [
-        { id: 'C', name: 'Cubos' },
+        { id: 'C', name: 'Cubos', isCit: true },
         { id: 'P', name: 'Puzles Visuales' },
     ],
     IRF: [
-        { id: 'M', name: 'Matrices' },
-        { id: 'B', name: 'Balanzas' },
+        { id: 'M', name: 'Matrices', isCit: true },
+        { id: 'B', name: 'Balanzas', isCit: true },
         { id: 'A', name: 'Aritmética', optional: true },
     ],
     IMT: [
-        { id: 'D', name: 'Dígitos' },
+        { id: 'D', name: 'Dígitos', isCit: true },
         { id: 'LN', name: 'Letras y Números' },
     ],
     IVP: [
-        { id: 'Cl', name: 'Claves' },
+        { id: 'Cl', name: 'Claves', isCit: true },
         { id: 'BS', name: 'Búsqueda de Símbolos' },
         { id: 'Ca', name: 'Cancelación', optional: true },
     ]
@@ -43,6 +43,7 @@ const subtestsByDomain = {
 
 const getScaledScore = (rawScore: number): number => {
     if (rawScore === 0) return 1;
+    // Esta es una conversión lineal simplificada, no basada en baremos reales.
     const scaled = Math.round((rawScore / 50) * 18) + 1; 
     return Math.max(1, Math.min(19, scaled));
 };
@@ -57,8 +58,26 @@ const getDescriptiveClassification = (score: number) => {
     return "Extremadamente Bajo";
 };
 
-const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
+const calculateClinicalProfile = (scaledScores: { [key: string]: number }, substitutions: {[key: string]: string}) => {
+    
+    // Lógica de Sustitución para el CIT
+    const citScores: {[key: string]: number} = {};
+    const citBaseIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
+    const citSubstIds = Object.keys(substitutions);
+    const substitutedOriginals = Object.values(substitutions);
+
+    citBaseIds.forEach(id => {
+        if (!substitutedOriginals.includes(id)) {
+            citScores[id] = scaledScores[id] || 0;
+        }
+    });
+     citSubstIds.forEach(id => {
+        citScores[id] = scaledScores[id] || 0;
+    });
+
     const getSum = (ids: string[]) => ids.reduce((sum, id) => sum + (scaledScores[id] || 0), 0);
+    const getCitSum = () => Object.values(citScores).reduce((sum, score) => sum + score, 0);
+
 
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (numSubtests === 0 || sum === 0) return 40;
@@ -74,16 +93,15 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         classification: getDescriptiveClassification(score),
     });
 
-    const citSubtestsIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
     const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
     const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'P']), 2));
     const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
     const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
     const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
-    const cit = createProfile("C.I. Total (CIT)", scaleToComposite(getSum(citSubtestsIds), citSubtestsIds.length));
+    const cit = createProfile("C.I. Total (CIT)", scaleToComposite(getCitSum(), Object.keys(citScores).length));
 
     const compositeScores = [icv, ive, irf, imt, ivp, cit];
-
+    
     const valoresCriticos = { 'ICV-IVE': 11.5, 'ICV-IRF': 10.8, 'IMT-IVP': 12.3, 'ICV-IMT': 11.2 };
     const discrepancies = [
         { pair: 'ICV - IVE', diff: icv.score - ive.score, significant: Math.abs(icv.score - ive.score) >= valoresCriticos['ICV-IVE'] },
@@ -92,10 +110,10 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
         { pair: 'ICV - IMT', diff: icv.score - imt.score, significant: Math.abs(icv.score - imt.score) >= valoresCriticos['ICV-IMT'] },
     ];
     
-    const meanPE = getSum(citSubtestsIds) / citSubtestsIds.length;
+    const meanPE = getCitSum() / Object.keys(citScores).length;
     const allSubtests = Object.values(subtestsByDomain).flat();
-    const strengthsAndWeaknesses = citSubtestsIds.map(id => {
-        const score = scaledScores[id] || 0;
+    const strengthsAndWeaknesses = Object.keys(citScores).map(id => {
+        const score = citScores[id] || 0;
         const diff = score - meanPE;
         let classification = '-';
         if (diff > 3) classification = 'Fortaleza (F)';
@@ -110,100 +128,109 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
     const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
+    const [substitutions, setSubstitutions] = useState<{[key: string]: string}>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
 
     const handleScoreChange = (subtestId: string, value: string) => {
         setRawScores(prev => ({ ...prev, [subtestId]: value }));
     };
 
+    const handleSubstitutionChange = (substId: string, originalId: string) => {
+        const newSubstitutions = {...substitutions};
+        if (newSubstitutions[substId] === originalId) {
+            delete newSubstitutions[substId];
+        } else {
+            // Permitir solo una sustitución
+            if (Object.keys(newSubstitutions).length >= 1) {
+                alert("Error: El manual WISC-V solo permite una sustitución para el cálculo del CIT.");
+                return;
+            }
+             // Eliminar cualquier otra sustitución para el mismo original
+            for (const key in newSubstitutions) {
+                if (newSubstitutions[key] === originalId) {
+                    delete newSubstitutions[key];
+                }
+            }
+            newSubstitutions[substId] = originalId;
+        }
+        setSubstitutions(newSubstitutions);
+    };
+
     const handleCalculate = () => {
         const scaledScores: { [key: string]: number } = {};
         Object.values(subtestsByDomain).flat().forEach(subtest => {
             const rawScore = parseInt(rawScores[subtest.id] || '0', 10);
-            scaledScores[subtest.id] = getScaledScore(rawScore);
+            if (rawScore === 0) {
+                 scaledScores[subtest.id] = 1;
+                 console.log(`ALERTA DE PISO: Puntaje bruto de 0 en '${subtest.name}'. Se asigna puntaje escalar de 1.`);
+            } else {
+                scaledScores[subtest.id] = getScaledScore(rawScore);
+            }
         });
 
-        const clinicalProfile = calculateClinicalProfile(scaledScores);
+        const clinicalProfile = calculateClinicalProfile(scaledScores, substitutions);
         setResults(clinicalProfile);
 
-        console.log("--- WISC-V Scoring (Simulación Avanzada) ---", { studentAge, rawScores, scaledScores, clinicalProfile });
+        console.log("--- WISC-V Scoring (Simulación Avanzada) ---", { studentAge, rawScores, scaledScores, substitutions, clinicalProfile });
     };
 
     const handleFinalizeAndSeal = () => {
         console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---");
-
-        // 1. Generación del Payload de Integridad
         const integrityPayload = {
-            studentId: "S002_WISC", // Debería ser dinámico
+            studentId: "S002_WISC",
             timestamp: new Date().toISOString(),
             rawResponses: rawScores,
+            substitutions,
             calculatedProfile: results,
             testVersion: "WISC-V"
         };
         console.log("1. Payload de Integridad (JSON) creado:", integrityPayload);
 
-        // 2. Cálculo del Hash (Huella Digital)
-        const hashSimulado = "a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890"; // Simulación
+        const hashSimulado = "a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890";
         console.log(`2. Hash SHA-256 calculado: ${hashSimulado}`);
+        console.log("3. Renderizando PDF de auditoría con logo institucional y pie de página de integridad.");
+        console.log("4. Guardando PDF en Firebase Storage y bloqueando el registro en Firestore ('LOCKED').");
 
-        // 3. Renderizado del PDF Institucional
-        console.log("3. Renderizando PDF de auditoría con logo institucional (Blanco y Verde)...");
-        console.log(`   - El pie de página contendrá el ID de Integridad: ${hashSimulado}`);
-        
-        // 4. Flujo de Almacenamiento
-        console.log("4. Guardando PDF en Firebase Storage en '/expedientes_clínicos/auditoria/...'");
-        console.log("   - Cambiando estado de la evaluación a 'LOCKED' en Firestore.");
-
-        alert("CIERRE SEGURO (SIMULACIÓN):\n\nEl protocolo ha sido finalizado, sellado con Hash de integridad y guardado como evidencia de auditoría. El registro ya no es editable.");
+        alert("CIERRE SEGURO (SIMULACIÓN):\nEl protocolo ha sido finalizado y sellado con Hash de integridad. El registro ya no es editable.");
     };
 
     return (
         <div className="w-full shadow-md border rounded-lg p-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Columna Izquierda: Protocolo y Resultados */}
+                {/* Columna Izquierda: Protocolo del Psicólogo */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Protocolo de Registro (Psicólogo)</h3>
-                     <Accordion type="multiple" className="w-full">
+                    <h3 className="font-semibold text-lg text-center lg:text-left">Consola del Examinador (WISC-V)</h3>
+                    <Accordion type="multiple" className="w-full">
                         {Object.entries(subtestsByDomain).map(([domain, tests]) => (
                             <AccordionItem value={domain} key={domain}>
-                                <AccordionTrigger className="font-semibold">{domain}</AccordionTrigger>
+                                <AccordionTrigger className="font-semibold text-base">{domain}</AccordionTrigger>
                                 <AccordionContent>
                                     <div className="space-y-4 p-2">
-                                        <div className="p-3 bg-gray-100 rounded-md border">
-                                            <p className="font-semibold text-sm">CONSIGNA (Script para el psicólogo):</p>
-                                            <p className="text-sm text-gray-700 mt-1">"Ahora vamos a hacer algo diferente. Mira estas balanzas..."</p>
-                                        </div>
-
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div className="col-span-2 space-y-4">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor={`response-${domain}`} className="text-xs">Respuesta del Sujeto (Cualitativa)</Label>
-                                                    <Textarea id={`response-${domain}`} placeholder="Anotar respuesta literal..." className="h-20" />
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor={`time-${domain}`} className="text-xs">Tiempo (s)</Label>
-                                                        <Input id={`time-${domain}`} type="number" placeholder="s" className="h-8 w-20" />
+                                        {tests.map(test => (
+                                            <div key={test.id} className="p-3 border rounded-lg bg-gray-50/80">
+                                                <Label htmlFor={`raw-${test.id}`} className="font-bold text-gray-800">
+                                                    {test.name}
+                                                    {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional / Sustituta)</span>}
+                                                </Label>
+                                                <Input 
+                                                    id={`raw-${test.id}`} 
+                                                    type="number" 
+                                                    placeholder="Puntaje Bruto"
+                                                    value={rawScores[test.id] || ''}
+                                                    onChange={e => handleScoreChange(test.id, e.target.value)}
+                                                    className="mt-2"
+                                                />
+                                                {test.optional && (
+                                                    <div className="mt-2 flex items-center space-x-2">
+                                                        <Checkbox 
+                                                            id={`subst-${test.id}`}
+                                                            onCheckedChange={() => handleSubstitutionChange(test.id, 'S')} // Simplificado, necesita lógica real
+                                                        />
+                                                        <Label htmlFor={`subst-${test.id}`} className="text-xs font-normal">Sustituir para CIT</Label>
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor={`score-${domain}`} className="text-xs">Puntaje</Label>
-                                                        <Input id={`score-${domain}`} type="number" placeholder="0, 1, 2" className="h-8 w-20" />
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
-                                             <div className="col-span-1">
-                                                <p className="text-xs font-semibold mb-2">Miniatura de Estímulo:</p>
-                                                <div className="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
-                                                    <p className="text-xs text-gray-500">Img. aquí</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-between items-center mt-4">
-                                            <Button variant="outline" size="sm"><ChevronLeft className="mr-2 h-4 w-4" /> Anterior</Button>
-                                            <p className="text-xs text-gray-500">Ítem 3 de 27</p>
-                                            <Button variant="outline" size="sm">Siguiente <ChevronRight className="ml-2 h-4 w-4" /></Button>
-                                        </div>
+                                        ))}
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
@@ -211,25 +238,18 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                     </Accordion>
                     <Button onClick={handleCalculate} className="w-full bg-blue-600 hover:bg-blue-700">
                         <Calculator className="mr-2" />
-                        Calcular Puntuaciones (WISC-V)
+                        Calcular Puntuaciones Completas (WISC-V)
                     </Button>
                      {results && (
                         <div className="space-y-8 pt-4">
-                            <h3 className="font-semibold text-lg">Perfil de Puntuaciones (Calculado)</h3>
+                            <h3 className="font-semibold text-lg">Perfil de Puntuaciones Compuestas</h3>
                             <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Índice</TableHead>
-                                        <TableHead>PC</TableHead>
-                                        <TableHead>Percentil</TableHead>
-                                        <TableHead>Clasificación</TableHead>
-                                    </TableRow>
-                                </TableHeader>
+                                <TableHeader><TableRow><TableHead>Índice</TableHead><TableHead>PC</TableHead><TableHead>Percentil</TableHead><TableHead>Clasificación</TableHead></TableRow></TableHeader>
                                 <TableBody>
                                     {results.compositeScores.map(res => (
-                                        <TableRow key={res.name} className={res.name === 'C.I. Total (CIT)' ? 'bg-gray-100 font-bold' : ''}>
+                                        <TableRow key={res.name} className={res.name === 'C.I. Total (CIT)' ? 'bg-blue-50 font-bold' : ''}>
                                             <TableCell>{res.name}</TableCell>
-                                            <TableCell className="font-extrabold">{res.score}</TableCell>
+                                            <TableCell className="font-extrabold text-blue-800">{res.score}</TableCell>
                                             <TableCell>{res.percentile}</TableCell>
                                             <TableCell>{res.classification}</TableCell>
                                         </TableRow>
@@ -276,10 +296,10 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                     )}
                 </div>
 
-                 {/* Columna Derecha: Visor de Estímulos */}
+                {/* Columna Derecha: Visor de Estímulos */}
                 <div className="space-y-6">
-                    <h3 className="font-semibold text-lg">Visor de Estímulos (Alumno)</h3>
-                    <div className="flex items-center justify-center h-full p-8 bg-gray-900 text-white rounded-md border-dashed border-2 border-gray-400">
+                     <h3 className="font-semibold text-lg text-center lg:text-left">Visor de Estímulos (Alumno)</h3>
+                    <div className="sticky top-8 flex items-center justify-center min-h-[500px] p-8 bg-gray-900 text-white rounded-md border-dashed border-2 border-gray-400">
                         <p className="text-center text-lg">El Visor de Estímulos para el Alumno aparecerá aquí.<br/> (Modo Espejo Sincronizado)</p>
                     </div>
                 </div>
