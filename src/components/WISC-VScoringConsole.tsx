@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -53,8 +53,8 @@ const subtestsByDomainWAIS = {
     IRP: [
         { id: 'C', name: 'Diseño con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true },
         { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'PV', name: 'Rompecabezas Visuales', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'B', name: 'Balanzas', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true },
+        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', optional: true },
         { id: 'FI', name: 'Figuras Incompletas', renderType: 'VERBAL_CRITERIO', optional: true },
     ],
     IMT: [
@@ -206,7 +206,7 @@ const GuiaCalificacion = () => {
 
 
 // Componente para simular la aplicación de una subprueba verbal
-function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: string, subtestId: string }) {
+function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { subtestName: string, subtestId: string, renderType: string }) {
     const storageKey = `wisc_session_${subtestId}`;
 
     const [currentItem, setCurrentItem] = useState(1);
@@ -215,13 +215,22 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
     const [isTimerActive, setIsTimerActive] = useState(false);
 
     // --- LÓGICA DE PERSISTENCIA Y RECUPERACIÓN ---
+    const updateAndPersistScores = useCallback((newScores: typeof scores, newCurrentItem: number) => {
+        setScores(newScores);
+        try {
+             localStorage.setItem(storageKey, JSON.stringify({ savedScores: newScores, savedCurrentItem: newCurrentItem }));
+        } catch (error) {
+            console.error("Error al guardar la sesión en el localStorage:", error);
+        }
+    }, [storageKey]);
+
     useEffect(() => {
         try {
             const savedSession = localStorage.getItem(storageKey);
             if (savedSession) {
                 const { savedScores, savedCurrentItem } = JSON.parse(savedSession);
-                setScores(savedScores);
-                setCurrentItem(savedCurrentItem);
+                if (savedScores) setScores(savedScores);
+                if (savedCurrentItem) setCurrentItem(savedCurrentItem);
                 console.log(`Sesión de ${subtestName} recuperada.`);
             }
         } catch (error) {
@@ -229,14 +238,6 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
         }
     }, [storageKey, subtestName]);
     
-    const updateAndPersistScores = (newScores: typeof scores, newCurrentItem: number) => {
-        setScores(newScores);
-        try {
-             localStorage.setItem(storageKey, JSON.stringify({ savedScores: newScores, savedCurrentItem: newCurrentItem }));
-        } catch (error) {
-            console.error("Error al guardar la sesión en el localStorage:", error);
-        }
-    };
     // --- FIN DE LÓGICA DE PERSISTENCIA ---
 
 
@@ -248,12 +249,24 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
         if (isTimerActive) {
-            interval = setInterval(() => setTimer(t => t + 1), 1000);
+            interval = setInterval(() => {
+                setTimer(t => {
+                    const newTime = t + 1;
+                    // Lógica de Timeout (Simulada)
+                    const timeLimit = 30; // Límite de ejemplo, debería venir de la config
+                    if (newTime >= timeLimit) {
+                        setIsTimerActive(false);
+                        alert(`Tiempo límite de ${timeLimit}s excedido. Puntaje = 0.`);
+                        setScore(currentItem, 0);
+                    }
+                    return newTime;
+                });
+            }, 1000);
         } else if (interval) {
             clearInterval(interval);
         }
         return () => { if (interval) clearInterval(interval); };
-    }, [isTimerActive]);
+    }, [isTimerActive, currentItem]);
 
     const totalScore = useMemo(() => Object.values(scores).reduce((sum, item) => sum + (item?.score || 0), 0), [scores]);
 
@@ -319,7 +332,48 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
     // TODO: EQUIPO DE DESARROLLO - Esta URL debe ser reemplazada por la `imageUrl`
     // que proviene del objeto de configuración de la subprueba, una vez que
     // el script de carga masiva actualice la base de datos en Firestore.
-    const stimulusImageUrl = `https://picsum.photos/seed/stimulus${currentItem}/600/400`;
+    const stimulusImageUrl = `https://picsum.photos/seed/stimulus${subtestId}${currentItem}/600/400`;
+
+    const renderInputInterface = () => {
+        switch(renderType) {
+            case 'VERBAL_CRITERIO':
+                return (
+                    <div className="flex gap-2 mt-1">
+                        {[0, 1, 2].map(score => (
+                            <Button 
+                                key={score} 
+                                type="button"
+                                variant={currentItemScore === score ? 'default' : 'outline'}
+                                onClick={() => setScore(currentItem, score)}
+                            >
+                                {score}
+                            </Button>
+                        ))}
+                    </div>
+                );
+            case 'MULTI_CHOICE': // Para Puzles Visuales
+                 return (
+                    <div className="grid grid-cols-3 gap-2 mt-1">
+                        {[1, 2, 3, 4, 5, 6].map(option => (
+                           <div key={option} className="flex items-center space-x-2">
+                                <Checkbox id={`pv-opt-${option}`} />
+                                <Label htmlFor={`pv-opt-${option}`}>Opción {option}</Label>
+                            </div>
+                        ))}
+                    </div>
+                );
+             case 'SINGLE_CHOICE': // Para Balanzas
+                return (
+                    <div className="grid grid-cols-3 gap-2 mt-1">
+                       {[1, 2, 3, 4, 5].map(option => (
+                            <Button key={option} type="button" variant="outline">{option}</Button>
+                        ))}
+                    </div>
+                );
+            default:
+                return <p>Tipo de renderizado no configurado.</p>;
+        }
+    }
 
     return (
         <div className="p-1 space-y-4">
@@ -373,21 +427,10 @@ function SubtestApplicationConsole({ subtestName, subtestId }: { subtestName: st
                     
                     <div>
                         <Label className="text-sm font-medium">Puntuación del Ítem (según manual)</Label>
-                        <div className="flex gap-2 mt-1">
-                            {[0, 1, 2].map(score => (
-                                <Button 
-                                    key={score} 
-                                    type="button"
-                                    variant={currentItemScore === score ? 'default' : 'outline'}
-                                    onClick={() => setScore(currentItem, score)}
-                                >
-                                    {score}
-                                </Button>
-                            ))}
-                        </div>
+                        {renderInputInterface()}
                     </div>
                     
-                    <GuiaCalificacion />
+                    {renderType === 'VERBAL_CRITERIO' && <GuiaCalificacion />}
                 </div>
             </div>
 
@@ -521,6 +564,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                                         <SubtestApplicationConsole 
                                                             subtestName={test.name}
                                                             subtestId={test.id}
+                                                            renderType={test.renderType}
                                                         />
                                                     </AccordionContent>
                                                 </AccordionItem>
@@ -618,5 +662,3 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
-
-    
