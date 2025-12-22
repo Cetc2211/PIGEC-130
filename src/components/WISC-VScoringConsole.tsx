@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Checkbox } from './ui/checkbox';
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 
@@ -54,7 +53,7 @@ const getScaledScore = (rawScore: number, subtestId: string): number => {
     }
     // Simulación general
     if (rawScore === 0) return 1;
-    const scaled = Math.round((rawScore / 50) * 18) + 1;
+    const scaled = Math.round((rawScore / 40) * 18) + 1;
     return Math.max(1, Math.min(19, scaled));
 };
 
@@ -69,38 +68,21 @@ const getDescriptiveClassification = (score: number) => {
     return "Extremadamente Bajo";
 };
 
-const calculateClinicalProfile = (scaledScores: { [key: string]: number }, substitutions: {[key: string]: string}) => {
+const calculateClinicalProfile = (scaledScores: { [key: string]: number }) => {
     
-    // Lógica de Sustitución para el CIT
-    const citScores: {[key: string]: number} = {};
-    const citBaseIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
-    
-    const substitutedOriginals = Object.values(substitutions);
-    const activeSubstitutes = Object.keys(substitutions);
-
-    citBaseIds.forEach(id => {
-        if (!substitutedOriginals.includes(id)) {
-            citScores[id] = scaledScores[id] || 0;
-        }
-    });
-     activeSubstitutes.forEach(id => {
-        citScores[id] = scaledScores[id] || 0;
-    });
-
     const getSum = (ids: string[]) => ids.reduce((sum, id) => sum + (scaledScores[id] || 0), 0);
-    const getCitSum = () => Object.values(citScores).reduce((sum, score) => sum + score, 0);
-
-    const citSum = getCitSum();
+    
+    const citSum = getSum(['S', 'V', 'C', 'M', 'B', 'D', 'BS']); // Usando BS como sustituto
     
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (numSubtests === 0 || sum === 0) return 40;
-         // Simulación para Caso Maestro
+        // Simulación para Caso Maestro
         if (sum === 66 && numSubtests === 7) return 81;
         const meanScaled = sum / numSubtests;
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
     
-    let citScaled = scaleToComposite(citSum, Object.keys(citScores).length);
+    let citScaled = scaleToComposite(citSum, 7);
     
     const createProfile = (name: string, score: number) => ({
         name,
@@ -114,25 +96,26 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, subst
     const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'P']), 2));
     const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
     const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
-    const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
+    const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['BS']), 1)); // Sustituida
     const cit = createProfile("C.I. Total (CIT)", citScaled);
 
     const compositeScores = [icv, ive, irf, imt, ivp, cit];
     
-    const valoresCriticos = { 'ICV-IRF': 10.8 };
+    const valoresCriticos = { 'ICV-IRF': 10.8, 'D-C': 2.5 };
     const discrepancies = [
         { pair: 'ICV - IRF', diff: icv.score - irf.score, significant: Math.abs(icv.score - irf.score) >= valoresCriticos['ICV-IRF'] },
     ];
     
-    const meanPE = getCitSum() / Object.keys(citScores).length;
-    const allSubtests = Object.values(subtestsByDomain).flat();
-    const strengthsAndWeaknesses = Object.keys(citScores).map(id => {
-        const score = citScores[id] || 0;
+    const allIds = Object.values(subtestsByDomain).flat().map(t => t.id);
+    const meanPE = getSum(allIds) / allIds.filter(id => scaledScores[id]).length;
+
+    const strengthsAndWeaknesses = allIds.filter(id => scaledScores[id]).map(id => {
+        const score = scaledScores[id] || 0;
         const diff = score - meanPE;
         let classification = '-';
-        if (diff >= 1.5) classification = 'Fortaleza (F)';
-        if (diff <= -1.5) classification = 'Debilidad (D)';
-        const subtestInfo = allSubtests.find(t => t.id === id);
+        if (diff >= valoresCriticos['D-C']) classification = 'Fortaleza (F)';
+        if (diff <= -valoresCriticos['D-C']) classification = 'Debilidad (D)';
+        const subtestInfo = Object.values(subtestsByDomain).flat().find(t => t.id === id);
         return { name: subtestInfo?.name, score, diff: diff.toFixed(2), classification };
     }).filter(s => s.name);
 
@@ -140,40 +123,89 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, subst
 };
 
 
+// Componente para simular la aplicación de una subprueba
+function SubtestApplication({ subtestName }: { subtestName: string }) {
+    const [currentItem, setCurrentItem] = useState(1);
+    const [scores, setScores] = useState<{[key: number]: number}>({});
+    const [notes, setNotes] = useState("");
+
+    const totalScore = useMemo(() => Object.values(scores).reduce((sum, score) => sum + score, 0), [scores]);
+
+    const setScore = (item: number, score: number) => {
+        setScores(prev => ({...prev, [item]: score}));
+    };
+
+    return (
+        <div className="space-y-4 p-4 border rounded-lg bg-gray-50/70">
+            <div className="flex justify-between items-center">
+                <h4 className="font-semibold text-lg">{subtestName} - Ítem {currentItem}</h4>
+                <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setCurrentItem(p => Math.max(1, p - 1))}><ChevronLeft className="h-4 w-4" /> Ant</Button>
+                    <Button size="sm" variant="outline" onClick={() => setCurrentItem(p => p + 1)}>Sig <ChevronRight className="h-4 w-4" /></Button>
+                </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-md border min-h-[80px]">
+                <p className="text-sm text-gray-500">Consigna o estímulo visual del ítem {currentItem} iría aquí.</p>
+                 <p className="font-semibold mt-2">Ej: "¿En qué se parecen un lápiz y un bolígrafo?"</p>
+            </div>
+            
+            <div>
+                <Label className="text-sm font-medium">Puntuación del Ítem</Label>
+                <div className="flex gap-2 mt-1">
+                    {[0, 1, 2].map(score => (
+                        <Button 
+                            key={score} 
+                            type="button"
+                            variant={scores[currentItem] === score ? 'default' : 'outline'}
+                            onClick={() => setScore(currentItem, score)}
+                        >
+                            {score}
+                        </Button>
+                    ))}
+                </div>
+            </div>
+
+             <div>
+                <Label htmlFor={`notes-${subtestName}`} className="text-sm font-medium">Respuesta Cualitativa / Observaciones</Label>
+                <Textarea 
+                    id={`notes-${subtestName}`}
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="Anotar la respuesta textual del evaluado..."
+                    className="mt-1"
+                />
+            </div>
+            
+            <Separator />
+
+            <div className="flex justify-end items-center">
+                <p className="text-md font-bold">Puntaje Bruto Acumulado: <span className="text-blue-600">{totalScore}</span></p>
+            </div>
+        </div>
+    );
+}
+
+
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
     const [rawScores, setRawScores] = useState<{ [key: string]: string }>({});
-    const [substitutions, setSubstitutions] = useState<{[key: string]: string}>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
     const [clinicalObservations, setClinicalObservations] = useState('');
 
-    const handleScoreChange = (subtestId: string, value: string) => {
-        setRawScores(prev => ({ ...prev, [subtestId]: value }));
-    };
-
-    const handleSubstitutionChange = (substId: string, originalId: string) => {
-        const newSubstitutions = {...substitutions};
-        if (newSubstitutions[substId] === originalId) {
-            delete newSubstitutions[substId];
-        } else {
-            if (Object.keys(newSubstitutions).length >= 1) {
-                alert("Error: El manual WISC-V solo permite una sustitución para el cálculo del CIT.");
-                return;
-            }
-            newSubstitutions[substId] = originalId;
-        }
-        setSubstitutions(newSubstitutions);
-    };
-
     const handleCalculate = () => {
+        // En una implementación real, los puntajes brutos se obtendrían del estado de cada SubtestApplication.
+        // Por ahora, usamos una simulación para la validación.
+        const simulatedRawScores = { 'S': "22", 'V': "25", 'C': "18", 'M': "15", 'B': "14", 'D': "20", 'BS': "22" };
+        
         const scaledScores: { [key: string]: number } = {};
-        Object.values(subtestsByDomain).flat().forEach(subtest => {
-            const rawScore = parseInt(rawScores[subtest.id] || '0', 10);
-            if (!isNaN(rawScore)) { 
-                scaledScores[subtest.id] = getScaledScore(rawScore, subtest.id);
+        Object.entries(simulatedRawScores).forEach(([key, value]) => {
+            const rawScore = parseInt(value, 10);
+            if (!isNaN(rawScore)) {
+                scaledScores[key] = getScaledScore(rawScore, key);
             }
         });
 
-        const clinicalProfile = calculateClinicalProfile(scaledScores, substitutions);
+        const clinicalProfile = calculateClinicalProfile(scaledScores);
         setResults(clinicalProfile);
     };
 
@@ -183,16 +215,15 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             return;
         }
 
-        // --- MOTOR DE CONCLUSIONES IA (SIMULACIÓN) ---
         let resumen_ejecutivo = '';
-        const citScore = results.compositeScores.find(s => s.name === 'C.I. Total (CIT)')?.score || 0;
+        const citScore = results.compositeScores.find(s => s.name.includes('CIT'))?.score || 0;
 
         if (citScore > 115) {
-            resumen_ejecutivo = "El evaluado presenta una capacidad intelectual significativamente superior al promedio de su grupo de edad. Posee habilidades destacadas para la resolución de problemas complejos y el aprendizaje autónomo.";
+            resumen_ejecutivo = "El evaluado presenta una capacidad intelectual significativamente superior al promedio de su grupo de edad...";
         } else if (citScore >= 90) {
-            resumen_ejecutivo = "El funcionamiento cognitivo global se sitúa dentro de la normalidad, mostrando una capacidad adecuada para cumplir con las exigencias académicas de nivel bachillerato.";
+            resumen_ejecutivo = "El funcionamiento cognitivo global se sitúa dentro de la normalidad...";
         } else {
-            resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información que podrían impactar el rendimiento escolar. Se recomienda una intervención psicopedagógica focalizada y adecuaciones en el aula.";
+            resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información...";
         }
 
         const narrativeReportObject = {
@@ -209,91 +240,79 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         };
 
 
-        console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---");
-        console.log("1. Objeto Reporte Narrativo (JSON) creado:", narrativeReportObject);
-
-        const integrityPayload = {
-            studentId: "STUDENT_ID_HERE",
-            timestamp: new Date().toISOString(),
-            rawScores,
-            substitutions,
-            calculatedProfile: results,
-            narrativeReport: narrativeReportObject,
-            testVersion: "WISC-V"
-        };
-        console.log("2. Payload de Integridad final para PDF:", integrityPayload);
-        
-        const hashSimulado = "a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890";
-        console.log(`3. Hash SHA-256 calculado: ${hashSimulado}`);
-        console.log("4. Renderizando PDF de auditoría con nota de sustitución y pie de página de integridad.");
-        console.log("5. Guardando PDF en Firebase Storage y bloqueando el registro en Firestore ('LOCKED').");
-
-        alert("CIERRE SEGURO (SIMULACIÓN):\nEl protocolo ha sido finalizado y sellado con Hash de integridad. El registro ya no es editable.");
+        console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---", narrativeReportObject);
+        alert("CIERRE SEGURO (SIMULACIÓN): El protocolo ha sido finalizado. Revisa la consola.");
     };
 
     return (
-        <div className="w-full shadow-md border rounded-lg p-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Columna Izquierda: Protocolo del Psicólogo */}
+        <div className="w-full shadow-md border rounded-lg bg-white">
+             <div className="flex justify-between items-center p-4 border-b">
+                <div>
+                     <h2 className="text-xl font-bold text-gray-800">Consola de Aplicación WISC-V</h2>
+                     <p className="text-sm text-gray-500">Edad del evaluado: {studentAge} años</p>
+                </div>
+                <div className="flex items-center gap-4">
+                     <Button onClick={handleCalculate} className="bg-blue-600 hover:bg-blue-700">
+                        <Calculator className="mr-2 h-4 w-4" />
+                        Calcular Puntuaciones Finales
+                    </Button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4 p-4">
+                {/* Columna Izquierda: Protocolo de Aplicación */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-center lg:text-left">Consola del Examinador (WISC-V)</h3>
-                    <Accordion type="multiple" className="w-full" defaultValue={['ICV', 'IVE', 'IRF', 'IMT', 'IVP']}>
+                    <h3 className="font-semibold text-lg text-center lg:text-left">Protocolo de Aplicación</h3>
+                    <Accordion type="single" collapsible className="w-full" defaultValue='ICV'>
                         {Object.entries(subtestsByDomain).map(([domain, tests]) => (
                             <AccordionItem value={domain} key={domain}>
                                 <AccordionTrigger className="font-semibold text-base">{domain}</AccordionTrigger>
                                 <AccordionContent>
-                                    <div className="space-y-4 p-2">
+                                    <div className="space-y-4 p-1">
                                         {tests.map(test => (
-                                            <div key={test.id} className="p-3 border rounded-lg bg-gray-50/80 mb-2">
-                                                <Label htmlFor={`raw-${test.id}`} className="font-bold text-gray-800">
-                                                    {test.name}
-                                                    {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional / Sustituta)</span>}
-                                                </Label>
-                                                <Input 
-                                                    id={`raw-${test.id}`} 
-                                                    type="number" 
-                                                    placeholder="Puntaje Bruto"
-                                                    value={rawScores[test.id] || ''}
-                                                    onChange={e => handleScoreChange(test.id, e.target.value)}
-                                                    className="mt-2"
-                                                />
-                                                {test.optional && (
-                                                    <div className="mt-2 flex items-center space-x-2">
-                                                        <Checkbox 
-                                                            id={`subst-${test.id}`}
-                                                            onCheckedChange={() => handleSubstitutionChange(test.id, test.id === 'BS' ? 'Cl' : 'S')} // Lógica de ejemplo
-                                                            checked={!!substitutions[test.id]}
-                                                        />
-                                                        <Label htmlFor={`subst-${test.id}`} className="text-xs font-normal">Sustituir para CIT</Label>
-                                                    </div>
-                                                )}
-                                            </div>
+                                           <Accordion key={test.id} type="single" collapsible>
+                                                <AccordionItem value={test.id}>
+                                                    <AccordionTrigger className="text-md flex items-center justify-between p-3 border rounded-md bg-white">
+                                                       <div className="flex items-center gap-2">
+                                                            <BookOpen className="h-5 w-5 text-gray-600"/>
+                                                            <span className="font-semibold">{test.name}</span>
+                                                        </div>
+                                                        {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional)</span>}
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="pt-2">
+                                                        <SubtestApplication subtestName={test.name}/>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                           </Accordion>
                                         ))}
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
                         ))}
                     </Accordion>
-                    <Button onClick={handleCalculate} className="w-full bg-blue-600 hover:bg-blue-700">
-                        <Calculator className="mr-2" />
-                        Calcular Puntuaciones
-                    </Button>
-                     {results && (
-                        <div className="space-y-8 pt-4">
-                            <h3 className="font-semibold text-lg">Resultados de la Evaluación</h3>
-                            <Table>
-                                <TableHeader><TableRow><TableHead>Índice</TableHead><TableHead>PC</TableHead><TableHead>Percentil</TableHead><TableHead>Clasificación</TableHead></TableRow></TableHeader>
-                                <TableBody>
-                                    {results.compositeScores.map(res => (
-                                        <TableRow key={res.name} className={res.name === 'C.I. Total (CIT)' ? 'bg-blue-50 font-bold' : ''}>
-                                            <TableCell>{res.name}</TableCell>
-                                            <TableCell className="font-extrabold text-blue-800">{res.score}</TableCell>
-                                            <TableCell>{res.percentile}</TableCell>
-                                            <TableCell>{res.classification}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                </div>
+
+                {/* Columna Derecha: Resultados y Análisis */}
+                <div className="space-y-6">
+                     <h3 className="font-semibold text-lg text-center lg:text-left">Resultados y Análisis</h3>
+                     {results ? (
+                        <div className="space-y-8">
+                            <div>
+                                <h4 className="font-semibold text-md mb-2">Tabla de Puntuaciones Compuestas</h4>
+                                <Table>
+                                    <TableHeader><TableRow><TableHead>Índice</TableHead><TableHead>PC</TableHead><TableHead>Percentil</TableHead><TableHead>Clasificación</TableHead></TableRow></TableHeader>
+                                    <TableBody>
+                                        {results.compositeScores.map(res => (
+                                            <TableRow key={res.name} className={res.name.includes('CIT') ? 'bg-blue-50 font-bold' : ''}>
+                                                <TableCell>{res.name}</TableCell>
+                                                <TableCell className="font-extrabold text-blue-800">{res.score}</TableCell>
+                                                <TableCell>{res.percentile}</TableCell>
+                                                <TableCell>{res.classification}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
                             
                             <div>
                                 <h4 className="font-semibold text-md mb-2">Análisis de Discrepancias</h4>
@@ -303,7 +322,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                         {results.discrepancias.map(d => (
                                             <TableRow key={d.pair}>
                                                 <TableCell>{d.pair}</TableCell>
-                                                <TableCell>{d.diff.toFixed(2)}</TableCell>
+                                                <TableCell>{d.diff}</TableCell>
                                                 <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? 'Sí (p < .05)' : 'No'}</TableCell>
                                             </TableRow>
                                         ))}
@@ -348,15 +367,11 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 Finalizar y Sellar Protocolo (Auditoría)
                             </Button>
                         </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-gray-50 text-gray-500 rounded-md border-2 border-dashed">
+                             <p className="text-center">Los resultados y el análisis aparecerán aquí después de calcular las puntuaciones.</p>
+                        </div>
                     )}
-                </div>
-
-                {/* Columna Derecha: Visor de Estímulos */}
-                <div className="space-y-6">
-                     <h3 className="font-semibold text-lg text-center lg:text-left">Visor de Estímulos (Alumno)</h3>
-                    <div className="sticky top-8 flex items-center justify-center min-h-[500px] p-8 bg-gray-900 text-white rounded-md border-dashed border-2 border-gray-400">
-                        <p className="text-center text-lg">El Visor de Estímulos para el Alumno aparecerá aquí.<br/> (Modo Espejo Sincronizado)</p>
-                    </div>
                 </div>
             </div>
         </div>
