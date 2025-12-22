@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams, redirect } from 'next/navigation';
@@ -63,7 +62,7 @@ export default function ClinicalFilePage() {
 
     return (
         <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                  <div className="mb-8">
                     <h1 className="text-3xl font-extrabold text-red-700">EXPEDIENTE CLÍNICO NIVEL 3 - CONFIDENCIAL</h1>
                     <p className="text-md text-gray-500">{student.name}</p>
@@ -129,16 +128,10 @@ export default function ClinicalFilePage() {
                            <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <BookOpen />
-                                    Evaluación Psicométrica (Motor de Enrutamiento por Edad)
+                                    Consola de Aplicación: Evaluación Psicométrica (WISC-V / WAIS-IV)
                                 </CardTitle>
                                 <CardDescription>
-                                     El sistema selecciona automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado.
-                                     <span className="block font-semibold mt-2">
-                                     {student.demographics.age < 17 
-                                        ? `Se muestra la consola WISC-V porque la edad del estudiante (${student.demographics.age} años) es menor a 17.`
-                                        : `Se muestra la consola WAIS-IV porque la edad del estudiante (${student.demographics.age} años) es 17 o mayor.`
-                                    }
-                                     </span>
+                                     El sistema selecciona automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado, que es de <strong>{student.demographics.age} años</strong>.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
