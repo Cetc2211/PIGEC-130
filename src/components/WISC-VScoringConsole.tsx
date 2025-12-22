@@ -266,6 +266,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                         A: 30, // Aritmética
                         PV: 30, // Puzles Visuales (ejemplo)
                         B: 20, // Balanzas (ejemplo)
+                        FI: 20, // Figuras Incompletas
                     };
                     const timeLimit = renderType === 'SPEED_TEST' ? 120 : timeLimitConfig[subtestId];
 
