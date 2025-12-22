@@ -128,7 +128,7 @@ export default function ClinicalFilePage() {
                            <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <BookOpen />
-                                    Consola de Aplicación: Evaluación Psicométrica (WISC-V / WAIS-IV)
+                                    Consola de Aplicación: Evaluación Psicométrica
                                 </CardTitle>
                                 <CardDescription>
                                      El sistema selecciona automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado, que es de <strong>{student.demographics.age} años</strong>.

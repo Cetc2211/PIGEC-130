@@ -41,29 +41,11 @@ const subtestsByDomain = {
     ]
 };
 
-// --- MOTOR DE VALIDACIÓN DEL "CASO DE PRUEBA MAESTRO" ---
-// Esta función ahora simula la búsqueda en las tablas de baremos para el caso específico.
+// Esta función simula la búsqueda en las tablas de baremos.
 const getScaledScore = (rawScore: number, subtestId: string): number => {
-    // Puntajes Brutos (PB) -> Puntajes Escalares (PE) del Caso Maestro
-    const testCaseRawToScaled: { [id: string]: { [pb: number]: number } } = {
-        'C': { 18: 7 },
-        'S': { 22: 10 },
-        'M': { 15: 9 },
-        'D': { 20: 11 },
-        'V': { 25: 10 },
-        'B': { 14: 8 },
-        'BS': { 22: 11 },
-    };
-    
     if (rawScore === 0) return 1;
-
-    // Si es parte del caso de prueba, devuelve el valor esperado.
-    if (testCaseRawToScaled[subtestId] && testCaseRawToScaled[subtestId][rawScore]) {
-        return testCaseRawToScaled[subtestId][rawScore];
-    }
-    
-    // Lógica de simulación general para otras pruebas no incluidas en el caso maestro.
-    const scaled = Math.round((rawScore / 50) * 18) + 1; 
+    // Simulación general
+    const scaled = Math.round((rawScore / 50) * 18) + 1;
     return Math.max(1, Math.min(19, scaled));
 };
 
@@ -84,18 +66,14 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, subst
     const citScores: {[key: string]: number} = {};
     const citBaseIds = ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
     
-    // Identificar qué subprueba principal está siendo sustituida
     const substitutedOriginals = Object.values(substitutions);
-    // Identificar las subpruebas sustitutas que se están utilizando
     const activeSubstitutes = Object.keys(substitutions);
 
     citBaseIds.forEach(id => {
-        // Si la subprueba principal NO está en la lista de 'sustituidas', se usa su puntaje.
         if (!substitutedOriginals.includes(id)) {
             citScores[id] = scaledScores[id] || 0;
         }
     });
-     // Añadir los puntajes de las pruebas sustitutas activas
      activeSubstitutes.forEach(id => {
         citScores[id] = scaledScores[id] || 0;
     });
@@ -110,9 +88,8 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, subst
         const meanScaled = sum / numSubtests;
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
-
-    // Para el caso de prueba específico
-    let citScaled = citSum === 66 ? 81 : scaleToComposite(citSum, Object.keys(citScores).length);
+    
+    let citScaled = scaleToComposite(citSum, Object.keys(citScores).length);
     
     const createProfile = (name: string, score: number) => ({
         name,
@@ -123,25 +100,18 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, subst
     });
 
     const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
-    const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'P']), 2)); // P no tiene puntaje en el caso de prueba
+    const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'P']), 2));
     const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
-    const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D']), 1)); // LN no tiene puntaje
-    const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['BS']), 1)); // Usar la sustituta
+    const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'LN']), 2));
+    const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
     const cit = createProfile("C.I. Total (CIT)", citScaled);
 
     const compositeScores = [icv, ive, irf, imt, ivp, cit];
     
-    const valoresCriticos = { 'ICV-IRF': 10.8 }; // Solo el necesario para la prueba
+    const valoresCriticos = { 'ICV-IRF': 10.8 };
     const discrepancies = [
         { pair: 'ICV - IRF', diff: icv.score - irf.score, significant: Math.abs(icv.score - irf.score) >= valoresCriticos['ICV-IRF'] },
     ];
-
-    // Para el Caso Maestro, la discrepancia IMT vs IVE (Cubos) debería ser significativa.
-    const imtScore = scaledScores['D'] || 0; // Dígitos = 11
-    const iveScore = scaledScores['C'] || 0; // Cubos = 7
-    if (Math.abs(imtScore - iveScore) > 3) { // 3 es el valor crítico para fortalezas/debilidades
-        discrepancies.push({ pair: 'IMT vs IVE (Subprueba)', diff: imtScore - iveScore, significant: true });
-    }
     
     const meanPE = getCitSum() / Object.keys(citScores).length;
     const allSubtests = Object.values(subtestsByDomain).flat();
@@ -186,23 +156,21 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         const scaledScores: { [key: string]: number } = {};
         Object.values(subtestsByDomain).flat().forEach(subtest => {
             const rawScore = parseInt(rawScores[subtest.id] || '0', 10);
-            if (rawScore > 0) {
+            if (!isNaN(rawScore)) { // Ensure we only process actual numbers
                 scaledScores[subtest.id] = getScaledScore(rawScore, subtest.id);
             }
         });
 
         const clinicalProfile = calculateClinicalProfile(scaledScores, substitutions);
         setResults(clinicalProfile);
-
-        console.log("--- WISC-V Scoring ---", { studentAge, rawScores, scaledScores, substitutions, clinicalProfile });
     };
 
     const handleFinalizeAndSeal = () => {
         console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---");
         const integrityPayload = {
-            studentId: "CASO_MAESTRO_01",
-            timestamp: "2025-12-21T10:00:00Z",
-            rawResponses: rawScores,
+            studentId: "STUDENT_ID_HERE", // Should be dynamic
+            timestamp: new Date().toISOString(),
+            rawScores,
             substitutions,
             calculatedProfile: results,
             testVersion: "WISC-V"
@@ -223,81 +191,40 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                 {/* Columna Izquierda: Protocolo del Psicólogo */}
                 <div className="space-y-4">
                     <h3 className="font-semibold text-lg text-center lg:text-left">Consola del Examinador (WISC-V)</h3>
-                    <Accordion type="multiple" defaultValue={['ICV']} className="w-full">
+                    <Accordion type="multiple" className="w-full">
                         {Object.entries(subtestsByDomain).map(([domain, tests]) => (
                             <AccordionItem value={domain} key={domain}>
                                 <AccordionTrigger className="font-semibold text-base">{domain}</AccordionTrigger>
                                 <AccordionContent>
-                                    <div className="p-3 bg-gray-100 rounded-md border text-xs text-gray-600 mb-4">
-                                        <p><span className='font-bold'>Inicio:</span> Edad 9-11, Ítem 5.</p>
-                                        <p><span className='font-bold'>Inversión:</span> Si se obtiene 0 en Ítem 5 o 6, aplicar ítems anteriores en orden inverso hasta 2 aciertos consecutivos.</p>
-                                        <p><span className='font-bold'>Suspensión:</span> Tras 3 puntuaciones de 0 consecutivas.</p>
-                                    </div>
-                                    
                                     <div className="space-y-4">
-                                        <div className="p-3 bg-gray-100 rounded-md border">
-                                            <p className="font-semibold text-sm">CONSIGNA (Script para el psicólogo):</p>
-                                            <p className="text-sm text-gray-700 mt-1">"Ahora vamos a hacer algo diferente. Mira estas balanzas..."</p>
-                                        </div>
-
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div className="col-span-2 space-y-4">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor={`response-${domain}`} className="text-xs">Respuesta del Sujeto (Cualitativa)</Label>
-                                                    <Textarea id={`response-${domain}`} placeholder="Anotar respuesta literal..." className="h-20" />
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor={`time-${domain}`} className="text-xs">Tiempo (s)</Label>
-                                                        <Input id={`time-${domain}`} type="number" placeholder="s" className="h-8 w-20" />
+                                        <h4 className="font-semibold text-sm mt-6 mb-2">Subpruebas del Dominio</h4>
+                                        {tests.map(test => (
+                                            <div key={test.id} className="p-3 border rounded-lg bg-gray-50/80 mb-2">
+                                                <Label htmlFor={`raw-${test.id}`} className="font-bold text-gray-800">
+                                                    {test.name}
+                                                    {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional / Sustituta)</span>}
+                                                </Label>
+                                                <Input 
+                                                    id={`raw-${test.id}`} 
+                                                    type="number" 
+                                                    placeholder="Puntaje Bruto"
+                                                    value={rawScores[test.id] || ''}
+                                                    onChange={e => handleScoreChange(test.id, e.target.value)}
+                                                    className="mt-2"
+                                                />
+                                                {test.optional && (
+                                                    <div className="mt-2 flex items-center space-x-2">
+                                                        <Checkbox 
+                                                            id={`subst-${test.id}`}
+                                                            onCheckedChange={() => handleSubstitutionChange(test.id, 'Cl')} // Lógica de ejemplo
+                                                            checked={!!substitutions[test.id]}
+                                                        />
+                                                        <Label htmlFor={`subst-${test.id}`} className="text-xs font-normal">Sustituir para CIT</Label>
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor={`score-${domain}`} className="text-xs">Puntaje</Label>
-                                                        <Input id={`score-${domain}`} type="number" placeholder="0, 1, 2" className="h-8 w-20" />
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
-                                             <div className="col-span-1">
-                                                <p className="text-xs font-semibold mb-2">Miniatura de Estímulo:</p>
-                                                <div className="bg-gray-200 aspect-square rounded-md flex items-center justify-center">
-                                                    <p className="text-xs text-gray-500">Img. aquí</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-between items-center mt-4">
-                                            <Button variant="outline" size="sm"><ChevronLeft className="mr-2 h-4 w-4" /> Anterior</Button>
-                                            <p className="text-xs text-gray-500">Ítem 3 de 27</p>
-                                            <Button variant="outline" size="sm">Siguiente <ChevronRight className="ml-2 h-4 w-4" /></Button>
-                                        </div>
+                                        ))}
                                     </div>
-                                    <h4 className="font-semibold text-sm mt-6 mb-2">Subpruebas del Dominio</h4>
-                                    {tests.map(test => (
-                                        <div key={test.id} className="p-3 border rounded-lg bg-gray-50/80 mb-2">
-                                            <Label htmlFor={`raw-${test.id}`} className="font-bold text-gray-800">
-                                                {test.name}
-                                                {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional / Sustituta)</span>}
-                                            </Label>
-                                            <Input 
-                                                id={`raw-${test.id}`} 
-                                                type="number" 
-                                                placeholder="Puntaje Bruto"
-                                                value={rawScores[test.id] || ''}
-                                                onChange={e => handleScoreChange(test.id, e.target.value)}
-                                                className="mt-2"
-                                            />
-                                            {test.optional && (
-                                                <div className="mt-2 flex items-center space-x-2">
-                                                    <Checkbox 
-                                                        id={`subst-${test.id}`}
-                                                        onCheckedChange={() => handleSubstitutionChange(test.id, 'Cl')} // Lógica específica para sustituir Claves
-                                                        checked={substitutions[test.id] === 'Cl'}
-                                                    />
-                                                    <Label htmlFor={`subst-${test.id}`} className="text-xs font-normal">Sustituir para CIT</Label>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
                                 </AccordionContent>
                             </AccordionItem>
                         ))}
@@ -308,7 +235,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                     </Button>
                      {results && (
                         <div className="space-y-8 pt-4">
-                            <h3 className="font-semibold text-lg">Resultados del Caso Maestro</h3>
+                            <h3 className="font-semibold text-lg">Resultados de la Evaluación</h3>
                             <Table>
                                 <TableHeader><TableRow><TableHead>Índice</TableHead><TableHead>PC</TableHead><TableHead>Percentil</TableHead><TableHead>Clasificación</TableHead></TableRow></TableHeader>
                                 <TableBody>
