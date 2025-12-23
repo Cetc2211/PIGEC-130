@@ -3,7 +3,7 @@
 import { useParams, redirect } from 'next/navigation';
 import { useSession } from '@/context/SessionContext';
 import React, { useEffect, useState } from 'react';
-import { getStudentById, getEducationalAssessmentByStudentId } from '@/lib/store';
+import { getStudentById, getEducationalAssessmentByStudentId, Student } from '@/lib/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Send } from 'lucide-react';
 import PIEIFeedback from '@/components/piei-feedback';
@@ -20,6 +20,13 @@ export default function EducationalFilePage() {
 
     const [isLoaded, setIsLoaded] = useState(false);
     const [isReferralOpen, setIsReferralOpen] = useState(false);
+    const [student, setStudent] = useState<Student | undefined>(undefined);
+
+    useEffect(() => {
+        if (studentId) {
+            setStudent(getStudentById(studentId));
+        }
+    }, [studentId]);
 
 
     useEffect(() => {
@@ -36,11 +43,10 @@ export default function EducationalFilePage() {
         }
     }
     
-    if (role === 'loading' || !isLoaded) {
+    if (role === 'loading' || !isLoaded || !student) {
         return <div className="p-8 text-center text-xl">Verificando Permisos Educativos...</div>;
     }
     
-    const student = getStudentById(studentId);
     const educationalAssessment = getEducationalAssessmentByStudentId(studentId);
 
 

@@ -10,7 +10,7 @@ import TreatmentPlanGenerator from "@/components/treatment-plan-generator";
 import ProgressTracker from "@/components/progress-tracker";
 import PIEIGenerator from "@/components/piei-generator";
 import ReportGenerator from "@/components/ReportGenerator";
-import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId } from "@/lib/store";
+import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId, Student } from "@/lib/store";
 import ClinicalKPILogger from '@/components/ClinicalKPILogger';
 import RiskTimelineChart from '@/components/RiskTimelineChart';
 import SOAPNotesForm from '@/components/SOAPNotesForm';
@@ -31,6 +31,13 @@ export default function ClinicalFilePage() {
     const params = useParams();
     const studentId = params.id as string;
     const { role } = useSession();
+    const [student, setStudent] = useState<Student | undefined>(undefined);
+
+    useEffect(() => {
+        if (studentId) {
+            setStudent(getStudentById(studentId));
+        }
+    }, [studentId]);
 
     useEffect(() => {
         if (role && role !== 'loading' && role !== 'Clinico') {
@@ -38,8 +45,6 @@ export default function ClinicalFilePage() {
             redirect(`/educativa/estudiante/${studentId}`);
         }
     }, [role, studentId]);
-
-    const student = getStudentById(studentId);
     
     if (role === 'loading' || !student) {
         return (
