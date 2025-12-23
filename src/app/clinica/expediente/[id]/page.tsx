@@ -24,6 +24,7 @@ import { NeuroScreeningConsole } from '@/components/NeuroScreeningConsole';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import StudentIdentificationCard from '@/components/StudentIdentificationCard';
 
 
 export default function ClinicalFilePage() {
@@ -91,12 +92,17 @@ export default function ClinicalFilePage() {
                 </Alert>
 
                 <Tabs defaultValue="resumen" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="resumen"><UserCheck className="mr-2"/>Resumen Ejecutivo</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-5">
+                        <TabsTrigger value="identificacion"><UserCheck className="mr-2"/>Ficha de Identificación</TabsTrigger>
+                        <TabsTrigger value="resumen"><Activity className="mr-2"/>Resumen Ejecutivo</TabsTrigger>
                         <TabsTrigger value="pruebas"><ClipboardList className="mr-2"/>Gestión de Pruebas</TabsTrigger>
                         <TabsTrigger value="soap"><FileText className="mr-2"/>Evolución y Notas</TabsTrigger>
                         <TabsTrigger value="documentacion"><FileDown className="mr-2"/>Documentación Legal</TabsTrigger>
                     </TabsList>
+
+                    <TabsContent value="identificacion" className="mt-6">
+                        <StudentIdentificationCard student={student} />
+                    </TabsContent>
                     
                     <TabsContent value="resumen" className="mt-6 space-y-12">
                         <ClinicalAssessmentForm initialData={clinicalAssessment} />
