@@ -9,20 +9,23 @@ import { UserPlus, RefreshCw, UserCog } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-// Simulación de la función que guardaría en Firestore
+
+// Función que guarda en Firestore
 async function addNewStudent(data: { studentId: string; studentName: string; group: string; dualRelationship: string; }) {
-    console.log("Iniciando guardado de nuevo estudiante...");
+    console.log("Iniciando guardado de nuevo estudiante en Firestore...");
     
-    // Simulación de una llamada a API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log("Datos que se guardarían en Firestore (colección 'students'):", {
+    const studentRef = doc(db, 'students', data.studentId);
+
+    await setDoc(studentRef, {
         id: data.studentId,
         name: data.studentName,
         demographics: {
             group: data.group,
-            age: 0,
+            age: 0, // Se inicializa en 0, se actualizará con la ficha de identificación
+            semester: 0,
         },
         academicData: {
             gpa: 0,
@@ -33,10 +36,10 @@ async function addNewStudent(data: { studentId: string; studentName: string; gro
             name: '',
             phone: '',
         },
-        // Nuevo campo para trazabilidad de relación dual
         dualRelationshipNote: data.dualRelationship, 
     });
-
+    
+    console.log("Datos guardados en Firestore para el estudiante:", data.studentId);
     return { success: true, studentId: data.studentId };
 }
 
@@ -72,7 +75,8 @@ function AddNewStudentForm() {
                  setFeedback({ type: 'error', message: 'Ocurrió un error al guardar el estudiante.' });
             }
         } catch (error) {
-             setFeedback({ type: 'error', message: 'Ocurrió un error inesperado.' });
+             setFeedback({ type: 'error', message: 'Ocurrió un error inesperado al conectar con la base de datos.' });
+             console.error("Error al guardar en Firestore:", error);
         } finally {
             setIsLoading(false);
         }
