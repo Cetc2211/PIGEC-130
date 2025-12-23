@@ -18,8 +18,6 @@ interface WISCScoringConsoleProps {
 }
 
 const subtestsByDomainWISC = {
-    // La estructura de dominios se mantiene para el cálculo, 
-    // pero el renderizado se hará en el orden especificado.
     ICV: [
         { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true, order: 2 },
         { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, order: 6 },
@@ -28,7 +26,7 @@ const subtestsByDomainWISC = {
     ],
     IVE: [
         { id: 'C', name: 'Construcción con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 1 },
-        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: false, order: 8 },
+        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true, order: 8 },
     ],
     IRF: [
         { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, order: 3 },
@@ -37,13 +35,13 @@ const subtestsByDomainWISC = {
     ],
     IMT: [
         { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 4 },
-        { id: 'RI', name: 'Retención de Imágenes', renderType: 'MULTI_CHOICE', optional: true, order: 9 },
+        { id: 'RI', name: 'Retención de Imágenes', renderType: 'MULTI_CHOICE', isCit: true, order: 9 },
         { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, order: 12 },
     ],
     IVP: [
         { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, order: 5 },
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', optional: true, order: 10 },
-        { id: 'Ca', name: 'Cancelación', renderType: 'VERBAL_CRITERIO', optional: true, order: 13 },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, order: 10 },
+        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, order: 13 },
     ]
 };
 
@@ -152,8 +150,8 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
         const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'PV']), 2));
         const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
-        const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D']), 1)); // Solo Dígitos es esencial
-        const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl']), 1)); // Solo Claves es esencial
+        const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'RI']), 2));
+        const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
         const citSum = getSum(['S', 'V', 'C', 'M', 'B', 'D', 'Cl']);
         const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 7));
         compositeScores = [icv, ive, irf, imt, ivp, cit];
@@ -166,7 +164,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
     
     const coreSubtests = isWais
         ? ['S', 'V', 'I', 'C', 'M', 'PV', 'D', 'A', ...ivpSubtests]
-        : ['S', 'V', 'C', 'M', 'B', 'D', 'Cl'];
+        : ['S', 'V', 'C', 'M', 'B', 'D', 'Cl', 'PV', 'RI', 'BS'];
 
     const validCoreScores = coreSubtests.map(id => effectiveScores[id]).filter(score => score !== undefined);
     const meanPE = validCoreScores.length > 0 ? validCoreScores.reduce((sum, score) => sum + score, 0) / validCoreScores.length : 0;
@@ -229,6 +227,87 @@ const GuiaCalificacion = () => {
         </div>
     );
 };
+
+// --- [NUEVO] Componente para registrar Observaciones de Proceso ---
+const processIndicators = [
+    { id: 'NS', label: 'No Sabe' },
+    { id: 'NR', label: 'No Responde' },
+    { id: 'R', label: 'Repetición' },
+    { id: 'RD', label: 'Rep. Denegada' },
+    { id: 'SV', label: 'Subvocalización' },
+    { id: 'AC', label: 'Autocorrección' },
+];
+
+function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
+    const storageKey = `wisc_process_obs_${subtestId}`;
+    const [counts, setCounts] = useState<{[key: string]: number}>({});
+    const [notes, setNotes] = useState('');
+
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(storageKey);
+            if (savedData) {
+                const { savedCounts, savedNotes } = JSON.parse(savedData);
+                if (savedCounts) setCounts(savedCounts);
+                if (savedNotes) setNotes(savedNotes);
+            }
+        } catch (error) {
+            console.error("Error al recuperar observaciones de proceso:", error);
+        }
+    }, [storageKey]);
+
+    const updateAndPersist = (newCounts: typeof counts, newNotes: string) => {
+        setCounts(newCounts);
+        setNotes(newNotes);
+        try {
+            localStorage.setItem(storageKey, JSON.stringify({ savedCounts: newCounts, savedNotes: newNotes }));
+        } catch (error) {
+            console.error("Error al guardar observaciones de proceso:", error);
+        }
+    };
+
+    const handleIncrement = (id: string) => {
+        const newCounts = { ...counts, [id]: (counts[id] || 0) + 1 };
+        updateAndPersist(newCounts, notes);
+    };
+
+    const handleDecrement = (id: string) => {
+        const newCounts = { ...counts, [id]: Math.max(0, (counts[id] || 0) - 1) };
+        updateAndPersist(newCounts, notes);
+    };
+
+    const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        updateAndPersist(counts, e.target.value);
+    };
+
+    return (
+        <div className="p-4 border rounded-lg bg-slate-50 space-y-4">
+            <h4 className="font-semibold text-md text-slate-800">Observaciones de Proceso</h4>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                {processIndicators.map(indicator => (
+                    <div key={indicator.id} className="flex items-center justify-between bg-white p-2 border rounded-md">
+                        <Label htmlFor={`count-${indicator.id}`} className="text-sm font-medium">{indicator.label}</Label>
+                        <div className="flex items-center gap-1.5">
+                            <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDecrement(indicator.id)}><Minus className="h-3 w-3"/></Button>
+                            <span id={`count-${indicator.id}`} className="font-mono text-center w-6 text-sm">{(counts[indicator.id] || 0)}</span>
+                            <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleIncrement(indicator.id)}><Plus className="h-3 w-3"/></Button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="process-notes" className="text-sm">Notas Cualitativas de Proceso</Label>
+                <Textarea 
+                    id="process-notes"
+                    placeholder="Ej. El evaluado muestra signos de ansiedad..."
+                    className="text-xs"
+                    value={notes}
+                    onChange={handleNotesChange}
+                />
+            </div>
+        </div>
+    );
+}
 
 
 // Componente para simular la aplicación de una subprueba verbal
@@ -611,7 +690,12 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                         {renderInputInterface()}
                     </div>
                     
-                    {renderType === 'VERBAL_CRITERIO' && <GuiaCalificacion />}
+                    {renderType === 'VERBAL_CRITERIO' ? (
+                        <GuiaCalificacion />
+                    ): (
+                         <ProcessObservationTracker subtestId={subtestId} />
+                    )}
+
                 </div>
             </div>
 
@@ -698,6 +782,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información que podrían impactar el rendimiento escolar. Se recomienda una intervención psicopedagógica focalizada y adecuaciones en el aula.";
         }
         
+        const processObservationsData = {}; // Aquí se recopilarían los datos de `ProcessObservationTracker`
+        
         // Simulación de la estructura del reporte final
         const narrativeReportObject = {
             metadata: {
@@ -707,9 +793,9 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             },
             scores: {
                 rawScores: rawScores,
-                scaledScores: results.compositeScores,
+                compositeScores: results.compositeScores, // Corregido de scaledScores a compositeScores
                 strengthsAndWeaknesses: results.strengthsAndWeaknesses,
-                processAnalysis: { /* ... datos de CCsb, RDd, etc. */ },
+                processAnalysis: processObservationsData, // Integración de las observaciones
                 secondaryIndexes: { /* ... datos de IRC, IMTA, etc. */ }
             },
             narrative: {
@@ -724,6 +810,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         Object.values(subtestsByDomain).flat().forEach(subtest => {
             try {
                 localStorage.removeItem(`wisc_session_${subtest.id}`);
+                localStorage.removeItem(`wisc_process_obs_${subtest.id}`); // Limpiar observaciones
             } catch (error) {
                 console.error("No se pudo limpiar el localStorage para la subprueba:", subtest.id, error);
             }
