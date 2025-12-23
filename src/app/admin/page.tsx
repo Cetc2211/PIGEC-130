@@ -9,7 +9,7 @@ import { UserPlus, RefreshCw, UserCog } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 
@@ -17,14 +17,16 @@ import { db } from '@/lib/firebase';
 async function addNewStudent(data: { studentId: string; studentName: string; group: string; dualRelationship: string; }) {
     console.log("Iniciando guardado de nuevo estudiante en Firestore...");
     
-    const studentRef = doc(db, 'students', data.studentId);
+    const batch = writeBatch(db);
 
-    await setDoc(studentRef, {
+    // 1. Referencia a la colección de estudiantes (datos generales)
+    const studentRef = doc(db, 'students', data.studentId);
+    batch.set(studentRef, {
         id: data.studentId,
         name: data.studentName,
         demographics: {
             group: data.group,
-            age: 0, // Se inicializa en 0, se actualizará con la ficha de identificación
+            age: 0, 
             semester: 0,
         },
         academicData: {
@@ -32,12 +34,25 @@ async function addNewStudent(data: { studentId: string; studentName: string; gro
             absences: 0,
         },
         suicideRiskLevel: 'Bajo', // Valor por defecto
+        dualRelationshipNote: data.dualRelationship, 
+    });
+
+    // 2. Referencia a la subcolección clínica (datos sensibles)
+    const clinicalRecordRef = doc(db, 'students', data.studentId, 'clinical_records', 'initial_assessment');
+    batch.set(clinicalRecordRef, {
+        studentId: data.studentId,
+        createdAt: new Date().toISOString(),
         emergencyContact: {
             name: '',
             phone: '',
         },
-        dualRelationshipNote: data.dualRelationship, 
+        // Aquí se inicializan los campos clínicos que se llenarán después
+        bdi_ii_score: null,
+        bai_score: null,
+        impresion_diagnostica: 'Expediente recién creado, pendiente de evaluación inicial.',
     });
+    
+    await batch.commit();
     
     console.log("Datos guardados en Firestore para el estudiante:", data.studentId);
     return { success: true, studentId: data.studentId };
