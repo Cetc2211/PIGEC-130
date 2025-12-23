@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
@@ -728,6 +728,74 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
     );
 }
 
+const pedagogicalRecommendations = {
+    icv: {
+        title: "Comprensión Verbal (ICV)",
+        strategies: [
+            "Usar organizadores gráficos y apoyos visuales para compensar dificultades en el procesamiento de instrucciones verbales complejas.",
+            "Enseñar explícitamente el vocabulario técnico antes de iniciar nuevas unidades temáticas.",
+            "Fomentar el uso de diccionarios o glosarios digitales para promover la autonomía."
+        ]
+    },
+    imt: {
+        title: "Memoria de Trabajo (IMT)",
+        strategies: [
+            "Fragmentar las tareas largas en pasos cortos y proporcionar listas de verificación (checklists).",
+            "Permitir el uso de apoyos externos como tablas de multiplicar, calculadoras o fórmulas durante la fase de aprendizaje.",
+            "Dar instrucciones de una en una y confirmar la comprensión antes de continuar."
+        ]
+    },
+    ivp: {
+        title: "Velocidad de Procesamiento (IVP)",
+        strategies: [
+            "Otorgar tiempo adicional en exámenes y reducir la carga de copiado de pizarrón.",
+            "Priorizar la calidad de las respuestas sobre la cantidad de ejercicios completados en un tiempo límite.",
+            "Proporcionar los apuntes o presentaciones de clase por adelantado para reducir la carga de toma de notas en tiempo real."
+        ]
+    }
+};
+
+function PedagogicalRecommendations({ compositeScores }: { compositeScores: any[] }) {
+    const recommendationsToShow = [];
+    
+    const icvScore = compositeScores.find(s => s.name.includes('ICV'))?.score;
+    if (icvScore && icvScore < 90) {
+        recommendationsToShow.push(pedagogicalRecommendations.icv);
+    }
+    
+    const imtScore = compositeScores.find(s => s.name.includes('IMT'))?.score;
+    if (imtScore && imtScore < 90) {
+        recommendationsToShow.push(pedagogicalRecommendations.imt);
+    }
+
+    const ivpScore = compositeScores.find(s => s.name.includes('IVP'))?.score;
+    if (ivpScore && ivpScore < 90) {
+        recommendationsToShow.push(pedagogicalRecommendations.ivp);
+    }
+
+    if (recommendationsToShow.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Lightbulb className="text-yellow-500" />
+                Sugerencias de Intervención Pedagógica
+            </h3>
+            {recommendationsToShow.map(rec => (
+                <div key={rec.title} className="p-4 border rounded-lg bg-gray-50">
+                    <h4 className="font-semibold text-md text-gray-700">{rec.title}</h4>
+                    <ul className="list-disc pl-5 mt-2 space-y-1 text-sm text-gray-600">
+                        {rec.strategies.map((strategy, index) => (
+                            <li key={index}>{strategy}</li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
+        </div>
+    );
+}
 
 export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
     const isWais = studentAge >= 17;
@@ -737,7 +805,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     // Para WISC-V, se necesita un array plano ordenado para el renderizado.
     const orderedWiscSubtests = useMemo(() => {
         if (isWais) return [];
-        return Object.values(subtestsByDomainWISC).flat().sort((a, b) => a.order - b.order);
+        return Object.values(subtestsByDomainWISC).flat().sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [isWais]);
 
 
@@ -949,6 +1017,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                     </TableBody>
                                 </Table>
                             </div>
+
+                            <PedagogicalRecommendations compositeScores={results.compositeScores} />
 
                              <Separator className="my-6" />
 
