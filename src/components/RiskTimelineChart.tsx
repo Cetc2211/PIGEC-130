@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, AlertTriangle } from 'lucide-react';
-import { ChartContainer, ChartTooltipContent } from './ui/chart';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 // Datos simulados del progreso del riesgo (P de Abandono)
 const riskData = [
