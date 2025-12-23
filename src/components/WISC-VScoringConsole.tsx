@@ -18,31 +18,35 @@ interface WISCScoringConsoleProps {
 }
 
 const subtestsByDomainWISC = {
+    // La estructura de dominios se mantiene para el cálculo, 
+    // pero el renderizado se hará en el orden especificado.
     ICV: [
-        { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', optional: true },
-        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true, order: 2 },
+        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, order: 6 },
+        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', optional: true, order: 11 },
+        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true, order: 14 },
     ],
     IVE: [
-        { id: 'C', name: 'Cubos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: false },
+        { id: 'C', name: 'Construcción con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 1 },
+        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: false, order: 8 },
     ],
     IRF: [
-        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', isCit: true },
-        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', optional: true },
+        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, order: 3 },
+        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', isCit: true, order: 7 },
+        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', optional: true, order: 15 },
     ],
     IMT: [
-        { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true },
+        { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 4 },
+        { id: 'RI', name: 'Retención de Imágenes', renderType: 'MULTI_CHOICE', optional: true, order: 9 },
+        { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, order: 12 },
     ],
     IVP: [
-        { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true },
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', optional: true },
-        { id: 'Ca', name: 'Cancelación', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, order: 5 },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', optional: true, order: 10 },
+        { id: 'Ca', name: 'Cancelación', renderType: 'VERBAL_CRITERIO', optional: true, order: 13 },
     ]
 };
+
 
 const subtestsByDomainWAIS = {
     ICV: [
@@ -645,6 +649,13 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     const isWais = studentAge >= 17;
     const subtestsByDomain = isWais ? subtestsByDomainWAIS : subtestsByDomainWISC;
     const scaleName = isWais ? "WAIS-IV" : "WISC-V";
+    
+    // Para WISC-V, se necesita un array plano ordenado para el renderizado.
+    const orderedWiscSubtests = useMemo(() => {
+        if (isWais) return [];
+        return Object.values(subtestsByDomainWISC).flat().sort((a, b) => a.order - b.order);
+    }, [isWais]);
+
 
     const [rawScores, setRawScores] = useState<{ [key: string]: number }>({
         C: 48, S: 26, D: 28, M: 22, V: 45, A: 15, PV: 18, I: 20, Cl: 75, Ca: 50
@@ -686,19 +697,28 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         } else {
             resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información que podrían impactar el rendimiento escolar. Se recomienda una intervención psicopedagógica focalizada y adecuaciones en el aula.";
         }
-
+        
+        // Simulación de la estructura del reporte final
         const narrativeReportObject = {
-            resumen_ejecutivo: `${resumen_ejecutivo}\n\nObservaciones Clínicas Adicionales:\n${clinicalObservations}`,
-            analisis_indices: {
-                fortalezas: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('F')).map(s => s.name),
-                debilidades: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('D')).map(s => s.name)
+            metadata: {
+                examiner: 'Dr. John Doe (Simulated)',
+                evaluationDate: new Date().toISOString(),
+                subjectAge: `${studentAge} años`,
             },
-            plan_intervencion: [
-                ...(results.strengthsAndWeaknesses.some(s => s.name === 'Cubos' && s.classification.startsWith('D'))
-                    ? [{ area: 'Visoespacial', sugerencia: 'Implementar estrategias de organización espacial y planificación.', fuente: 'Manual de Intervención Psicopedagógica, pág. 88' }]
-                    : [])
-            ]
+            scores: {
+                rawScores: rawScores,
+                scaledScores: results.compositeScores,
+                strengthsAndWeaknesses: results.strengthsAndWeaknesses,
+                processAnalysis: { /* ... datos de CCsb, RDd, etc. */ },
+                secondaryIndexes: { /* ... datos de IRC, IMTA, etc. */ }
+            },
+            narrative: {
+                summary: `${resumen_ejecutivo}\n\nObservaciones Clínicas Adicionales:\n${clinicalObservations}`,
+                behavioralObservations: clinicalObservations,
+            },
+            // Adjuntar la representación gráfica de la Curva Normal
         };
+
 
         // --- LIMPIEZA DE SESIÓN ---
         Object.values(subtestsByDomain).flat().forEach(subtest => {
@@ -709,9 +729,9 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             }
         });
 
-        console.log("--- SIMULACIÓN DE CIERRE SEGURO Y AUDITORÍA ---", narrativeReportObject);
+        console.log("--- SIMULACIÓN DE CIERRE SEGURO Y GENERACIÓN DE REPORTE ---", narrativeReportObject);
         console.log("--- SESIÓN LOCAL LIMPIADA ---");
-        alert("CIERRE SEGURO (SIMULACIÓN): El protocolo ha sido finalizado. Revisa la consola.");
+        alert("CIERRE SEGURO (SIMULACIÓN): El protocolo ha sido finalizado. Revisa la consola para ver el objeto del reporte.");
     };
 
     return (
@@ -733,36 +753,59 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                 {/* Columna Izquierda: Protocolo de Aplicación */}
                 <div className="space-y-4">
                     <h3 className="font-semibold text-lg text-center lg:text-left">Protocolo de Aplicación</h3>
-                    <Accordion type="single" collapsible className="w-full" defaultValue='ICV'>
-                        {Object.entries(subtestsByDomain).map(([domain, tests]) => (
-                            <AccordionItem value={domain} key={domain}>
-                                <AccordionTrigger className="font-semibold text-base">{domain}</AccordionTrigger>
-                                <AccordionContent>
-                                    <div className="space-y-4 p-1">
-                                        {tests.map(test => (
-                                           <Accordion key={test.id} type="single" collapsible>
-                                                <AccordionItem value={test.id}>
-                                                    <AccordionTrigger className="text-md flex items-center justify-between p-3 border rounded-md bg-white">
-                                                       <div className="flex items-center gap-2">
-                                                            <BookOpen className="h-5 w-5 text-gray-600"/>
-                                                            <span className="font-semibold">{test.name}</span>
-                                                        </div>
-                                                        {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional)</span>}
-                                                    </AccordionTrigger>
-                                                    <AccordionContent className="pt-2">
-                                                        <SubtestApplicationConsole 
-                                                            subtestName={test.name}
-                                                            subtestId={test.id}
-                                                            renderType={test.renderType}
-                                                        />
-                                                    </AccordionContent>
-                                                </AccordionItem>
-                                           </Accordion>
-                                        ))}
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
+                     <Accordion type="single" collapsible className="w-full" defaultValue={isWais ? 'ICV' : undefined}>
+                        {isWais ? (
+                            Object.entries(subtestsByDomainWAIS).map(([domain, tests]) => (
+                                <AccordionItem value={domain} key={domain}>
+                                    <AccordionTrigger className="font-semibold text-base">{domain}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="space-y-4 p-1">
+                                            {tests.map(test => (
+                                            <Accordion key={test.id} type="single" collapsible>
+                                                    <AccordionItem value={test.id}>
+                                                        <AccordionTrigger className="text-md flex items-center justify-between p-3 border rounded-md bg-white">
+                                                        <div className="flex items-center gap-2">
+                                                                <BookOpen className="h-5 w-5 text-gray-600"/>
+                                                                <span className="font-semibold">{test.name}</span>
+                                                            </div>
+                                                            {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional)</span>}
+                                                        </AccordionTrigger>
+                                                        <AccordionContent className="pt-2">
+                                                            <SubtestApplicationConsole 
+                                                                subtestName={test.name}
+                                                                subtestId={test.id}
+                                                                renderType={test.renderType}
+                                                            />
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                            </Accordion>
+                                            ))}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))
+                        ) : (
+                            orderedWiscSubtests.map(test => (
+                                 <Accordion key={test.id} type="single" collapsible className="w-full">
+                                    <AccordionItem value={test.id}>
+                                        <AccordionTrigger className="text-md flex items-center justify-between p-3 border rounded-md bg-white">
+                                            <div className="flex items-center gap-2">
+                                                <BookOpen className="h-5 w-5 text-gray-600"/>
+                                                <span className="font-semibold">{test.order}. {test.name}</span>
+                                            </div>
+                                            {test.optional && <span className="text-xs font-normal text-gray-500 ml-2">(Opcional)</span>}
+                                        </AccordionTrigger>
+                                        <AccordionContent className="pt-2">
+                                            <SubtestApplicationConsole 
+                                                subtestName={test.name}
+                                                subtestId={test.id}
+                                                renderType={test.renderType}
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                            ))
+                        )}
                     </Accordion>
                 </div>
 
