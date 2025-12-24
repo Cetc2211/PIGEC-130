@@ -148,15 +148,11 @@ export default function ClinicalFilePage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="flex flex-col items-center justify-center p-6">
-                                {student.demographics.age < 17 ? (
-                                    <Button asChild size="lg">
-                                        <Link href={`/consola/${studentId}`} target="_blank">
-                                            Iniciar Aplicación Presencial (WISC-V)
-                                        </Link>
-                                    </Button>
-                                ) : (
-                                     <WISCScoringConsole studentAge={student.demographics.age} />
-                                )}
+                                <Button asChild size="lg">
+                                    <Link href={`/consola/${studentId}`} target="_blank">
+                                        Iniciar Aplicación Presencial ({student.demographics.age < 17 ? 'WISC-V' : 'WAIS-IV'})
+                                    </Link>
+                                </Button>
                             </CardContent>
                         </Card>
                         
