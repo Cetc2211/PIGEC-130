@@ -120,7 +120,7 @@ Este método es el más recomendado porque se hace todo desde el navegador, sin 
     unzip -o stimuli-assets.zip
 
     # 2. Usa el comando 'gcloud storage' para copiar la carpeta a Storage.
-    # Este comando es el más moderno y robusto.
+    # Este comando es el más moderno y robusto. Asegúrate de que el nombre del bucket incluye '.appspot.com'.
     gcloud storage cp --recursive stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
     ```
     *El comando `gcloud storage cp --recursive` es el método más fiable para subir directorios completos y reemplaza al antiguo `gsutil`.*
