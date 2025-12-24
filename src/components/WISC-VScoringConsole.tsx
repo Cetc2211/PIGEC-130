@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb, Image as ImageIcon } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
@@ -20,28 +20,28 @@ interface WISCScoringConsoleProps {
 const subtestsByDomainWISC = {
     ICV: [
         { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true, order: 2 },
-        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, order: 6 },
+        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, order: 6, stimulusBooklet: 1 },
         { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', optional: true, order: 11 },
         { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true, order: 14 },
     ],
     IVE: [
-        { id: 'C', name: 'Construcción con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 1 },
-        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true, order: 8 },
+        { id: 'C', name: 'Construcción con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 1, stimulusBooklet: 1 },
+        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true, order: 8, stimulusBooklet: 2 },
     ],
     IRF: [
-        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, order: 3 },
-        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', isCit: true, order: 7 },
-        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', optional: true, order: 15 },
+        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, order: 3, stimulusBooklet: 1 },
+        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', isCit: true, order: 7, stimulusBooklet: 1 },
+        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', optional: true, order: 15, stimulusBooklet: 2 },
     ],
     IMT: [
         { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 4 },
-        { id: 'RI', name: 'Retención de Imágenes', renderType: 'MULTI_CHOICE', isCit: true, order: 9 },
+        { id: 'RI', name: 'Retención de Imágenes', renderType: 'MULTI_CHOICE', isCit: true, order: 9, stimulusBooklet: 2 },
         { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, order: 12 },
     ],
     IVP: [
         { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, order: 5 },
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, order: 10 },
-        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, order: 13 },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, order: 10, stimulusBooklet: 2 },
+        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, order: 13, stimulusBooklet: 2 },
     ]
 };
 
@@ -311,7 +311,7 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
 
 
 // Componente para simular la aplicación de una subprueba verbal
-function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { subtestName: string, subtestId: string, renderType: string }) {
+function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulusBooklet }: { subtestName: string, subtestId: string, renderType: string, stimulusBooklet?: number }) {
     const storageKey = `wisc_session_${subtestId}`;
 
     const [currentItem, setCurrentItem] = useState(1);
@@ -472,10 +472,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
     };
     
     const currentItemScore = scores[currentItem]?.score;
-
-    // TODO: EQUIPO DE DESARROLLO - Esta URL debe ser reemplazada por la `imageUrl`
-    // que proviene del objeto de configuración de la subprueba, una vez que
-    // el script de carga masiva actualice la base de datos en Firestore.
+    
     const stimulusImageUrl = `https://picsum.photos/seed/stimulus${subtestId}${currentItem}/600/400`;
 
     const renderInputInterface = () => {
@@ -632,8 +629,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
     }
 
 
-    const verbalRenderTypes = ['VERBAL_CRITERIO', 'ARITHMETIC', 'LETTER_NUMBER_SEQUENCING'];
-
     return (
         <div className="p-1 space-y-4">
             <div className="flex justify-between items-center">
@@ -648,18 +643,17 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                  {/* Columna Izquierda: Estímulo y Aplicación */}
                 <div className="space-y-4">
                     <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
-                       {verbalRenderTypes.includes(renderType) ? (
+                       {!stimulusBooklet ? (
                             <div className="text-white text-center p-4">
                                 <p className="text-lg font-semibold">Consigna Oral</p>
                                 <p className="text-sm">(Lea el problema en voz alta desde el manual de aplicación)</p>
                             </div>
                         ) : (
-                             <img 
-                                src={stimulusImageUrl} 
-                                alt={`Estímulo para el ítem ${currentItem} de ${subtestName}`}
-                                className="max-w-full max-h-full object-contain rounded-sm"
-                                onContextMenu={(e) => e.preventDefault()}
-                            />
+                             <div className="text-white text-center p-4 space-y-3">
+                                 <ImageIcon className="h-10 w-10 mx-auto text-gray-400" />
+                                 <p className="text-lg font-semibold">Estímulo Visual: Usar Cuadernillo {stimulusBooklet}</p>
+                                 <p className="text-sm text-gray-300">(El estímulo real del ítem {currentItem} se mostrará aquí)</p>
+                             </div>
                         )}
                     </div>
 
@@ -957,6 +951,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                                 subtestName={test.name}
                                                 subtestId={test.id}
                                                 renderType={test.renderType}
+                                                stimulusBooklet={test.stimulusBooklet}
                                             />
                                         </AccordionContent>
                                     </AccordionItem>
