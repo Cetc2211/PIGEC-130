@@ -100,8 +100,7 @@ Este método es el más recomendado porque se hace todo desde el navegador, sin 
 
 1.  **Comprime tus Archivos:**
     *   En tu iPad, asegúrate de tener una carpeta `stimuli-assets` que contenga todas las subcarpetas de imágenes (`C`, `M`, `PV`, etc.).
-    *   Para este ejemplo, asumiremos que tienes otra carpeta llamada `firebase-upload` y que moviste `stimuli-assets` **DENTRO** de ella.
-    *   Mantén presionada la carpeta `firebase-upload` y selecciona **Comprimir**. Esto creará un archivo llamado **`firebase-upload.zip`**.
+    *   Mantén presionada la carpeta `stimuli-assets` y selecciona **Comprimir**. Esto creará un archivo llamado **`stimuli-assets.zip`**.
 
 2.  **Abre Firebase Cloud Shell:**
     *   Ve a la [Consola de Firebase](https://console.firebase.google.com/) y selecciona tu proyecto (`academic-tracker-qeoxi`).
@@ -110,21 +109,22 @@ Este método es el más recomendado porque se hace todo desde el navegador, sin 
 
 3.  **Sube el Archivo .zip:**
     *   En la barra de herramientas de Cloud Shell, haz clic en el menú de tres puntos (**`⋮`**) y selecciona **Subir**.
-    *   Elige el archivo **`firebase-upload.zip`** que creaste en el primer paso.
+    *   Elige el archivo **`stimuli-assets.zip`** que creaste en el primer paso.
 
-4.  **Descomprime y Sube a Storage:**
+4.  **Descomprime y Sube a Storage (El Comando Definitivo):**
     *   Una vez que termine de subirse, ejecuta los siguientes comandos en la terminal de Cloud Shell, uno por uno.
 
     ```bash
     # 1. Descomprime el archivo.
-    # (Si tu archivo se llama diferente, reemplaza 'firebase-upload.zip')
-    unzip -o firebase-upload.zip
+    # Si te da error, asegúrate de que el nombre del archivo coincide.
+    unzip -o stimuli-assets.zip
 
-    # 2. Usa el comando 'gcloud storage' para copiar la carpeta a Storage.
-    # Este comando es el más moderno y robusto. Asegúrate de que el nombre del bucket incluye '.appspot.com'.
-    gcloud storage cp --recursive firebase-upload/stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
+    # 2. Sincroniza la carpeta con Storage usando el comando universal 'gsutil'.
+    # Este comando es el método más robusto y es el estándar de Google Cloud.
+    # Cópialo y pégalo tal cual para evitar errores.
+    gsutil -m rsync -r stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
     ```
-    *El comando `gcloud storage cp --recursive` es el método más fiable para subir directorios completos y reemplaza a los antiguos `gsutil` y `firebase storage:deploy`.*
+    *`gsutil rsync` es el método más fiable para subir directorios. `-m` acelera la subida y `-r` la hace recursiva.*
 
 5.  **Verificación:**
     *   Ve a la sección de **Storage** en tu consola de Firebase. Deberías ver una carpeta nueva llamada `stimuli` con todas tus imágenes dentro.
@@ -139,15 +139,15 @@ Este método requiere una app de terminal en tu dispositivo (como a-Shell en iPa
     La estructura final debe ser: `tu-dispositivo/firebase-upload/stimuli-assets/`.
 
 2.  **Prepara la Terminal:**
-    *   **Instala gcloud CLI:** Si no lo tienes, sigue las instrucciones de Google. Usualmente involucra un script de instalación.
+    *   **Instala gcloud CLI:** Si no lo tienes, sigue las instrucciones de Google.
     *   **Inicia Sesión:** Autentícate con tu cuenta de Google: `gcloud auth login`
     *   **Configura tu Proyecto:** `gcloud config set project academic-tracker-qeoxi`
 
 3.  **Sube las Imágenes:**
     *   Navega a tu carpeta de trabajo: `cd ruta/a/firebase-upload`
-    *   Una vez **dentro** de `firebase-upload`, ejecuta el comando:
+    *   Una vez **dentro** de `firebase-upload`, ejecuta el comando universal:
     ```bash
-    gcloud storage cp --recursive stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
+    gsutil -m rsync -r stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
     ```
 
 ¡Y listo! Con cualquiera de estos dos métodos, tus estímulos estarán en la nube, listos para ser usados por la aplicación.
