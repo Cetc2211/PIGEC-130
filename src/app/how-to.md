@@ -92,7 +92,7 @@ Al final de este paso, tendrás una copia local exacta de tu proyecto en tu lapt
 
 ## 🛠️ Guía: Subir Estímulos a Firebase Storage
 
-Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage.
+Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage. Aquí tienes dos métodos.
 
 ### Método 1 (Recomendado): Interfaz Gráfica de Google Cloud
 
