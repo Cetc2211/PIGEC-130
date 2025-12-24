@@ -7,7 +7,7 @@ import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBliGErw1WiGhY6lZeCSh6WU0Kg2ZK7oa0",
+  apiKey: "AIzaSyBliGErw1WiGhY6lZeCSh6WU0Kg2ZK7oao",
   authDomain: "academic-tracker-qeoxi.firebaseapp.com",
   projectId: "academic-tracker-qeoxi",
   storageBucket: "academic-tracker-qeoxi.appspot.com",
