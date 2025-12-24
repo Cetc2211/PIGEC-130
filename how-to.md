@@ -90,16 +90,16 @@ Al final de este paso, tendrás una copia local exacta de tu proyecto en tu lapt
 
 ---
 
-## 🛠️ Guía: Subir Estímulos a Firebase Storage (Método Universal)
+## 🛠️ Guía: Subir Estímulos a Firebase Storage (Método Universal para iPad/Laptop)
 
-Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage. Este método es el más recomendado porque funciona igual en una laptop (Windows/Mac) o en un iPad.
+Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage. Este método es el más recomendado porque funciona igual en una laptop o en un iPad.
 
 ### Paso 1: Mueve las Imágenes a tu Proyecto
 
 1.  **Descarga las Imágenes:** Si tienes las imágenes en Google Drive, primero descárgalas a tu dispositivo (iPad o computadora). Se guardarán como un archivo `.zip`.
 2.  **Descomprime el ZIP:** Usa la app "Archivos" de tu iPad o el explorador de archivos de tu computadora para descomprimir el archivo. Obtendrás una carpeta con todas las imágenes.
 3.  **Crea y Organiza la Carpeta `stimuli-assets`:**
-    *   Dentro de la carpeta principal de tu proyecto (`suite-integral-mtss`), crea una nueva carpeta llamada `stimuli-assets`.
+    *   **Dentro de la carpeta principal de tu proyecto** (`suite-integral-mtss`), crea una nueva carpeta llamada `stimuli-assets`.
     *   Dentro de `stimuli-assets`, crea las carpetas para cada subprueba usando su abreviatura oficial (ej. `C` para Cubos, `M` para Matrices, `PV` para Puzles Visuales).
     *   Mueve las imágenes correspondientes a cada carpeta. La estructura final debe ser así:
 
@@ -128,17 +128,18 @@ Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las im
     ```bash
     firebase login
     ```
+    *(En iPad, esto podría abrir una ventana del navegador para iniciar sesión).*
 
 ### Paso 3: Sube las Imágenes
 
-1.  **Navega a tu Proyecto:** En la terminal, asegúrate de estar dentro de la carpeta de tu proyecto (`suite-integral-mtss`). Si abres la terminal desde VS Code, ya estarás ahí.
+1.  **Navega a tu Proyecto:** En la terminal, asegúrate de estar dentro de la carpeta de tu proyecto (`suite-integral-mtss`). Si abres la terminal desde una app como `a-Shell` en iPad, navega hasta la carpeta donde guardaste tu proyecto.
 2.  **Ejecuta el Comando de Sincronización:** Copia y pega el siguiente comando. Como las imágenes ya están dentro del proyecto, la ruta es muy simple y directa:
 
     ```bash
     firebase storage:upload ./stimuli-assets stimuli
     ```
     *   `./stimuli-assets`: Es la ruta a tu carpeta local. El `./` significa "desde la carpeta actual".
-    *   `stimuli`: Es el nombre de la carpeta de destino en la nube de Firebase.
+    *   `stimuli`: Es el nombre de la carpeta de destino en la nube de Firebase Storage.
 
 ### Paso 4: Verificación
 
