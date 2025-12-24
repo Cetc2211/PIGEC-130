@@ -40,8 +40,8 @@ const subtestsByDomainWISC = {
     ],
     IVP: [
         { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, order: 5 },
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, order: 10, stimulusBooklet: 2 },
-        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, order: 13, stimulusBooklet: 2 },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, order: 10 },
+        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, order: 13 },
     ]
 };
 
