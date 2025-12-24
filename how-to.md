@@ -87,3 +87,55 @@ Al final de este paso, tendrás una copia local exacta de tu proyecto en tu lapt
     **Importante:** Reemplaza `https://github.com/TU_USUARIO/TU_REPOSITORIO.git` con la URL que te proporciona GitHub en la página de tu repositorio.
 
 ¡Y listo! Con estos comandos, todo tu proyecto se habrá subido a GitHub. A partir de ahora, cada vez que hagas cambios, solo necesitarás usar `git add .`, `git commit -m "mensaje"`, y `git push`.
+
+---
+
+## 🛠️ Guía: Subir Estímulos a Firebase Storage
+
+Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, balanzas, etc.) a Firebase Storage. Este script asume que ya tienes las imágenes preparadas y optimizadas (formato WebP recomendado).
+
+### 1. Preparación del Entorno
+
+1.  **Instalar Firebase CLI:** Si no lo tienes, abre tu terminal y ejecuta:
+    ```bash
+    npm install -g firebase-tools
+    ```
+
+2.  **Iniciar Sesión en Firebase:** Autentícate con la cuenta de Google asociada al proyecto.
+    ```bash
+    firebase login
+    ```
+
+3.  **Estructura de Carpetas Local:** Organiza todas tus imágenes de estímulos en una carpeta local. La estructura recomendada es por subprueba:
+    ```
+    /stimuli-assets
+        /C  (Cubos)
+            /item1.webp
+            /item2.webp
+        /M  (Matrices)
+            /item1.webp
+        /PV (Puzles Visuales)
+            /item1_opcion1.webp
+            /item1_opcion2.webp
+    ```
+    Este orden facilitará la carga y la referencia en el código.
+
+### 2. Script de Carga Masiva (Sincronización)
+
+1.  **Navega a tu carpeta de proyecto:** En la terminal, asegúrate de estar en la carpeta donde resides tu proyecto (`suite-integral-mtss`).
+
+2.  **Ejecuta el Comando de Sincronización:** El siguiente comando subirá todo el contenido de tu carpeta local `stimuli-assets` a una carpeta llamada `stimuli` en Firebase Storage.
+
+    ```bash
+    firebase storage:upload ./stimuli-assets stimuli
+    ```
+    *   `./stimuli-assets`: Es la ruta a tu carpeta local de imágenes.
+    *   `stimuli`: Es el nombre de la carpeta de destino en la nube de Firebase.
+
+### 3. Verificación
+
+*   Ve a la Consola de Firebase, selecciona tu proyecto (`academic-tracker-qeoxi`).
+*   Navega a la sección **Storage**.
+*   Verás una nueva carpeta llamada `stimuli` que contiene todas las imágenes de las subpruebas, organizadas como las tenías localmente.
+
+Una vez completado este paso, la `WISCScoringConsole` podrá construir dinámicamente las URLs para obtener los estímulos visuales correctos para cada ítem durante la aplicación de la prueba.
