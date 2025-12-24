@@ -90,33 +90,39 @@ Al final de este paso, tendrás una copia local exacta de tu proyecto en tu lapt
 
 ---
 
-## 🛠️ Guía: Subir Estímulos a Firebase Storage (Método Universal para iPad/Laptop)
+## 🛠️ Guía: Subir Estímulos a Firebase Storage (Método Universal)
 
-Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage. Este método es el más recomendado porque funciona igual en una laptop o en un iPad.
+Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage. Este método es el más recomendado porque funciona de forma idéntica y sencilla en cualquier dispositivo, incluyendo iPad.
 
-### Paso 1: Mueve las Imágenes a tu Proyecto
+### Paso 1: Organiza la Carpeta `stimuli-assets`
 
-1.  **Descarga las Imágenes:** Si tienes las imágenes en Google Drive, primero descárgalas a tu dispositivo (iPad o computadora). Se guardarán como un archivo `.zip`.
-2.  **Descomprime el ZIP:** Usa la app "Archivos" de tu iPad o el explorador de archivos de tu computadora para descomprimir el archivo. Obtendrás una carpeta con todas las imágenes.
-3.  **Crea y Organiza la Carpeta `stimuli-assets`:**
-    *   **Dentro de la carpeta principal de tu proyecto** (`suite-integral-mtss`), crea una nueva carpeta llamada `stimuli-assets`.
-    *   Dentro de `stimuli-assets`, crea las carpetas para cada subprueba usando su abreviatura oficial (ej. `C` para Cubos, `M` para Matrices, `PV` para Puzles Visuales).
-    *   Mueve las imágenes correspondientes a cada carpeta. La estructura final debe ser así:
+La clave es mover la carpeta con las imágenes **DENTRO** de la carpeta principal de tu proyecto.
 
-    ```
-    suite-integral-mtss/       <-- Carpeta principal de tu proyecto
+1.  **Descarga y Descomprime:** Si tienes las imágenes en Google Drive, primero descárgalas a tu dispositivo (iPad o computadora) y descomprime el archivo `.zip`. Obtendrás una carpeta llamada `stimuli-assets`.
+2.  **Mueve la Carpeta:** Arrastra y suelta la carpeta `stimuli-assets` para que quede **dentro** de la carpeta de tu proyecto (ej., `suite-integral-mtss`).
+
+Aquí tienes un diagrama de cómo debe quedar la estructura final:
+
+```
+// ANTES (Incorrecto)
+En mi iPad/
+├── suite-integral-mtss/  <-- Carpeta del proyecto
+└── stimuli-assets/       <-- Carpeta de imágenes (separada)
+
+// DESPUÉS (Correcto)
+En mi iPad/
+└── suite-integral-mtss/       <-- Carpeta del proyecto
     ├── src/
     ├── package.json
-    └── stimuli-assets/        <-- Carpeta que acabas de crear
+    └── stimuli-assets/        <-- Carpeta de imágenes (DENTRO del proyecto)
         ├── C/
         │   ├── item1.webp
         │   └── item2.webp
         ├── M/
         │   └── item1.webp
         └── PV/
-            ├── item1_opcion1.webp
-            └── item1_opcion2.webp
-    ```
+            └── ...
+```
 
 ### Paso 2: Prepara la Terminal
 
@@ -132,8 +138,8 @@ Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las im
 
 ### Paso 3: Sube las Imágenes
 
-1.  **Navega a tu Proyecto:** En la terminal, asegúrate de estar dentro de la carpeta de tu proyecto (`suite-integral-mtss`). Si abres la terminal desde una app como `a-Shell` en iPad, navega hasta la carpeta donde guardaste tu proyecto.
-2.  **Ejecuta el Comando de Sincronización:** Copia y pega el siguiente comando. Como las imágenes ya están dentro del proyecto, la ruta es muy simple y directa:
+1.  **Navega a tu Proyecto:** En la terminal, asegúrate de estar dentro de la carpeta raíz de tu proyecto (`suite-integral-mtss`). Si usas una app como `a-Shell` en iPad, navega hasta la carpeta del proyecto.
+2.  **Ejecuta el Comando Universal:** Copia y pega el siguiente comando. Como las imágenes ya están dentro del proyecto, la ruta es simple y directa:
 
     ```bash
     firebase storage:upload ./stimuli-assets stimuli
@@ -147,4 +153,4 @@ Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las im
 *   Navega a la sección **Storage**.
 *   Verás una nueva carpeta llamada `stimuli` que contiene todas las subcarpetas e imágenes que acabas de subir.
 
-¡Y listo! La consola de evaluación ahora podrá encontrar y mostrar los estímulos visuales correctamente.
+¡Y listo! Con la estructura de carpetas correcta, este comando funcionará sin problemas desde cualquier terminal.
