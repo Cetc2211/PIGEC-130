@@ -401,7 +401,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                 if (savedCurrentItem) setCurrentItem(savedCurrentItem);
                 console.log(`Sesión de ${subtestName} recuperada.`);
             }
-        } catch (error) => {
+        } catch (error) {
             console.error("Error al recuperar la sesión del localStorage:", error);
         }
     }, [storageKey, subtestName]);
@@ -1097,5 +1097,3 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
-
-    
