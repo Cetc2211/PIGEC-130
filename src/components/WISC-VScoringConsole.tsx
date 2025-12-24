@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -12,7 +13,8 @@ import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import { getDownloadURL, ref } from "firebase/storage";
+import { storage } from '@/lib/firebase';
 import Image from 'next/image';
 
 
@@ -322,19 +324,17 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
         const fetchImageUrl = async () => {
             setIsLoading(true);
             setError(null);
-            // Convención de nombres: item1.webp.png -> item1.webp
-            const imageName = `item${itemId}.webp`; 
+            const imageName = `item${itemId}.webp.png`; 
             const imagePath = `stimuli/${subtestId}/${imageName}`;
             
             try {
-                const storage = getStorage();
                 const imageRef = ref(storage, imagePath);
                 const url = await getDownloadURL(imageRef);
                 setImageUrl(url);
             } catch (err: any) {
                 console.error(`Error fetching image: ${imagePath}`, err);
                 if (err.code === 'storage/object-not-found') {
-                    setError(`Estímulo no encontrado en la nube. Verifique la ruta: ${imagePath}`);
+                    setError(`Estímulo no encontrado. Verifique la ruta: ${imagePath}`);
                 } else {
                     setError('Error al cargar el estímulo desde la nube.');
                 }
