@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -364,12 +365,12 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
             } catch (err: any) {
                 console.error(`Error fetching image: ${imagePath}`, err);
                 if (err.code === 'storage/object-not-found') {
-                    setError(`Estímulo no encontrado. Verifique la ruta: ${imagePath}`);
+                    setError(`Estímulo no encontrado.`);
                 } else if (err.code === 'storage/retry-limit-exceeded') {
-                    setError('Límite de reintentos excedido. Verifique su conexión a internet.');
+                    setError('Error de red. Verifique la conexión.');
                 }
                 else {
-                    setError('Error al cargar el estímulo desde la nube.');
+                    setError('Error al cargar el estímulo.');
                 }
                 setImageUrl(null);
             } finally {
@@ -383,7 +384,13 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
     return (
         <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center relative overflow-hidden">
             {isLoading && <p className="text-white">Cargando estímulo...</p>}
-            {error && <p className="text-red-400 text-center p-4">{error}</p>}
+            {error && (
+                <div className="text-center text-yellow-400 p-4">
+                    <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
+                    <p className="font-semibold">{error}</p>
+                    <p className="text-sm text-yellow-300 mt-1">Por favor, utilice el cuadernillo de estímulos físico para este ítem.</p>
+                </div>
+            )}
             {imageUrl && !isLoading && !error && (
                 <Image
                     src={imageUrl}
@@ -1102,3 +1109,4 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
+
