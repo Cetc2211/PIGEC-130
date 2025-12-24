@@ -106,23 +106,26 @@ Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las im
     firebase login
     ```
 
-3.  **Estructura de Carpetas Local:** Organiza todas tus imágenes de estímulos en una carpeta local. La estructura recomendada es por subprueba:
+3.  **Estructura de Carpetas Local:** Organiza todas tus imágenes de estímulos en una carpeta local. La estructura recomendada usa las siglas de la subprueba como nombre de carpeta. Por ejemplo:
+
     ```
-    /stimuli-assets
-        /C  (Cubos)
-            /item1.webp
-            /item2.webp
-        /M  (Matrices)
-            /item1.webp
-        /PV (Puzles Visuales)
-            /item1_opcion1.webp
-            /item1_opcion2.webp
+    stimuli-assets/
+    ├── C/  (Corresponde a la subprueba 'Construcción con Cubos')
+    │   ├── item1.webp
+    │   └── item2.webp
+    │
+    ├── M/  (Corresponde a la subprueba 'Matrices')
+    │   └── item1.webp
+    │
+    └── PV/ (Corresponde a la subprueba 'Puzles Visuales')
+        ├── item1_opcion1.webp
+        └── item1_opcion2.webp
     ```
-    Este orden facilitará la carga y la referencia en el código.
+    Este orden facilitará la carga y la referencia en el código. `C/item1.webp` significa que el archivo `item1.webp` está dentro de la carpeta `C`.
 
 ### 2. Script de Carga Masiva (Sincronización)
 
-1.  **Navega a tu carpeta de proyecto:** En la terminal, asegúrate de estar en la carpeta donde resides tu proyecto (`suite-integral-mtss`).
+1.  **Navega a tu carpeta de proyecto:** En la terminal, asegúrate de estar en la carpeta donde reside tu proyecto (`suite-integral-mtss`).
 
 2.  **Ejecuta el Comando de Sincronización:** El siguiente comando subirá todo el contenido de tu carpeta local `stimuli-assets` a una carpeta llamada `stimuli` en Firebase Storage.
 
