@@ -100,7 +100,8 @@ Este método es el más recomendado porque se hace todo desde el navegador, sin 
 
 1.  **Comprime tus Archivos:**
     *   En tu iPad, asegúrate de tener una carpeta `stimuli-assets` que contenga todas las subcarpetas de imágenes (`C`, `M`, `PV`, etc.).
-    *   Mantén presionada la carpeta `stimuli-assets` y selecciona **Comprimir**. Esto creará un archivo llamado **`stimuli-assets.zip`**.
+    *   Para este ejemplo, asumiremos que tienes otra carpeta llamada `firebase-upload` y que moviste `stimuli-assets` **DENTRO** de ella.
+    *   Mantén presionada la carpeta `firebase-upload` y selecciona **Comprimir**. Esto creará un archivo llamado **`firebase-upload.zip`**.
 
 2.  **Abre Firebase Cloud Shell:**
     *   Ve a la [Consola de Firebase](https://console.firebase.google.com/) y selecciona tu proyecto (`academic-tracker-qeoxi`).
@@ -109,21 +110,21 @@ Este método es el más recomendado porque se hace todo desde el navegador, sin 
 
 3.  **Sube el Archivo .zip:**
     *   En la barra de herramientas de Cloud Shell, haz clic en el menú de tres puntos (**`⋮`**) y selecciona **Subir**.
-    *   Elige el archivo **`stimuli-assets.zip`** que creaste en el primer paso.
+    *   Elige el archivo **`firebase-upload.zip`** que creaste en el primer paso.
 
 4.  **Descomprime y Sube a Storage:**
     *   Una vez que termine de subirse, ejecuta los siguientes comandos en la terminal de Cloud Shell, uno por uno.
 
     ```bash
     # 1. Descomprime el archivo.
-    # (Si tu archivo se llama diferente, reemplaza 'stimuli-assets.zip')
-    unzip -o stimuli-assets.zip
+    # (Si tu archivo se llama diferente, reemplaza 'firebase-upload.zip')
+    unzip -o firebase-upload.zip
 
     # 2. Usa el comando 'gcloud storage' para copiar la carpeta a Storage.
     # Este comando es el más moderno y robusto. Asegúrate de que el nombre del bucket incluye '.appspot.com'.
-    gcloud storage cp --recursive stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
+    gcloud storage cp --recursive firebase-upload/stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
     ```
-    *El comando `gcloud storage cp --recursive` es el método más fiable para subir directorios completos y reemplaza al antiguo `gsutil`.*
+    *El comando `gcloud storage cp --recursive` es el método más fiable para subir directorios completos y reemplaza a los antiguos `gsutil` y `firebase storage:deploy`.*
 
 5.  **Verificación:**
     *   Ve a la sección de **Storage** en tu consola de Firebase. Deberías ver una carpeta nueva llamada `stimuli` con todas tus imágenes dentro.
