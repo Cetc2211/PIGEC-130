@@ -90,63 +90,60 @@ Al final de este paso, tendrás una copia local exacta de tu proyecto en tu lapt
 
 ---
 
-## 🛠️ Guía: Subir Estímulos a Firebase Storage
+## 🛠️ Guía: Subir Estímulos a Firebase Storage (Método Universal)
 
-Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, balanzas, etc.) a Firebase Storage.
+Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage. Este método es el más recomendado porque funciona igual en una laptop (Windows/Mac) o en un iPad.
 
-### Paso 1: Descargar las Imágenes a tu Computadora
+### Paso 1: Mueve las Imágenes a tu Proyecto
 
-**Importante:** El script de carga **no puede** leer archivos directamente desde Google Drive u otras nubes. Primero, debes descargar las imágenes a tu computadora.
+1.  **Descarga las Imágenes:** Si tienes las imágenes en Google Drive, primero descárgalas a tu dispositivo (iPad o computadora). Se guardarán como un archivo `.zip`.
+2.  **Descomprime el ZIP:** Usa la app "Archivos" de tu iPad o el explorador de archivos de tu computadora para descomprimir el archivo. Obtendrás una carpeta con todas las imágenes.
+3.  **Crea y Organiza la Carpeta `stimuli-assets`:**
+    *   Dentro de la carpeta principal de tu proyecto (`suite-integral-mtss`), crea una nueva carpeta llamada `stimuli-assets`.
+    *   Dentro de `stimuli-assets`, crea las carpetas para cada subprueba usando su abreviatura oficial (ej. `C` para Cubos, `M` para Matrices, `PV` para Puzles Visuales).
+    *   Mueve las imágenes correspondientes a cada carpeta. La estructura final debe ser así:
 
-1.  Ve a la carpeta de Google Drive que contiene los estímulos.
-2.  Haz clic derecho sobre la carpeta principal (ej. `Estimulos_WEBP`) y selecciona **Descargar**.
-3.  Se descargará un archivo `.zip`. Descomprímelo en una ubicación fácil de recordar, como tu Escritorio.
+    ```
+    suite-integral-mtss/       <-- Carpeta principal de tu proyecto
+    ├── src/
+    ├── package.json
+    └── stimuli-assets/        <-- Carpeta que acabas de crear
+        ├── C/
+        │   ├── item1.webp
+        │   └── item2.webp
+        ├── M/
+        │   └── item1.webp
+        └── PV/
+            ├── item1_opcion1.webp
+            └── item1_opcion2.webp
+    ```
 
-### Paso 2: Preparación del Entorno Local
+### Paso 2: Prepara la Terminal
 
-1.  **Instalar Firebase CLI:** Si no lo tienes, abre tu terminal y ejecuta:
+1.  **Instalar Firebase CLI:** Si aún no lo tienes, abre tu terminal y ejecuta:
     ```bash
     npm install -g firebase-tools
     ```
-
-2.  **Iniciar Sesión en Firebase:** Autentícate con la cuenta de Google asociada al proyecto.
+2.  **Iniciar Sesión en Firebase:** Autentícate con la cuenta de Google correcta.
     ```bash
     firebase login
     ```
 
-3.  **Verificar Estructura de Carpetas Local:** Una vez descomprimida, la carpeta debe tener una estructura específica. Las siglas de la subprueba se usan como nombre de la sub-carpeta. Por ejemplo:
+### Paso 3: Sube las Imágenes
 
-    ```
-    stimuli-assets/
-    ├── C/  (Corresponde a la subprueba 'Construcción con Cubos')
-    │   ├── item1.webp
-    │   └── item2.webp
-    │
-    ├── M/  (Corresponde a la subprueba 'Matrices')
-    │   └── item1.webp
-    │
-    └── PV/ (Corresponde a la subprueba 'Puzles Visuales')
-        ├── item1_opcion1.webp
-        └── item1_opcion2.webp
-    ```
-    Este orden es crucial. `C/item1.webp` significa que el archivo `item1.webp` está dentro de la carpeta `C`.
-
-### Paso 3: Script de Carga Masiva (Sincronización)
-
-1.  **Navega a tu carpeta de proyecto:** En la terminal, asegúrate de estar en la carpeta donde reside tu proyecto (`suite-integral-mtss`).
-
-2.  **Ejecuta el Comando de Sincronización:** El siguiente comando subirá todo el contenido de tu carpeta local `stimuli-assets` a una carpeta llamada `stimuli` en Firebase Storage.
+1.  **Navega a tu Proyecto:** En la terminal, asegúrate de estar dentro de la carpeta de tu proyecto (`suite-integral-mtss`). Si abres la terminal desde VS Code, ya estarás ahí.
+2.  **Ejecuta el Comando de Sincronización:** Copia y pega el siguiente comando. Como las imágenes ya están dentro del proyecto, la ruta es muy simple y directa:
 
     ```bash
     firebase storage:upload ./stimuli-assets stimuli
     ```
-    *   `./stimuli-assets`: Es la ruta a tu carpeta local de imágenes. Asegúrate de que esta ruta sea correcta desde donde estás ejecutando el comando.
+    *   `./stimuli-assets`: Es la ruta a tu carpeta local. El `./` significa "desde la carpeta actual".
     *   `stimuli`: Es el nombre de la carpeta de destino en la nube de Firebase.
 
 ### Paso 4: Verificación
 
 *   Ve a la Consola de Firebase, selecciona tu proyecto (`academic-tracker-qeoxi`).
 *   Navega a la sección **Storage**.
-*   Verás una nueva carpeta llamada `stimuli` que contiene todas las imágenes de las subpruebas, organizadas como las tenías localmente.
+*   Verás una nueva carpeta llamada `stimuli` que contiene todas las subcarpetas e imágenes que acabas de subir.
 
-Una vez completado este paso, la `WISCScoringConsole` podrá construir dinámicamente las URLs para obtener los estímulos visuales correctos para cada ítem durante la aplicación de la prueba.
+¡Y listo! La consola de evaluación ahora podrá encontrar y mostrar los estímulos visuales correctamente.
