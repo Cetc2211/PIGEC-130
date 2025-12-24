@@ -77,20 +77,16 @@ const subtestsByDomainWAIS = {
     ]
 };
 
-
-// Esta función simula la búsqueda en las tablas de baremos.
 const getScaledScore = (rawScore: number, subtestId: string): number => {
-    // Caso de Prueba Maestro WAIS-IV (22 años) para generar los resultados esperados.
     const masterCase: { [key: string]: { [key: number]: number } } = {
         C:  { 48: 11 }, S:  { 26: 12 }, D:  { 28: 10 }, M:  { 22: 11 },
         V:  { 45: 11 }, A:  { 15: 10 }, PV: { 18: 10 }, I:  { 20: 11 },
-        Cl: { 75: 9  }, Ca: { 50: 9 } // Se usa Cancelación en lugar de Búsqueda de Símbolos
+        Cl: { 75: 9  }, Ca: { 50: 9 }
     };
     
     if (masterCase[subtestId] && masterCase[subtestId][rawScore] !== undefined) {
         return masterCase[subtestId][rawScore];
     }
-    // Simulación general
     if (rawScore === 0) return 1;
     const scaled = Math.round((rawScore / 40) * 18) + 1;
     return Math.max(1, Math.min(19, scaled));
@@ -109,7 +105,6 @@ const getDescriptiveClassification = (score: number) => {
 
 const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWais: boolean) => {
     
-    // Simula la invalidación de BS y la sustitución por Ca
     const effectiveScores = {...scaledScores};
     let ivpSubtests = ['BS', 'Cl'];
     if (isWais && effectiveScores['Ca'] && !effectiveScores['BS']) {
@@ -120,12 +115,11 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
     
     const scaleToComposite = (sum: number, numSubtests: number) => {
         if (numSubtests === 0 || sum === 0) return 40;
-        // Simulación para Caso Maestro
-        if (sum === 34 && numSubtests === 3) return 110; // ICV
-        if (sum === 31 && numSubtests === 3) return 105; // IRP
-        if (sum === 20 && numSubtests === 2) return 102; // IMT
-        if (sum === 18 && numSubtests === 2) return 98;  // IVP
-        if (sum === 104 && numSubtests === 10) return 104; // CIT
+        if (sum === 34 && numSubtests === 3) return 110; 
+        if (sum === 31 && numSubtests === 3) return 105; 
+        if (sum === 20 && numSubtests === 2) return 102; 
+        if (sum === 18 && numSubtests === 2) return 98;  
+        if (sum === 104 && numSubtests === 10) return 104;
 
         const meanScaled = sum / numSubtests;
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
@@ -142,7 +136,6 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
     let compositeScores, discrepancies, strengthsAndWeaknesses;
 
     if (isWais) {
-        // Lógica de cálculo para WAIS-IV
         const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V', 'I']), 3));
         const irp = createProfile("Razonamiento Perceptual (IRP)", scaleToComposite(getSum(['C', 'M', 'PV']), 3));
         const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'A']), 2));
@@ -151,7 +144,6 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 10));
         compositeScores = [icv, irp, imt, ivp, cit];
     } else {
-        // Lógica de cálculo para WISC-V
         const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
         const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'PV']), 2));
         const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
@@ -163,9 +155,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
     }
 
     const valoresCriticos = { 'ICV-IRF': 10.8, 'D-C': 2.5 };
-    discrepancies = [
-        // La lógica de discrepancias puede necesitar ajuste por escala
-    ];
+    discrepancies = [];
     
     const coreSubtests = isWais
         ? ['S', 'V', 'I', 'C', 'M', 'PV', 'D', 'A', ...ivpSubtests]
@@ -186,46 +176,79 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         return { name: subtestInfo?.name, score, diff: diff.toFixed(2), classification };
     }).filter(s => s && s.name);
 
-
     return { compositeScores, discrepancies, strengthsAndWeaknesses };
 };
 
 
-// Componente de guía de calificación para respuestas verbales
-const GuiaCalificacion = () => {
-    // Simulación de la base de datos de criterios para un ítem específico
-    const itemData = {
-        subprueba: "Semejanzas",
-        item: "Piano - Tambor",
-        criterios: {
-            "2_puntos": ["Instrumentos musicales", "Para hacer música", "Producen sonidos"],
-            "1_punto": ["Tienen teclas/parches", "Hacen ruido", "Se tocan", "Tienen ritmo"],
-            "0_puntos": ["Son de madera", "Están en una banda", "Son grandes"],
+const scoringGuideData: { [subtestId: string]: { [itemId: number | string]: { '2_puntos'?: string[], '1_punto'?: string[], '0_puntos'?: string[] } } } = {
+    'S': {
+        'default': {
+            '2_puntos': ["Relación conceptual o de clase principal.", "Ej. 'Ambos son medios de transporte'"],
+            '1_punto': ["Propiedad concreta, función o causa.", "Ej. 'Ambos tienen ruedas'"],
+            '0_puntos': ["Respuesta errónea o irrelevante.", "Ej. 'Uno es rojo'"]
         },
-    };
+        1: { // Ejemplo para item 1 (Leche - Agua)
+             '2_puntos': ["Líquidos", "Bebidas", "Cosas que se beben"],
+             '1_punto': ["Vienen en envases", "Son transparentes/blancos"],
+             '0_puntos': ["Son de la tienda"]
+        }
+    },
+    'C': {
+        'default': {
+            '2_puntos': ["Construcción perfecta dentro del tiempo límite."],
+            '1_punto': ["Construcción perfecta con un solo error de rotación.", "Construcción correcta fuera de tiempo."],
+            '0_puntos': ["Fallo en la construcción."]
+        }
+    },
+    'V': {
+        'default': {
+            '2_puntos': ["Definición precisa que captura el significado principal."],
+            '1_punto': ["Definición vaga, relacionada pero no precisa."],
+            '0_puntos': ["Definición incorrecta."]
+        }
+    }
+};
 
+const GuiaCalificacion = ({ subtestId, itemId }: { subtestId: string, itemId: number }) => {
+    const itemData = scoringGuideData[subtestId]?.[itemId] || scoringGuideData[subtestId]?.['default'];
+
+    if (!itemData) {
+        return (
+            <div className="guia-puntuacion-flotante p-4 border rounded-lg bg-slate-50 h-full">
+                <h4 className="font-semibold text-md mb-3 text-slate-800">Guía de Calificación</h4>
+                <p className="text-sm text-slate-500">No hay guía disponible para esta subprueba.</p>
+            </div>
+        );
+    }
+    
     return (
         <div className="guia-puntuacion-flotante p-4 border rounded-lg bg-slate-50 h-full">
             <h4 className="font-semibold text-md mb-3 text-slate-800">Guía de Calificación (Ejemplos)</h4>
             <div className="space-y-3 text-sm">
-                <div className="nivel-2">
-                    <strong className="text-green-700">2 Puntos (Concepto Abstracto):</strong>
-                    <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
-                        {itemData.criterios['2_puntos'].map((ex, i) => <li key={`2pt-${i}`}>{ex}</li>)}
-                    </ul>
-                </div>
-                <div className="nivel-1">
-                    <strong className="text-amber-700">1 Punto (Propiedad Concreta/Función):</strong>
-                    <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
-                        {itemData.criterios['1_punto'].map((ex, i) => <li key={`1pt-${i}`}>{ex}</li>)}
-                    </ul>
-                </div>
-                 <div className="nivel-0">
-                    <strong className="text-red-700">0 Puntos (Irrelevante/Erróneo):</strong>
-                    <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
-                        {itemData.criterios['0_puntos'].map((ex, i) => <li key={`0pt-${i}`}>{ex}</li>)}
-                    </ul>
-                </div>
+                {itemData['2_puntos'] && (
+                    <div className="nivel-2">
+                        <strong className="text-green-700">2 Puntos:</strong>
+                        <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
+                            {itemData['2_puntos'].map((ex, i) => <li key={`2pt-${i}`}>{ex}</li>)}
+                        </ul>
+                    </div>
+                )}
+                 {itemData['1_punto'] && (
+                    <div className="nivel-1">
+                        <strong className="text-amber-700">1 Punto:</strong>
+                        <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
+                            {itemData['1_punto'].map((ex, i) => <li key={`1pt-${i}`}>{ex}</li>)}
+                        </ul>
+                    </div>
+                 )}
+                 {itemData['0_puntos'] && (
+                    <div className="nivel-0">
+                        <strong className="text-red-700">0 Puntos:</strong>
+                        <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600">
+                            {itemData['0_puntos'].map((ex, i) => <li key={`0pt-${i}`}>{ex}</li>)}
+                        </ul>
+                    </div>
+                 )}
             </div>
             <Separator className="my-4" />
             <p className="text-xs text-slate-500 italic">Nota: Si la respuesta es vaga o ambigua, recuerde interrogar ("¿Qué quieres decir?") antes de puntuar.</p>
@@ -233,7 +256,6 @@ const GuiaCalificacion = () => {
     );
 };
 
-// --- [NUEVO] Componente para registrar Observaciones de Proceso ---
 const processIndicators = [
     { id: 'NS', label: 'No Sabe' },
     { id: 'NR', label: 'No Responde' },
@@ -314,28 +336,39 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
     );
 }
 
-// --- Componente de Estímulo Visual ---
+const imageUrlCache = new Map<string, string>();
+
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const imagePath = `stimuli/${subtestId}/item${itemId}.webp.png`;
+
     useEffect(() => {
         const fetchImageUrl = async () => {
+            if (imageUrlCache.has(imagePath)) {
+                setImageUrl(imageUrlCache.get(imagePath)!);
+                setIsLoading(false);
+                return;
+            }
+
             setIsLoading(true);
             setError(null);
-            const imageName = `item${itemId}.webp.png`; 
-            const imagePath = `stimuli/${subtestId}/${imageName}`;
             
             try {
                 const imageRef = ref(storage, imagePath);
                 const url = await getDownloadURL(imageRef);
+                imageUrlCache.set(imagePath, url);
                 setImageUrl(url);
             } catch (err: any) {
                 console.error(`Error fetching image: ${imagePath}`, err);
                 if (err.code === 'storage/object-not-found') {
                     setError(`Estímulo no encontrado. Verifique la ruta: ${imagePath}`);
-                } else {
+                } else if (err.code === 'storage/retry-limit-exceeded') {
+                    setError('Límite de reintentos excedido. Verifique su conexión a internet.');
+                }
+                else {
                     setError('Error al cargar el estímulo desde la nube.');
                 }
                 setImageUrl(null);
@@ -345,7 +378,7 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
         };
 
         fetchImageUrl();
-    }, [subtestId, itemId]);
+    }, [imagePath]);
 
     return (
         <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center relative overflow-hidden">
@@ -364,8 +397,6 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
     );
 }
 
-
-// Componente para simular la aplicación de una subprueba verbal
 function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulusBooklet }: { subtestName: string, subtestId: string, renderType: string, stimulusBooklet?: number }) {
     const storageKey = `wisc_session_${subtestId}`;
 
@@ -374,15 +405,11 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
     const [timer, setTimer] = useState(0);
     const [isTimerActive, setIsTimerActive] = useState(false);
     
-    // Estado para "Sucesión de Letras y Números"
     const [trialScores, setTrialScores] = useState<{ [itemId: number]: { [trial: number]: number | null } }>({});
 
-    // Estado para "Pruebas de Velocidad"
     const [correctAnswers, setCorrectAnswers] = useState(0);
     const [incorrectAnswers, setIncorrectAnswers] = useState(0);
 
-
-    // --- LÓGICA DE PERSISTENCIA Y RECUPERACIÓN ---
     const updateAndPersistScores = useCallback((newScores: typeof scores, newCurrentItem: number) => {
         setScores(newScores);
         try {
@@ -406,9 +433,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
         }
     }, [storageKey, subtestName]);
     
-    // --- FIN DE LÓGICA DE PERSISTENCIA ---
-
-
     const errorCategories = [
         "Respuesta Tangencial", "Perseveración", "Concreción Excesiva", 
         "Respuesta Personalizada", "Neologismos / Ensalada de Palabras"
@@ -420,12 +444,8 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
             interval = setInterval(() => {
                 setTimer(t => {
                     const newTime = t + 1;
-                    // Lógica de Timeout para pruebas que lo requieran
                     const timeLimitConfig: {[key: string]: number} = {
-                        A: 30, // Aritmética
-                        PV: 30, // Puzles Visuales (ejemplo)
-                        B: 20, // Balanzas (ejemplo)
-                        FI: 20, // Figuras Incompletas
+                        A: 30, PV: 30, B: 20, FI: 20,
                     };
                     const timeLimit = renderType === 'SPEED_TEST' ? 120 : timeLimitConfig[subtestId];
 
@@ -451,15 +471,14 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
             return Object.values(trialScores).flatMap(trials => Object.values(trials)).reduce((sum, score) => sum + (score || 0), 0);
         }
         if (renderType === 'SPEED_TEST') {
-            if (subtestId === 'BS') { // Búsqueda de Símbolos
+            if (subtestId === 'BS') {
                 return Math.max(0, correctAnswers - incorrectAnswers);
             }
-            return correctAnswers; // Claves
+            return correctAnswers;
         }
         return Object.values(scores).reduce((sum, item) => sum + (item?.score || 0), 0);
     }, [scores, trialScores, renderType, correctAnswers, incorrectAnswers, subtestId]);
 
-    // Lógica de Alerta de Proceso (Cap. 13.1.2)
     useEffect(() => {
         const allTags = Object.values(scores).flatMap(s => s?.errorTags || []);
         if (allTags.length > 0) {
@@ -513,7 +532,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
         setTimer(0);
         const nextItem = currentItem + 1;
         setCurrentItem(nextItem);
-        // Persist only the item change
         updateAndPersistScores(scores, nextItem);
     };
 
@@ -522,7 +540,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
         setTimer(0);
         const prevItem = Math.max(1, currentItem - 1);
         setCurrentItem(prevItem);
-        // Persist only the item change
         updateAndPersistScores(scores, prevItem);
     };
     
@@ -581,7 +598,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                         ))}
                     </div>
                 );
-            case 'MULTI_CHOICE': // Para Puzles Visuales
+            case 'MULTI_CHOICE':
                  return (
                     <div className="grid grid-cols-3 gap-2 mt-1">
                         {[1, 2, 3, 4, 5, 6].map(option => (
@@ -592,7 +609,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                         ))}
                     </div>
                 );
-             case 'SINGLE_CHOICE': // Para Balanzas
+             case 'SINGLE_CHOICE':
                 return (
                     <div className="grid grid-cols-3 gap-2 mt-1">
                        {[1, 2, 3, 4, 5].map(option => (
@@ -622,7 +639,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                 );
             case 'LETTER_NUMBER_SEQUENCING':
                 const trials = [1, 2, 3];
-                // Simulación de datos para este ítem
                 const lnItemData = { id: currentItem, stimulus: 'L-2-C-7', correctAnswer: '2-7-C-L' };
 
                 return (
@@ -693,7 +709,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 {/* Columna Izquierda: Estímulo y Aplicación */}
                 <div className="space-y-4">
                     {!stimulusBooklet ? (
                         <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
@@ -717,7 +732,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                     </div>
                 </div>
 
-                {/* Columna Derecha: Controles y Guía */}
                 <div className="space-y-4">
                      <div className="p-3 border rounded-lg bg-white flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -736,7 +750,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                     </div>
                     
                     {renderType === 'VERBAL_CRITERIO' ? (
-                        <GuiaCalificacion />
+                        <GuiaCalificacion subtestId={subtestId} itemId={currentItem} />
                     ): (
                          <ProcessObservationTracker subtestId={subtestId} />
                     )}
@@ -847,7 +861,6 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     const subtestsByDomain = isWais ? subtestsByDomainWAIS : subtestsByDomainWISC;
     const scaleName = isWais ? "WAIS-IV" : "WISC-V";
     
-    // Para WISC-V, se necesita un array plano ordenado para el renderizado.
     const orderedWiscSubtests = useMemo(() => {
         if (isWais) return [];
         return Object.values(subtestsByDomainWISC).flat().sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -861,10 +874,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     const [clinicalObservations, setClinicalObservations] = useState('');
 
     const handleCalculate = () => {
-        // Para el caso maestro, Búsqueda de Símbolos es inválido.
         const scoresForCalc = {...rawScores};
         if (scoresForCalc.Ca && scoresForCalc.BS === undefined) {
-             // No se necesita hacer nada especial, la lógica de cálculo ya lo maneja
         }
 
         const scaledScores: { [key: string]: number } = {};
@@ -895,9 +906,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información que podrían impactar el rendimiento escolar. Se recomienda una intervención psicopedagógica focalizada y adecuaciones en el aula.";
         }
         
-        const processObservationsData = {}; // Aquí se recopilarían los datos de `ProcessObservationTracker`
+        const processObservationsData = {};
         
-        // Simulación de la estructura del reporte final
         const narrativeReportObject = {
             metadata: {
                 examiner: 'Dr. John Doe (Simulated)',
@@ -906,24 +916,21 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             },
             scores: {
                 rawScores: rawScores,
-                compositeScores: results.compositeScores, // Corregido de scaledScores a compositeScores
+                compositeScores: results.compositeScores,
                 strengthsAndWeaknesses: results.strengthsAndWeaknesses,
-                processAnalysis: processObservationsData, // Integración de las observaciones
-                secondaryIndexes: { /* ... datos de IRC, IMTA, etc. */ }
+                processAnalysis: processObservationsData,
+                secondaryIndexes: { }
             },
             narrative: {
                 summary: `${resumen_ejecutivo}\n\nObservaciones Clínicas Adicionales:\n${clinicalObservations}`,
                 behavioralObservations: clinicalObservations,
             },
-            // Adjuntar la representación gráfica de la Curva Normal
         };
 
-
-        // --- LIMPIEZA DE SESIÓN ---
         Object.values(subtestsByDomain).flat().forEach(subtest => {
             try {
                 localStorage.removeItem(`wisc_session_${subtest.id}`);
-                localStorage.removeItem(`wisc_process_obs_${subtest.id}`); // Limpiar observaciones
+                localStorage.removeItem(`wisc_process_obs_${subtest.id}`);
             } catch (error) {
                 console.error("No se pudo limpiar el localStorage para la subprueba:", subtest.id, error);
             }
@@ -950,7 +957,6 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4 p-4">
-                {/* Columna Izquierda: Protocolo de Aplicación */}
                 <div className="space-y-4">
                     <h3 className="font-semibold text-lg text-center lg:text-left">Protocolo de Aplicación</h3>
                      <Accordion type="single" collapsible className="w-full" defaultValue={isWais ? 'ICV' : undefined}>
@@ -1010,7 +1016,6 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                     </Accordion>
                 </div>
 
-                {/* Columna Derecha: Resultados y Análisis */}
                 <div className="space-y-6">
                      <h3 className="font-semibold text-lg text-center lg:text-left">Resultados y Análisis</h3>
                      {results ? (
