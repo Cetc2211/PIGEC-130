@@ -92,9 +92,17 @@ Al final de este paso, tendrás una copia local exacta de tu proyecto en tu lapt
 
 ## 🛠️ Guía: Subir Estímulos a Firebase Storage
 
-Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, balanzas, etc.) a Firebase Storage. Este script asume que ya tienes las imágenes preparadas y optimizadas (formato WebP recomendado).
+Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, balanzas, etc.) a Firebase Storage.
 
-### 1. Preparación del Entorno
+### Paso 1: Descargar las Imágenes a tu Computadora
+
+**Importante:** El script de carga **no puede** leer archivos directamente desde Google Drive u otras nubes. Primero, debes descargar las imágenes a tu computadora.
+
+1.  Ve a la carpeta de Google Drive que contiene los estímulos.
+2.  Haz clic derecho sobre la carpeta principal (ej. `Estimulos_WEBP`) y selecciona **Descargar**.
+3.  Se descargará un archivo `.zip`. Descomprímelo en una ubicación fácil de recordar, como tu Escritorio.
+
+### Paso 2: Preparación del Entorno Local
 
 1.  **Instalar Firebase CLI:** Si no lo tienes, abre tu terminal y ejecuta:
     ```bash
@@ -106,7 +114,7 @@ Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las im
     firebase login
     ```
 
-3.  **Estructura de Carpetas Local:** Organiza todas tus imágenes de estímulos en una carpeta local. La estructura recomendada usa las siglas de la subprueba como nombre de carpeta. Por ejemplo:
+3.  **Verificar Estructura de Carpetas Local:** Una vez descomprimida, la carpeta debe tener una estructura específica. Las siglas de la subprueba se usan como nombre de la sub-carpeta. Por ejemplo:
 
     ```
     stimuli-assets/
@@ -121,9 +129,9 @@ Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las im
         ├── item1_opcion1.webp
         └── item1_opcion2.webp
     ```
-    Este orden facilitará la carga y la referencia en el código. `C/item1.webp` significa que el archivo `item1.webp` está dentro de la carpeta `C`.
+    Este orden es crucial. `C/item1.webp` significa que el archivo `item1.webp` está dentro de la carpeta `C`.
 
-### 2. Script de Carga Masiva (Sincronización)
+### Paso 3: Script de Carga Masiva (Sincronización)
 
 1.  **Navega a tu carpeta de proyecto:** En la terminal, asegúrate de estar en la carpeta donde reside tu proyecto (`suite-integral-mtss`).
 
@@ -132,10 +140,10 @@ Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las im
     ```bash
     firebase storage:upload ./stimuli-assets stimuli
     ```
-    *   `./stimuli-assets`: Es la ruta a tu carpeta local de imágenes.
+    *   `./stimuli-assets`: Es la ruta a tu carpeta local de imágenes. Asegúrate de que esta ruta sea correcta desde donde estás ejecutando el comando.
     *   `stimuli`: Es el nombre de la carpeta de destino en la nube de Firebase.
 
-### 3. Verificación
+### Paso 4: Verificación
 
 *   Ve a la Consola de Firebase, selecciona tu proyecto (`academic-tracker-qeoxi`).
 *   Navega a la sección **Storage**.
