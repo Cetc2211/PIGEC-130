@@ -117,13 +117,13 @@ Este método es el más recomendado porque se hace todo desde el navegador, sin 
     ```bash
     # 1. Descomprime el archivo. 
     # (Si tu archivo se llama diferente, reemplaza 'stimuli-assets.zip')
-    unzip stimuli-assets.zip
+    unzip -o stimuli-assets.zip
 
-    # 2. Usa el comando de Firebase para subir la carpeta a Storage.
-    # El primer 'stimuli' es la carpeta que se creará en la nube.
-    firebase storage:deploy ./stimuli-assets stimuli
+    # 2. Usa el comando universal 'gsutil' para sincronizar la carpeta con Storage.
+    # Este comando es más robusto y es el estándar de Google Cloud.
+    gsutil -m rsync -r stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
     ```
-    *El comando `storage:deploy` es más eficiente para directorios que `storage:upload`.*
+    *El comando `gsutil rsync` es el método más fiable para subir directorios completos.*
 
 5.  **Verificación:**
     *   Ve a la sección de **Storage** en tu consola de Firebase. Deberías ver una carpeta nueva llamada `stimuli` con todas tus imágenes dentro.
@@ -145,7 +145,7 @@ Este método requiere una app de terminal en tu dispositivo (como a-Shell en iPa
     *   Navega a tu carpeta de trabajo: `cd ruta/a/firebase-upload`
     *   Una vez **dentro** de `firebase-upload`, ejecuta el comando universal:
     ```bash
-    firebase storage:deploy ./stimuli-assets stimuli
+    gsutil -m rsync -r stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
     ```
 
 ¡Y listo! Con cualquiera de estos dos métodos, tus estímulos estarán en la nube, listos para ser usados por la aplicación.
