@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -11,6 +12,8 @@ import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import Image from 'next/image';
 
 
 interface WISCScoringConsoleProps {
@@ -305,6 +308,58 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
                     onChange={handleNotesChange}
                 />
             </div>
+        </div>
+    );
+}
+
+// --- Componente de Estímulo Visual ---
+function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchImageUrl = async () => {
+            setIsLoading(true);
+            setError(null);
+            // Convención de nombres: item1.webp.png -> item1.webp
+            const imageName = `item${itemId}.webp`; 
+            const imagePath = `stimuli/${subtestId}/${imageName}`;
+            
+            try {
+                const storage = getStorage();
+                const imageRef = ref(storage, imagePath);
+                const url = await getDownloadURL(imageRef);
+                setImageUrl(url);
+            } catch (err: any) {
+                console.error(`Error fetching image: ${imagePath}`, err);
+                if (err.code === 'storage/object-not-found') {
+                    setError(`Estímulo no encontrado en la nube. Verifique la ruta: ${imagePath}`);
+                } else {
+                    setError('Error al cargar el estímulo desde la nube.');
+                }
+                setImageUrl(null);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchImageUrl();
+    }, [subtestId, itemId]);
+
+    return (
+        <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center relative overflow-hidden">
+            {isLoading && <p className="text-white">Cargando estímulo...</p>}
+            {error && <p className="text-red-400 text-center p-4">{error}</p>}
+            {imageUrl && !isLoading && !error && (
+                <Image
+                    src={imageUrl}
+                    alt={`Estímulo ${subtestId} - Ítem ${itemId}`}
+                    fill
+                    style={{ objectFit: 'contain' }}
+                    priority
+                />
+            )}
         </div>
     );
 }
@@ -640,20 +695,16 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                  {/* Columna Izquierda: Estímulo y Aplicación */}
                 <div className="space-y-4">
-                    <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
-                       {!stimulusBooklet ? (
+                    {!stimulusBooklet ? (
+                        <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
                             <div className="text-white text-center p-4">
                                 <p className="text-lg font-semibold">Consigna Oral</p>
                                 <p className="text-sm">(Lea el problema en voz alta desde el manual de aplicación)</p>
                             </div>
-                        ) : (
-                             <div className="text-white text-center p-4 space-y-3">
-                                 <ImageIcon className="h-10 w-10 mx-auto text-gray-400" />
-                                 <p className="text-lg font-semibold">Estímulo Visual: Usar Cuadernillo {stimulusBooklet}</p>
-                                 <p className="text-sm text-gray-300">(Muestre el ítem {currentItem} del cuadernillo físico)</p>
-                             </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <StimulusDisplay subtestId={subtestId} itemId={currentItem} />
+                    )}
 
                     <div>
                         <Label className="text-sm font-medium">Respuesta Cualitativa / Observaciones</Label>
@@ -1046,3 +1097,5 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
+
+    
