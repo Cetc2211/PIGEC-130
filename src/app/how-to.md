@@ -94,36 +94,53 @@ Al final de este paso, tendrás una copia local exacta de tu proyecto en tu lapt
 
 Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage.
 
-### Método 1: Usando Firebase Cloud Shell (Recomendado para iPad)
+### Método 1 (Recomendado): Interfaz Gráfica de Google Cloud
 
-Este método es el más recomendado porque se hace todo desde el navegador, sin instalar nada en tu dispositivo.
+Este método es el más sencillo y visual, ideal para iPad. No usa la terminal.
 
-1.  **Comprime tus Archivos:**
-    *   En tu iPad, asegúrate de tener una carpeta `stimuli-assets` que contenga todas las subcarpetas de imágenes (`C`, `M`, `PV`, etc.).
-    *   Mantén presionada la carpeta `stimuli-assets` y selecciona **Comprimir**. Esto creará un archivo llamado **`stimuli-assets.zip`**.
+1.  **Prepara tu Carpeta:** En tu iPad, asegúrate de tener la carpeta `stimuli-assets` lista en tu aplicación de "Archivos". Esta es la carpeta que contiene las subcarpetas `C`, `M`, `PV`, etc.
 
-2.  **Abre Firebase Cloud Shell:**
-    *   Ve a la [Consola de Firebase](https://console.firebase.google.com/) y selecciona tu proyecto (`academic-tracker-qeoxi`).
-    *   En la esquina superior derecha, busca y haz clic en el ícono de la terminal **( `>_` )** que dice **"Activar Cloud Shell"**.
-    *   Espera a que se inicie el entorno. Verás una línea de comandos en la parte inferior de tu pantalla.
+2.  **Abre la Consola de Google Cloud Storage:**
+    *   Haz clic en este enlace directo para ir al navegador de Storage de tu proyecto:
+        [https://console.cloud.google.com/storage/browser/academic-tracker-qeoxi.appspot.com?project=academic-tracker-qeoxi](https://console.cloud.google.com/storage/browser/academic-tracker-qeoxi.appspot.com?project=academic-tracker-qeoxi)
 
-3.  **Sube el Archivo .zip:**
-    *   En la barra de herramientas de Cloud Shell, haz clic en el menú de tres puntos (**`⋮`**) y selecciona **Subir**.
-    *   Elige el archivo **`stimuli-assets.zip`** que creaste en el primer paso.
+3.  **Sube la Carpeta:**
+    *   Dentro de la consola de Google Cloud, verás los botones "Subir archivos" y **"Subir carpeta"**.
+    *   Haz clic en **"Subir carpeta"**.
+    *   Se abrirá el selector de archivos de tu iPad. Navega y selecciona la carpeta `stimuli-assets`.
 
-4.  **Descomprime y Sube a Storage:**
-    *   Una vez que termine de subirse, ejecuta los siguientes comandos en la terminal de Cloud Shell, uno por uno.
+4.  **Crea la Carpeta de Destino:**
+    *   Después de seleccionar la carpeta, Google Cloud te preguntará por una "Carpeta de destino" (Destination folder).
+    *   En ese pequeño campo, escribe: **`stimuli`**
+    *   Haz clic en "Crear" o "Subir".
 
-    ```bash
-    # 1. Descomprime el archivo.
-    # (El comando -o sobreescribe si ya existe, para evitar errores)
-    unzip -o stimuli-assets.zip
-
-    # 2. Usa el comando universal 'gsutil' para sincronizar la carpeta con Storage.
-    # Este comando es el más robusto y es el estándar de Google Cloud.
-    gsutil -m rsync -r stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
-    ```
-    *El comando `gsutil rsync` es el método más fiable para subir directorios completos.*
+El sistema comenzará a subir todas las imágenes y las organizará automáticamente dentro de una carpeta llamada `stimuli` en la nube.
 
 5.  **Verificación:**
-    *   Ve a la sección de **Storage** en tu consola de Firebase. Deberías ver una carpeta nueva llamada `stimuli` con todas tus imágenes dentro.
+    *   Una vez que termine, verás la nueva carpeta `stimuli` en la lista. Si haces clic en ella, podrás ver todas las subcarpetas (`C`, `M`, etc.) y las imágenes que subiste. ¡Y listo!
+
+### Método 2: Usando Firebase Cloud Shell (Alternativa)
+
+Usa este método solo si el anterior falla.
+
+1.  **Comprime tus Archivos:**
+    *   En tu iPad, mantén presionada la carpeta `stimuli-assets` y selecciona **Comprimir**. Esto creará `stimuli-assets.zip`.
+
+2.  **Abre Firebase Cloud Shell:**
+    *   Ve a la [Consola de Firebase](https://console.firebase.google.com/) y selecciona tu proyecto.
+    *   Haz clic en el ícono de la terminal **( `>_` )** en la esquina superior derecha.
+
+3.  **Sube el Archivo .zip:**
+    *   En la barra de Cloud Shell, haz clic en el menú de tres puntos (**`⋮`**) y selecciona **Subir**. Elige el archivo `stimuli-assets.zip`.
+
+4.  **Descomprime y Sube a Storage:**
+    *   Ejecuta los siguientes comandos en orden:
+    ```bash
+    # 1. Descomprime el archivo (el -o sobreescribe para evitar errores).
+    unzip -o stimuli-assets.zip
+
+    # 2. Usa el comando gsutil para sincronizar.
+    gsutil -m rsync -r stimuli-assets gs://academic-tracker-qeoxi.appspot.com/stimuli
+    ```
+
+¡Y listo! Con cualquiera de estos dos métodos, tus estímulos estarán en la nube.
