@@ -632,6 +632,8 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
     }
 
 
+    const verbalRenderTypes = ['VERBAL_CRITERIO', 'ARITHMETIC', 'LETTER_NUMBER_SEQUENCING'];
+
     return (
         <div className="p-1 space-y-4">
             <div className="flex justify-between items-center">
@@ -646,18 +648,18 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType }: { sub
                  {/* Columna Izquierda: Estímulo y Aplicación */}
                 <div className="space-y-4">
                     <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
-                        {renderType !== 'ARITHMETIC' && renderType !== 'LETTER_NUMBER_SEQUENCING' ? (
-                            <img 
+                       {verbalRenderTypes.includes(renderType) ? (
+                            <div className="text-white text-center p-4">
+                                <p className="text-lg font-semibold">Consigna Oral</p>
+                                <p className="text-sm">(Lea el problema en voz alta desde el manual de aplicación)</p>
+                            </div>
+                        ) : (
+                             <img 
                                 src={stimulusImageUrl} 
-                                alt={`Estímulo para el ítem ${currentItem}`}
+                                alt={`Estímulo para el ítem ${currentItem} de ${subtestName}`}
                                 className="max-w-full max-h-full object-contain rounded-sm"
                                 onContextMenu={(e) => e.preventDefault()}
                             />
-                        ) : (
-                            <div className="text-white text-center p-4">
-                                <p className="text-lg font-semibold">Consigna Oral</p>
-                                <p className="text-sm">(Lea el problema en voz alta desde el manual)</p>
-                            </div>
                         )}
                     </div>
 
@@ -991,7 +993,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Comparación</TableHead><TableHead>Diferencia</TableHead><TableHead>Significancia</TableHead></TableRow></TableHeader>
                                     <TableBody>
-                                        {results.discrepancies.map(d => (
+                                        {results.discrepancias.map(d => (
                                             <TableRow key={d.pair}>
                                                 <TableCell>{d.pair}</TableCell>
                                                 <TableCell>{d.diff}</TableCell>
