@@ -92,29 +92,23 @@ Al final de este paso, tendrás una copia local exacta de tu proyecto en tu lapt
 
 ## 🛠️ Guía: Subir Estímulos a Firebase Storage (Método Universal)
 
-Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage. Este método es el más recomendado porque funciona de forma idéntica y sencilla en cualquier dispositivo, incluyendo iPad.
+Para que la Consola de Evaluación WISC/WAIS funcione, es necesario subir las imágenes de los estímulos (puzles, matrices, etc.) a Firebase Storage. Este método es el más recomendado porque **no necesitas descargar el código del proyecto** y funciona de forma idéntica en cualquier dispositivo, incluyendo iPad.
 
-### Paso 1: Organiza la Carpeta `stimuli-assets`
+### Paso 1: Prepara una Carpeta de Trabajo
 
-La clave es mover la carpeta con las imágenes **DENTRO** de la carpeta principal de tu proyecto.
+La clave es crear una carpeta temporal que contenga **únicamente** los estímulos que quieres subir.
 
-1.  **Descarga y Descomprime:** Si tienes las imágenes en Google Drive, primero descárgalas a tu dispositivo (iPad o computadora) y descomprime el archivo `.zip`. Obtendrás una carpeta llamada `stimuli-assets`.
-2.  **Mueve la Carpeta:** Arrastra y suelta la carpeta `stimuli-assets` para que quede **dentro** de la carpeta de tu proyecto (ej., `suite-integral-mtss`).
+1.  **Crea una Carpeta Temporal:** En tu dispositivo (en la ubicación "En mi iPad", por ejemplo), crea una nueva carpeta vacía. Vamos a llamarla `firebase-upload`.
+2.  **Descarga y Mueve los Estímulos:**
+    *   Si tienes las imágenes en Google Drive, descárgalas y descomprime el archivo `.zip`. Obtendrás una carpeta llamada `stimuli-assets`.
+    *   Mueve o copia la carpeta `stimuli-assets` para que quede **dentro** de la carpeta `firebase-upload` que acabas de crear.
 
-Aquí tienes un diagrama de cómo debe quedar la estructura final:
+La estructura debe ser la siguiente:
 
 ```
-// ANTES (Incorrecto)
 En mi iPad/
-├── suite-integral-mtss/  <-- Carpeta del proyecto
-└── stimuli-assets/       <-- Carpeta de imágenes (separada)
-
-// DESPUÉS (Correcto)
-En mi iPad/
-└── suite-integral-mtss/       <-- Carpeta del proyecto
-    ├── src/
-    ├── package.json
-    └── stimuli-assets/        <-- Carpeta de imágenes (DENTRO del proyecto)
+└── firebase-upload/         <-- Tu carpeta de trabajo temporal
+    └── stimuli-assets/        <-- La carpeta que contiene las imágenes
         ├── C/
         │   ├── item1.webp
         │   └── item2.webp
@@ -138,19 +132,21 @@ En mi iPad/
 
 ### Paso 3: Sube las Imágenes
 
-1.  **Navega a tu Proyecto:** En la terminal, asegúrate de estar dentro de la carpeta raíz de tu proyecto (`suite-integral-mtss`). Si usas una app como `a-Shell` en iPad, navega hasta la carpeta del proyecto.
-2.  **Ejecuta el Comando Universal:** Copia y pega el siguiente comando. Como las imágenes ya están dentro del proyecto, la ruta es simple y directa:
-
+1.  **Navega a tu Carpeta de Trabajo:** En la terminal, debes moverte hasta la carpeta `firebase-upload`. Si usas una app como `a-Shell` en iPad, el comando es `cd firebase-upload`.
+    ```bash
+    cd firebase-upload
+    ```
+2.  **Ejecuta el Comando Universal:** Una vez que estés **dentro** de la carpeta `firebase-upload`, copia y pega el siguiente comando.
     ```bash
     firebase storage:upload ./stimuli-assets stimuli
     ```
-    *   `./stimuli-assets`: Es la ruta a tu carpeta local. El `./` significa "desde la carpeta actual".
-    *   `stimuli`: Es el nombre de la carpeta de destino en la nube de Firebase Storage.
+    *   `./stimuli-assets`: Es la ruta a tu carpeta local de imágenes. El `./` significa "a partir de la carpeta actual".
+    *   `stimuli`: Es el nombre de la carpeta de destino que se creará en la nube de Firebase Storage.
 
 ### Paso 4: Verificación
 
 *   Ve a la Consola de Firebase, selecciona tu proyecto (`academic-tracker-qeoxi`).
 *   Navega a la sección **Storage**.
-*   Verás una nueva carpeta llamada `stimuli` que contiene todas las subcarpetas e imágenes que acabas de subir.
+*   Verás una nueva carpeta llamada `stimuli` que contiene todas las subcarpetas (`C`, `M`, `PV`, etc.) y las imágenes que acabas de subir.
 
-¡Y listo! Con la estructura de carpetas correcta, este comando funcionará sin problemas desde cualquier terminal.
+¡Y listo! Este método es más limpio y evita cualquier confusión con el código del proyecto.
