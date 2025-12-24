@@ -346,7 +346,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                 if (savedCurrentItem) setCurrentItem(savedCurrentItem);
                 console.log(`Sesión de ${subtestName} recuperada.`);
             }
-        } catch (error) {
+        } catch (error) => {
             console.error("Error al recuperar la sesión del localStorage:", error);
         }
     }, [storageKey, subtestName]);
@@ -472,8 +472,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
     };
     
     const currentItemScore = scores[currentItem]?.score;
-    
-    const stimulusImageUrl = `https://picsum.photos/seed/stimulus${subtestId}${currentItem}/600/400`;
 
     const renderInputInterface = () => {
         switch(renderType) {
@@ -652,7 +650,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                              <div className="text-white text-center p-4 space-y-3">
                                  <ImageIcon className="h-10 w-10 mx-auto text-gray-400" />
                                  <p className="text-lg font-semibold">Estímulo Visual: Usar Cuadernillo {stimulusBooklet}</p>
-                                 <p className="text-sm text-gray-300">(El estímulo real del ítem {currentItem} se mostrará aquí)</p>
+                                 <p className="text-sm text-gray-300">(Muestre el ítem {currentItem} del cuadernillo físico)</p>
                              </div>
                         )}
                     </div>
