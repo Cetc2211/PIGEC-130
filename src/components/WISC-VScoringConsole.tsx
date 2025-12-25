@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -63,27 +64,27 @@ const subtestsByDomainWISC: { [key: string]: Subtest[] } = {
 
 const subtestsByDomainWAIS: { [key: string]: Subtest[] } = {
     ICV: [
-        { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
-        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
-        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
-        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true, isCit: false },
+        { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false, stimulusBooklet: 0 },
+        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false, stimulusBooklet: 1 },
+        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false, stimulusBooklet: 0 },
+        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true, isCit: false, stimulusBooklet: 0 },
     ],
     IRP: [
-        { id: 'C', name: 'Diseño con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
-        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
-        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true, optional: false },
-        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', optional: true, isCit: false },
-        { id: 'FI', name: 'Figuras Incompletas', renderType: 'VERBAL_CRITERIO', optional: true, isCit: false },
+        { id: 'C', name: 'Diseño con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false, stimulusBooklet: 1 },
+        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false, stimulusBooklet: 1 },
+        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true, optional: false, stimulusBooklet: 2 },
+        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', optional: true, isCit: false, stimulusBooklet: 1 },
+        { id: 'FI', name: 'Figuras Incompletas', renderType: 'VERBAL_CRITERIO', optional: true, isCit: false, stimulusBooklet: 2 },
     ],
     IMT: [
-        { id: 'D', name: 'Retención de Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
-        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', isCit: true, optional: false },
-        { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, isCit: false },
+        { id: 'D', name: 'Retención de Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false, stimulusBooklet: 0 },
+        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', isCit: true, optional: false, stimulusBooklet: 0 },
+        { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, isCit: false, stimulusBooklet: 0 },
     ],
     IVP: [
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, optional: false },
-        { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, optional: false },
-        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, isCit: false },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, optional: false, stimulusBooklet: 0 },
+        { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, optional: false, stimulusBooklet: 0 },
+        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, isCit: false, stimulusBooklet: 0 },
     ]
 };
 
