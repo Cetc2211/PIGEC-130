@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -346,7 +347,9 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
 
     useEffect(() => {
         const fetchImageUrl = async () => {
+            console.log(`[STIMULUS LOG] Intentando cargar: ${imagePath}`);
             if (imageUrlCache.has(imagePath)) {
+                console.log(`[STIMULUS LOG] Imagen encontrada en caché.`);
                 setImageUrl(imageUrlCache.get(imagePath)!);
                 setIsLoading(false);
                 return;
@@ -358,6 +361,7 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
             try {
                 const imageRef = ref(storage, imagePath);
                 const url = await getDownloadURL(imageRef);
+                console.log(`[STIMULUS LOG] ¡Éxito! URL de descarga obtenida:`, url);
                 imageUrlCache.set(imagePath, url);
                 setImageUrl(url);
             } catch (err: any) {
@@ -365,7 +369,7 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                 if (err.code === 'storage/object-not-found') {
                     setError(`Estímulo no encontrado.`);
                 } else if (err.code === 'storage/retry-limit-exceeded') {
-                    setError('Error de red. Verifique la conexión.');
+                    setError('Error de red. Verifique la conexión y configuración CORS.');
                 }
                 else {
                     setError('Error al cargar el estímulo.');
@@ -1107,4 +1111,5 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
+
 
