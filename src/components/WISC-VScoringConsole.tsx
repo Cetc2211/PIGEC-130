@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -17,10 +18,6 @@ import { storage } from '@/lib/firebase';
 import Image from 'next/image';
 
 
-interface WISCScoringConsoleProps {
-    studentAge: number;
-}
-
 interface Subtest {
     id: string;
     name: string;
@@ -30,6 +27,12 @@ interface Subtest {
     stimulusBooklet?: number;
     optional?: boolean;
 }
+
+interface WISCScoringConsoleProps {
+    studentAge: number;
+}
+
+
 
 const subtestsByDomainWISC: { [key: string]: Subtest[] } = {
     ICV: [
@@ -381,14 +384,15 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const imagePath = `stimuli/${subtestId}/item${itemId}.webp.png`;
-
     useEffect(() => {
         const fetchImageUrl = async () => {
-            console.log(`[STIMULUS LOG] Intentando cargar: ${imagePath}`);
-            if (imageUrlCache.has(imagePath)) {
+            // Construcción de la ruta basada en la estructura observada en consola
+            const storagePath = `stimuli/${subtestId}/item${itemId}.webp.png`;
+            console.log(`[STIMULUS LOG] Intentando cargar: ${storagePath}`);
+
+            if (imageUrlCache.has(storagePath)) {
                 console.log(`[STIMULUS LOG] Imagen encontrada en caché.`);
-                setImageUrl(imageUrlCache.get(imagePath)!);
+                setImageUrl(imageUrlCache.get(storagePath)!);
                 setIsLoading(false);
                 return;
             }
@@ -397,17 +401,17 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
             setError(null);
             
             try {
-                const imageRef = ref(storage, imagePath);
-                const url = await getDownloadURL(imageRef);
+                const storageRef = ref(storage, storagePath);
+                const url = await getDownloadURL(storageRef);
                 console.log(`[STIMULUS LOG] ¡Éxito! URL de descarga obtenida:`, url);
-                imageUrlCache.set(imagePath, url);
+                imageUrlCache.set(storagePath, url);
                 setImageUrl(url);
             } catch (err: any) {
-                console.error(`Error fetching image: ${imagePath}`, err);
+                console.error(`Error 404: No existe el archivo en la ruta ${storagePath}`, err);
                 if (err.code === 'storage/object-not-found') {
-                    setError(`Estímulo no encontrado.`);
+                    setError(`Estímulo no encontrado en la ruta esperada.`);
                 } else if (err.code === 'storage/retry-limit-exceeded') {
-                    setError('Error de red. Verifique la conexión y configuración CORS.');
+                    setError('Error de red o permisos. Verifique CORS y reglas de Storage.');
                 }
                 else {
                     setError('Error al cargar el estímulo.');
@@ -419,7 +423,7 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
         };
 
         fetchImageUrl();
-    }, [imagePath]);
+    }, [subtestId, itemId]);
 
     return (
         <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center relative overflow-hidden">
@@ -1150,3 +1154,4 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
+
