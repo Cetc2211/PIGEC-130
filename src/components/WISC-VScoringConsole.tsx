@@ -22,12 +22,22 @@ interface WISCScoringConsoleProps {
     studentAge: number;
 }
 
-const subtestsByDomainWISC = {
+interface Subtest {
+    id: string;
+    name: string;
+    renderType: string;
+    isCit: boolean;
+    order?: number;
+    stimulusBooklet?: number;
+    optional?: boolean;
+}
+
+const subtestsByDomainWISC: { [key: string]: Subtest[] } = {
     ICV: [
         { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true, order: 2 },
         { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, order: 6, stimulusBooklet: 1 },
-        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', optional: true, order: 11 },
-        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true, order: 14 },
+        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', optional: true, isCit: false, order: 11 },
+        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true, isCit: false, order: 14 },
     ],
     IVE: [
         { id: 'C', name: 'Construcción con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 1, stimulusBooklet: 1 },
@@ -36,44 +46,44 @@ const subtestsByDomainWISC = {
     IRF: [
         { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, order: 3, stimulusBooklet: 1 },
         { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', isCit: true, order: 7, stimulusBooklet: 1 },
-        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', optional: true, order: 15, stimulusBooklet: 2 },
+        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', optional: true, isCit: false, order: 15, stimulusBooklet: 2 },
     ],
     IMT: [
         { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 4 },
         { id: 'RI', name: 'Retención de Imágenes', renderType: 'MULTI_CHOICE', isCit: true, order: 9, stimulusBooklet: 2 },
-        { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, order: 12 },
+        { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, isCit: false, order: 12 },
     ],
     IVP: [
         { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, order: 5 },
         { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, order: 10 },
-        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, order: 13 },
+        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, isCit: false, order: 13 },
     ]
 };
 
 
-const subtestsByDomainWAIS = {
+const subtestsByDomainWAIS: { [key: string]: Subtest[] } = {
     ICV: [
         { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
         { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
         { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
-        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true, isCit: false },
     ],
     IRP: [
         { id: 'C', name: 'Diseño con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
         { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
         { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true, optional: false },
-        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', optional: true },
-        { id: 'FI', name: 'Figuras Incompletas', renderType: 'VERBAL_CRITERIO', optional: true },
+        { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', optional: true, isCit: false },
+        { id: 'FI', name: 'Figuras Incompletas', renderType: 'VERBAL_CRITERIO', optional: true, isCit: false },
     ],
     IMT: [
         { id: 'D', name: 'Retención de Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
         { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', isCit: true, optional: false },
-        { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true },
+        { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, isCit: false },
     ],
     IVP: [
         { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, optional: false },
         { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, optional: false },
-        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true },
+        { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, isCit: false },
     ]
 };
 
@@ -128,7 +138,7 @@ type StrengthWeakness = {
 const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWais: boolean): {
     compositeScores: CompositeScoreProfile[];
     discrepancies: Discrepancy[];
-    strengthsAndWeaknesses: (StrengthWeakness | null)[];
+    strengthsAndWeaknesses: StrengthWeakness[];
 } => {
     
     const effectiveScores = {...scaledScores};
@@ -161,7 +171,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
 
     let compositeScores: CompositeScoreProfile[] = [];
     let discrepancies: Discrepancy[] = [];
-    let strengthsAndWeaknesses: (StrengthWeakness | null)[] = [];
+    let strengthsAndWeaknesses: StrengthWeakness[] = [];
 
 
     if (isWais) {
@@ -203,7 +213,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         if (diff <= -valoresCriticos['D-C']) classification = 'Debilidad (D)';
         const subtestInfo = allSubtests.find(t => t.id === id);
         return { name: subtestInfo?.name, score, diff: diff.toFixed(2), classification };
-    }).filter(s => s && s.name);
+    }).filter((s): s is StrengthWeakness => s !== null && s.name !== undefined);
 
     return { compositeScores, discrepancies, strengthsAndWeaknesses };
 };
@@ -853,7 +863,7 @@ const pedagogicalRecommendations = {
     }
 };
 
-function PedagogicalRecommendations({ compositeScores }: { compositeScores: any[] }) {
+function PedagogicalRecommendations({ compositeScores }: { compositeScores: CompositeScoreProfile[] }) {
     const recommendationsToShow = [];
     
     const icvScore = compositeScores.find(s => s.name.includes('ICV'))?.score;
