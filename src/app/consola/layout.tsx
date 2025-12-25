@@ -13,11 +13,9 @@ export default function ConsoleLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body>
-        {children}
-        <Toaster />
-      </body>
-    </html>
+    <>
+      {children}
+      <Toaster />
+    </>
   );
 }
