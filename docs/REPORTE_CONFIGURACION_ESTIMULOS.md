@@ -35,7 +35,7 @@ Es la "biblioteca" donde se guardan todas las imágenes. Para que la aplicación
 Es la parte de la aplicación que "sabe" cómo conectarse a Firebase y pedir las imágenes.
 
 -   **Archivo de Conexión (`src/lib/firebase.ts`):**
-    -   Este archivo contiene las "llaves" (`apiKey`, `authDomain`, etc.) que autorizan a tu aplicación a hablar con tu proyecto de Firebase.
+    -   Este archivo contiene las "llaves" (`apiKey`, `storageBucket`, etc.) que autorizan a tu aplicación a hablar con tu proyecto de Firebase.
     -   **Punto Crítico Corregido:** La `apiKey` y el `storageBucket` han sido verificados y corregidos para coincidir exactamente con los de tu proyecto, solucionando los errores previos de `BucketNotFound` y `retry-limit-exceeded`.
 
 -   **Componente de Visualización (`src/components/WISC-VScoringConsole.tsx`):**
