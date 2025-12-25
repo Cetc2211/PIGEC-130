@@ -53,26 +53,26 @@ const subtestsByDomainWISC = {
 
 const subtestsByDomainWAIS = {
     ICV: [
-        { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', isCit: true },
+        { id: 'S', name: 'Semejanzas', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
+        { id: 'V', name: 'Vocabulario', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
+        { id: 'I', name: 'Información', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
         { id: 'Co', name: 'Comprensión', renderType: 'VERBAL_CRITERIO', optional: true },
     ],
     IRP: [
-        { id: 'C', name: 'Diseño con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true },
+        { id: 'C', name: 'Diseño con Cubos', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
+        { id: 'M', name: 'Matrices', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
+        { id: 'PV', name: 'Puzles Visuales', renderType: 'MULTI_CHOICE', isCit: true, optional: false },
         { id: 'B', name: 'Balanzas', renderType: 'SINGLE_CHOICE', optional: true },
         { id: 'FI', name: 'Figuras Incompletas', renderType: 'VERBAL_CRITERIO', optional: true },
     ],
     IMT: [
-        { id: 'D', name: 'Retención de Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true },
-        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', isCit: true },
+        { id: 'D', name: 'Retención de Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, optional: false },
+        { id: 'A', name: 'Aritmética', renderType: 'ARITHMETIC', isCit: true, optional: false },
         { id: 'LN', name: 'Sucesión de Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true },
     ],
     IVP: [
-        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true },
-        { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true },
+        { id: 'BS', name: 'Búsqueda de Símbolos', renderType: 'SPEED_TEST', isCit: true, optional: false },
+        { id: 'Cl', name: 'Claves', renderType: 'SPEED_TEST', isCit: true, optional: false },
         { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true },
     ]
 };
@@ -103,7 +103,33 @@ const getDescriptiveClassification = (score: number) => {
     return "Extremadamente Bajo";
 };
 
-const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWais: boolean) => {
+type CompositeScoreProfile = {
+    name: string;
+    score: number;
+    percentile: number;
+    confidenceInterval: string;
+    classification: string;
+};
+
+type Discrepancy = {
+    pair: string;
+    diff: number;
+    significant: boolean;
+};
+
+type StrengthWeakness = {
+    name: string | undefined;
+    score: number;
+    diff: string;
+    classification: string;
+};
+
+
+const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWais: boolean): {
+    compositeScores: CompositeScoreProfile[];
+    discrepancies: Discrepancy[];
+    strengthsAndWeaknesses: (StrengthWeakness | null)[];
+} => {
     
     const effectiveScores = {...scaledScores};
     let ivpSubtests = ['BS', 'Cl'];
@@ -125,7 +151,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         return Math.round(100 + 15 * (meanScaled - 10) / 3);
     };
     
-    const createProfile = (name: string, score: number) => ({
+    const createProfile = (name: string, score: number): CompositeScoreProfile => ({
         name,
         score,
         percentile: Math.max(1, Math.min(99, Math.round(((score - 50) / 100) * 98) + 1)),
@@ -133,7 +159,10 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         classification: getDescriptiveClassification(score),
     });
 
-    let compositeScores, discrepancies, strengthsAndWeaknesses;
+    let compositeScores: CompositeScoreProfile[] = [];
+    let discrepancies: Discrepancy[] = [];
+    let strengthsAndWeaknesses: (StrengthWeakness | null)[] = [];
+
 
     if (isWais) {
         const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V', 'I']), 3));
@@ -472,6 +501,7 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
             clearInterval(interval);
         }
         return () => { if (interval) clearInterval(interval); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isTimerActive, currentItem, renderType, subtestId]);
 
 
@@ -1051,7 +1081,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Comparación</TableHead><TableHead>Diferencia</TableHead><TableHead>Significancia</TableHead></TableRow></TableHeader>
                                     <TableBody>
-                                        {results.discrepancias.map(d => (
+                                        {results.discrepancies.map((d: Discrepancy) => (
                                             <TableRow key={d.pair}>
                                                 <TableCell>{d.pair}</TableCell>
                                                 <TableCell>{d.diff}</TableCell>
@@ -1067,7 +1097,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 <Table>
                                      <TableHeader><TableRow><TableHead>Subprueba</TableHead><TableHead>PE</TableHead><TableHead>Clasificación</TableHead></TableRow></TableHeader>
                                     <TableBody>
-                                         {results.strengthsAndWeaknesses.map(s => (
+                                         {results.strengthsAndWeaknesses.map(s => s && (
                                             <TableRow key={s.name}>
                                                 <TableCell>{s.name}</TableCell>
                                                 <TableCell>{s.score}</TableCell>
@@ -1111,5 +1141,3 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
-
-
