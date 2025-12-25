@@ -201,7 +201,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         : ['S', 'V', 'C', 'M', 'B', 'D', 'Cl', 'PV', 'RI', 'BS'];
 
     const validCoreScores = coreSubtests.map(id => effectiveScores[id]).filter(score => score !== undefined);
-    const meanPE = validCoreScores.length > 0 ? validCoreScores.reduce((sum, score) => sum + score, 0) / validCoreScores.length : 0;
+    const meanPE = validCoreScores.length > 0 ? validCoreScores.reduce((sum, score) => sum + (score || 0), 0) / validCoreScores.length : 0;
     
     const allSubtests = isWais ? Object.values(subtestsByDomainWAIS).flat() : Object.values(subtestsByDomainWISC).flat();
     
