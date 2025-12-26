@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -399,18 +400,17 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                 return;
             }
 
-            console.log(`[STIMULUS LOG] Buscando en caché o Firebase para: ${storagePath}`);
             setIsLoading(true);
             setError(null);
             
             try {
                 const storageRef = ref(storage, storagePath);
                 const url = await getDownloadURL(storageRef);
-                console.log(`[STIMULUS LOG] ¡Éxito! URL obtenida de Firebase:`, url);
+                console.log("URL de descarga obtenida de Firebase:", url);
                 imageUrlCache.set(storagePath, url);
                 setImageUrl(url);
             } catch (err: any) {
-                console.error(`Error 404: No existe el archivo en la ruta ${storagePath}`, err);
+                console.error(`Error al obtener URL para ${storagePath}:`, err);
                 if (err.code === 'storage/object-not-found') {
                     setError(`Estímulo no encontrado. Verifique que el archivo exista en Storage.`);
                 } else if (err.code === 'storage/retry-limit-exceeded') {
