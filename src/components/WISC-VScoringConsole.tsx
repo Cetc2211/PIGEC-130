@@ -17,7 +17,6 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from '@/lib/firebase';
 import Image from 'next/image';
 
-
 interface Subtest {
     id: string;
     name: string;
@@ -27,6 +26,7 @@ interface Subtest {
     stimulusBooklet?: number;
     optional?: boolean;
 }
+
 
 interface WISCScoringConsoleProps {
     studentAge: number;
@@ -386,7 +386,6 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
 
     useEffect(() => {
         const fetchImageUrl = async () => {
-            // Construcción de la ruta basada en la estructura observada en consola
             const storagePath = `stimuli/${subtestId}/item${itemId}.webp`;
             console.log(`[STIMULUS LOG] Intentando cargar: ${storagePath}`);
 
@@ -409,7 +408,7 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
             } catch (err: any) {
                 console.error(`Error 404: No existe el archivo en la ruta ${storagePath}`, err);
                 if (err.code === 'storage/object-not-found') {
-                    setError(`Estímulo no encontrado en la ruta esperada.`);
+                    setError(`Estímulo no encontrado. Verifique que el archivo exista en Storage.`);
                 } else if (err.code === 'storage/retry-limit-exceeded') {
                     setError('Error de red o permisos. Verifique CORS y reglas de Storage.');
                 }
@@ -1154,4 +1153,3 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
-
