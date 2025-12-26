@@ -36,7 +36,7 @@ Es la parte de la aplicación que "sabe" cómo conectarse a Firebase y pedir las
 
 -   **Archivo de Conexión (`src/lib/firebase.ts`):**
     -   Este archivo es el **puente** entre la aplicación y tu proyecto de Firebase. Contiene un objeto `firebaseConfig` con las "llaves" que autorizan a tu aplicación a hablar con tus servicios en la nube.
-    -   **Punto Crítico:** La propiedad `storageBucket: "academic-tracker-qeoxi.appspot.com"` en este archivo le dice al SDK de Firebase que todas las operaciones de almacenamiento deben realizarse en tu bucket específico.
+    -   **Punto Crítico:** La propiedad `storageBucket: "academic-tracker-qeoxi.appspot.com"` en este archivo le dice al SDK de Firebase que todas las operaciones de almacenamiento deben realizarse en tu bucket específico. Aunque en la consola de Google Cloud veas la URL como `gs://...firebasestorage.app`, la configuración del cliente **debe** usar el formato `.appspot.com`.
 
 -   **Componente de Visualización (`src/components/WISC-VScoringConsole.tsx`):**
     -   Dentro de este archivo, un sub-componente llamado `StimulusDisplay` es el encargado de la lógica de carga.
