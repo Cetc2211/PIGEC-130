@@ -387,7 +387,7 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
     useEffect(() => {
         const fetchImageUrl = async () => {
             // Construcción de la ruta basada en la estructura observada en consola
-            const storagePath = `stimuli/${subtestId}/item${itemId}.webp.png`;
+            const storagePath = `stimuli/${subtestId}/item${itemId}.webp`;
             console.log(`[STIMULUS LOG] Intentando cargar: ${storagePath}`);
 
             if (imageUrlCache.has(storagePath)) {
