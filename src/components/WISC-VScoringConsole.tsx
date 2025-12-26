@@ -27,12 +27,9 @@ interface Subtest {
     optional?: boolean;
 }
 
-
 interface WISCScoringConsoleProps {
     studentAge: number;
 }
-
-
 
 const subtestsByDomainWISC: { [key: string]: Subtest[] } = {
     ICV: [
@@ -61,7 +58,6 @@ const subtestsByDomainWISC: { [key: string]: Subtest[] } = {
         { id: 'Ca', name: 'Cancelación', renderType: 'SPEED_TEST', optional: true, isCit: false, order: 13 },
     ]
 };
-
 
 const subtestsByDomainWAIS: { [key: string]: Subtest[] } = {
     ICV: [
@@ -104,7 +100,6 @@ const getScaledScore = (rawScore: number, subtestId: string): number => {
     return Math.max(1, Math.min(19, scaled));
 };
 
-
 const getDescriptiveClassification = (score: number) => {
     if (score >= 130) return "Muy Superior";
     if (score >= 120) return "Superior";
@@ -135,7 +130,6 @@ type StrengthWeakness = {
     diff: string;
     classification: string;
 };
-
 
 const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWais: boolean): {
     compositeScores: CompositeScoreProfile[];
@@ -174,7 +168,6 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
     let compositeScores: CompositeScoreProfile[] = [];
     let discrepancies: Discrepancy[] = [];
     let strengthsAndWeaknesses: StrengthWeakness[] = [];
-
 
     if (isWais) {
         const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V', 'I']), 3));
@@ -219,7 +212,6 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
 
     return { compositeScores, discrepancies, strengthsAndWeaknesses };
 };
-
 
 const scoringGuideData: { [subtestId: string]: { [itemId: number | string]: { '2_puntos'?: string[], '1_punto'?: string[], '0_puntos'?: string[] } } } = {
     'S': {
@@ -380,29 +372,41 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
 const imageUrlCache = new Map<string, string>();
 
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const storagePath = `stimuli/${subtestId}/item${itemId}.webp`;
+    const [imageUrl, setImageUrl] = useState<string | null>(imageUrlCache.get(storagePath) || null);
+    const [isLoading, setIsLoading] = useState(!imageUrl);
     const [error, setError] = useState<string | null>(null);
+
+    // Limpiar caché al montar para asegurar datos frescos
+    useEffect(() => {
+        imageUrlCache.clear();
+    }, []);
+
+    const handleImageError = useCallback(() => {
+        setError('Error al cargar la imagen desde la caché. Reintentando...');
+        console.warn(`[STIMULUS CACHE] La URL en caché para ${storagePath} es inválida. Eliminando.`);
+        imageUrlCache.delete(storagePath); // Invalida la URL incorrecta
+        // Forza un re-render para que el useEffect de abajo se ejecute de nuevo
+        setImageUrl(null); 
+        setIsLoading(true);
+    }, [storagePath]);
 
     useEffect(() => {
         const fetchImageUrl = async () => {
-            const storagePath = `stimuli/${subtestId}/item${itemId}.webp`;
-            console.log(`[STIMULUS LOG] Intentando cargar: ${storagePath}`);
-
-            if (imageUrlCache.has(storagePath)) {
-                console.log(`[STIMULUS LOG] Imagen encontrada en caché.`);
-                setImageUrl(imageUrlCache.get(storagePath)!);
+            if (imageUrl) {
+                // Si ya tenemos una URL (de la caché), la usamos y salimos
                 setIsLoading(false);
                 return;
             }
 
+            console.log(`[STIMULUS LOG] Buscando en caché o Firebase para: ${storagePath}`);
             setIsLoading(true);
             setError(null);
             
             try {
                 const storageRef = ref(storage, storagePath);
                 const url = await getDownloadURL(storageRef);
-                console.log(`[STIMULUS LOG] ¡Éxito! URL de descarga obtenida:`, url);
+                console.log(`[STIMULUS LOG] ¡Éxito! URL obtenida de Firebase:`, url);
                 imageUrlCache.set(storagePath, url);
                 setImageUrl(url);
             } catch (err: any) {
@@ -411,8 +415,7 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                     setError(`Estímulo no encontrado. Verifique que el archivo exista en Storage.`);
                 } else if (err.code === 'storage/retry-limit-exceeded') {
                     setError('Error de red o permisos. Verifique CORS y reglas de Storage.');
-                }
-                else {
+                } else {
                     setError('Error al cargar el estímulo.');
                 }
                 setImageUrl(null);
@@ -422,12 +425,12 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
         };
 
         fetchImageUrl();
-    }, [subtestId, itemId]);
+    }, [subtestId, itemId, storagePath, imageUrl]);
 
     return (
         <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center relative overflow-hidden">
             {isLoading && <p className="text-white">Cargando estímulo...</p>}
-            {error && (
+            {error && !isLoading && (
                 <div className="text-center text-yellow-400 p-4">
                     <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
                     <p className="font-semibold">{error}</p>
@@ -441,6 +444,7 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                     fill
                     style={{ objectFit: 'contain' }}
                     priority
+                    onError={handleImageError}
                 />
             )}
         </div>
@@ -748,7 +752,6 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
         );
     }
 
-
     return (
         <div className="p-1 space-y-4">
             <div className="flex justify-between items-center">
@@ -761,15 +764,15 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                    {!stimulusBooklet ? (
+                    {stimulusBooklet ? (
+                        <StimulusDisplay subtestId={subtestId} itemId={currentItem} />
+                    ) : (
                         <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center">
                             <div className="text-white text-center p-4">
                                 <p className="text-lg font-semibold">Consigna Oral</p>
                                 <p className="text-sm">(Lea el problema en voz alta desde el manual de aplicación)</p>
                             </div>
                         </div>
-                    ) : (
-                        <StimulusDisplay subtestId={subtestId} itemId={currentItem} />
                     )}
 
                     <div>
