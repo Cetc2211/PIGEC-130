@@ -1,6 +1,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -370,66 +371,53 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
     );
 }
 
-const imageUrlCache = new Map<string, string>();
-
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
     const storagePath = `stimuli/${subtestId}/item${itemId}.webp`;
-    const [imageUrl, setImageUrl] = useState<string | null>(imageUrlCache.get(storagePath) || null);
-    const [isLoading, setIsLoading] = useState(!imageUrl);
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Limpiar caché al montar para asegurar datos frescos
     useEffect(() => {
-        imageUrlCache.clear();
-    }, []);
+        let isCancelled = false;
 
-    const handleImageError = useCallback(() => {
-        setError('Error al cargar la imagen desde la caché. Reintentando...');
-        console.warn(`[STIMULUS CACHE] La URL en caché para ${storagePath} es inválida. Eliminando.`);
-        imageUrlCache.delete(storagePath); // Invalida la URL incorrecta
-        // Forza un re-render para que el useEffect de abajo se ejecute de nuevo
-        setImageUrl(null); 
-        setIsLoading(true);
-    }, [storagePath]);
-
-    useEffect(() => {
         const fetchImageUrl = async () => {
-            if (imageUrl) {
-                // Si ya tenemos una URL (de la caché), la usamos y salimos
-                setIsLoading(false);
-                return;
-            }
-
             setIsLoading(true);
             setError(null);
             
             try {
                 const storageRef = ref(storage, storagePath);
                 const url = await getDownloadURL(storageRef);
-                console.log("URL de descarga obtenida de Firebase:", url);
-                imageUrlCache.set(storagePath, url);
-                setImageUrl(url);
-            } catch (err: any) {
-                console.error(`Error al obtener URL para ${storagePath}:`, err);
-                if (err.code === 'storage/object-not-found') {
-                    setError(`Estímulo no encontrado. Verifique que el archivo exista en Storage.`);
-                } else if (err.code === 'storage/retry-limit-exceeded') {
-                    setError('Error de red o permisos. Verifique CORS y reglas de Storage.');
-                } else {
-                    setError('Error al cargar el estímulo.');
+                if (!isCancelled) {
+                    setImageUrl(url);
                 }
-                setImageUrl(null);
+            } catch (err: any) {
+                if (!isCancelled) {
+                    console.error(`Error al obtener URL para ${storagePath}:`, err);
+                    if (err.code === 'storage/object-not-found') {
+                        setError(`Estímulo no encontrado. Verifique que el archivo exista en Storage.`);
+                    } else {
+                        setError('Error al cargar el estímulo. Verifique su conexión y los permisos de Storage.');
+                    }
+                    setImageUrl(null);
+                }
             } finally {
-                setIsLoading(false);
+                if (!isCancelled) {
+                    setIsLoading(false);
+                }
             }
         };
 
         fetchImageUrl();
-    }, [subtestId, itemId, storagePath, imageUrl]);
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [subtestId, itemId, storagePath]);
+
 
     return (
         <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center relative overflow-hidden">
-            {isLoading && <p className="text-white">Cargando estímulo...</p>}
+            {isLoading && <p className="text-white animate-pulse">Cargando estímulo...</p>}
             {error && !isLoading && (
                 <div className="text-center text-yellow-400 p-4">
                     <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
@@ -444,7 +432,8 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                     fill
                     style={{ objectFit: 'contain' }}
                     priority
-                    onError={handleImageError}
+                    unoptimized // Puede ser útil si la optimización de Next.js causa problemas con URLs de Firebase
+                    onError={() => setError('La imagen no se pudo decodificar o cargar.')}
                 />
             )}
         </div>
