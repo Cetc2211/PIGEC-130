@@ -1,11 +1,3 @@
-
-
-
-
-
-
-
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -433,13 +425,11 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                 </div>
             )}
             {imageUrl && !isLoading && !error && (
-                <Image
+                <img
                     src={imageUrl}
                     alt={`Estímulo ${subtestId} - Ítem ${itemId}`}
-                    fill
-                    style={{ objectFit: 'contain' }}
-                    priority
-                    unoptimized // Puede ser útil si la optimización de Next.js causa problemas con URLs de Firebase
+                    className="object-contain w-full h-full"
+                    crossOrigin="anonymous"
                     onError={() => setError('La imagen no se pudo decodificar o cargar.')}
                 />
             )}
@@ -1093,12 +1083,12 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                     <TableHeader><TableRow><TableHead>Comparación</TableHead><TableHead>Diferencia</TableHead><TableHead>Significancia</TableHead></TableRow></TableHeader>
 
                                     <TableBody>
-                                        {results.discrepancies.length > 0 ? (
+                                        {results.discrepancias.length > 0 ? (
                                             results.discrepancies.map((d: Discrepancy) => (
                                                 <TableRow key={d.pair}>
                                                     <TableCell>{d.pair}</TableCell>
                                                     <TableCell>{d.diff}</TableCell>
-                                                    <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? 'Sí (p < .05)' : 'No'}</TableCell>
+                                                    <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? 'Sí (p &lt; .05)' : 'No'}</TableCell>
                                                 </TableRow>
                                             ))
                                         ) : (
