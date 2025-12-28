@@ -935,8 +935,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             return;
         }
         
-        let resumen_ejecutivo = '';
         const citScore = results.compositeScores.find(s => s.name.includes('CIT'))?.score || 0;
+        let resumen_ejecutivo: string;
 
         if (citScore > 115) {
             resumen_ejecutivo = "El evaluado presenta una capacidad intelectual significativamente superior al promedio de su grupo de edad. Posee habilidades destacadas para la resolución de problemas complejos y el aprendizaje autónomo.";
@@ -1083,7 +1083,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                     <TableHeader><TableRow><TableHead>Comparación</TableHead><TableHead>Diferencia</TableHead><TableHead>Significancia</TableHead></TableRow></TableHeader>
 
                                     <TableBody>
-                                        {results.discrepancias.length > 0 ? (
+                                        {results.discrepancies.length > 0 ? (
                                             results.discrepancies.map((d: Discrepancy) => (
                                                 <TableRow key={d.pair}>
                                                     <TableCell>{d.pair}</TableCell>
