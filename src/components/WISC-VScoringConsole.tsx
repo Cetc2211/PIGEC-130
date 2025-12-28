@@ -378,19 +378,21 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                 className="max-w-full max-h-[350px] object-contain shadow-2xl"
                 // Si la imagen local no existe, mostramos el aviso de respaldo
                 onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const parent = e.currentTarget.parentElement;
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
                     if (parent) {
+                        // Limpiar el contenedor antes de añadir el mensaje de error
+                        while (parent.firstChild) {
+                            parent.removeChild(parent.firstChild);
+                        }
                         const errorDiv = document.createElement('div');
                         errorDiv.className = "text-center text-yellow-500";
                         errorDiv.innerHTML = `
                             <p class="font-bold">IMAGEN LOCAL NO ENCONTRADA</p>
-                            <p class="text-xs italic">Use Cuadernillo Físico</p>
+                             <p class="text-xs">Ruta: ${localPath}</p>
+                            <p class="text-xs italic mt-2">Use Cuadernillo Físico</p>
                         `;
-                        // Limpiar el contenedor antes de añadir el error para evitar duplicados
-                        while (parent.firstChild) {
-                            parent.removeChild(parent.firstChild);
-                        }
                         parent.appendChild(errorDiv);
                     }
                 }}
