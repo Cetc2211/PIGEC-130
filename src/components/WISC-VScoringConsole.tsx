@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -12,8 +13,6 @@ import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from '@/lib/firebase';
 import Image from 'next/image';
 
 interface Subtest {
@@ -369,55 +368,22 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
 }
 
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
-    // 1. Ruta corregida para coincidir con tu nueva subida (solo .webp)
-    const storagePath = `stimuli/${subtestId}/item${itemId}.webp`; 
-    
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        let isMounted = true;
-        const fetchUrl = async () => {
-            setIsLoading(true);
-            try {
-                const storageRef = ref(storage, storagePath);
-                // getDownloadURL es la que genera el error de retry si la red falla
-                const url = await getDownloadURL(storageRef);
-                if (isMounted) {
-                    setImageUrl(url);
-                    setIsLoading(false);
-                }
-            } catch (err: any) {
-                console.error("Fallo de carga:", storagePath, err);
-                if (isMounted) {
-                    setError("No se pudo conectar con el servidor de estímulos.");
-                    setIsLoading(false);
-                }
-            }
-        };
-        fetchUrl();
-        return () => { isMounted = false; };
-    }, [storagePath]); // Se actualiza cada vez que cambias de ítem
-
-    if (isLoading) return <div className="h-64 flex items-center justify-center bg-slate-900 text-white animate-pulse">Cargando estímulo...</div>;
+    // Usar el servicio de placeholder picsum.photos para generar imágenes
+    // Se usa una "seed" única para cada estímulo para que la imagen sea siempre la misma.
+    const imageUrl = `https://picsum.photos/seed/${subtestId}${itemId}/600/400`;
+    const dataAiHint = subtestId === 'C' ? 'cube design' : subtestId === 'M' ? 'abstract pattern' : 'puzzle';
 
     return (
         <div className="p-2 bg-gray-900 rounded-lg flex items-center justify-center min-h-[300px]">
-            {imageUrl ? (
-                <img 
-                    src={imageUrl} 
-                    alt={`Ítem ${itemId}`} 
-                    className="max-w-full max-h-[400px] object-contain rounded shadow-lg"
-                />
-            ) : (
-                <div className="text-yellow-500 text-center p-4 border border-yellow-500/50 rounded">
-                    <AlertTriangle className="mx-auto mb-2" />
-                    <p className="text-sm font-bold">ESTÍMULO NO CARGADO</p>
-                    <p className="text-xs">Ruta: {storagePath}</p>
-                    <p className="mt-2 text-[10px] text-gray-400 font-bold uppercase">Use Cuadernillo Físico</p>
-                </div>
-            )}
+            <Image
+                src={imageUrl}
+                alt={`Estímulo de marcador de posición para ${subtestId} - Ítem ${itemId}`}
+                width={600}
+                height={400}
+                className="max-w-full max-h-[400px] object-contain rounded shadow-lg"
+                data-ai-hint={dataAiHint}
+                priority // Cargar la imagen actual con prioridad
+            />
         </div>
     );
 }
@@ -1134,5 +1100,3 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
-
-    
