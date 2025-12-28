@@ -3,6 +3,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -1091,14 +1092,21 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 <h4 className="font-semibold text-md mb-2">Análisis de Discrepancias</h4>
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Comparación</TableHead><TableHead>Diferencia</TableHead><TableHead>Significancia</TableHead></TableRow></TableHeader>
+
                                     <TableBody>
-                                        {results.discrepancies.map((d: Discrepancy) => (
-                                            <TableRow key={d.pair}>
-                                                <TableCell>{d.pair}</TableCell>
-                                                <TableCell>{d.diff}</TableCell>
-                                                <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? 'Sí (p < .05)' : 'No'}</TableCell>
+                                        {results.discrepancies.length > 0 ? (
+                                            results.discrepancies.map((d: Discrepancy) => (
+                                                <TableRow key={d.pair}>
+                                                    <TableCell>{d.pair}</TableCell>
+                                                    <TableCell>{d.diff}</TableCell>
+                                                    <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? 'Sí (p < .05)' : 'No'}</TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={3} className="text-center text-gray-500">No se encontraron discrepancias significativas.</TableCell>
                                             </TableRow>
-                                        ))}
+                                        )}
                                     </TableBody>
                                 </Table>
                             </div>
