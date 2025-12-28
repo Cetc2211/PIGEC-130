@@ -13,7 +13,6 @@ import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import Image from 'next/image';
 
 interface Subtest {
     id: string;
@@ -368,25 +367,38 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
 }
 
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
-    // Usar el servicio de placeholder picsum.photos para generar imágenes
-    // Se usa una "seed" única para cada estímulo para que la imagen sea siempre la misma.
-    const imageUrl = `https://picsum.photos/seed/${subtestId}${itemId}/600/400`;
-    const dataAiHint = subtestId === 'C' ? 'cube design' : subtestId === 'M' ? 'abstract pattern' : 'puzzle';
+    // La ruta ahora es local. No depende de Firebase.
+    const localPath = `/stimuli/${subtestId}/item${itemId}.webp`;
 
     return (
-        <div className="p-2 bg-gray-900 rounded-lg flex items-center justify-center min-h-[300px]">
-            <Image
-                src={imageUrl}
-                alt={`Estímulo de marcador de posición para ${subtestId} - Ítem ${itemId}`}
-                width={600}
-                height={400}
-                className="max-w-full max-h-[400px] object-contain rounded shadow-lg"
-                data-ai-hint={dataAiHint}
-                priority // Cargar la imagen actual con prioridad
+        <div className="p-4 bg-gray-900 rounded-md border min-h-[300px] flex items-center justify-center relative overflow-hidden">
+            <img
+                src={localPath}
+                alt={`Estímulo ${subtestId} Item ${itemId}`}
+                className="max-w-full max-h-[350px] object-contain shadow-2xl"
+                // Si la imagen local no existe, mostramos el aviso de respaldo
+                onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = "text-center text-yellow-500";
+                        errorDiv.innerHTML = `
+                            <p class="font-bold">IMAGEN LOCAL NO ENCONTRADA</p>
+                            <p class="text-xs italic">Use Cuadernillo Físico</p>
+                        `;
+                        // Limpiar el contenedor antes de añadir el error para evitar duplicados
+                        while (parent.firstChild) {
+                            parent.removeChild(parent.firstChild);
+                        }
+                        parent.appendChild(errorDiv);
+                    }
+                }}
             />
         </div>
     );
 }
+
 
 function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulusBooklet }: { subtestName: string, subtestId: string, renderType: string, stimulusBooklet?: number }) {
     const storageKey = `wisc_session_${subtestId}`;
