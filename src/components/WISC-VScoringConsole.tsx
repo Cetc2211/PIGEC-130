@@ -5,6 +5,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -391,10 +392,9 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
             try {
                 const storageRef = ref(storage, storagePath);
                 const url = await getDownloadURL(storageRef);
-
-                console.log(`[DEBUG] URL generada para ${storagePath}:`, url);
-
+                
                 if (!isCancelled) {
+                    console.log(`[DIAGNÓSTICO] URL obtenida para ${storagePath}:`, url);
                     setImageUrl(url);
                 }
             } catch (err: any) {

@@ -34,11 +34,6 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    // Esta opción se deja vacía si no hay otras configuraciones experimentales necesarias.
-  },
-  // Corregido: `allowedDevOrigins` debe estar en el nivel raíz, no dentro de `experimental`.
-  allowedDevOrigins: ["https://*.cloudworkstations.dev"],
 };
 
 export default nextConfig;
