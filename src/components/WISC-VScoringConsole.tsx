@@ -2,6 +2,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -383,10 +384,16 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
         const fetchImageUrl = async () => {
             setIsLoading(true);
             setError(null);
+            setImageUrl(null);
             
             try {
                 const storageRef = ref(storage, storagePath);
                 const url = await getDownloadURL(storageRef);
+
+                // --- INICIO DE LA MODIFICACIÓN PARA DEBUGGING ---
+                console.log(`[DEBUG] URL generada para ${storagePath}:`, url);
+                // --- FIN DE LA MODIFICACIÓN ---
+
                 if (!isCancelled) {
                     setImageUrl(url);
                 }
