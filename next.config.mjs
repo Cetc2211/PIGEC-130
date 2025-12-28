@@ -6,6 +6,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    // Corrige el error de 'Cross origin request' en Firebase Studio
+    allowedDevOrigins: ["*.cloudworkstations.dev"],
+  },
   images: {
     remotePatterns: [
       {
@@ -27,7 +31,7 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'httpses',
         hostname: 'firebasestorage.googleapis.com',
         port: '',
         pathname: '/**',
