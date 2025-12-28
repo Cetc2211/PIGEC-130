@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -193,13 +194,13 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         ? ['S', 'V', 'I', 'C', 'M', 'PV', 'D', 'A', ...ivpSubtests]
         : ['S', 'V', 'C', 'M', 'B', 'D', 'Cl', 'PV', 'RI', 'BS'];
 
-    const validCoreScores = coreSubtests.map(id => effectiveScores[id]).filter(score => score !== undefined);
+    const validCoreScores = coreSubtests.map(id => effectiveScores[id]).filter(score => score !== undefined && !isNaN(score));
     const meanPE = validCoreScores.length > 0 ? validCoreScores.reduce((sum, score) => sum + (score || 0), 0) / validCoreScores.length : 0;
     
     const allSubtests = isWais ? Object.values(subtestsByDomainWAIS).flat() : Object.values(subtestsByDomainWISC).flat();
     
     strengthsAndWeaknesses = Object.entries(effectiveScores).map(([id, score]) => {
-        if (!score) return null;
+        if (score === undefined || isNaN(score)) return null;
         const diff = score - meanPE;
         let classification = '-';
         if (diff >= valoresCriticos['D-C']) classification = 'Fortaleza (F)';
@@ -368,70 +369,54 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
 }
 
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
-    const storagePath = `stimuli/${subtestId}/item${itemId}.webp`;
+    // 1. Ruta corregida para coincidir con tu nueva subida (solo .webp)
+    const storagePath = `stimuli/${subtestId}/item${itemId}.webp`; 
+    
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        let isCancelled = false;
-
-        const fetchImageUrl = async () => {
+        let isMounted = true;
+        const fetchUrl = async () => {
             setIsLoading(true);
-            setError(null);
-            setImageUrl(null);
-            
             try {
                 const storageRef = ref(storage, storagePath);
+                // getDownloadURL es la que genera el error de retry si la red falla
                 const url = await getDownloadURL(storageRef);
-                
-                if (!isCancelled) {
-                    console.log(`[DIAGNÓSTICO] URL obtenida para ${storagePath}:`, url);
+                if (isMounted) {
                     setImageUrl(url);
+                    setIsLoading(false);
                 }
             } catch (err: any) {
-                if (!isCancelled) {
-                    console.error(`Error al obtener URL para ${storagePath}:`, err);
-                    if (err.code === 'storage/object-not-found') {
-                        setError(`Estímulo no encontrado. Verifique que el archivo exista en Storage.`);
-                    } else {
-                        setError('Error al cargar el estímulo. Verifique su conexión y los permisos de Storage.');
-                    }
-                    setImageUrl(null);
-                }
-            } finally {
-                if (!isCancelled) {
+                console.error("Fallo de carga:", storagePath, err);
+                if (isMounted) {
+                    setError("No se pudo conectar con el servidor de estímulos.");
                     setIsLoading(false);
                 }
             }
         };
+        fetchUrl();
+        return () => { isMounted = false; };
+    }, [storagePath]); // Se actualiza cada vez que cambias de ítem
 
-        fetchImageUrl();
-
-        return () => {
-            isCancelled = true;
-        };
-    }, [subtestId, itemId, storagePath]);
-
+    if (isLoading) return <div className="h-64 flex items-center justify-center bg-slate-900 text-white animate-pulse">Cargando estímulo...</div>;
 
     return (
-        <div className="p-4 bg-gray-900 rounded-md border min-h-[240px] flex items-center justify-center relative overflow-hidden">
-            {isLoading && <p className="text-white animate-pulse">Cargando estímulo...</p>}
-            {error && !isLoading && (
-                <div className="text-center text-yellow-400 p-4">
-                    <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
-                    <p className="font-semibold">{error}</p>
-                    <p className="text-sm text-yellow-300 mt-1">Por favor, utilice el cuadernillo de estímulos físico para este ítem.</p>
-                </div>
-            )}
-            {imageUrl && !isLoading && !error && (
-                <img
-                    src={imageUrl}
-                    alt={`Estímulo ${subtestId} - Ítem ${itemId}`}
-                    className="object-contain w-full h-full"
-                    crossOrigin="anonymous"
-                    onError={() => setError('La imagen no se pudo decodificar o cargar.')}
+        <div className="p-2 bg-gray-900 rounded-lg flex items-center justify-center min-h-[300px]">
+            {imageUrl ? (
+                <img 
+                    src={imageUrl} 
+                    alt={`Ítem ${itemId}`} 
+                    className="max-w-full max-h-[400px] object-contain rounded shadow-lg"
                 />
+            ) : (
+                <div className="text-yellow-500 text-center p-4 border border-yellow-500/50 rounded">
+                    <AlertTriangle className="mx-auto mb-2" />
+                    <p className="text-sm font-bold">ESTÍMULO NO CARGADO</p>
+                    <p className="text-xs">Ruta: {storagePath}</p>
+                    <p className="mt-2 text-[10px] text-gray-400 font-bold uppercase">Use Cuadernillo Físico</p>
+                </div>
             )}
         </div>
     );
@@ -1149,3 +1134,5 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         </div>
     );
 }
+
+    
