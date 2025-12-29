@@ -1,6 +1,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -14,8 +15,7 @@ import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { storage } from '@/lib/firebase';
-import { getDownloadURL, ref } from 'firebase/storage';
+
 
 interface Subtest {
     id: string;
@@ -369,72 +369,35 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
     );
 }
 
-// Caché en memoria para las URLs de Firebase Storage
-const imageUrlCache = new Map<string, string>();
-
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const imagePath = `stimuli/${subtestId}/item${itemId}.webp`;
-
-        // 1. Resetear estados al cambiar de ítem
-        setIsLoading(true);
-        setError(null);
-        setImageUrl(null);
-
-        // 2. Revisar la caché primero
-        if (imageUrlCache.has(imagePath)) {
-            setImageUrl(imageUrlCache.get(imagePath)!);
-            setIsLoading(false);
-            return;
-        }
-
-        // 3. Si no está en caché, buscar en Firebase Storage
-        const imageRef = ref(storage, imagePath);
-        getDownloadURL(imageRef)
-            .then((url) => {
-                imageUrlCache.set(imagePath, url); // Guardar en caché para futuras visitas
-                setImageUrl(url);
-            })
-            .catch((err) => {
-                console.error("Error al obtener la URL del estímulo:", err);
-                if (err.code === 'storage/object-not-found') {
-                    setError(`Estímulo no encontrado en Storage: ${imagePath}`);
-                } else {
-                    setError('Error de conexión con Firebase Storage.');
-                }
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-
-    }, [subtestId, itemId]);
+    // La ruta ahora es local. No depende de Firebase.
+    const localPath = `/stimuli/${subtestId}/item${itemId}.webp`;
 
     return (
         <div className="p-4 bg-gray-900 rounded-md border min-h-[300px] flex items-center justify-center relative overflow-hidden">
-            {isLoading && (
-                <div className="text-white flex flex-col items-center gap-2">
-                    <Loader2 className="animate-spin h-8 w-8" />
-                    <p>Cargando estímulo...</p>
-                </div>
-            )}
-            {error && (
-                <div className="text-center text-yellow-400 p-4">
-                    <p className="font-bold">Error al Cargar Imagen</p>
-                    <p className="text-xs italic">{error}</p>
-                    <p className="text-xs italic mt-2">Use el cuadernillo físico para este ítem.</p>
-                </div>
-            )}
-            {!isLoading && imageUrl && (
-                <img
-                    src={imageUrl}
-                    alt={`Estímulo ${subtestId} Ítem ${itemId}`}
-                    className="max-w-full max-h-[350px] object-contain shadow-2xl"
-                />
-            )}
+            <img
+                src={localPath}
+                alt={`Estímulo ${subtestId} Item ${itemId}`}
+                className="max-w-full max-h-[350px] object-contain shadow-2xl"
+                // Si la imagen local no existe, mostramos el aviso de respaldo
+                onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = "text-center text-yellow-500";
+                        errorDiv.innerHTML = `
+                            <p class="font-bold">IMAGEN LOCAL NO ENCONTRADA</p>
+                            <p class="text-xs italic">Use Cuadernillo Físico</p>
+                        `;
+                        // Limpiar el contenedor antes de añadir el error
+                        while (parent.firstChild) {
+                            parent.removeChild(parent.firstChild);
+                        }
+                        parent.appendChild(errorDiv);
+                    }
+                }}
+            />
         </div>
     );
 }
