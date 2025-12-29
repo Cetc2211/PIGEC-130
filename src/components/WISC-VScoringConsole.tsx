@@ -2,6 +2,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -49,7 +50,7 @@ const subtestsByDomainWISC: { [key: string]: Subtest[] } = {
     ],
     IMT: [
         { id: 'D', name: 'Dígitos', renderType: 'VERBAL_CRITERIO', isCit: true, order: 4 },
-        { id: 'RI', name: 'Retención de Imágenes', renderType: 'MULTI_CHOICE', isCit: true, order: 9, stimulusBooklet: 2 },
+        { id: 'SV', name: 'Span Visual', renderType: 'MULTI_CHOICE', isCit: true, order: 9, stimulusBooklet: 2 },
         { id: 'LN', name: 'Letras y Números', renderType: 'LETTER_NUMBER_SEQUENCING', optional: true, isCit: false, order: 12 },
     ],
     IVP: [
@@ -181,7 +182,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
         const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'PV']), 2));
         const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
-        const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'RI']), 2));
+        const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'SV']), 2));
         const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
         const citSum = getSum(['S', 'V', 'C', 'M', 'B', 'D', 'Cl']);
         const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 7));
@@ -193,7 +194,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
     
     const coreSubtests = isWais
         ? ['S', 'V', 'I', 'C', 'M', 'PV', 'D', 'A', ...ivpSubtests]
-        : ['S', 'V', 'C', 'M', 'B', 'D', 'Cl', 'PV', 'RI', 'BS'];
+        : ['S', 'V', 'C', 'M', 'B', 'D', 'Cl', 'PV', 'SV', 'BS'];
 
     const validCoreScores = coreSubtests.map(id => effectiveScores[id]).filter(score => score !== undefined && !isNaN(score));
     const meanPE = validCoreScores.length > 0 ? validCoreScores.reduce((sum, score) => sum + (score || 0), 0) / validCoreScores.length : 0;
@@ -381,19 +382,16 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                 className="max-w-full max-h-[350px] object-contain shadow-2xl"
                 // Si la imagen local no existe, mostramos el aviso de respaldo
                 onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const parent = e.currentTarget.parentElement;
-                    if (parent) {
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent && !parent.querySelector('.error-message')) {
                         const errorDiv = document.createElement('div');
-                        errorDiv.className = "text-center text-yellow-500";
+                        errorDiv.className = "text-center text-yellow-500 error-message";
                         errorDiv.innerHTML = `
                             <p class="font-bold">IMAGEN LOCAL NO ENCONTRADA</p>
-                            <p class="text-xs italic">Use Cuadernillo Físico</p>
+                            <p class="text-xs italic">Verifique la carpeta <strong>public/stimuli/${subtestId}</strong></p>
                         `;
-                        // Limpiar el contenedor antes de añadir el error
-                        while (parent.firstChild) {
-                            parent.removeChild(parent.firstChild);
-                        }
                         parent.appendChild(errorDiv);
                     }
                 }}
