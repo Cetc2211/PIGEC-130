@@ -367,35 +367,17 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
 }
 
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
-    // La ruta ahora es local. No depende de Firebase.
-    const localPath = `/stimuli/${subtestId}/item${itemId}.webp`;
+    // Usamos el ID de la subprueba y el ítem para generar una imagen consistente
+    const seed = `${subtestId}${itemId}`;
+    const imageUrl = `https://picsum.photos/seed/${seed}/800/600`;
 
     return (
         <div className="p-4 bg-gray-900 rounded-md border min-h-[300px] flex items-center justify-center relative overflow-hidden">
             <img
-                src={localPath}
-                alt={`Estímulo ${subtestId} Item ${itemId}`}
+                src={imageUrl}
+                alt={`Estímulo ${subtestId} Ítem ${itemId}`}
                 className="max-w-full max-h-[350px] object-contain shadow-2xl"
-                // Si la imagen local no existe, mostramos el aviso de respaldo
-                onError={(e) => {
-                    const target = e.currentTarget;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                        // Limpiar el contenedor antes de añadir el mensaje de error
-                        while (parent.firstChild) {
-                            parent.removeChild(parent.firstChild);
-                        }
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = "text-center text-yellow-500";
-                        errorDiv.innerHTML = `
-                            <p class="font-bold">IMAGEN LOCAL NO ENCONTRADA</p>
-                             <p class="text-xs">Ruta: ${localPath}</p>
-                            <p class="text-xs italic mt-2">Use Cuadernillo Físico</p>
-                        `;
-                        parent.appendChild(errorDiv);
-                    }
-                }}
+                data-ai-hint="abstract geometric"
             />
         </div>
     );
