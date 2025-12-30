@@ -33,7 +33,7 @@ const reportGenerationPrompt = ai.definePrompt({
     name: 'wiscReportPrompt',
     input: { schema: WiscReportInputSchema },
     output: { schema: WiscReportOutputSchema },
-    prompt: `Rol: Actúa como un experto en Psicometría y Evaluación Clínica Neuropsicológica especializado en escalas Wechsler (WISC-V).
+    prompt: `Rol: Actúa como un experto en Psicometría y Evaluación Clínica Neuropsicológica especializado en escalas Wechsler (WISC-V/WAIS-IV).
 
 Entrada de Datos:
 * Nombre del Estudiante: {{{studentName}}}
@@ -47,12 +47,8 @@ Entrada de Datos:
 
 Instrucciones de Redacción:
 1.  **Introducción**: Redacta una descripción de la capacidad intelectual general basada en el C.I. Total (CIT).
-2.  **Análisis por Dominios**: Genera párrafos descriptivos para cada índice (Comprensión Verbal, Visoespacial, Razonamiento Fluido, Memoria de Trabajo, Velocidad de Procesamiento) siguiendo el estilo del manual:
-    *   **Comprensión Verbal**: Analiza la formación de conceptos y razonamiento verbal.
-    *   **Visoespacial**: Describe la discriminación de detalles visuales y entendimiento de relaciones espaciales.
-    *   **Memoria de Trabajo**: Evalúa la capacidad de registrar, mantener y manipular información visual/auditiva.
-    *   **Velocidad de Procesamiento**: Comenta la velocidad y precisión en la toma de decisiones visuales.
-3.  **Conclusión**: Finaliza con una **Síntesis Diagnóstica** clara, indicando si el rendimiento es acorde a su edad o si sugiere algún déficit intelectual (DIL, DIM, etc.).
+2.  **Análisis por Dominios**: Genera párrafos descriptivos para cada índice (Comprensión Verbal, Visoespacial, Razonamiento Fluido, Memoria de Trabajo, Velocidad de Procesamiento) siguiendo el estilo del manual.
+3.  **Conclusión (Síntesis Diagnóstica)**: Finaliza con una **Síntesis Diagnóstica** clara, indicando si el rendimiento es acorde a su edad o si sugiere algún déficit intelectual (DIL, DIM, etc.). Integra los antecedentes relevantes del estudiante (si se proporcionan) con los resultados numéricos para ofrecer una visión clínica integral.
 4.  **Formato**: El resultado debe ser un objeto JSON con dos claves: 'narrativeReport' (con la introducción y análisis de dominios) y 'diagnosticSynthesis' (con la conclusión).
 `,
 });

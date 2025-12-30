@@ -117,6 +117,9 @@ const interpretationDictionary: { [indexKey: string]: { [rangeKey: string]: stri
         "Promedio": "Muestra una capacidad adecuada para evaluar detalles visuales y entender relaciones visoespaciales para construir diseños geométricos a partir de un modelo.",
         "Promedio Bajo": "Las habilidades para entender las relaciones visoespaciales, así como la discriminación de detalles visuales, se observan en un rango considerado como medio bajo, dando cuenta de un adecuado rendimiento, aunque levemente descendido.",
     },
+    IRF: {
+        "Promedio": "El evaluado muestra una capacidad dentro de la norma para identificar reglas lógicas y patrones en información visual abstracta, sin necesidad de conocimiento previo, lo que le permite resolver problemas novedosos de manera eficiente.",
+    },
     IMT: {
         "Promedio": "Posee una capacidad normal para registrar, mantener y manipular activamente información visual y auditiva en el corto plazo.",
         "Muy Bajo": "La habilidad para registrar, mantener y manipular información visual y auditiva se encuentra en un rango muy bajo, lo que indica un rendimiento descendido que puede afectar el seguimiento de instrucciones complejas.",
@@ -129,9 +132,14 @@ const interpretationDictionary: { [indexKey: string]: { [rangeKey: string]: stri
 
 const getSemanticInterpretation = (indexKey: string, classification: string, studentName: string = "el evaluado"): string => {
     const key = indexKey.split(' ')[0]; // 'ICV', 'IVE', etc.
+    // Fallback a una clave más genérica si una específica no existe
+    const effectiveClassification = Object.keys(interpretationDictionary[key] || {}).includes(classification)
+        ? classification
+        : (classification.includes("Promedio") ? "Promedio" : classification);
+
     const dict = interpretationDictionary[key];
-    if (dict && dict[classification]) {
-        return dict[classification].replace('[Nombre]', studentName);
+    if (dict && dict[effectiveClassification]) {
+        return dict[effectiveClassification].replace('[Nombre]', studentName);
     }
     // Fallback general si no hay un texto específico
     return `El rendimiento en el índice ${indexKey} se clasificó como ${classification}.`;
@@ -248,7 +256,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
     strengthsAndWeaknesses = Object.entries(effectiveScores).map(([id, score]) => {
         if (score === undefined || isNaN(score)) return null;
         const diff = score - meanPE;
-        const criticalValueStrengthWeakness = 2.5; // Valor simulado
+        const criticalValueStrengthWeakness = 2.5; 
         let classification = '-';
         if (diff >= criticalValueStrengthWeakness) classification = 'Fortaleza (F)';
         if (diff <= -criticalValueStrengthWeakness) classification = 'Debilidad (D)';
@@ -951,10 +959,9 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         setIsGenerating(true);
         setGeneratedReportText('');
         
-        // --- 1. Generación local con Diccionario Clínico ---
-        const studentName = "Estudiante de Ejemplo"; // Reemplazar con nombre real
+        const studentName = "Estudiante de Ejemplo";
         const domainReports = results.compositeScores
-            .filter(score => !score.name.includes('CIT')) // Excluir CIT de los párrafos de dominio
+            .filter(score => !score.name.includes('CIT'))
             .map(score => getSemanticInterpretation(score.name, score.classification, studentName))
             .join('\n\n');
 
@@ -963,11 +970,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
             ? `Basado en el C.I. Total (CIT) de ${citProfile.score}, la capacidad intelectual general de ${studentName} se clasifica como ${citProfile.classification}.`
             : "No se pudo calcular el C.I. Total para generar la introducción.";
         
-        const fullLocalReport = `${introduction}\n\n${domainReports}`;
-        setGeneratedReportText(fullLocalReport);
-
-
-        // --- 2. (Opcional) Generación de Síntesis con IA ---
+        const localReportBody = `${introduction}\n\n${domainReports}`;
+        
         try {
             const aiInput: WiscReportInput = {
                 studentName,
@@ -979,15 +983,24 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
 
             const reportFromAI = await generateWiscReport(aiInput);
             
-            // Combina el reporte local con la síntesis de la IA
-            setGeneratedReportText(prev => `${prev}\n\n---\n\n**Síntesis Diagnóstica (sugerida por IA):**\n${reportFromAI.diagnosticSynthesis}`);
-            setNarrativeReport(reportFromAI); // Para mantener la estructura original si se necesita
+            let finalSynthesis = reportFromAI.diagnosticSynthesis;
 
-            console.log("--- SÍNTESIS GENERADA POR IA ---", reportFromAI.diagnosticSynthesis);
+            if (citProfile) {
+                if (citProfile.score < 70) {
+                    finalSynthesis += "\n\nSugerencia Automática: Perfil sugerente de Discapacidad Intelectual.";
+                } else if (citProfile.score >= 70 && citProfile.score <= 79) {
+                    finalSynthesis += "\n\nSugerencia Automática: Funcionamiento Intelectual Limítrofe.";
+                } else {
+                    finalSynthesis += "\n\nSugerencia Automática: Funcionamiento Intelectual dentro de la normalidad.";
+                }
+            }
+
+            setGeneratedReportText(`${localReportBody}\n\n---\n\n**Síntesis Diagnóstica (sugerida por IA):**\n${finalSynthesis}`);
+            console.log("--- INFORME GENERADO ---", { localReportBody, finalSynthesis });
 
         } catch (error) {
             console.error("Error al generar la síntesis con IA:", error);
-            setGeneratedReportText(prev => `${prev}\n\n---\n\n**Error:** No se pudo generar la síntesis diagnóstica con la IA.`);
+            setGeneratedReportText(`${localReportBody}\n\n---\n\n**Error:** No se pudo generar la síntesis diagnóstica con la IA.`);
         } finally {
             setIsGenerating(false);
         }
