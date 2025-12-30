@@ -24,7 +24,7 @@ export default function ConsolePage() {
 
     return (
         <div className="p-4 sm:p-8">
-            <WISCScoringConsole studentAge={student.demographics.age} />
+            <WISCScoringConsole studentId={student.id} studentAge={student.demographics.age} />
         </div>
     );
 }

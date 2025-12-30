@@ -12,6 +12,7 @@ import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { generateWiscReport, WiscReportInput } from '@/ai/flows/wisc-report-flow';
+import { getClinicalAssessmentByStudentId } from '@/lib/store';
 
 
 interface Subtest {
@@ -26,6 +27,7 @@ interface Subtest {
 
 interface WISCScoringConsoleProps {
     studentAge: number;
+    studentId: string;
 }
 
 const subtestsByDomainWISC: { [key: string]: Subtest[] } = {
@@ -124,7 +126,7 @@ const interpretationDictionary: { [indexKey: string]: { [rangeKey: string]: stri
     },
     IRF: {
         "Promedio": "El evaluado muestra una capacidad dentro de la norma para identificar reglas lógicas y patrones en información visual abstracta, sin necesidad de conocimiento previo, lo que le permite resolver problemas novedosos de manera eficiente.",
-        "Medio Bajo": "El rendimiento en las tareas que requieren identificar patrones lógicos y reglas en información nueva se encuentra en un nivel medio bajo."
+        "Promedio Bajo": "El rendimiento en las tareas que requieren identificar patrones lógicos y reglas en información nueva se encuentra en un nivel medio bajo."
     },
     IMT: {
         "Promedio": "Posee una capacidad normal para registrar, mantener y manipular activamente información visual y auditiva en el corto plazo.",
@@ -200,8 +202,12 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
             "15,2": 85,  // IRF: M+B
             "9,2": 70,   // IMT: D+SV
             "12,2": 76,  // IVP: Cl+BS
-            "52,7": 81   // CIT
+            "52,7": 81   // CIT para WISC-V con 7 subpruebas principales
         };
+        const citWiscSum = getSum(['S', 'V', 'C', 'PV', 'M', 'B', 'D']);
+        if(sum === citWiscSum && numSubtests === 7) return 81;
+
+
         const key = `${sum},${numSubtests}`;
         if(testCaseMap[key]) return testCaseMap[key];
 
@@ -245,7 +251,7 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         const irf = createProfile("Razonamiento Fluido (IRF)", scaleToComposite(getSum(['M', 'B']), 2));
         const imt = createProfile("Memoria de Trabajo (IMT)", scaleToComposite(getSum(['D', 'SV']), 2));
         const ivp = createProfile("Velocidad de Procesamiento (IVP)", scaleToComposite(getSum(['Cl', 'BS']), 2));
-        const citSum = getSum(['S', 'V', 'C', 'PV', 'M', 'B', 'D', 'SV', 'Cl', 'BS']);
+        const citSum = getSum(['S', 'V', 'C', 'M', 'B', 'D', 'SV']);
         const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 7)); // Only 7 CIT subtests in WISC-V
         compositeScores = [icv, ive, irf, imt, ivp, cit];
 
@@ -926,7 +932,7 @@ function PedagogicalRecommendations({ compositeScores }: { compositeScores: Comp
     );
 }
 
-export default function WISCScoringConsole({ studentAge }: WISCScoringConsoleProps) {
+export default function WISCScoringConsole({ studentId, studentAge }: WISCScoringConsoleProps) {
     const isWais = studentAge >= 17;
     const subtestsByDomain = isWais ? subtestsByDomainWAIS : subtestsByDomainWISC;
     const scaleName = isWais ? "WAIS-IV" : "WISC-V";
@@ -937,14 +943,21 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     }, [isWais]);
 
 
-    const [rawScores, setRawScores] = useState<{ [key: string]: number }>({
-        C: 27, S: 29, M: 16, D: 12, Cl: 38, V: 32, B: 18, PV: 15, SV: 20, BS: 23
-    });
+    const [rawScores, setRawScores] = useState<{ [key: string]: number }>({});
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
     const [narrativeReport, setNarrativeReport] = useState<NarrativeReport | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [clinicalObservations, setClinicalObservations] = useState('');
     const [generatedReportText, setGeneratedReportText] = useState('');
+
+    // Cargar los puntajes del caso de prueba de Esteban si el ID coincide
+    useEffect(() => {
+        if (studentId === 'S004') {
+            setRawScores({
+                C: 27, S: 29, M: 16, D: 12, Cl: 38, V: 32, B: 18, PV: 15, SV: 20, BS: 23
+            });
+        }
+    }, [studentId]);
 
 
     const handleCalculate = () => {

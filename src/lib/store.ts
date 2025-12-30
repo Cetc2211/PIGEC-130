@@ -150,7 +150,7 @@ export interface NeuroScreeningResult {
 
 const studentsDB: Student[] = [
     { 
-        id: 'S001', name: 'Ana M. Pérez (Caso de Prueba: Riesgo Crítico)', 
+        id: 'S001', name: 'Ana M. Pérez (Caso: Riesgo Crítico)', 
         demographics: { age: 17, group: '5A', semester: 5 },
         emergencyContact: { name: 'Mariana López', phone: '5512345678' },
         suicideRiskLevel: 'Crítico',
@@ -174,12 +174,22 @@ const studentsDB: Student[] = [
         academicData: { gpa: 9.1, absences: 5 },
         ansiedadScore: 4,
     },
+     { 
+        id: 'S004', name: 'Esteban Hernandarias (Caso de Prueba)', 
+        demographics: { age: 14, group: '1C', semester: 1 },
+        emergencyContact: { name: 'Susana Ramírez', phone: '5544332211' },
+        suicideRiskLevel: 'Medio',
+        academicData: { gpa: 7.5, absences: 20 },
+        ansiedadScore: 15,
+        dualRelationshipNote: 'Primo del orientador asignado al grupo 2B, no hay conflicto directo.'
+    },
 ];
 
 const evaluationsDB: Evaluation[] = [
     { id: 'eval-01', studentId: 'S001', type: 'GAD-7', score: 21, date: new Date('2024-05-01') },
     { id: 'eval-02', studentId: 'S002', type: 'GAD-7', score: 10, date: new Date('2024-05-10') },
     { id: 'eval-03', studentId: 'S003', type: 'GAD-7', score: 4, date: new Date('2024-05-12') },
+    { id: 'eval-04', studentId: 'S004', type: 'GAD-7', score: 15, date: new Date('2024-05-13') },
 ];
 
 const educationalAssessmentsDB: EducationalAssessment[] = [
@@ -201,7 +211,7 @@ const educationalAssessmentsDB: EducationalAssessment[] = [
     }
 ];
 
-// --- DATOS SIMULADOS PARA EL CASO DE ANA PÉREZ ---
+// --- DATOS SIMULADOS PARA LOS CASOS ---
 const clinicalAssessmentsDB: ClinicalAssessment[] = [
     {
         studentId: 'S001',
@@ -216,6 +226,21 @@ const clinicalAssessmentsDB: ClinicalAssessment[] = [
         assist_result: 'Negativo',
         conducta_autolesiva_score: 8, // Frecuencia alta
         impresion_diagnostica: 'Sintomatología depresiva y ansiosa severa, con ideación suicida activa y planificada. El rendimiento cognitivo parece afectado por la carga emocional. La conducta problema parece mantenida por evitación del malestar. Criterio de Riesgo Vital (Código Rojo) activado.',
+    },
+    {
+        studentId: 'S004',
+        fecha_evaluacion: '2020-04-05',
+        bdi_ii_score: 18,
+        bai_score: 15,
+        riesgo_suicida_beck_score: 2,
+        // Puntajes brutos del caso de prueba
+        neuro_mt_score: 12, // Corresponde a Dígitos
+        neuro_as_score: 20, // Corresponde a Span Visual (RI)
+        neuro_vp_score: 38, // Corresponde a Claves
+        contexto_carga_cognitiva: 'Dificultades de adaptación al nuevo entorno escolar. Reporta sentirse abrumado por la carga académica.',
+        assist_result: 'Negativo',
+        conducta_autolesiva_score: 0,
+        impresion_diagnostica: 'El perfil cognitivo muestra una discrepancia significativa entre la comprensión verbal (promedio) y las habilidades de memoria de trabajo y velocidad de procesamiento (muy bajas). Esto, combinado con sintomatología ansiosa, puede explicar las dificultades académicas. Sugerente de un posible trastorno del aprendizaje a explorar.',
     }
 ];
 
