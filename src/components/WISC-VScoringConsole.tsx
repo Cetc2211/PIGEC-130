@@ -3,6 +3,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -10,12 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb, Image as ImageIcon, Bot } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { generateWiscReport, WiscReportInput } from '@/ai/flows/wisc-report-flow';
 
 
 interface Subtest {
@@ -107,7 +109,7 @@ const getDescriptiveClassification = (score: number) => {
     if (score >= 110) return "Promedio Alto";
     if (score >= 90) return "Promedio";
     if (score >= 80) return "Promedio Bajo";
-    if (score >= 70) return "Muy Bajo (Limítrofe)";
+    if (score >= 70) return "Muy Bajo";
     return "Extremadamente Bajo";
 };
 
@@ -131,6 +133,11 @@ type StrengthWeakness = {
     diff: string;
     classification: string;
 };
+
+type NarrativeReport = {
+    narrativeReport: string;
+    diagnosticSynthesis: string;
+}
 
 const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWais: boolean): {
     compositeScores: CompositeScoreProfile[];
@@ -371,7 +378,6 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
 }
 
 function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
-    // La ruta ahora es local. No depende de Firebase.
     const localPath = `/stimuli/${subtestId}/item${itemId}.webp`;
 
     return (
@@ -380,7 +386,6 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                 src={localPath}
                 alt={`Estímulo ${subtestId} Item ${itemId}`}
                 className="max-w-full max-h-[350px] object-contain shadow-2xl"
-                // Si la imagen local no existe, mostramos el aviso de respaldo
                 onError={(e) => {
                     const target = e.currentTarget;
                     target.style.display = 'none';
@@ -389,8 +394,10 @@ function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: num
                         const errorDiv = document.createElement('div');
                         errorDiv.className = "text-center text-yellow-500 error-message";
                         errorDiv.innerHTML = `
-                            <p class="font-bold">IMAGEN LOCAL NO ENCONTRADA</p>
-                            <p class="text-xs italic">Verifique la carpeta <strong>public/stimuli/${subtestId}</strong></p>
+                            <div class="text-center text-yellow-500">
+                                <p class="font-bold">IMAGEN LOCAL NO ENCONTRADA</p>
+                                <p class="text-xs italic">Use Cuadernillo Físico</p>
+                            </div>
                         `;
                         parent.appendChild(errorDiv);
                     }
@@ -875,6 +882,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         C: 48, S: 26, D: 28, M: 22, V: 45, A: 15, PV: 18, I: 20, Cl: 75, Ca: 50
     });
     const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
+    const [narrativeReport, setNarrativeReport] = useState<NarrativeReport | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [clinicalObservations, setClinicalObservations] = useState('');
 
     const handleCalculate = () => {
@@ -893,56 +902,32 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         setResults(clinicalProfile);
     };
 
-    const handleFinalizeAndSeal = () => {
+    const handleFinalizeAndSeal = async () => {
         if (!results) {
             alert("Primero debe calcular los resultados antes de finalizar.");
             return;
         }
         
-        const citScore = results.compositeScores.find(s => s.name.includes('CIT'))?.score || 0;
-        let resumen_ejecutivo: string;
+        setIsGenerating(true);
+        setNarrativeReport(null);
 
-        if (citScore > 115) {
-            resumen_ejecutivo = "El evaluado presenta una capacidad intelectual significativamente superior al promedio de su grupo de edad. Posee habilidades destacadas para la resolución de problemas complejos y el aprendizaje autónomo.";
-        } else if (citScore >= 90) {
-            resumen_ejecutivo = "El funcionamiento cognitivo global se sitúa dentro de la normalidad, mostrando una capacidad adecuada para cumplir con las exigencias académicas de nivel bachillerato.";
-        } else {
-            resumen_ejecutivo = "Se observan retos significativos en el procesamiento de información que podrían impactar el rendimiento escolar. Se recomienda una intervención psicopedagógica focalizada y adecuaciones en el aula.";
-        }
-        
-        const processObservationsData = {};
-        
-        const narrativeReportObject = {
-            metadata: {
-                examiner: 'Dr. John Doe (Simulated)',
-                evaluationDate: new Date().toISOString(),
-                subjectAge: `${studentAge} años`,
-            },
-            scores: {
-                rawScores: rawScores,
+        try {
+            const aiInput: WiscReportInput = {
+                studentName: 'Estudiante de Ejemplo', // Reemplazar con nombre real
+                studentAge,
                 compositeScores: results.compositeScores,
-                strengthsAndWeaknesses: results.strengthsAndWeaknesses,
-                processAnalysis: processObservationsData,
-                secondaryIndexes: { }
-            },
-            narrative: {
-                summary: `${resumen_ejecutivo}\n\nObservaciones Clínicas Adicionales:\n${clinicalObservations}`,
-                behavioralObservations: clinicalObservations,
-            },
-        };
+            };
 
-        Object.values(subtestsByDomain).flat().forEach(subtest => {
-            try {
-                localStorage.removeItem(`wisc_session_${subtest.id}`);
-                localStorage.removeItem(`wisc_process_obs_${subtest.id}`);
-            } catch (error) {
-                console.error("No se pudo limpiar el localStorage para la subprueba:", subtest.id, error);
-            }
-        });
+            const report = await generateWiscReport(aiInput);
+            setNarrativeReport(report);
 
-        console.log("--- SIMULACIÓN DE CIERRE SEGURO Y GENERACIÓN DE REPORTE ---", narrativeReportObject);
-        console.log("--- SESIÓN LOCAL LIMPIADA ---");
-        alert("CIERRE SEGURO (SIMULACIÓN): El protocolo ha sido finalizado. Revisa la consola para ver el objeto del reporte.");
+            console.log("--- INFORME NARRATIVO GENERADO POR IA ---", report);
+        } catch (error) {
+            console.error("Error al generar el informe narrativo:", error);
+            alert("Ocurrió un error al contactar al servicio de IA. Por favor, intente de nuevo.");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     return (
@@ -1090,7 +1075,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                     <Label htmlFor="clinical-observations">Observaciones y Análisis Cualitativo (Manual)</Label>
                                     <Textarea
                                         id="clinical-observations"
-                                        placeholder="Añadir aquí observaciones conductuales, rapport, fatiga, lenguaje no verbal, etc."
+                                        placeholder="Añadir aquí observaciones conductuales, rapport, fatiga, lenguaje no verbal, etc. Estos datos se añadirán al informe final."
                                         className="min-h-[120px]"
                                         value={clinicalObservations}
                                         onChange={(e) => setClinicalObservations(e.target.value)}
@@ -1098,10 +1083,31 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 </div>
                             </div>
                            
-                           <Button onClick={handleFinalizeAndSeal} variant="default" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold">
-                                <FileLock2 className="mr-2" />
-                                Finalizar y Sellar Protocolo (Auditoría)
+                           <Button onClick={handleFinalizeAndSeal} variant="default" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold" disabled={isGenerating}>
+                                {isGenerating ? (
+                                    <>
+                                        <Bot className="mr-2 animate-spin" />
+                                        Generando Informe con IA...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileLock2 className="mr-2" />
+                                        Generar Informe, Finalizar y Sellar
+                                    </>
+                                )}
                            </Button>
+                           
+                           {narrativeReport && (
+                                <div className="mt-6 p-4 border rounded-lg bg-gray-50 space-y-4">
+                                    <h4 className="font-bold text-lg text-gray-800">Borrador de Informe Generado por IA</h4>
+                                    <div className="space-y-2 text-sm text-gray-700 whitespace-pre-wrap">
+                                        <p>{narrativeReport.narrativeReport}</p>
+                                        <Separator className="my-4"/>
+                                        <h5 className="font-semibold">Síntesis Diagnóstica:</h5>
+                                        <p>{narrativeReport.diagnosticSynthesis}</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-gray-50 text-gray-500 rounded-md border-2 border-dashed">
