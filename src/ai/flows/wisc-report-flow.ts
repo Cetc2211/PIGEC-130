@@ -48,7 +48,7 @@ Entrada de Datos:
 Instrucciones de Redacción:
 1.  **Introducción**: Redacta una descripción de la capacidad intelectual general basada en el C.I. Total (CIT).
 2.  **Análisis por Dominios**: Genera párrafos descriptivos para cada índice (Comprensión Verbal, Visoespacial, Razonamiento Fluido, Memoria de Trabajo, Velocidad de Procesamiento) siguiendo el estilo del manual.
-3.  **Conclusión (Síntesis Diagnóstica)**: Finaliza con una **Síntesis Diagnóstica** clara, indicando si el rendimiento es acorde a su edad o si sugiere algún déficit intelectual (DIL, DIM, etc.). Integra los antecedentes relevantes del estudiante (si se proporcionan) con los resultados numéricos para ofrecer una visión clínica integral.
+3.  **Conclusión (Síntesis Diagnóstica)**: Finaliza con una **Síntesis Diagnóstica** clara y concisa. Integra los antecedentes relevantes del estudiante (si se proporcionan) con los resultados numéricos para ofrecer una visión clínica integral. Indica si el rendimiento es acorde a su edad o si sugiere algún déficit intelectual (DIL, DIM, etc.), supeditándolo siempre a la evaluación de la conducta adaptativa.
 4.  **Formato**: El resultado debe ser un objeto JSON con dos claves: 'narrativeReport' (con la introducción y análisis de dominios) y 'diagnosticSynthesis' (con la conclusión).
 `,
 });
