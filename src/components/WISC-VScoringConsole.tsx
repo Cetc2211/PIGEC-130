@@ -107,6 +107,36 @@ const getDescriptiveClassification = (score: number) => {
     return "Extremadamente Bajo";
 };
 
+const interpretationDictionary: { [indexKey: string]: { [rangeKey: string]: string } } = {
+    ICV: {
+        "Promedio Alto": "La capacidad de [Nombre] para acceder y aplicar el conocimiento de palabras se sitúa en un rango promedio alto, demostrando una habilidad superior en la formación de conceptos y el razonamiento verbal.",
+        "Promedio": "La capacidad del evaluado para acceder y aplicar el conocimiento de palabras se ubica en un rango considerado como promedio, dando cuenta de un adecuado rendimiento en las habilidades relacionadas con la formación de conceptos, razonamiento y expresión verbal.",
+        "Muy Bajo": "Se observa una capacidad limitada para la formación de conceptos verbales y el acceso al conocimiento léxico, situándose en un rango muy bajo para su edad cronológica.",
+    },
+    IVE: {
+        "Promedio": "Muestra una capacidad adecuada para evaluar detalles visuales y entender relaciones visoespaciales para construir diseños geométricos a partir de un modelo.",
+        "Promedio Bajo": "Las habilidades para entender las relaciones visoespaciales, así como la discriminación de detalles visuales, se observan en un rango considerado como medio bajo, dando cuenta de un adecuado rendimiento, aunque levemente descendido.",
+    },
+    IMT: {
+        "Promedio": "Posee una capacidad normal para registrar, mantener y manipular activamente información visual y auditiva en el corto plazo.",
+        "Muy Bajo": "La habilidad para registrar, mantener y manipular información visual y auditiva se encuentra en un rango muy bajo, lo que indica un rendimiento descendido que puede afectar el seguimiento de instrucciones complejas.",
+    },
+    IVP: {
+        "Promedio": "La velocidad y precisión en la identificación de estímulos visuales, así como la rapidez en la toma de decisiones simples, se encuentran dentro de lo esperado para su edad.",
+        "Muy Bajo": "Muestra un rendimiento descendido en las habilidades relacionadas con la velocidad y precisión en la identificación de estímulos visuales y en la toma de decisiones, situándose en un rango muy bajo.",
+    }
+};
+
+const getSemanticInterpretation = (indexKey: string, classification: string, studentName: string = "el evaluado"): string => {
+    const key = indexKey.split(' ')[0]; // 'ICV', 'IVE', etc.
+    const dict = interpretationDictionary[key];
+    if (dict && dict[classification]) {
+        return dict[classification].replace('[Nombre]', studentName);
+    }
+    // Fallback general si no hay un texto específico
+    return `El rendimiento en el índice ${indexKey} se clasificó como ${classification}.`;
+};
+
 type CompositeScoreProfile = {
     name: string;
     score: number;
@@ -893,6 +923,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
     const [narrativeReport, setNarrativeReport] = useState<NarrativeReport | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [clinicalObservations, setClinicalObservations] = useState('');
+    const [generatedReportText, setGeneratedReportText] = useState('');
+
 
     const handleCalculate = () => {
         const scoresForCalc = {...rawScores};
@@ -917,24 +949,45 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
         }
         
         setIsGenerating(true);
-        setNarrativeReport(null);
+        setGeneratedReportText('');
+        
+        // --- 1. Generación local con Diccionario Clínico ---
+        const studentName = "Estudiante de Ejemplo"; // Reemplazar con nombre real
+        const domainReports = results.compositeScores
+            .filter(score => !score.name.includes('CIT')) // Excluir CIT de los párrafos de dominio
+            .map(score => getSemanticInterpretation(score.name, score.classification, studentName))
+            .join('\n\n');
 
+        const citProfile = results.compositeScores.find(s => s.name.includes('CIT'));
+        const introduction = citProfile
+            ? `Basado en el C.I. Total (CIT) de ${citProfile.score}, la capacidad intelectual general de ${studentName} se clasifica como ${citProfile.classification}.`
+            : "No se pudo calcular el C.I. Total para generar la introducción.";
+        
+        const fullLocalReport = `${introduction}\n\n${domainReports}`;
+        setGeneratedReportText(fullLocalReport);
+
+
+        // --- 2. (Opcional) Generación de Síntesis con IA ---
         try {
             const aiInput: WiscReportInput = {
-                studentName: 'Estudiante de Ejemplo', // Reemplazar con nombre real
+                studentName,
                 studentAge,
                 compositeScores: results.compositeScores,
                 strengths: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('F')).map(s => s.name || ''),
                 weaknesses: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('D')).map(s => s.name || ''),
             };
 
-            const report = await generateWiscReport(aiInput);
-            setNarrativeReport(report);
+            const reportFromAI = await generateWiscReport(aiInput);
+            
+            // Combina el reporte local con la síntesis de la IA
+            setGeneratedReportText(prev => `${prev}\n\n---\n\n**Síntesis Diagnóstica (sugerida por IA):**\n${reportFromAI.diagnosticSynthesis}`);
+            setNarrativeReport(reportFromAI); // Para mantener la estructura original si se necesita
 
-            console.log("--- INFORME NARRATIVO GENERADO POR IA ---", report);
+            console.log("--- SÍNTESIS GENERADA POR IA ---", reportFromAI.diagnosticSynthesis);
+
         } catch (error) {
-            console.error("Error al generar el informe narrativo:", error);
-            alert("Ocurrió un error al contactar al servicio de IA. Por favor, intente de nuevo.");
+            console.error("Error al generar la síntesis con IA:", error);
+            setGeneratedReportText(prev => `${prev}\n\n---\n\n**Error:** No se pudo generar la síntesis diagnóstica con la IA.`);
         } finally {
             setIsGenerating(false);
         }
@@ -1096,7 +1149,7 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 {isGenerating ? (
                                     <>
                                         <Bot className="mr-2 animate-spin" />
-                                        Generando Informe con IA...
+                                        Generando Informe...
                                     </>
                                 ) : (
                                     <>
@@ -1106,15 +1159,14 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 )}
                            </Button>
                            
-                           {narrativeReport && (
+                           {generatedReportText && (
                                 <div className="mt-6 p-4 border rounded-lg bg-gray-50 space-y-4">
-                                    <h4 className="font-bold text-lg text-gray-800">Borrador de Informe Generado por IA</h4>
-                                    <div className="space-y-2 text-sm text-gray-700 whitespace-pre-wrap">
-                                        <p>{narrativeReport.narrativeReport}</p>
-                                        <Separator className="my-4"/>
-                                        <h5 className="font-semibold">Síntesis Diagnóstica:</h5>
-                                        <p>{narrativeReport.diagnosticSynthesis}</p>
-                                    </div>
+                                    <h4 className="font-bold text-lg text-gray-800">Borrador de Informe Generado</h4>
+                                    <Textarea
+                                        readOnly
+                                        value={generatedReportText}
+                                        className="min-h-[400px] whitespace-pre-wrap bg-white"
+                                    />
                                 </div>
                             )}
                         </div>
