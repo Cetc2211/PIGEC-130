@@ -1,9 +1,3 @@
-
-
-
-
-
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -124,6 +118,7 @@ type CompositeScoreProfile = {
 type Discrepancy = {
     pair: string;
     diff: number;
+    criticalValue: number;
     significant: boolean;
 };
 
@@ -185,6 +180,14 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         const citSum = getSum(['S', 'V', 'I', 'C', 'M', 'PV', 'D', 'A', ...ivpSubtests]);
         const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 10));
         compositeScores = [icv, irp, imt, ivp, cit];
+
+        // WAIS Discrepancies
+        discrepancies = [
+            { pair: 'ICV-IRP', diff: icv.score - irp.score, criticalValue: 9.8, significant: Math.abs(icv.score - irp.score) > 9.8 },
+            { pair: 'ICV-IMT', diff: icv.score - imt.score, criticalValue: 10.2, significant: Math.abs(icv.score - imt.score) > 10.2 },
+            { pair: 'IRP-IMT', diff: irp.score - imt.score, criticalValue: 10.5, significant: Math.abs(irp.score - imt.score) > 10.5 },
+        ];
+
     } else {
         const icv = createProfile("Comprensión Verbal (ICV)", scaleToComposite(getSum(['S', 'V']), 2));
         const ive = createProfile("Visoespacial (IVE)", scaleToComposite(getSum(['C', 'PV']), 2));
@@ -194,10 +197,14 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
         const citSum = getSum(['S', 'V', 'C', 'M', 'B', 'D', 'Cl']);
         const cit = createProfile("C.I. Total (CIT)", scaleToComposite(citSum, 7));
         compositeScores = [icv, ive, irf, imt, ivp, cit];
-    }
 
-    const valoresCriticos = { 'ICV-IRF': 10.8, 'D-C': 2.5 };
-    discrepancies = [];
+        // WISC-V Discrepancies
+        discrepancies = [
+            { pair: 'ICV-IVE', diff: icv.score - ive.score, criticalValue: 10.8, significant: Math.abs(icv.score - ive.score) > 10.8 },
+            { pair: 'ICV-IRF', diff: icv.score - irf.score, criticalValue: 11.2, significant: Math.abs(icv.score - irf.score) > 11.2 },
+            { pair: 'IMT-IVP', diff: imt.score - ivp.score, criticalValue: 11.5, significant: Math.abs(imt.score - ivp.score) > 11.5 },
+        ];
+    }
     
     const coreSubtests = isWais
         ? ['S', 'V', 'I', 'C', 'M', 'PV', 'D', 'A', ...ivpSubtests]
@@ -211,9 +218,10 @@ const calculateClinicalProfile = (scaledScores: { [key: string]: number }, isWai
     strengthsAndWeaknesses = Object.entries(effectiveScores).map(([id, score]) => {
         if (score === undefined || isNaN(score)) return null;
         const diff = score - meanPE;
+        const criticalValueStrengthWeakness = 2.5; // Valor simulado
         let classification = '-';
-        if (diff >= valoresCriticos['D-C']) classification = 'Fortaleza (F)';
-        if (diff <= -valoresCriticos['D-C']) classification = 'Debilidad (D)';
+        if (diff >= criticalValueStrengthWeakness) classification = 'Fortaleza (F)';
+        if (diff <= -criticalValueStrengthWeakness) classification = 'Debilidad (D)';
         const subtestInfo = allSubtests.find(t => t.id === id);
         return { name: subtestInfo?.name, score, diff: diff.toFixed(2), classification };
     }).filter((s): s is StrengthWeakness => s !== null && s.name !== undefined);
@@ -916,6 +924,8 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                 studentName: 'Estudiante de Ejemplo', // Reemplazar con nombre real
                 studentAge,
                 compositeScores: results.compositeScores,
+                strengths: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('F')).map(s => s.name || ''),
+                weaknesses: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('D')).map(s => s.name || ''),
             };
 
             const report = await generateWiscReport(aiInput);
@@ -1030,14 +1040,13 @@ export default function WISCScoringConsole({ studentAge }: WISCScoringConsolePro
                                 <h4 className="font-semibold text-md mb-2">Análisis de Discrepancias</h4>
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Comparación</TableHead><TableHead>Diferencia</TableHead><TableHead>Significancia</TableHead></TableRow></TableHeader>
-
                                     <TableBody>
                                         {results.discrepancies.length > 0 ? (
                                             results.discrepancies.map((d: Discrepancy) => (
                                                 <TableRow key={d.pair}>
                                                     <TableCell>{d.pair}</TableCell>
                                                     <TableCell>{d.diff}</TableCell>
-                                                    <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? 'Sí (p &lt; .05)' : 'No'}</TableCell>
+                                                    <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? `Sí (VC=${d.criticalValue})` : 'No'}</TableCell>
                                                 </TableRow>
                                             ))
                                         ) : (

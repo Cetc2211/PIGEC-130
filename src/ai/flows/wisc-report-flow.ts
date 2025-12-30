@@ -18,6 +18,8 @@ export const WiscReportInputSchema = z.object({
         score: z.number(),
         classification: z.string(),
     })).describe('Listado de Índices Compuestos y sus puntajes.'),
+    strengths: z.array(z.string()).describe('Lista de fortalezas detectadas.'),
+    weaknesses: z.array(z.string()).describe('Lista de debilidades detectadas.'),
 });
 export type WiscReportInput = z.infer<typeof WiscReportInputSchema>;
 
@@ -31,24 +33,28 @@ const reportGenerationPrompt = ai.definePrompt({
     name: 'wiscReportPrompt',
     input: { schema: WiscReportInputSchema },
     output: { schema: WiscReportOutputSchema },
-    prompt: `Actúa como un Psicólogo Clínico experto en evaluación neuropsicológica con la escala WISC-V/WAIS-IV.
-    Tarea: Generar un análisis cualitativo profesional y una síntesis diagnóstica basada en los siguientes resultados psicométricos:
-    
-    * Nombre del Evaluado: {{{studentName}}}
-    * Edad: {{{studentAge}}}
-    * Puntajes Compuestos (PC):
-    {{#each compositeScores}}
-    * {{{name}}}: PC = {{{score}}} (Clasificación: {{{classification}}})
-    {{/each}}
-    
-    Instrucciones de Redacción:
-    - Para cada índice principal (ICV, IVE, IRF, IMT, IVP), redacta un párrafo describiendo el rendimiento del evaluado.
-    - Utiliza una terminología técnica pero accesible, similar a: "La capacidad de acceder y aplicar el conocimiento de palabras...".
-    - Basa la descripción cualitativa en la clasificación proporcionada (ej. "Promedio", "Medio Bajo", "Muy Bajo").
-    - Menciona específicamente las habilidades de formación de conceptos, relaciones visoespaciales y manipulación de información visual/auditiva en los párrafos correspondientes.
-    - El resultado debe ser un objeto JSON con dos claves: 'narrativeReport' (que contenga los párrafos descriptivos) y 'diagnosticSynthesis'.
-    - En 'diagnosticSynthesis', genera una breve síntesis que relacione los resultados con la posible necesidad de apoyos pedagógicos, destacando las áreas de oportunidad.
-    `,
+    prompt: `Rol: Actúa como un experto en Psicometría y Evaluación Clínica Neuropsicológica especializado en escalas Wechsler (WISC-V).
+
+Entrada de Datos:
+* Nombre del Estudiante: {{{studentName}}}
+* Edad: {{{studentAge}}}
+* Perfil de Índices:
+{{#each compositeScores}}
+  * {{{name}}}: PC = {{{score}}} (Clasificación: {{{classification}}})
+{{/each}}
+* Fortalezas detectadas: {{#each strengths}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+* Debilidades detectadas: {{#each weaknesses}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+
+Instrucciones de Redacción:
+1.  **Introducción**: Redacta una descripción de la capacidad intelectual general basada en el C.I. Total (CIT).
+2.  **Análisis por Dominios**: Genera párrafos descriptivos para cada índice (Comprensión Verbal, Visoespacial, Razonamiento Fluido, Memoria de Trabajo, Velocidad de Procesamiento) siguiendo el estilo del manual:
+    *   **Comprensión Verbal**: Analiza la formación de conceptos y razonamiento verbal.
+    *   **Visoespacial**: Describe la discriminación de detalles visuales y entendimiento de relaciones espaciales.
+    *   **Memoria de Trabajo**: Evalúa la capacidad de registrar, mantener y manipular información visual/auditiva.
+    *   **Velocidad de Procesamiento**: Comenta la velocidad y precisión en la toma de decisiones visuales.
+3.  **Conclusión**: Finaliza con una **Síntesis Diagnóstica** clara, indicando si el rendimiento es acorde a su edad o si sugiere algún déficit intelectual (DIL, DIM, etc.).
+4.  **Formato**: El resultado debe ser un objeto JSON con dos claves: 'narrativeReport' (con la introducción y análisis de dominios) y 'diagnosticSynthesis' (con la conclusión).
+`,
 });
 
 
