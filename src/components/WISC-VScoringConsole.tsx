@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb, Image as ImageIcon, Bot } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb, Image as ImageIcon, Bot, Download, BarChart3 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
@@ -13,7 +13,12 @@ import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { generateWiscReport, WiscReportInput } from '@/ai/flows/wisc-report-flow';
 import { getClinicalAssessmentByStudentId } from '@/lib/store';
-
+import { calculateWiscProfile, WiscCalculationResult } from '@/lib/wisc-logic';
+import { MOCK_TEST_CASE, TEST_CASES } from '@/lib/mock-test-case';
+import { WiscProfileChart } from './WiscProfileChart';
+import { WiscReportDocument } from './WiscReportDocument';
+import { pdf } from '@react-pdf/renderer';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Subtest {
     id: string;
@@ -944,33 +949,39 @@ export default function WISCScoringConsole({ studentId, studentAge }: WISCScorin
 
 
     const [rawScores, setRawScores] = useState<{ [key: string]: number }>({});
-    const [results, setResults] = useState<ReturnType<typeof calculateClinicalProfile> | null>(null);
+    const [results, setResults] = useState<WiscCalculationResult | null>(null);
     const [narrativeReport, setNarrativeReport] = useState<NarrativeReport | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [clinicalObservations, setClinicalObservations] = useState('');
     const [generatedReportText, setGeneratedReportText] = useState('');
+    const [currentStudentName, setCurrentStudentName] = useState("Esteban Hernandarias");
 
-    // Cargar los puntajes del caso de prueba de Esteban si el ID coincide
-    useEffect(() => {
-        if (studentId === 'S004') {
-            setRawScores({
-                C: 27, S: 29, M: 16, D: 12, Cl: 38, V: 32, B: 18, PV: 15, SV: 20, BS: 23
-            });
-        }
-    }, [studentId]);
+    // Cargar Caso de Prueba (Instrucción 6)
+    const handleLoadTestCase = (caseKey: string = "esteban") => {
+        // @ts-ignore
+        const selectedCase = TEST_CASES[caseKey];
+        if (!selectedCase) return;
 
+        console.log(`Cargando caso de prueba (${caseKey}):`, selectedCase.rawScores);
+        setRawScores(selectedCase.rawScores);
+        setCurrentStudentName(selectedCase.studentInfo.name);
+        
+        // Forzar actualización de la UI (opcional, si queremos que los inputs reflejen los datos)
+        // Por ahora, solo alertamos para confirmar que los datos internos están listos.
+        alert(`✅ Datos de ${selectedCase.studentInfo.name} cargados correctamente:\n${JSON.stringify(selectedCase.rawScores, null, 2)}\n\nAhora haga clic en 'Calcular Puntuaciones Finales'.`);
+    };
 
     const handleCalculate = () => {
-        const scoresForCalc = {...rawScores};
-        const scaledScores: { [key: string]: number } = {};
-        Object.entries(scoresForCalc).forEach(([key, value]) => {
-            if (value !== undefined && !isNaN(value)) {
-                scaledScores[key] = getScaledScore(value, key);
-            }
-        });
+        if (Object.keys(rawScores).length === 0) {
+            alert("⚠️ No se detectaron puntuaciones.\n\nPor favor, haga clic en 'Cargar Caso de Prueba' primero, o ingrese los datos manualmente en cada subprueba.");
+            return;
+        }
 
-        const clinicalProfile = calculateClinicalProfile(scaledScores, isWais);
-        setResults(clinicalProfile);
+        console.log("Calculando perfil con:", rawScores);
+        // Usar el nuevo Motor Psicométrico (Instrucción 5)
+        const profile = calculateWiscProfile(rawScores, `${studentAge} años`, currentStudentName); 
+        console.log("Resultado del perfil:", profile);
+        setResults(profile);
     };
 
     const handleFinalizeAndSeal = async () => {
@@ -980,50 +991,57 @@ export default function WISCScoringConsole({ studentId, studentAge }: WISCScorin
         }
         
         setIsGenerating(true);
-        setGeneratedReportText('');
-        
-        const studentName = "Esteban Hernandarias"; // From test case
-        const domainReports = results.compositeScores
-            .filter(score => !score.name.includes('CIT'))
-            .map(score => getSemanticInterpretation(score.name, score.classification, studentName))
-            .join('\n\n');
-
-        const citProfile = results.compositeScores.find(s => s.name.includes('CIT'));
-        const introduction = citProfile
-            ? `Basado en el C.I. Total (CIT) de ${citProfile.score}, la capacidad intelectual general de ${studentName} se clasifica como ${citProfile.classification}.`
-            : "No se pudo calcular el C.I. Total para generar la introducción.";
-        
-        const localReportBody = `${introduction}\n\n${domainReports}`;
         
         try {
+            // 1. Generar Síntesis con IA (Instrucción 2 y 3)
             const aiInput: WiscReportInput = {
-                studentName,
-                studentAge,
-                compositeScores: results.compositeScores,
-                strengths: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('F')).map(s => s.name || ''),
-                weaknesses: results.strengthsAndWeaknesses.filter(s => s.classification.startsWith('D')).map(s => s.name || ''),
+                studentName: currentStudentName,
+                studentAge: studentAge,
+                compositeScores: results.indices.map(i => ({ name: i.name, score: i.pc, classification: i.classification })),
+                strengths: results.analysis.strengths,
+                weaknesses: results.analysis.weaknesses,
             };
 
-            const reportFromAI = await generateWiscReport(aiInput);
-            
-            let finalSynthesis = reportFromAI.diagnosticSynthesis;
-
-            if (citProfile) {
-                if (citProfile.score < 70) {
-                    finalSynthesis += "\n\nSugerencia Automática: Perfil sugerente de Discapacidad Intelectual.";
-                } else if (citProfile.score >= 70 && citProfile.score <= 79) {
-                    finalSynthesis += "\n\nSugerencia Automática: Funcionamiento Intelectual Limítrofe.";
-                } else {
-                    finalSynthesis += "\n\nSugerencia Automática: Funcionamiento Intelectual dentro de la normalidad.";
-                }
+            let finalSynthesis = "";
+            try {
+                const reportFromAI = await generateWiscReport(aiInput);
+                finalSynthesis = reportFromAI.diagnosticSynthesis;
+            } catch (e) {
+                console.error("IA no disponible, usando síntesis local", e);
+                finalSynthesis = results.analysis.diagnosis;
             }
 
-            setGeneratedReportText(`${localReportBody}\n\n---\n\n**Síntesis Diagnóstica (sugerida por IA):**\n${finalSynthesis}`);
-            console.log("--- INFORME GENERADO ---", { localReportBody, finalSynthesis });
+            // Actualizar resultados con la síntesis de IA
+            const finalResults = {
+                ...results,
+                analysis: {
+                    ...results.analysis,
+                    diagnosis: finalSynthesis
+                }
+            };
+
+            // 2. Generar PDF (Instrucción 7)
+            const blob = await pdf(
+                <WiscReportDocument 
+                    data={finalResults} 
+                    studentInfo={{ name: currentStudentName, age: `${studentAge} años`, date: new Date().toLocaleDateString() }} 
+                />
+            ).toBlob();
+            
+            // 3. Descargar
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Reporte_WISC_${currentStudentName.replace(/\s+/g, '')}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            alert("Informe generado y descargado con éxito.");
 
         } catch (error) {
-            console.error("Error al generar la síntesis con IA:", error);
-            setGeneratedReportText(`${localReportBody}\n\n---\n\n**Error:** No se pudo generar la síntesis diagnóstica con la IA.`);
+            console.error("Error al generar el informe:", error);
+            alert("Error al generar el informe PDF.");
         } finally {
             setIsGenerating(false);
         }
@@ -1037,6 +1055,23 @@ export default function WISCScoringConsole({ studentId, studentAge }: WISCScorin
                      <p className="text-sm text-gray-500">Edad del evaluado: {studentAge} años</p>
                 </div>
                 <div className="flex items-center gap-4">
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="border-dashed border-gray-400">
+                                <Bot className="mr-2 h-4 w-4" />
+                                Cargar Caso de Prueba
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => handleLoadTestCase("esteban")}>
+                                Caso 1: Esteban (DIL)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleLoadTestCase("sofia")}>
+                                Caso 2: Sofía (Superior)
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                     </DropdownMenu>
+
                      <Button onClick={handleCalculate} className="bg-blue-600 hover:bg-blue-700">
                         <Calculator className="mr-2 h-4 w-4" />
                         Calcular Puntuaciones Finales
@@ -1108,15 +1143,22 @@ export default function WISCScoringConsole({ studentId, studentAge }: WISCScorin
                      <h3 className="font-semibold text-lg text-center lg:text-left">Resultados y Análisis</h3>
                      {results ? (
                         <div className="space-y-8">
+                            
+                            {/* Gráficos (Instrucción 6) */}
+                            <WiscProfileChart 
+                                indices={results.indices} 
+                                subtests={Object.entries(results.scaledScores).map(([name, score]) => ({ name, score }))} 
+                            />
+
                             <div>
                                 <h4 className="font-semibold text-md mb-2">Tabla de Puntuaciones Compuestas</h4>
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Índice</TableHead><TableHead>PC</TableHead><TableHead>Percentil</TableHead><TableHead>Clasificación</TableHead></TableRow></TableHeader>
                                     <TableBody>
-                                        {results.compositeScores.map(res => (
+                                        {results.indices.map(res => (
                                             <TableRow key={res.name} className={res.name.includes('CIT') ? 'bg-blue-50 font-bold' : ''}>
                                                 <TableCell>{res.name}</TableCell>
-                                                <TableCell className="font-extrabold text-blue-800">{res.score}</TableCell>
+                                                <TableCell className="font-extrabold text-blue-800">{res.pc}</TableCell>
                                                 <TableCell>{res.percentile}</TableCell>
                                                 <TableCell>{res.classification}</TableCell>
                                             </TableRow>
@@ -1128,19 +1170,17 @@ export default function WISCScoringConsole({ studentId, studentAge }: WISCScorin
                             <div>
                                 <h4 className="font-semibold text-md mb-2">Análisis de Discrepancias</h4>
                                 <Table>
-                                    <TableHeader><TableRow><TableHead>Comparación</TableHead><TableHead>Diferencia</TableHead><TableHead>Significancia</TableHead></TableRow></TableHeader>
+                                    <TableHeader><TableRow><TableHead>Alerta Clínica</TableHead></TableRow></TableHeader>
                                     <TableBody>
-                                        {results.discrepancies.length > 0 ? (
-                                            results.discrepancies.map((d: Discrepancy) => (
-                                                <TableRow key={d.pair}>
-                                                    <TableCell>{d.pair}</TableCell>
-                                                    <TableCell>{d.diff}</TableCell>
-                                                    <TableCell className={d.significant ? 'font-bold text-red-600' : ''}>{d.significant ? `Sí (VC=${d.criticalValue})` : 'No'}</TableCell>
+                                        {results.analysis.discrepancies.length > 0 ? (
+                                            results.analysis.discrepancies.map((d, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell className="font-bold text-red-600">{d}</TableCell>
                                                 </TableRow>
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={3} className="text-center text-gray-500">No se encontraron discrepancias significativas.</TableCell>
+                                                <TableCell className="text-center text-gray-500">No se encontraron discrepancias significativas.</TableCell>
                                             </TableRow>
                                         )}
                                     </TableBody>
@@ -1150,20 +1190,25 @@ export default function WISCScoringConsole({ studentId, studentAge }: WISCScorin
                              <div>
                                 <h4 className="font-semibold text-md mb-2">Fortalezas y Debilidades Personales</h4>
                                 <Table>
-                                     <TableHeader><TableRow><TableHead>Subprueba</TableHead><TableHead>PE</TableHead><TableHead>Clasificación</TableHead></TableRow></TableHeader>
+                                     <TableHeader><TableRow><TableHead>Subprueba</TableHead><TableHead>Clasificación</TableHead></TableRow></TableHeader>
                                     <TableBody>
-                                         {results.strengthsAndWeaknesses.map(s => s && (
-                                            <TableRow key={s.name}>
-                                                <TableCell>{s.name}</TableCell>
-                                                <TableCell>{s.score}</TableCell>
-                                                <TableCell className={s.classification.startsWith('F') ? 'font-bold text-green-600' : s.classification.startsWith('D') ? 'font-bold text-orange-600' : ''}>{s.classification}</TableCell>
+                                         {results.analysis.strengths.map(s => (
+                                            <TableRow key={s}>
+                                                <TableCell>{s}</TableCell>
+                                                <TableCell className="font-bold text-green-600">Fortaleza (F)</TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {results.analysis.weaknesses.map(s => (
+                                            <TableRow key={s}>
+                                                <TableCell>{s}</TableCell>
+                                                <TableCell className="font-bold text-orange-600">Debilidad (D)</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
                             </div>
 
-                            <PedagogicalRecommendations compositeScores={results.compositeScores} />
+                            {/* <PedagogicalRecommendations compositeScores={results.compositeScores} /> */}
 
                              <Separator className="my-6" />
 
@@ -1190,21 +1235,10 @@ export default function WISCScoringConsole({ studentId, studentAge }: WISCScorin
                                 ) : (
                                     <>
                                         <FileLock2 className="mr-2" />
-                                        Generar Informe, Finalizar y Sellar
+                                        Generar Informe PDF
                                     </>
                                 )}
                            </Button>
-                           
-                           {generatedReportText && (
-                                <div className="mt-6 p-4 border rounded-lg bg-gray-50 space-y-4">
-                                    <h4 className="font-bold text-lg text-gray-800">Borrador de Informe Generado</h4>
-                                    <Textarea
-                                        readOnly
-                                        value={generatedReportText}
-                                        className="min-h-[400px] whitespace-pre-wrap bg-white"
-                                    />
-                                </div>
-                            )}
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-gray-50 text-gray-500 rounded-md border-2 border-dashed">

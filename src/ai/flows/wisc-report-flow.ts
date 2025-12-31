@@ -31,8 +31,12 @@ export type WiscReportOutput = z.infer<typeof WiscReportOutputSchema>;
 
 const reportGenerationPrompt = ai.definePrompt({
     name: 'wiscReportPrompt',
+    model: 'googleai/gemini-1.5-flash',
     input: { schema: WiscReportInputSchema },
     output: { schema: WiscReportOutputSchema },
+    config: {
+        temperature: 0.7,
+    },
     prompt: `Rol: Actúa como un experto en Psicometría y Evaluación Clínica Neuropsicológica especializado en escalas Wechsler (WISC-V/WAIS-IV).
 
 Entrada de Datos:
