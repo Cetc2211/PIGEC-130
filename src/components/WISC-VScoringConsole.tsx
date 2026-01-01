@@ -5,7 +5,77 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb, Image as ImageIcon, Bot, Download, BarChart3 } from 'lucide-react';
+import { Calculator, FileLock2, ChevronLeft, ChevronRight, BookOpen, Timer, Play, Pause, AlertTriangle, AlertCircle, Minus, Plus, Lightbulb, Image as ImageIcon, Bot, Download, BarChart3, Maximize2, Minimize2, Tablet, Pencil, Check, X, MousePointer2 } from 'lucide-react';
+
+const SpeedTimer = ({ limit = 120, onExpire }: { limit: number, onExpire: () => void }) => {
+    const [timeLeft, setTimeLeft] = useState(limit);
+    const [isRunning, setIsRunning] = useState(false);
+    const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+    // Sonido de alerta (opcional: requiere archivo beep.mp3 en public/sounds)
+    const playBeep = () => {
+        const audio = new Audio('/sounds/beep.mp3');
+        audio.play().catch(e => console.warn("Audio bloqueado por el navegador"));
+    };
+
+    useEffect(() => {
+        if (isRunning && timeLeft > 0) {
+            timerRef.current = setInterval(() => {
+                setTimeLeft((prev) => prev - 1);
+            }, 1000);
+        } else if (timeLeft === 0) {
+            setIsRunning(false);
+            if (timerRef.current) clearInterval(timerRef.current);
+            playBeep();
+            onExpire();
+        }
+        return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    }, [isRunning, timeLeft, onExpire]);
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
+    return (
+        <div className={`p-4 rounded-xl border-2 transition-all duration-500 ${
+            timeLeft <= 10 ? 'bg-red-50 border-red-500 scale-105' : 'bg-slate-900 border-slate-700'
+        }`}>
+            <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2 text-white">
+                    <Timer className={isRunning ? "animate-pulse text-blue-400" : "text-gray-400"} />
+                    <span className="text-4xl font-mono font-bold tracking-tighter">
+                        {formatTime(timeLeft)}
+                    </span>
+                </div>
+                
+                <div className="flex gap-2 mt-2">
+                    <Button 
+                        size="sm"
+                        variant={isRunning ? "destructive" : "default"}
+                        onClick={() => setIsRunning(!isRunning)}
+                    >
+                        {isRunning ? "Pausar" : "Iniciar Prueba"}
+                    </Button>
+                    <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => { setIsRunning(false); setTimeLeft(limit); }}
+                    >
+                        Reiniciar
+                    </Button>
+                </div>
+
+                {timeLeft <= 10 && timeLeft > 0 && (
+                    <p className="text-red-600 text-[10px] font-bold animate-bounce mt-1">
+                        ¡ÚLTIMOS 10 SEGUNDOS!
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+};
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
@@ -447,36 +517,345 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
     );
 }
 
-function StimulusDisplay({ subtestId, itemId }: { subtestId: string, itemId: number }) {
-    const localPath = `/stimuli/${subtestId}/item${itemId}.webp`;
+
+type AppMode = 'PHYSICAL' | 'DIGITAL';
+
+// Mock de Coordenadas para Cancelación (Se debe reemplazar con JSON real)
+// Las coordenadas deben ser relativas (0.0 a 1.0) para funcionar en cualquier resolución
+const CA_TARGETS: {[sheet: number]: {x: number, y: number, r: number, type: 'target' | 'distractor'}[]} = {
+    2: [ // Item 1 (Aleatoria) - Ejemplo Mock Relativo
+        {x: 0.2, y: 0.3, r: 0.05, type: 'target'}, 
+        {x: 0.5, y: 0.5, r: 0.05, type: 'distractor'}
+    ],
+    3: [ // Item 2 (Estructurada) - Ejemplo Mock Relativo
+        {x: 0.4, y: 0.4, r: 0.05, type: 'target'}
+    ]
+};
+
+function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning, onReviewComplete, onTimerControl }: { subtestId: string, onClose: () => void, timerValue: number, isTimerRunning: boolean, onReviewComplete?: (hits: number, errors: number) => void, onTimerControl?: (action: 'start' | 'stop' | 'reset') => void }) {
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+    // Iniciar en lámina 1 para Ca (Ejemplo y Práctica)
+    const [currentSheet, setCurrentSheet] = useState(1);
+    const [isDelaying, setIsDelaying] = useState(false);
+    
+    // Estado para revisión y puntuación
+    const [strokes, setStrokes] = useState<{path: {x: number, y: number}[], type: 'hit' | 'miss' | 'neutral'}[]>([]);
+    const [isReviewMode, setIsReviewMode] = useState(false);
+    const [hits, setHits] = useState(0);
+    const [commissions, setCommissions] = useState(0);
+
+    // Configuración de Láminas por Subprueba
+    const sheetConfig: {[key: string]: {count: number, labels: string[]}} = {
+        'Ca': { 
+            count: 3, 
+            labels: ['Lámina 1: Ejemplo y Práctica', 'Lámina 2: Ensayo 1 (Aleatoria)', 'Lámina 3: Ensayo 2 (Estructurada)'] 
+        },
+        'BS': { count: 1, labels: ['Búsqueda de Símbolos'] },
+        'Cl': { count: 1, labels: ['Claves'] }
+    };
+    
+    const config = sheetConfig[subtestId] || { count: 1, labels: ['Lámina Única'] };
+    const currentLabel = config.labels[currentSheet - 1] || `Lámina ${currentSheet}`;
+    const imagePath = `/stimuli/${subtestId}/item${currentSheet}.webp`;
+
+    // Lógica de Tiempo Límite (45s para Ca)
+    useEffect(() => {
+        // Solo activar revisión automática en láminas 2 y 3 (Items reales)
+        if (subtestId === 'Ca' && currentSheet > 1 && timerValue >= 45 && !isReviewMode) {
+            setIsReviewMode(true);
+        }
+    }, [timerValue, subtestId, isReviewMode, currentSheet]);
+
+    useEffect(() => {
+        if (canvasRef.current && canvasRef.current.parentElement) {
+            const canvas = canvasRef.current;
+            const parent = canvas.parentElement;
+            canvas.width = parent.clientWidth;
+            canvas.height = parent.clientHeight;
+
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 3;
+                setContext(ctx);
+                // Redibujar trazos existentes si los hay (al cambiar tamaño o volver de revisión)
+                redrawCanvas(ctx, strokes);
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentSheet, isReviewMode]); 
+
+    const startNextItem = (nextSheet: number) => {
+        if (onTimerControl) {
+            onTimerControl('stop');
+            onTimerControl('reset');
+        }
+        setIsDelaying(true);
+        setCurrentSheet(nextSheet);
+        setStrokes([]);
+        setHits(0);
+        setCommissions(0);
+        setIsReviewMode(false);
+        
+        setTimeout(() => {
+            setIsDelaying(false);
+            if (onTimerControl) onTimerControl('start');
+        }, 2000);
+    }; 
+
+    const redrawCanvas = (ctx: CanvasRenderingContext2D, currentStrokes: typeof strokes) => {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        currentStrokes.forEach(stroke => {
+            ctx.beginPath();
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 3;
+            if (stroke.path.length > 0) {
+                ctx.moveTo(stroke.path[0].x, stroke.path[0].y);
+                stroke.path.forEach(p => ctx.lineTo(p.x, p.y));
+                ctx.stroke();
+            }
+        });
+    };
+
+    const getCanvasCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return { x: 0, y: 0 };
+        
+        const rect = canvas.getBoundingClientRect();
+        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+        
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    };
+
+    const checkStrokeIntersection = (strokePath: {x: number, y: number}[]) => {
+        if (subtestId !== 'Ca' || !canvasRef.current) return 'neutral';
+        
+        const canvasWidth = canvasRef.current.width;
+        const canvasHeight = canvasRef.current.height;
+
+        // Calcular centro del trazo (simplificado)
+        const centerX = strokePath.reduce((sum, p) => sum + p.x, 0) / strokePath.length;
+        const centerY = strokePath.reduce((sum, p) => sum + p.y, 0) / strokePath.length;
+
+        // Convertir a coordenadas relativas (0-1)
+        const relativeX = centerX / canvasWidth;
+        const relativeY = centerY / canvasHeight;
+
+        const targets = CA_TARGETS[currentSheet] || [];
+        
+        // Verificar si el centro cae en algún objetivo
+        for (const target of targets) {
+            // Calcular distancia en coordenadas relativas, ajustando por aspecto si es necesario
+            // Para simplificar, usaremos distancia euclidiana relativa directa
+            // Nota: El radio también debe ser relativo. Asumimos radio relativo al ancho o promedio.
+            
+            const dx = relativeX - target.x;
+            const dy = relativeY - target.y;
+            // Ajuste de aspecto para círculos perfectos: multiplicar dy por aspect ratio?
+            // Por ahora simple:
+            const distance = Math.sqrt(dx*dx + dy*dy);
+            
+            if (distance <= target.r) {
+                return target.type === 'target' ? 'hit' : 'miss';
+            }
+        }
+        return 'miss'; 
+    };
+
+    const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!context || isReviewMode) return;
+        setIsDrawing(true);
+        const { x, y } = getCanvasCoordinates(e);
+        context.beginPath();
+        context.moveTo(x, y);
+        // Iniciar nuevo trazo
+        setStrokes(prev => [...prev, { path: [{x, y}], type: 'neutral' }]);
+    };
+
+    const draw = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!isDrawing || !context || isReviewMode) return;
+        const { x, y } = getCanvasCoordinates(e);
+        context.lineTo(x, y);
+        context.stroke();
+        
+        // Agregar punto al trazo actual
+        setStrokes(prev => {
+            const newStrokes = [...prev];
+            const lastStroke = newStrokes[newStrokes.length - 1];
+            lastStroke.path.push({x, y});
+            return newStrokes;
+        });
+    };
+
+    const stopDrawing = () => {
+        if (!context || !isDrawing) return;
+        context.closePath();
+        setIsDrawing(false);
+
+        // Procesar el último trazo
+        setStrokes(prev => {
+            const newStrokes = [...prev];
+            const lastStroke = newStrokes[newStrokes.length - 1];
+            const result = checkStrokeIntersection(lastStroke.path);
+            lastStroke.type = result;
+            
+            if (result === 'hit') setHits(h => h + 1);
+            if (result === 'miss') setCommissions(c => c + 1);
+            
+            return newStrokes;
+        });
+    };
+
+    const handleConfirmReview = () => {
+        if (onReviewComplete) {
+            onReviewComplete(hits, commissions);
+        }
+        // Avanzar a siguiente lámina o cerrar si es la última
+        if (currentSheet < config.count) {
+            // Usar la nueva lógica de transición con delay
+            startNextItem(currentSheet + 1);
+        } else {
+            onClose();
+        }
+    };
 
     return (
-        <div className="p-4 bg-gray-900 rounded-md border min-h-[300px] flex items-center justify-center relative overflow-hidden">
-            <img
-                src={localPath}
-                alt={`Estímulo ${subtestId} Item ${itemId}`}
-                className="max-w-full max-h-[350px] object-contain shadow-2xl"
-                onError={(e) => {
-                    const target = e.currentTarget;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent && !parent.querySelector('.error-message')) {
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = "text-center text-yellow-500 error-message";
-                        errorDiv.innerHTML = `
-                            <div class="text-center text-yellow-500">
-                                <p class="font-bold">IMAGEN LOCAL NO ENCONTRADA</p>
-                                <p class="text-xs italic">Use Cuadernillo Físico</p>
+        <div className="fixed inset-0 z-50 bg-white flex flex-col">
+            {/* Overlay de Delay (Cuenta regresiva) */}
+            {isDelaying && (
+                <div className="absolute inset-0 z-[60] bg-black/80 flex flex-col items-center justify-center text-white">
+                    <h2 className="text-4xl font-bold mb-4">Preparado...</h2>
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+                </div>
+            )}
+
+            {/* Header Flotante */}
+            <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-white/90 backdrop-blur-sm border-b z-10 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={onClose}>
+                        <Minimize2 className="h-6 w-6" />
+                    </Button>
+                    <div className={`flex items-center gap-2 font-mono text-xl font-bold px-3 py-1 rounded-md ${isReviewMode ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600'}`}>
+                        <Timer className="h-5 w-5" />
+                        {isReviewMode ? "REVISIÓN" : (currentSheet === 1 && subtestId === 'Ca' ? "PRÁCTICA" : `${timerValue}s`)}
+                    </div>
+                    {isTimerRunning && !isReviewMode && currentSheet > 1 && <span className="animate-pulse text-red-500 text-xs font-bold">GRABANDO</span>}
+                </div>
+                
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
+                        <span className="text-sm font-medium text-slate-700 min-w-[200px] text-center">
+                            {currentLabel}
+                        </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                        {/* Botón especial para iniciar desde Práctica */}
+                        {currentSheet === 1 && subtestId === 'Ca' && (
+                            <Button 
+                                variant="default" 
+                                size="sm" 
+                                className="bg-blue-600 hover:bg-blue-700 animate-pulse" 
+                                onClick={() => startNextItem(2)}
+                            >
+                                Iniciar Prueba (Ítem 1)
+                            </Button>
+                        )}
+
+                        {!isReviewMode && currentSheet > 1 && (
+                            <Button variant="outline" size="sm" onClick={() => {
+                                if (context && canvasRef.current) {
+                                    context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                                    setStrokes([]);
+                                    setHits(0);
+                                    setCommissions(0);
+                                }
+                            }}>Limpiar Lienzo</Button>
+                        )}
+                        {isReviewMode && (
+                            <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700" onClick={handleConfirmReview}>
+                                Confirmar y Continuar
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Área de Trabajo */}
+            <div className="flex-1 relative overflow-auto bg-gray-100 touch-none">
+                {/* Imagen de Fondo (Estímulo) */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                     <img 
+                        src={imagePath} 
+                        alt={`Estímulo ${subtestId} - ${currentLabel}`}
+                        className="max-w-full max-h-full object-contain opacity-90"
+                     />
+                </div>
+
+                {/* Canvas de Dibujo */}
+                <canvas
+                    ref={canvasRef}
+                    className={`absolute inset-0 touch-none ${isReviewMode ? 'cursor-default' : 'cursor-crosshair'}`}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                />
+
+                {/* Overlay de Revisión */}
+                {isReviewMode && (
+                    <div className="absolute inset-0 pointer-events-none">
+                        {strokes.map((stroke, i) => {
+                            // Calcular posición para el icono (centro del trazo)
+                            if (stroke.path.length === 0) return null;
+                            const cx = stroke.path.reduce((s, p) => s + p.x, 0) / stroke.path.length;
+                            const cy = stroke.path.reduce((s, p) => s + p.y, 0) / stroke.path.length;
+                            
+                            return (
+                                <div key={i} className="absolute transform -translate-x-1/2 -translate-y-1/2" style={{left: cx, top: cy}}>
+                                    {stroke.type === 'hit' && <div className="bg-green-500/20 border-2 border-green-500 rounded-full w-12 h-12 flex items-center justify-center"><Check className="text-green-600 h-6 w-6 font-bold"/></div>}
+                                    {stroke.type === 'miss' && <div className="bg-red-500/20 border-2 border-red-500 rounded-full w-12 h-12 flex items-center justify-center"><X className="text-red-600 h-6 w-6 font-bold"/></div>}
+                                </div>
+                            );
+                        })}
+                        
+                        {/* Panel de Edición Manual Flotante */}
+                        <div className="absolute bottom-10 right-10 bg-white p-4 rounded-lg shadow-xl border pointer-events-auto flex flex-col gap-3 w-64">
+                            <h5 className="font-bold text-gray-800 border-b pb-2">Validación Clínica</h5>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-green-700 font-medium">Aciertos</span>
+                                <div className="flex items-center gap-2">
+                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setHits(h => Math.max(0, h-1))}><Minus className="h-3 w-3"/></Button>
+                                    <span className="font-mono w-6 text-center">{hits}</span>
+                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setHits(h => h+1)}><Plus className="h-3 w-3"/></Button>
+                                </div>
                             </div>
-                        `;
-                        parent.appendChild(errorDiv);
-                    }
-                }}
-            />
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-red-700 font-medium">Errores</span>
+                                <div className="flex items-center gap-2">
+                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setCommissions(c => Math.max(0, c-1))}><Minus className="h-3 w-3"/></Button>
+                                    <span className="font-mono w-6 text-center">{commissions}</span>
+                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setCommissions(c => c+1)}><Plus className="h-3 w-3"/></Button>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 italic mt-2">Ajuste manualmente si la detección automática falló.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
-
 
 function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulusBooklet }: { subtestName: string, subtestId: string, renderType: string, stimulusBooklet?: number }) {
     const storageKey = `wisc_session_${subtestId}`;
@@ -485,6 +864,9 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
     const [scores, setScores] = useState<{[key: number]: { score: number, notes: string, errorTags: string[] }}>({});
     const [timer, setTimer] = useState(0);
     const [isTimerActive, setIsTimerActive] = useState(false);
+    const [isDigitalInterfaceOpen, setIsDigitalInterfaceOpen] = useState(false);
+    const [appMode, setAppMode] = useState<AppMode>('PHYSICAL');
+    const [isTestFinished, setIsTestFinished] = useState(false);
     
     const [trialScores, setTrialScores] = useState<{ [itemId: number]: { [trial: number]: number | null } }>({});
 
@@ -528,11 +910,20 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                     const timeLimitConfig: {[key: string]: number} = {
                         A: 30, PV: 30, B: 20, FI: 20,
                     };
-                    const timeLimit = renderType === 'SPEED_TEST' ? 120 : timeLimitConfig[subtestId];
+                    const timeLimit = (renderType === 'SPEED_TEST' && subtestId !== 'Ca') ? 120 : (subtestId === 'Ca' ? 45 : timeLimitConfig[subtestId]);
 
                     if (timeLimit && newTime >= timeLimit) {
-                        setIsTimerActive(false);
-                        alert(`Tiempo límite de ${timeLimit}s excedido.`);
+                        // En modo digital para Ca, no detenemos el timer aquí, dejamos que la UI maneje la transición
+                        // Solo detenemos si NO es Ca Digital
+                        if (subtestId !== 'Ca' || appMode !== 'DIGITAL') {
+                            setIsTimerActive(false);
+                            alert(`Tiempo límite de ${timeLimit}s excedido.`);
+                        } else {
+                            // Para Ca Digital, dejamos que siga corriendo hasta que DigitalCanvasInterface lo detenga
+                            // O podemos detenerlo pero NO mostrar alerta
+                             setIsTimerActive(false);
+                        }
+                        
                         if(renderType !== 'SPEED_TEST') {
                              setScore(currentItem, 0);
                         }
@@ -631,17 +1022,12 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
         switch(renderType) {
             case 'SPEED_TEST':
                 return (
-                    <div className="space-y-6">
-                        <div className="p-6 border rounded-lg bg-gray-900 flex flex-col items-center justify-center text-white">
-                            <Timer className="h-12 w-12" />
-                            <p className="text-6xl font-mono mt-2">{timer}s</p>
-                            <p className="text-lg text-gray-300">/ 120s</p>
-                        </div>
-                         <Button size="lg" variant={isTimerActive ? "destructive" : "default"} onClick={() => setIsTimerActive(!isTimerActive)} className="w-full">
-                            {isTimerActive ? <Pause className="mr-2 h-5 w-5"/> : <Play className="mr-2 h-5 w-5"/>}
-                            {isTimerActive ? 'Pausar Cronómetro' : 'Iniciar Cronómetro'}
-                        </Button>
-                        <Separator />
+                    <div className={`space-y-6 transition-opacity duration-500 ${!isTestFinished ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'}`}>
+                        {!isTestFinished && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center">
+                                {/* Overlay to prevent interaction */}
+                            </div>
+                        )}
                         {subtestId === 'BS' || subtestId === 'Ca' ? (
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -768,13 +1154,96 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
     
     if (renderType === 'SPEED_TEST') {
         return (
-            <div className="p-4 space-y-4">
-                <h4 className="font-semibold text-lg">{subtestName} - Registro de Totales</h4>
-                {renderInputInterface()}
-                <Separator className="!mt-6" />
-                <div className="flex justify-end items-center">
-                    <p className="text-md font-bold">Puntaje Bruto Final: <span className="text-blue-600">{totalScore}</span></p>
+            <div className="space-y-4">
+                {/* Selector de Modalidad (Instrucción 1) */}
+                <div className="flex gap-4 p-4 justify-center bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                    <Button 
+                        onClick={() => setAppMode('PHYSICAL')} 
+                        variant={appMode === 'PHYSICAL' ? 'default' : 'outline'}
+                        className="flex gap-2"
+                    >
+                        <Pencil className="h-4 w-4" />
+                        Modo Papel y Lápiz
+                    </Button>
+                    <Button 
+                        onClick={() => setAppMode('DIGITAL')} 
+                        variant={appMode === 'DIGITAL' ? 'default' : 'outline'}
+                        className="flex gap-2"
+                    >
+                        <Tablet className="h-4 w-4" />
+                        Modo Digital (Tablet)
+                    </Button>
                 </div>
+
+                {appMode === 'DIGITAL' ? (
+                    <div className="p-4 border rounded-lg bg-blue-50 text-center space-y-4">
+                        <h4 className="font-semibold text-lg text-blue-800">Modo Digital Activado</h4>
+                        <p className="text-sm text-blue-600">
+                            Haga clic en "Iniciar Aplicación Digital" para abrir el lienzo de pantalla completa.
+                            <br/>
+                            El evaluado podrá usar el lápiz óptico directamente sobre la pantalla.
+                        </p>
+                        <Button 
+                            onClick={() => {
+                                setIsDigitalInterfaceOpen(true);
+                                if (subtestId !== 'Ca') {
+                                    setIsTimerActive(true);
+                                } else {
+                                    setIsTimerActive(false);
+                                }
+                            }} 
+                            className="w-full py-8 text-lg font-bold bg-blue-600 hover:bg-blue-700"
+                        >
+                            <Maximize2 className="mr-2 h-6 w-6" />
+                            Iniciar Aplicación Digital
+                        </Button>
+                        
+                        {/* Renderizado Condicional del Lienzo Fullscreen */}
+                        {(isTimerActive || isDigitalInterfaceOpen) && (
+                            <DigitalCanvasInterface 
+                                subtestId={subtestId} 
+                                onClose={() => {
+                                    setIsTimerActive(false);
+                                    setIsDigitalInterfaceOpen(false);
+                                }}
+                                timerValue={timer}
+                                isTimerRunning={isTimerActive}
+                                onReviewComplete={(hits, errors) => {
+                                    setCorrectAnswers(prev => prev + hits);
+                                    setIncorrectAnswers(prev => prev + errors);
+                                    // Reiniciar timer para el siguiente ítem si es necesario
+                                    setTimer(0);
+                                }}
+                                onTimerControl={(action) => {
+                                    if (action === 'start') setIsTimerActive(true);
+                                    if (action === 'stop') setIsTimerActive(false);
+                                    if (action === 'reset') setTimer(0);
+                                }}
+                            />
+                        )}
+                    </div>
+                ) : (
+                    <div className="p-4 space-y-4">
+                        <h4 className="font-semibold text-lg">{subtestName} - Registro de Totales (Físico)</h4>
+                        
+                        {/* Cronómetro Gigante (Instrucción 2) */}
+                        <div className="flex justify-center py-6">
+                            <SpeedTimer 
+                                limit={120} 
+                                onExpire={() => {
+                                    setIsTestFinished(true);
+                                    alert("¡TIEMPO TERMINADO!\n\nPor favor diga 'Alto' y detenga la aplicación.");
+                                }} 
+                            />
+                        </div>
+
+                        {renderInputInterface()}
+                        <Separator className="!mt-6" />
+                        <div className="flex justify-end items-center">
+                            <p className="text-md font-bold">Puntaje Bruto Final: <span className="text-blue-600">{totalScore}</span></p>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }

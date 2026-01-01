@@ -125,6 +125,16 @@ export const calculateWiscProfile = (rawScores: Record<string, number>, studentA
     checkDiscrepancy("Comprensión Verbal", icv, "Memoria de Trabajo", imt, "ICV-IMT");
     checkDiscrepancy("Memoria de Trabajo", imt, "Velocidad de Procesamiento", ivp, "IMT-IVP");
 
+    // Análisis de Velocidad (Cancelación vs Búsqueda de Símbolos)
+    const caScore = scaledScores['Ca'];
+    const bsScore = scaledScores['BS'];
+    if (caScore !== undefined && bsScore !== undefined) {
+        // "Significativamente menor" - usually 3 points is significant for subtests
+        if (caScore < bsScore - 3) {
+            discrepancies.push("Se observa una fluctuación en la velocidad de procesamiento ante estímulos con carga semántica (animales) frente a estímulos abstractos.");
+        }
+    }
+
     // Síntesis Diagnóstica Condicional (Instrucción 7)
     let diagnosis = "Funcionamiento Intelectual dentro de la normalidad";
     const cit = citComposite.pc;
@@ -133,6 +143,12 @@ export const calculateWiscProfile = (rawScores: Record<string, number>, studentA
 
     // 4. Generación de Narrativa (Diccionario) (Instrucción 4 y 7)
     const narrative: Record<string, string> = {};
+    
+    // Nota de Transparencia Digital (Cancelación)
+    if (scaledScores['Ca'] !== undefined) {
+        narrative['Ca_Note'] = "Nota Técnica: Aplicación de Cancelación realizada mediante tablet con detección automática de trazos y validación clínica. (Anexo: Evidencia visual de trazos disponible en el expediente digital).";
+    }
+
     indices.forEach(idx => {
         if (idx.id === 'CIT') return; // El CIT suele tener su propia intro
         

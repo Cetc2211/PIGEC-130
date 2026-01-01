@@ -88,6 +88,18 @@ export const COMPOSITE_SCORE_LOOKUP: Record<string, Record<number, { pc: number,
 
 // Función simulada de baremos (Instrucción 5.3)
 export const getScaledScoreFromTable = (subtestId: string, rawScore: number, age: string): number => {
+    // Lógica específica para Cancelación (Ca) según tabla proporcionada
+    if (subtestId === 'Ca') {
+        if (rawScore <= 15) return 4; // Rango 1-4 (Muy Bajo)
+        if (rawScore <= 24) return 6; // Interpolación
+        if (rawScore <= 30) return 8; // Rango 7-8 (Promedio Bajo)
+        if (rawScore <= 39) return 9; // Interpolación
+        if (rawScore <= 50) return 12; // Rango 10-12 (Promedio)
+        if (rawScore <= 64) return 13; // Interpolación
+        if (rawScore <= 75) return 16; // Rango 14-16 (Superior)
+        return 19; // Rango 18-19 (Muy Superior)
+    }
+
     // En producción: buscar en tabla gigante por edad.
     // Aquí: devolver valor del caso de prueba si coincide, o una aproximación lineal.
     
