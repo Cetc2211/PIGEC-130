@@ -520,16 +520,39 @@ function ProcessObservationTracker({ subtestId }: { subtestId: string }) {
 
 type AppMode = 'PHYSICAL' | 'DIGITAL';
 
-// Mock de Coordenadas para Cancelación (Se debe reemplazar con JSON real)
-// Las coordenadas deben ser relativas (0.0 a 1.0) para funcionar en cualquier resolución
-const CA_TARGETS: {[sheet: number]: {x: number, y: number, r: number, type: 'target' | 'distractor'}[]} = {
-    2: [ // Item 1 (Aleatoria) - Ejemplo Mock Relativo
-        {x: 0.2, y: 0.3, r: 0.05, type: 'target'}, 
-        {x: 0.5, y: 0.5, r: 0.05, type: 'distractor'}
+// Mapa de Coordenadas Maestro para Cancelación
+// Nota: Este mapa contiene los puntos de referencia proporcionados. 
+// Para una funcionalidad completa, se deben mapear todos los estímulos restantes.
+const CA_TARGETS: {[sheet: number]: {id: string, x: number, y: number, r: number, type: 'target' | 'distractor', label: string}[]} = {
+    1: [ // Lámina 1: Ejemplo y Práctica (Mock para demostración de feedback)
+        {id: "p_t1", x: 0.3, y: 0.4, r: 0.05, type: "target", label: "Ejemplo Acierto"},
+        {id: "p_d1", x: 0.6, y: 0.4, r: 0.05, type: "distractor", label: "Ejemplo Error"}
     ],
-    3: [ // Item 2 (Estructurada) - Ejemplo Mock Relativo
-        {x: 0.4, y: 0.4, r: 0.05, type: 'target'}
+    2: [ // Item 1 (Aleatoria) - Datos proporcionados
+        {id: "t1", x: 0.08, y: 0.05, r: 0.03, type: "target", label: "cocodrilo"},
+        {id: "t2", x: 0.58, y: 0.05, r: 0.03, type: "target", label: "caballo"},
+        {id: "t3", x: 0.32, y: 0.12, r: 0.03, type: "target", label: "pájaro rojo"},
+        {id: "t4", x: 0.12, y: 0.18, r: 0.03, type: "target", label: "ave azul"},
+        {id: "d1", x: 0.18, y: 0.05, r: 0.03, type: "distractor", label: "sombrero"},
+        {id: "d2", x: 0.28, y: 0.05, r: 0.03, type: "distractor", label: "sartén"},
+        {id: "d3", x: 0.45, y: 0.05, r: 0.03, type: "distractor", label: "candado"}
+    ],
+    3: [ // Item 2 (Estructurada)
+        {id: "t_r1_1", x: 0.100, y: 0.050, r: 0.030, type: "target", label: "caballo"},
+        {id: "t_r1_2", x: 0.300, y: 0.050, r: 0.030, type: "target", label: "pájaro"}
     ]
+};
+
+// Configuración de Reglas por Subprueba (Instrucción 🚀)
+const SUBTEST_RULES: {[key: string]: {phases: {id: string, sheet: number, label: string, timer: number, scoring: boolean, feedback: boolean}[], scoringFormula: (h: number, e: number) => number}} = {
+    'Ca': {
+        phases: [
+            { id: "practice", sheet: 1, label: "Lámina 1: Ejemplo y Práctica", timer: 0, scoring: false, feedback: true },
+            { id: "test_1", sheet: 2, label: "Lámina 2: Ensayo 1 (Aleatoria)", timer: 45, scoring: true, feedback: false },
+            { id: "test_2", sheet: 3, label: "Lámina 3: Ensayo 2 (Estructurada)", timer: 45, scoring: true, feedback: false }
+        ],
+        scoringFormula: (h, e) => Math.max(0, h - e)
+    }
 };
 
 function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning, onReviewComplete, onTimerControl }: { subtestId: string, onClose: () => void, timerValue: number, isTimerRunning: boolean, onReviewComplete?: (hits: number, errors: number) => void, onTimerControl?: (action: 'start' | 'stop' | 'reset') => void }) {
@@ -546,7 +569,13 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
     const [hits, setHits] = useState(0);
     const [commissions, setCommissions] = useState(0);
 
-    // Configuración de Láminas por Subprueba
+    // Obtener reglas específicas o usar defaults
+    const rules = SUBTEST_RULES[subtestId];
+    const currentPhase = rules ? rules.phases.find(p => p.sheet === currentSheet) : null;
+    
+    const [practiceCompleted, setPracticeCompleted] = useState(false);
+
+    // Configuración de Láminas por Subprueba (Legacy fallback)
     const sheetConfig: {[key: string]: {count: number, labels: string[]}} = {
         'Ca': { 
             count: 3, 
@@ -557,16 +586,19 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
     };
     
     const config = sheetConfig[subtestId] || { count: 1, labels: ['Lámina Única'] };
-    const currentLabel = config.labels[currentSheet - 1] || `Lámina ${currentSheet}`;
+    const currentLabel = currentPhase ? currentPhase.label : (config.labels[currentSheet - 1] || `Lámina ${currentSheet}`);
     const imagePath = `/stimuli/${subtestId}/item${currentSheet}.webp`;
 
     // Lógica de Tiempo Límite (45s para Ca)
     useEffect(() => {
-        // Solo activar revisión automática en láminas 2 y 3 (Items reales)
-        if (subtestId === 'Ca' && currentSheet > 1 && timerValue >= 45 && !isReviewMode) {
+        // Usar el tiempo definido en las reglas si existe
+        const timeLimit = currentPhase ? currentPhase.timer : 45;
+        
+        // Solo activar revisión automática si hay límite de tiempo (>0) y no estamos ya en revisión
+        if (timeLimit > 0 && timerValue >= timeLimit && !isReviewMode) {
             setIsReviewMode(true);
         }
-    }, [timerValue, subtestId, isReviewMode, currentSheet]);
+    }, [timerValue, subtestId, isReviewMode, currentSheet, currentPhase]);
 
     useEffect(() => {
         if (canvasRef.current && canvasRef.current.parentElement) {
@@ -610,7 +642,11 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         currentStrokes.forEach(stroke => {
             ctx.beginPath();
-            ctx.strokeStyle = 'red';
+            // Color del trazo según su estado
+            if (stroke.type === 'hit') ctx.strokeStyle = '#16a34a'; // Green-600
+            else if (stroke.type === 'miss') ctx.strokeStyle = '#dc2626'; // Red-600
+            else ctx.strokeStyle = '#2563eb'; // Blue-600 (Neutral)
+            
             ctx.lineWidth = 3;
             if (stroke.path.length > 0) {
                 ctx.moveTo(stroke.path[0].x, stroke.path[0].y);
@@ -640,40 +676,88 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
         const canvasWidth = canvasRef.current.width;
         const canvasHeight = canvasRef.current.height;
 
-        // Calcular centro del trazo (simplificado)
+        // Calcular centro del trazo
         const centerX = strokePath.reduce((sum, p) => sum + p.x, 0) / strokePath.length;
         const centerY = strokePath.reduce((sum, p) => sum + p.y, 0) / strokePath.length;
 
-        // Convertir a coordenadas relativas (0-1)
+        // 1. Convertir coordenadas de píxeles a relativas (0-1)
         const relativeX = centerX / canvasWidth;
         const relativeY = centerY / canvasHeight;
 
         const targets = CA_TARGETS[currentSheet] || [];
         
-        // Verificar si el centro cae en algún objetivo
-        for (const target of targets) {
-            // Calcular distancia en coordenadas relativas, ajustando por aspecto si es necesario
-            // Para simplificar, usaremos distancia euclidiana relativa directa
-            // Nota: El radio también debe ser relativo. Asumimos radio relativo al ancho o promedio.
-            
-            const dx = relativeX - target.x;
-            const dy = relativeY - target.y;
-            // Ajuste de aspecto para círculos perfectos: multiplicar dy por aspect ratio?
-            // Por ahora simple:
-            const distance = Math.sqrt(dx*dx + dy*dy);
-            
-            if (distance <= target.r) {
-                return target.type === 'target' ? 'hit' : 'miss';
-            }
+        // 2. Buscar si el toque colisiona con un objeto del mapa
+        const hit = targets.find(obj => {
+            const distance = Math.sqrt(
+                Math.pow(relativeX - obj.x, 2) + Math.pow(relativeY - obj.y, 2)
+            );
+            return distance < obj.r; 
+        });
+
+        // 3. Registrar resultado
+        if (hit) {
+            return hit.type === 'target' ? 'hit' : 'miss';
         }
-        return 'miss'; 
+        
+        return 'neutral'; 
+    };
+
+    // Helper para detectar omisiones (targets no tocados)
+    const isTargetHit = (target: {x: number, y: number, r: number}, currentStrokes: typeof strokes) => {
+        if (!canvasRef.current) return false;
+        // Verificar si algún trazo 'hit' está cerca de este target
+        // Simplificación: Usamos la misma lógica de distancia inversa
+        return currentStrokes.some(stroke => {
+            if (stroke.type !== 'hit') return false;
+            const centerX = stroke.path.reduce((s, p) => s + p.x, 0) / stroke.path.length;
+            const centerY = stroke.path.reduce((s, p) => s + p.y, 0) / stroke.path.length;
+            const relativeX = centerX / canvasRef.current!.width;
+            const relativeY = centerY / canvasRef.current!.height;
+            
+            const distance = Math.sqrt(Math.pow(relativeX - target.x, 2) + Math.pow(relativeY - target.y, 2));
+            return distance < target.r;
+        });
     };
 
     const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!context || isReviewMode) return;
+        // Lógica de "Toque para Corregir" en Modo Revisión
+        if (isReviewMode) {
+            const { x, y } = getCanvasCoordinates(e);
+            if (!canvasRef.current) return;
+            
+            const relativeX = x / canvasRef.current.width;
+            const relativeY = y / canvasRef.current.height;
+            const targets = CA_TARGETS[currentSheet] || [];
+
+            // Buscar si se tocó un animal (target)
+            const target = targets.find(obj => {
+                const distance = Math.sqrt(Math.pow(relativeX - obj.x, 2) + Math.pow(relativeY - obj.y, 2));
+                return distance < obj.r;
+            });
+
+            if (target && target.type === 'target') {
+                // Agregar manualmente un acierto visual
+                setStrokes(prev => [...prev, { 
+                    path: [{x, y}, {x: x+1, y: y+1}], // Pequeño trazo
+                    type: 'hit' 
+                }]);
+                setHits(h => h + 1);
+            }
+            return;
+        }
+
+        if (!context) return;
         setIsDrawing(true);
         const { x, y } = getCanvasCoordinates(e);
         context.beginPath();
+        
+        // Feedback inmediato si está habilitado en la fase actual (Práctica)
+        if (currentPhase?.feedback) {
+             context.strokeStyle = '#2563eb'; 
+        } else {
+             context.strokeStyle = '#2563eb'; // Azul mientras dibuja (neutral)
+        }
+        
         context.moveTo(x, y);
         // Iniciar nuevo trazo
         setStrokes(prev => [...prev, { path: [{x, y}], type: 'neutral' }]);
@@ -706,8 +790,17 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
             const result = checkStrokeIntersection(lastStroke.path);
             lastStroke.type = result;
             
-            if (result === 'hit') setHits(h => h + 1);
-            if (result === 'miss') setCommissions(c => c + 1);
+            // Solo sumar puntaje si la fase actual tiene scoring habilitado
+            if (currentPhase?.scoring) {
+                if (result === 'hit') setHits(h => h + 1);
+                if (result === 'miss') setCommissions(c => c + 1);
+            }
+            
+            // Si hay feedback inmediato (Práctica), redibujar todo para mostrar colores
+            if (currentPhase?.feedback && context) {
+                // Pequeño hack: forzar redibujado inmediato
+                requestAnimationFrame(() => redrawCanvas(context, newStrokes));
+            }
             
             return newStrokes;
         });
@@ -759,14 +852,27 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
                     <div className="flex gap-2">
                         {/* Botón especial para iniciar desde Práctica */}
                         {currentSheet === 1 && subtestId === 'Ca' && (
-                            <Button 
-                                variant="default" 
-                                size="sm" 
-                                className="bg-blue-600 hover:bg-blue-700 animate-pulse" 
-                                onClick={() => startNextItem(2)}
-                            >
-                                Iniciar Prueba (Ítem 1)
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center space-x-2 bg-white/80 p-2 rounded border">
+                                    <Checkbox 
+                                        id="practice-check" 
+                                        checked={practiceCompleted}
+                                        onCheckedChange={(c) => setPracticeCompleted(!!c)}
+                                    />
+                                    <Label htmlFor="practice-check" className="text-sm cursor-pointer">Práctica Correcta</Label>
+                                </div>
+                                <Button 
+                                    variant="default" 
+                                    size="sm" 
+                                    className={`${practiceCompleted ? 'bg-blue-600 hover:bg-blue-700 animate-pulse' : 'bg-gray-400 cursor-not-allowed'}`}
+                                    onClick={() => {
+                                        if (practiceCompleted) startNextItem(2);
+                                    }}
+                                    disabled={!practiceCompleted}
+                                >
+                                    Iniciar Prueba (Ítem 1)
+                                </Button>
+                            </div>
                         )}
 
                         {!isReviewMode && currentSheet > 1 && (
@@ -829,9 +935,45 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
                             );
                         })}
                         
+                        {/* Indicadores de Omisión (Borde Amarillo) */}
+                        {isReviewMode && CA_TARGETS[currentSheet]?.filter(t => t.type === 'target').map((target, i) => {
+                            if (isTargetHit(target, strokes)) return null;
+                            // Renderizar círculo amarillo en la posición del target
+                            // Necesitamos convertir coordenadas relativas a absolutas
+                            if (!canvasRef.current) return null;
+                            const left = target.x * canvasRef.current.width;
+                            const top = target.y * canvasRef.current.height;
+                            const width = target.r * 2 * canvasRef.current.width; // Aprox
+                            
+                            return (
+                                <div 
+                                    key={`omission-${i}`} 
+                                    className="absolute border-2 border-yellow-400 border-dashed rounded-full pointer-events-none animate-pulse"
+                                    style={{
+                                        left: left,
+                                        top: top,
+                                        width: '50px', // Tamaño fijo visual o calculado
+                                        height: '50px',
+                                        transform: 'translate(-50%, -50%)'
+                                    }}
+                                    title="Omisión: Animal no marcado"
+                                />
+                            );
+                        })}
+
                         {/* Panel de Edición Manual Flotante */}
                         <div className="absolute bottom-10 right-10 bg-white p-4 rounded-lg shadow-xl border pointer-events-auto flex flex-col gap-3 w-64">
                             <h5 className="font-bold text-gray-800 border-b pb-2">Validación Clínica</h5>
+                            
+                            {/* Fórmula en Tiempo Real */}
+                            <div className="bg-slate-100 p-2 rounded text-center mb-2">
+                                <span className="text-xs text-slate-500 uppercase font-bold">Puntaje Bruto (PB)</span>
+                                <div className="text-2xl font-bold text-blue-700">
+                                    {Math.max(0, hits - commissions)}
+                                </div>
+                                <span className="text-xs text-slate-400">Aciertos - Errores</span>
+                            </div>
+
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-green-700 font-medium">Aciertos</span>
                                 <div className="flex items-center gap-2">
@@ -848,7 +990,9 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
                                     <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setCommissions(c => c+1)}><Plus className="h-3 w-3"/></Button>
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-500 italic mt-2">Ajuste manualmente si la detección automática falló.</p>
+                            <p className="text-xs text-gray-500 italic mt-2">
+                                <strong>Tip:</strong> Toque un animal no marcado para corregirlo manualmente como acierto.
+                            </p>
                         </div>
                     </div>
                 )}
@@ -1205,6 +1349,22 @@ function SubtestApplicationConsole({ subtestName, subtestId, renderType, stimulu
                                 onClose={() => {
                                     setIsTimerActive(false);
                                     setIsDigitalInterfaceOpen(false);
+                                    
+                                    // Guardado Automático al cerrar la interfaz digital (Instrucción 🛠️)
+                                    if (subtestId === 'Ca') {
+                                        const rawScore = Math.max(0, correctAnswers - incorrectAnswers);
+                                        // Usamos la tabla de baremos existente para obtener el puntaje escalar
+                                        const scaledScore = getScaledScoreFromTable('Ca', rawScore, `${studentAge}`);
+                                        
+                                        console.log(`Guardando Cancelación: Bruto=${rawScore}, Escalar=${scaledScore}`);
+                                        
+                                        // Actualizar el estado principal de puntuaciones
+                                        // Asumimos que el ítem 1 almacena el puntaje total de la subprueba para efectos de reporte
+                                        setScore(1, scaledScore);
+                                        
+                                        // También podríamos actualizar rawScores si fuera necesario para el cálculo de perfil
+                                        setRawScores(prev => ({...prev, 'Ca': rawScore}));
+                                    }
                                 }}
                                 timerValue={timer}
                                 isTimerRunning={isTimerActive}
