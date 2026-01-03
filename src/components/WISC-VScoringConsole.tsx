@@ -737,16 +737,32 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
     };
 
     const draw = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!isDrawing || !context || isReviewMode) return;
-        const { x, y } = getCanvasCoordinates(e);
-        context.lineTo(x, y);
-        context.stroke();
-        setStrokes(prev => {
-            const newStrokes = [...prev];
-            newStrokes[newStrokes.length - 1].path.push({x, y});
-            return newStrokes;
-        });
-    };
+    // 1. Validaciones de estado
+    if (!isDrawing || !context || isReviewMode) return;
+    
+    // 2. Obtener coordenadas precisas (soporta Mouse y Touch)
+    const { x, y } = getCanvasCoordinates(e);
+    
+    // 3. Renderizado visual inmediato en el lienzo
+    context.lineTo(x, y);
+    context.stroke();
+    
+    // 4. Registro persistente del trazo para evaluación automática
+    setStrokes(prev => {
+        if (prev.length === 0) return prev; // Seguridad: evita errores si no hay trazo inicial
+        
+        const newStrokes = [...prev];
+        const lastIndex = newStrokes.length - 1;
+        
+        // Añadimos el punto actual a la ruta del último trazo
+        newStrokes[lastIndex] = {
+            ...newStrokes[lastIndex],
+            path: [...newStrokes[lastIndex].path, { x, y }]
+        };
+        
+        return newStrokes;
+    });
+};
 
     // TRUCO TEMPORAL PARA OBTENER COORDENADAS
 const logCoordinates = (e: React.MouseEvent) => {
@@ -880,31 +896,41 @@ const logCoordinates = (e: React.MouseEvent) => {
 
             {/* Área de Trabajo */}
             <div className="flex-1 relative overflow-auto bg-gray-100 touch-none">
-                {/* Imagen de Fondo (Estímulo) */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                     <img 
-                        src={imagePath} 
-                        alt={`Estímulo ${subtestId} - ${currentLabel}`}
-                        className="max-w-full max-h-full object-contain opacity-90"
-                     />
-                </div>
+    {/* Imagen de Fondo (Estímulo) */}
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <img 
+            src={imagePath} 
+            alt={`Estímulo ${subtestId} - ${currentLabel}`}
+            className="max-w-full max-h-full object-contain opacity-90"
+            />
+    </div>
 
-                {/* Canvas de Dibujo */}
-                <canvas
-                    ref={canvasRef}
-                    className={`absolute inset-0 touch-none ${isReviewMode ? 'cursor-default' : 'cursor-crosshair'}`}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
-                />
+    {/* Canvas de Dibujo - REEMPLAZAR AQUÍ */}
+    <canvas
+        ref={canvasRef}
+        className={`absolute inset-0 touch-none ${isReviewMode ? 'cursor-default' : 'cursor-crosshair'}`}
+        // Eventos para Dibujo
+        onMouseDown={startDrawing}
+        onMouseMove={draw}
+        onMouseUp={stopDrawing}
+        onMouseLeave={stopDrawing}
+        
+        // Eventos para Tablets
+        onTouchStart={startDrawing}
+        onTouchMove={draw}
+        onTouchEnd={stopDrawing}
+        
+        // Función para obtener coordenadas (Mapeo de animales)
+        onClick={(e) => {
+            if (!isReviewMode) logCoordinates(e);
+        }}
+    />
 
-                {/* Overlay de Revisión */}
-                {isReviewMode && (
-                    <div className="absolute inset-0 pointer-events-none">
+    {/* Overlay de Revisión */}
+    {isReviewMode && (
+        <div className="absolute inset-0 pointer-events-none">
+            {/* ... resto del código de los iconos de Check y X ... */}
+
                         {strokes.map((stroke, i) => {
                             // Calcular posición para el icono (centro del trazo)
                             if (stroke.path.length === 0) return null;
