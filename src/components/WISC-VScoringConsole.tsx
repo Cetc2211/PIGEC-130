@@ -799,24 +799,23 @@ const logCoordinates = (e: React.MouseEvent) => {
     };
 
         const handleConfirmReview = () => {
-        // 1. Enviamos los resultados de la lámina actual al contador acumulado
-        if (onReviewComplete) {
-            onReviewComplete(hits, commissions);
-        }
+    // Calculamos el PB de la lámina actual usando la fórmula oficial
+    const currentPB = Math.max(0, hits - commissions);
+    
+    // Si tienes un estado acumulativo en el componente padre, lo enviamos
+    if (onReviewComplete) {
+        onReviewComplete(hits, commissions);
+    }
 
-        // 2. Verificamos si es la última lámina (config.count suele ser 3 para Cancelación)
-        if (currentSheet < config.count) {
-            // Si faltan láminas, pasamos a la siguiente
-            startNextItem(currentSheet + 1);
-        } else {
-            // SI ES LA ÚLTIMA LÁMINA: 
-            // Pequeña pausa de seguridad para asegurar que los datos se registraron
-            setTimeout(() => {
-                onClose();
-                alert("Prueba de Cancelación finalizada. Los datos se han enviado al protocolo.");
-            }, 100);
-        }
-    };
+    if (currentSheet < config.count) {
+        // Reiniciamos estados locales para la siguiente lámina
+        startNextItem(currentSheet + 1);
+    } else {
+        // Si terminamos la última lámina, cerramos y consolidamos
+        onClose();
+    }
+};
+
 
 
     return (
@@ -971,39 +970,60 @@ const logCoordinates = (e: React.MouseEvent) => {
                             );
                         })}
 
-                        {/* Panel de Edición Manual Flotante */}
-                        <div className="absolute bottom-10 right-10 bg-white p-4 rounded-lg shadow-xl border pointer-events-auto flex flex-col gap-3 w-64">
-                            <h5 className="font-bold text-gray-800 border-b pb-2">Validación Clínica</h5>
-                            
-                            {/* Fórmula en Tiempo Real */}
-                            <div className="bg-slate-100 p-2 rounded text-center mb-2">
-                                <span className="text-xs text-slate-500 uppercase font-bold">Puntaje Bruto (PB)</span>
-                                <div className="text-2xl font-bold text-blue-700">
-                                    {Math.max(0, hits - commissions)}
-                                </div>
-                                <span className="text-xs text-slate-400">Aciertos - Errores</span>
-                            </div>
+                       {/* Panel de Edición Manual Flotante */}
+<div className="absolute bottom-10 right-10 bg-white p-4 rounded-lg shadow-xl border pointer-events-auto flex flex-col gap-3 w-64">
+    <h5 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
+        <Check className="h-4 w-4 text-green-600" />
+        Validación Clínica
+    </h5>
+    
+    {/* Visualizador de Puntaje Bruto (PB) */}
+    <div className="bg-slate-100 p-2 rounded text-center mb-2">
+        <span className="text-[10px] text-slate-500 uppercase font-extrabold tracking-wider">
+            Puntaje Bruto (PB) Actual
+        </span>
+        <div className="text-3xl font-black text-blue-700">
+            {Math.max(0, hits - commissions)}
+        </div>
+        <div className="flex justify-between text-[9px] text-slate-400 px-4">
+            <span>ACIERTOS: {hits}</span>
+            <span>ERRORES: {commissions}</span>
+        </div>
+    </div>
 
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-green-700 font-medium">Aciertos</span>
-                                <div className="flex items-center gap-2">
-                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setHits(h => Math.max(0, h-1))}><Minus className="h-3 w-3"/></Button>
-                                    <span className="font-mono w-6 text-center">{hits}</span>
-                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setHits(h => h+1)}><Plus className="h-3 w-3"/></Button>
-                                </div>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-red-700 font-medium">Errores</span>
-                                <div className="flex items-center gap-2">
-                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setCommissions(c => Math.max(0, c-1))}><Minus className="h-3 w-3"/></Button>
-                                    <span className="font-mono w-6 text-center">{commissions}</span>
-                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => setCommissions(c => c+1)}><Plus className="h-3 w-3"/></Button>
-                                </div>
-                            </div>
-                            <p className="text-xs text-gray-500 italic mt-2">
-                                <strong>Tip:</strong> Toque un animal no marcado para corregirlo manualmente como acierto.
-                            </p>
-                        </div>
+    {/* Controles de Aciertos */}
+    <div className="flex justify-between items-center bg-green-50/50 p-2 rounded-md border border-green-100">
+        <span className="text-sm text-green-700 font-bold">Aciertos</span>
+        <div className="flex items-center gap-2">
+            <Button size="icon" variant="outline" className="h-7 w-7 bg-white" onClick={() => setHits(h => Math.max(0, h-1))}>
+                <Minus className="h-4 w-4 text-green-600"/>
+            </Button>
+            <span className="font-mono font-bold w-6 text-center text-lg">{hits}</span>
+            <Button size="icon" variant="outline" className="h-7 w-7 bg-white" onClick={() => setHits(h => h+1)}>
+                <Plus className="h-4 w-4 text-green-600"/>
+            </Button>
+        </div>
+    </div>
+
+    {/* Controles de Errores (Comisiones) */}
+    <div className="flex justify-between items-center bg-red-50/50 p-2 rounded-md border border-red-100">
+        <span className="text-sm text-red-700 font-bold">Errores</span>
+        <div className="flex items-center gap-2">
+            <Button size="icon" variant="outline" className="h-7 w-7 bg-white" onClick={() => setCommissions(c => Math.max(0, c-1))}>
+                <Minus className="h-4 w-4 text-red-600"/>
+            </Button>
+            <span className="font-mono font-bold w-6 text-center text-lg">{commissions}</span>
+            <Button size="icon" variant="outline" className="h-7 w-7 bg-white" onClick={() => setCommissions(c => c+1)}>
+                <Plus className="h-4 w-4 text-red-600"/>
+            </Button>
+        </div>
+    </div>
+
+    <p className="text-[10px] text-gray-400 italic mt-1 leading-tight">
+        * Use estos controles para ajustar manualmente si detecta errores de detección en el trazo.
+    </p>
+</div>
+
                     </div>
                 )}
             </div>
