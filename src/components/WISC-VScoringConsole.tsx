@@ -524,24 +524,21 @@ type AppMode = 'PHYSICAL' | 'DIGITAL';
 // Nota: Este mapa contiene los puntos de referencia proporcionados. 
 // Para una funcionalidad completa, se deben mapear todos los estímulos restantes.
 const CA_TARGETS: {[sheet: number]: {id: string, x: number, y: number, r: number, type: 'target' | 'distractor', label: string}[]} = {
-    1: [ // Lámina 1: Ejemplo y Práctica (Mock para demostración de feedback)
-        {id: "p_t1", x: 0.3, y: 0.4, r: 0.05, type: "target", label: "Ejemplo Acierto"},
-        {id: "p_d1", x: 0.6, y: 0.4, r: 0.05, type: "distractor", label: "Ejemplo Error"}
-    ],
-    2: [ // Item 1 (Aleatoria) - Datos proporcionados
+    1: [ /* Ejemplo y Práctica */ ],
+    2: [ // LÁMINA 1 (ALEATORIA)
         {id: "t1", x: 0.08, y: 0.05, r: 0.03, type: "target", label: "cocodrilo"},
         {id: "t2", x: 0.58, y: 0.05, r: 0.03, type: "target", label: "caballo"},
         {id: "t3", x: 0.32, y: 0.12, r: 0.03, type: "target", label: "pájaro rojo"},
-        {id: "t4", x: 0.12, y: 0.18, r: 0.03, type: "target", label: "ave azul"},
-        {id: "d1", x: 0.18, y: 0.05, r: 0.03, type: "distractor", label: "sombrero"},
-        {id: "d2", x: 0.28, y: 0.05, r: 0.03, type: "distractor", label: "sartén"},
-        {id: "d3", x: 0.45, y: 0.05, r: 0.03, type: "distractor", label: "candado"}
+        // COPIA Y PEGA ESTA LÍNEA PARA CADA ANIMAL OBJETIVO QUE FALTE:
+        // {id: "t5", x: 0.XX, y: 0.YY, r: 0.03, type: "target", label: "animal"},
     ],
-    3: [ // Item 2 (Estructurada)
+    3: [ // LÁMINA 2 (ESTRUCTURADA)
         {id: "t_r1_1", x: 0.100, y: 0.050, r: 0.030, type: "target", label: "caballo"},
-        {id: "t_r1_2", x: 0.300, y: 0.050, r: 0.030, type: "target", label: "pájaro"}
+        {id: "t_r1_2", x: 0.300, y: 0.050, r: 0.030, type: "target", label: "pájaro"},
+        // AQUÍ DEBES COMPLETAR LAS FILAS Y COLUMNAS SEGÚN LA CUADRÍCULA DEL MANUAL
     ]
 };
+
 
 // Configuración de Reglas por Subprueba (Instrucción 🚀)
 const SUBTEST_RULES: {[key: string]: {phases: {id: string, sheet: number, label: string, timer: number, scoring: boolean, feedback: boolean}[], scoringFormula: (h: number, e: number) => number}} = {
@@ -670,77 +667,61 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
         };
     };
 
-    const checkStrokeIntersection = (strokePath: {x: number, y: number}[]) => {
-        if (subtestId !== 'Ca' || !canvasRef.current) return 'neutral';
+        const checkStrokeIntersection = (strokePath: {x: number, y: number}[]) => {
+        if (subtestId !== 'Ca' || !canvasRef.current || strokePath.length === 0) return 'neutral';
         
         const canvasWidth = canvasRef.current.width;
         const canvasHeight = canvasRef.current.height;
 
-        // Calcular centro del trazo
-        const centerX = strokePath.reduce((sum, p) => sum + p.x, 0) / strokePath.length;
-        const centerY = strokePath.reduce((sum, p) => sum + p.y, 0) / strokePath.length;
-
-        // 1. Convertir coordenadas de píxeles a relativas (0-1)
-        const relativeX = centerX / canvasWidth;
-        const relativeY = centerY / canvasHeight;
+        // Mejoramos el cálculo del centro usando el punto medio del trazo
+        const midPoint = strokePath[Math.floor(strokePath.length / 2)];
+        const relativeX = midPoint.x / canvasWidth;
+        const relativeY = midPoint.y / canvasHeight;
 
         const targets = CA_TARGETS[currentSheet] || [];
         
-        // 2. Buscar si el toque colisiona con un objeto del mapa
+        // Buscamos colisión con un radio más permisivo (0.045 es ideal para tablets)
         const hit = targets.find(obj => {
             const distance = Math.sqrt(
                 Math.pow(relativeX - obj.x, 2) + Math.pow(relativeY - obj.y, 2)
             );
-            return distance < obj.r; 
+            // Si el objeto tiene un radio definido usamos ese, si no, uno estándar de 0.045
+            return distance < (obj.r || 0.045); 
         });
 
-        // 3. Registrar resultado
         if (hit) {
+            console.log(`Detectado: ${hit.label} - Tipo: ${hit.type}`);
             return hit.type === 'target' ? 'hit' : 'miss';
         }
         
         return 'neutral'; 
     };
 
-    // Helper para detectar omisiones (targets no tocados)
     const isTargetHit = (target: {x: number, y: number, r: number}, currentStrokes: typeof strokes) => {
         if (!canvasRef.current) return false;
-        // Verificar si algún trazo 'hit' está cerca de este target
-        // Simplificación: Usamos la misma lógica de distancia inversa
         return currentStrokes.some(stroke => {
-            if (stroke.type !== 'hit') return false;
-            const centerX = stroke.path.reduce((s, p) => s + p.x, 0) / stroke.path.length;
-            const centerY = stroke.path.reduce((s, p) => s + p.y, 0) / stroke.path.length;
-            const relativeX = centerX / canvasRef.current!.width;
-            const relativeY = centerY / canvasRef.current!.height;
-            
-            const distance = Math.sqrt(Math.pow(relativeX - target.x, 2) + Math.pow(relativeY - target.y, 2));
-            return distance < target.r;
+            if (stroke.type !== 'hit' || stroke.path.length === 0) return false;
+            const mid = stroke.path[Math.floor(stroke.path.length / 2)];
+            const relX = mid.x / canvasRef.current!.width;
+            const relY = mid.y / canvasRef.current!.height;
+            const dist = Math.sqrt(Math.pow(relX - target.x, 2) + Math.pow(relY - target.y, 2));
+            return dist < (target.r || 0.045);
         });
     };
 
     const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-        // Lógica de "Toque para Corregir" en Modo Revisión
         if (isReviewMode) {
             const { x, y } = getCanvasCoordinates(e);
             if (!canvasRef.current) return;
-            
-            const relativeX = x / canvasRef.current.width;
-            const relativeY = y / canvasRef.current.height;
-            const targets = CA_TARGETS[currentSheet] || [];
-
-            // Buscar si se tocó un animal (target)
-            const target = targets.find(obj => {
-                const distance = Math.sqrt(Math.pow(relativeX - obj.x, 2) + Math.pow(relativeY - obj.y, 2));
-                return distance < obj.r;
+            const relX = x / canvasRef.current.width;
+            const relY = y / canvasRef.current.height;
+            const target = (CA_TARGETS[currentSheet] || []).find(obj => {
+                const dist = Math.sqrt(Math.pow(relX - obj.x, 2) + Math.pow(relY - obj.y, 2));
+                return dist < (obj.r || 0.045);
             });
 
             if (target && target.type === 'target') {
-                // Agregar manualmente un acierto visual
-                setStrokes(prev => [...prev, { 
-                    path: [{x, y}, {x: x+1, y: y+1}], // Pequeño trazo
-                    type: 'hit' 
-                }]);
+                setStrokes(prev => [...prev, { path: [{x, y}, {x: x+1, y: y+1}], type: 'hit' }]);
                 setHits(h => h + 1);
             }
             return;
@@ -750,16 +731,8 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
         setIsDrawing(true);
         const { x, y } = getCanvasCoordinates(e);
         context.beginPath();
-        
-        // Feedback inmediato si está habilitado en la fase actual (Práctica)
-        if (currentPhase?.feedback) {
-             context.strokeStyle = '#2563eb'; 
-        } else {
-             context.strokeStyle = '#2563eb'; // Azul mientras dibuja (neutral)
-        }
-        
+        context.strokeStyle = '#2563eb'; // Azul estándar al dibujar
         context.moveTo(x, y);
-        // Iniciar nuevo trazo
         setStrokes(prev => [...prev, { path: [{x, y}], type: 'neutral' }]);
     };
 
@@ -768,56 +741,67 @@ function DigitalCanvasInterface({ subtestId, onClose, timerValue, isTimerRunning
         const { x, y } = getCanvasCoordinates(e);
         context.lineTo(x, y);
         context.stroke();
-        
-        // Agregar punto al trazo actual
         setStrokes(prev => {
             const newStrokes = [...prev];
-            const lastStroke = newStrokes[newStrokes.length - 1];
-            lastStroke.path.push({x, y});
+            newStrokes[newStrokes.length - 1].path.push({x, y});
             return newStrokes;
         });
     };
+
+    // TRUCO TEMPORAL PARA OBTENER COORDENADAS
+const logCoordinates = (e: React.MouseEvent) => {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / canvasRef.current.width).toFixed(3);
+    const y = ((e.clientY - rect.top) / canvasRef.current.height).toFixed(3);
+    
+    // Esto imprimirá en la consola el código listo para copiar
+    console.log(`{id: "t_nuevo", x: ${x}, y: ${y}, r: 0.03, type: "target", label: "animal"},`);
+};
 
     const stopDrawing = () => {
         if (!context || !isDrawing) return;
         context.closePath();
         setIsDrawing(false);
 
-        // Procesar el último trazo
         setStrokes(prev => {
             const newStrokes = [...prev];
             const lastStroke = newStrokes[newStrokes.length - 1];
             const result = checkStrokeIntersection(lastStroke.path);
             lastStroke.type = result;
             
-            // Solo sumar puntaje si la fase actual tiene scoring habilitado
             if (currentPhase?.scoring) {
                 if (result === 'hit') setHits(h => h + 1);
                 if (result === 'miss') setCommissions(c => c + 1);
             }
             
-            // Si hay feedback inmediato (Práctica), redibujar todo para mostrar colores
             if (currentPhase?.feedback && context) {
-                // Pequeño hack: forzar redibujado inmediato
                 requestAnimationFrame(() => redrawCanvas(context, newStrokes));
             }
-            
             return newStrokes;
         });
     };
 
-    const handleConfirmReview = () => {
+        const handleConfirmReview = () => {
+        // 1. Enviamos los resultados de la lámina actual al contador acumulado
         if (onReviewComplete) {
             onReviewComplete(hits, commissions);
         }
-        // Avanzar a siguiente lámina o cerrar si es la última
+
+        // 2. Verificamos si es la última lámina (config.count suele ser 3 para Cancelación)
         if (currentSheet < config.count) {
-            // Usar la nueva lógica de transición con delay
+            // Si faltan láminas, pasamos a la siguiente
             startNextItem(currentSheet + 1);
         } else {
-            onClose();
+            // SI ES LA ÚLTIMA LÁMINA: 
+            // Pequeña pausa de seguridad para asegurar que los datos se registraron
+            setTimeout(() => {
+                onClose();
+                alert("Prueba de Cancelación finalizada. Los datos se han enviado al protocolo.");
+            }, 100);
         }
     };
+
 
     return (
         <div className="fixed inset-0 z-50 bg-white flex flex-col">
