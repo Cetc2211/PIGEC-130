@@ -445,6 +445,8 @@ export default function EvaluacionPage() {
                             {CurrentForm ? (
                                 <CurrentForm 
                                     studentId={expedienteId || undefined}
+                                    grupoId={estudiante?.grupoId || undefined}
+                                    matricula={estudiante?.matricula || undefined}
                                     onComplete={handleTestComplete}
                                 />
                             ) : (

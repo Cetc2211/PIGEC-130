@@ -144,6 +144,8 @@ function calculateEBMAResults(responses: Record<string, number>): {
 
 interface EbmaFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: {
         intrinsicTotal: number;
         extrinsicTotal: number;
@@ -153,7 +155,7 @@ interface EbmaFormProps {
     }) => void;
 }
 
-export default function EbmaForm({ studentId, onComplete }: EbmaFormProps) {
+export default function EbmaForm({ studentId, grupoId, matricula, onComplete }: EbmaFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -191,12 +193,17 @@ export default function EbmaForm({ studentId, onComplete }: EbmaFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
                     testType: 'EBMA',
                     date: Timestamp.now(),
+                    score: calculatedResult.intrinsicTotal,
                     intrinsicTotal: calculatedResult.intrinsicTotal,
                     extrinsicTotal: calculatedResult.extrinsicTotal,
                     amotivationScore: calculatedResult.amotivationScore,
                     motivationProfile: calculatedResult.motivationProfile,
+                    interpretation: calculatedResult.motivationProfile,
+                    level: calculatedResult.motivationProfile,
                     recommendation: calculatedResult.recommendation,
                     subscaleScores: calculatedResult.subscaleScores,
                     responses

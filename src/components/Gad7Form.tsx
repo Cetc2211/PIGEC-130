@@ -34,10 +34,12 @@ function interpretGAD7(score: number): { level: string; color: string; descripti
 
 interface Gad7FormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: { total: number; interpretation: string }) => void;
 }
 
-export default function Gad7Form({ studentId, onComplete }: Gad7FormProps) {
+export default function Gad7Form({ studentId, grupoId, matricula, onComplete }: Gad7FormProps) {
     const [responses, setResponses] = useState<Record<number, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -73,8 +75,15 @@ export default function Gad7Form({ studentId, onComplete }: Gad7FormProps) {
             try {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
-                    studentId, testType: 'GAD-7', date: Timestamp.now(),
-                    score: calculatedResult.total, interpretation: calculatedResult.interpretation.level, responses
+                    studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
+                    testType: 'GAD-7',
+                    date: Timestamp.now(),
+                    score: calculatedResult.total,
+                    interpretation: calculatedResult.interpretation.level,
+                    level: calculatedResult.interpretation.level,
+                    responses
                 });
             } catch (error) { console.error('Error:', error); }
             finally { setIsSaving(false); }

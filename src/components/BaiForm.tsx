@@ -36,10 +36,12 @@ function interpretBAI(score: number): { level: string; color: string; descriptio
 
 interface BaiFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: { total: number; interpretation: string; factors: { cognitive: number; somatic: number; autonomic: number; panic: number } }) => void;
 }
 
-export default function BaiForm({ studentId, onComplete }: BaiFormProps) {
+export default function BaiForm({ studentId, grupoId, matricula, onComplete }: BaiFormProps) {
     const [responses, setResponses] = useState<Record<number, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -85,9 +87,16 @@ export default function BaiForm({ studentId, onComplete }: BaiFormProps) {
             try {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
-                    studentId, testType: 'BAI', date: Timestamp.now(),
-                    score: calculatedResult.total, interpretation: calculatedResult.interpretation.level,
-                    details: { factors: calculatedResult.factors }, responses
+                    studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
+                    testType: 'BAI',
+                    date: Timestamp.now(),
+                    score: calculatedResult.total,
+                    interpretation: calculatedResult.interpretation.level,
+                    level: calculatedResult.interpretation.level,
+                    details: { factors: calculatedResult.factors },
+                    responses
                 });
             } catch (error) { console.error('Error:', error); }
             finally { setIsSaving(false); }

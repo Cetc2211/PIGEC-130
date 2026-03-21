@@ -149,10 +149,12 @@ function interpretBDI(score: number): { level: string; color: string; descriptio
 
 interface BdiFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: { total: number; interpretation: string; item9Alert: boolean; alerts: string[] }) => void;
 }
 
-export default function BdiForm({ studentId, onComplete }: BdiFormProps) {
+export default function BdiForm({ studentId, grupoId, matricula, onComplete }: BdiFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -217,10 +219,13 @@ export default function BdiForm({ studentId, onComplete }: BdiFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
                     testType: 'BDI-II',
                     date: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
+                    level: calculatedResult.interpretation.level,
                     alerts: calculatedResult.alerts,
                     details: { item9Alert: calculatedResult.item9Alert },
                     responses

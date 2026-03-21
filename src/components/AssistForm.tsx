@@ -157,6 +157,8 @@ function calculateASSISTScore(responses: Record<string, number>): {
 
 interface AssistFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: {
         totalScore: number;
         substanceScores: { substance: string; score: number; risk: string; intervention: string }[];
@@ -165,7 +167,7 @@ interface AssistFormProps {
     }) => void;
 }
 
-export default function AssistForm({ studentId, onComplete }: AssistFormProps) {
+export default function AssistForm({ studentId, grupoId, matricula, onComplete }: AssistFormProps) {
     const [selectedSubstances, setSelectedSubstances] = useState<string[]>([]);
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -219,8 +221,11 @@ export default function AssistForm({ studentId, onComplete }: AssistFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
                     testType: 'ASSIST',
                     date: Timestamp.now(),
+                    score: calculatedResult.totalScore,
                     totalScore: calculatedResult.totalScore,
                     substanceScores: calculatedResult.substanceScores,
                     highRiskSubstances: calculatedResult.highRiskSubstances,

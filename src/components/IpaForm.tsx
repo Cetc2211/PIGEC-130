@@ -120,6 +120,8 @@ function analyzeDistortions(responses: Record<string, number>): { category: stri
 
 interface IpaFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: { 
         total: number; 
         interpretation: string; 
@@ -128,7 +130,7 @@ interface IpaFormProps {
     }) => void;
 }
 
-export default function IpaForm({ studentId, onComplete }: IpaFormProps) {
+export default function IpaForm({ studentId, grupoId, matricula, onComplete }: IpaFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -200,10 +202,13 @@ export default function IpaForm({ studentId, onComplete }: IpaFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
                     testType: 'IPA',
                     date: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
+                    level: calculatedResult.interpretation.level,
                     distortionAnalysis: calculatedResult.distortionAnalysis,
                     alerts: calculatedResult.alerts,
                     responses

@@ -30,17 +30,35 @@ import {
 } from 'firebase/firestore';
 
 // ============================================
-// TIPOS
+// TIPOS - ACTUALIZADOS PARA COINCIDIR CON DATOS REALES
 // ============================================
 
 interface ResultadoEvaluacion {
   id: string;
-  studentId: string;
-  testType: string;
-  score: number;
-  interpretation: string;
-  date: Date;
-  alerts?: string[];
+  expedienteId: string;
+  testId: string;
+  testName: string;
+  puntaje: number;
+  matricula: string;
+  nombreCompleto: string;
+  grupoId: string;
+  grupoNombre: string;
+  fechaCompletado: Date;
+  respuestas?: Record<string, any>;
+  sessionId?: string;
+}
+
+interface EstudianteResultado {
+  expedienteId: string;
+  nombreCompleto: string;
+  matricula: string;
+  tests: {
+    testId: string;
+    testName: string;
+    puntaje: number;
+    interpretacion: string;
+    nivel: 'normal' | 'leve' | 'moderado' | 'grave';
+  }[];
 }
 
 interface PerfilGrupo {
@@ -54,21 +72,17 @@ interface PerfilGrupo {
   motivacionExtrinseca: number;
   amotivacion: number;
 
-  // GAD-7 / PHQ-9
+  // BAI - Ansiedad
   ansiedadMinima: number;
   ansiedadLeve: number;
   ansiedadModerada: number;
   ansiedadGrave: number;
 
+  // PHQ-9 / BDI-II - Depresión
   depresionMinima: number;
   depresionLeve: number;
   depresionModerada: number;
   depresionGrave: number;
-
-  // LIRA - Riesgo Académico
-  riesgoAlto: number;
-  riesgoMedio: number;
-  riesgoBajo: number;
 
   // Alertas críticas
   alertasSuicida: number;
@@ -84,10 +98,62 @@ interface ExpedienteGrupal {
   tasaRespuesta: number;
   perfil: PerfilGrupo;
   recomendaciones: string[];
+  estudiantes: EstudianteResultado[];
   casosAtencion: {
-    nivel2: number;  // Segundo nivel de soporte
-    nivel3: number;  // Tercer nivel (especializado)
+    nivel2: number;
+    nivel3: number;
   };
+}
+
+// ============================================
+// FUNCIONES DE INTERPRETACIÓN
+// ============================================
+
+function interpretarBAI(puntaje: number): { nivel: string; color: string; categoria: 'normal' | 'leve' | 'moderado' | 'grave' } {
+  if (puntaje <= 10) return { nivel: 'Mínima', color: 'bg-green-500', categoria: 'normal' };
+  if (puntaje <= 18) return { nivel: 'Leve', color: 'bg-yellow-500', categoria: 'leve' };
+  if (puntaje <= 25) return { nivel: 'Moderada', color: 'bg-orange-500', categoria: 'moderado' };
+  return { nivel: 'Grave', color: 'bg-red-500', categoria: 'grave' };
+}
+
+function interpretarBDI(puntaje: number): { nivel: string; color: string; categoria: 'normal' | 'leve' | 'moderado' | 'grave' } {
+  if (puntaje <= 13) return { nivel: 'Mínima', color: 'bg-green-500', categoria: 'normal' };
+  if (puntaje <= 19) return { nivel: 'Leve', color: 'bg-yellow-500', categoria: 'leve' };
+  if (puntaje <= 28) return { nivel: 'Moderada', color: 'bg-orange-500', categoria: 'moderado' };
+  return { nivel: 'Grave', color: 'bg-red-500', categoria: 'grave' };
+}
+
+function interpretarGAD7(puntaje: number): { nivel: string; color: string; categoria: 'normal' | 'leve' | 'moderado' | 'grave' } {
+  if (puntaje <= 4) return { nivel: 'Mínima', color: 'bg-green-500', categoria: 'normal' };
+  if (puntaje <= 9) return { nivel: 'Leve', color: 'bg-yellow-500', categoria: 'leve' };
+  if (puntaje <= 14) return { nivel: 'Moderada', color: 'bg-orange-500', categoria: 'moderado' };
+  return { nivel: 'Grave', color: 'bg-red-500', categoria: 'grave' };
+}
+
+function interpretarPHQ9(puntaje: number): { nivel: string; color: string; categoria: 'normal' | 'leve' | 'moderado' | 'grave' } {
+  if (puntaje <= 4) return { nivel: 'Mínima', color: 'bg-green-500', categoria: 'normal' };
+  if (puntaje <= 9) return { nivel: 'Leve', color: 'bg-yellow-500', categoria: 'leve' };
+  if (puntaje <= 14) return { nivel: 'Moderada', color: 'bg-orange-500', categoria: 'moderado' };
+  if (puntaje <= 19) return { nivel: 'Mod. Grave', color: 'bg-red-400', categoria: 'grave' };
+  return { nivel: 'Grave', color: 'bg-red-600', categoria: 'grave' };
+}
+
+function interpretarTest(testId: string, puntaje: number): { nivel: string; color: string; categoria: 'normal' | 'leve' | 'moderado' | 'grave' } {
+  switch (testId) {
+    case 'bai':
+      return interpretarBAI(puntaje);
+    case 'bdi-ii':
+    case 'bdi':
+      return interpretarBDI(puntaje);
+    case 'gad-7':
+    case 'gad7':
+      return interpretarGAD7(puntaje);
+    case 'phq-9':
+    case 'phq9':
+      return interpretarPHQ9(puntaje);
+    default:
+      return { nivel: 'Sin interpretación', color: 'bg-gray-500', categoria: 'normal' };
+  }
 }
 
 // ============================================
@@ -133,7 +199,7 @@ export function ExpedienteGrupalCard({
       const resultados: ResultadoEvaluacion[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        date: doc.data().date?.toDate() || new Date()
+        fechaCompletado: doc.data().fechaCompletado?.toDate() || new Date()
       })) as ResultadoEvaluacion[];
 
       if (resultados.length === 0) {
@@ -141,23 +207,54 @@ export function ExpedienteGrupalCard({
         return;
       }
 
+      // Agrupar por expedienteId (estudiante)
+      const porEstudiante: Record<string, EstudianteResultado> = {};
+      
+      resultados.forEach(r => {
+        const expedienteId = r.expedienteId || r.matricula;
+        if (!porEstudiante[expedienteId]) {
+          porEstudiante[expedienteId] = {
+            expedienteId,
+            nombreCompleto: r.nombreCompleto || 'Sin nombre',
+            matricula: r.matricula,
+            tests: []
+          };
+        }
+        
+        // Agregar resultado con interpretación
+        if (r.puntaje !== null && r.puntaje !== undefined && r.testId) {
+          const interpretacion = interpretarTest(r.testId, r.puntaje);
+          porEstudiante[expedienteId].tests.push({
+            testId: r.testId,
+            testName: r.testName || r.testId,
+            puntaje: r.puntaje,
+            interpretacion: interpretacion.nivel,
+            nivel: interpretacion.categoria
+          });
+        }
+      });
+
+      const estudiantes = Object.values(porEstudiante);
+      const estudiantesEvaluados = estudiantes.length;
+
       // Calcular perfil del grupo
-      const perfil = calcularPerfilGrupo(resultados, totalEstudiantes);
+      const perfil = calcularPerfilGrupo(resultados, estudiantesEvaluados);
 
       // Generar recomendaciones
       const recomendaciones = generarRecomendaciones(perfil);
 
       // Identificar casos de atención
-      const casosAtencion = identificarCasosAtencion(resultados);
+      const casosAtencion = identificarCasosAtencion(estudiantes);
 
       setExpediente({
         grupoId,
         grupoNombre,
         fechaEvaluacion: new Date(),
         totalEstudiantes,
-        tasaRespuesta: Math.round((resultados.filter(r => r.testType === 'ficha').length / totalEstudiantes) * 100),
+        tasaRespuesta: Math.round((estudiantesEvaluados / totalEstudiantes) * 100),
         perfil,
         recomendaciones,
+        estudiantes,
         casosAtencion
       });
     } catch (error) {
@@ -167,8 +264,7 @@ export function ExpedienteGrupalCard({
     setLoading(false);
   };
 
-  const calcularPerfilGrupo = (resultados: ResultadoEvaluacion[], total: number): PerfilGrupo => {
-    // Valores por defecto
+  const calcularPerfilGrupo = (resultados: ResultadoEvaluacion[], estudiantesEvaluados: number): PerfilGrupo => {
     const perfil: PerfilGrupo = {
       chtePlanificacion: 50,
       chteConcentracion: 50,
@@ -176,17 +272,14 @@ export function ExpedienteGrupalCard({
       motivacionIntrinseca: 50,
       motivacionExtrinseca: 50,
       amotivacion: 20,
-      ansiedadMinima: 60,
-      ansiedadLeve: 25,
-      ansiedadModerada: 12,
-      ansiedadGrave: 3,
-      depresionMinima: 60,
-      depresionLeve: 25,
-      depresionModerada: 12,
-      depresionGrave: 3,
-      riesgoAlto: 10,
-      riesgoMedio: 30,
-      riesgoBajo: 60,
+      ansiedadMinima: 0,
+      ansiedadLeve: 0,
+      ansiedadModerada: 0,
+      ansiedadGrave: 0,
+      depresionMinima: 0,
+      depresionLeve: 0,
+      depresionModerada: 0,
+      depresionGrave: 0,
       alertasSuicida: 0,
       alertasAnsiedadSevera: 0,
       alertasDepresionSevera: 0
@@ -195,49 +288,60 @@ export function ExpedienteGrupalCard({
     // Agrupar por tipo de test
     const porTipo: Record<string, ResultadoEvaluacion[]> = {};
     resultados.forEach(r => {
-      if (!porTipo[r.testType]) porTipo[r.testType] = [];
-      porTipo[r.testType].push(r);
+      if (!porTipo[r.testId]) porTipo[r.testId] = [];
+      porTipo[r.testId].push(r);
     });
 
-    // Calcular promedios por tipo
-    if (porTipo['GAD-7']) {
-      const gad = porTipo['GAD-7'];
-      perfil.ansiedadMinima = gad.filter(r => r.score <= 4).length / gad.length * 100;
-      perfil.ansiedadLeve = gad.filter(r => r.score >= 5 && r.score <= 9).length / gad.length * 100;
-      perfil.ansiedadModerada = gad.filter(r => r.score >= 10 && r.score <= 14).length / gad.length * 100;
-      perfil.ansiedadGrave = gad.filter(r => r.score >= 15).length / gad.length * 100;
+    // Calcular distribución de niveles por tipo
+    // BAI - Ansiedad
+    if (porTipo['bai'] && porTipo['bai'].length > 0) {
+      const bai = porTipo['bai'];
+      perfil.ansiedadMinima = bai.filter(r => r.puntaje <= 10).length / bai.length * 100;
+      perfil.ansiedadLeve = bai.filter(r => r.puntaje > 10 && r.puntaje <= 18).length / bai.length * 100;
+      perfil.ansiedadModerada = bai.filter(r => r.puntaje > 18 && r.puntaje <= 25).length / bai.length * 100;
+      perfil.ansiedadGrave = bai.filter(r => r.puntaje > 25).length / bai.length * 100;
     }
 
-    if (porTipo['PHQ-9']) {
-      const phq = porTipo['PHQ-9'];
-      perfil.depresionMinima = phq.filter(r => r.score <= 4).length / phq.length * 100;
-      perfil.depresionLeve = phq.filter(r => r.score >= 5 && r.score <= 9).length / phq.length * 100;
-      perfil.depresionModerada = phq.filter(r => r.score >= 10 && r.score <= 14).length / phq.length * 100;
-      perfil.depresionGrave = phq.filter(r => r.score >= 15).length / phq.length * 100;
+    // GAD-7 - Ansiedad Generalizada
+    if (porTipo['gad-7'] && porTipo['gad-7'].length > 0) {
+      const gad = porTipo['gad-7'];
+      perfil.ansiedadMinima = gad.filter(r => r.puntaje <= 4).length / gad.length * 100;
+      perfil.ansiedadLeve = gad.filter(r => r.puntaje >= 5 && r.puntaje <= 9).length / gad.length * 100;
+      perfil.ansiedadModerada = gad.filter(r => r.puntaje >= 10 && r.puntaje <= 14).length / gad.length * 100;
+      perfil.ansiedadGrave = gad.filter(r => r.puntaje >= 15).length / gad.length * 100;
     }
 
-    if (porTipo['EBMA']) {
-      const ebma = porTipo['EBMA'];
-      // Promedios de motivación (simplificado)
-      perfil.motivacionIntrinseca = ebma.reduce((acc, r) => acc + (r.score / 5 * 100), 0) / ebma.length;
+    // PHQ-9 - Depresión
+    if (porTipo['phq-9'] && porTipo['phq-9'].length > 0) {
+      const phq = porTipo['phq-9'];
+      perfil.depresionMinima = phq.filter(r => r.puntaje <= 4).length / phq.length * 100;
+      perfil.depresionLeve = phq.filter(r => r.puntaje >= 5 && r.puntaje <= 9).length / phq.length * 100;
+      perfil.depresionModerada = phq.filter(r => r.puntaje >= 10 && r.puntaje <= 14).length / phq.length * 100;
+      perfil.depresionGrave = phq.filter(r => r.puntaje >= 15).length / phq.length * 100;
     }
 
-    // Contar alertas críticas
-    resultados.forEach(r => {
-      if (r.alerts && r.alerts.length > 0) {
-        r.alerts.forEach(alert => {
-          if (alert.includes('suicid') || alert.includes('SSI')) {
-            perfil.alertasSuicida++;
-          }
-          if (alert.includes('ansiedad severa') || alert.includes('GAD-7')) {
-            perfil.alertasAnsiedadSevera++;
-          }
-          if (alert.includes('depresión severa') || alert.includes('PHQ-9')) {
-            perfil.alertasDepresionSevera++;
-          }
-        });
-      }
-    });
+    // BDI-II - Depresión Beck
+    if (porTipo['bdi-ii'] && porTipo['bdi-ii'].length > 0) {
+      const bdi = porTipo['bdi-ii'];
+      perfil.depresionMinima = bdi.filter(r => r.puntaje <= 13).length / bdi.length * 100;
+      perfil.depresionLeve = bdi.filter(r => r.puntaje >= 14 && r.puntaje <= 19).length / bdi.length * 100;
+      perfil.depresionModerada = bdi.filter(r => r.puntaje >= 20 && r.puntaje <= 28).length / bdi.length * 100;
+      perfil.depresionGrave = bdi.filter(r => r.puntaje >= 29).length / bdi.length * 100;
+    }
+
+    // EBMA - Motivación
+    if (porTipo['ebma'] && porTipo['ebma'].length > 0) {
+      const ebma = porTipo['ebma'];
+      perfil.motivacionIntrinseca = ebma.reduce((acc, r) => acc + (r.puntaje / 5 * 100), 0) / ebma.length;
+    }
+
+    // CHTE - Hábitos de Estudio
+    if (porTipo['chte'] && porTipo['chte'].length > 0) {
+      const chte = porTipo['chte'];
+      perfil.chtePlanificacion = chte.reduce((acc, r) => acc + (r.puntaje || 50), 0) / chte.length;
+      perfil.chteEstrategias = perfil.chtePlanificacion;
+      perfil.chteConcentracion = perfil.chtePlanificacion;
+    }
 
     return perfil;
   };
@@ -245,64 +349,40 @@ export function ExpedienteGrupalCard({
   const generarRecomendaciones = (perfil: PerfilGrupo): string[] => {
     const recomendaciones: string[] = [];
 
-    // Hábitos de estudio
     if (perfil.chteEstrategias < 40) {
       recomendaciones.push('Implementar talleres de técnicas de estudio y organización del tiempo.');
     }
     if (perfil.chtePlanificacion < 40) {
       recomendaciones.push('Introducir uso de agendas y planificadores académicos.');
     }
-
-    // Motivación
     if (perfil.amotivacion > 30) {
-      recomendaciones.push('Atender casos de amotivación mediante entrevistas individuales para identificar causas.');
+      recomendaciones.push('Atender casos de amotivación mediante entrevistas individuales.');
     }
-    if (perfil.motivacionIntrinseca > 60) {
-      recomendaciones.push('Aprovechar la alta motivación intrínseca con proyectos autodirigidos y aprendizaje basado en problemas.');
-    }
-
-    // Salud mental
     if (perfil.ansiedadGrave > 5 || perfil.depresionGrave > 5) {
-      recomendaciones.push('Coordinar con orientación seguimiento de casos con ansiedad/depresión grave detectados.');
+      recomendaciones.push('Coordinar con orientación seguimiento de casos con ansiedad/depresión grave.');
     }
     if (perfil.alertasSuicida > 0) {
-      recomendaciones.push(`⚠️ URGENTE: ${perfil.alertasSuicida} caso(s) con alerta de riesgo suicida detectados. Requieren evaluación clínica inmediata.`);
-    }
-
-    // Riesgo académico
-    if (perfil.riesgoAlto > 15) {
-      recomendaciones.push('Establecer programa de acompañamiento académico para estudiantes en alto riesgo.');
+      recomendaciones.push(`⚠️ URGENTE: ${perfil.alertasSuicida} caso(s) con alerta de riesgo.`);
     }
 
     if (recomendaciones.length === 0) {
-      recomendaciones.push('El grupo presenta un perfil saludable. Continuar con las prácticas actuales y monitoreo periódico.');
+      recomendaciones.push('El grupo presenta un perfil saludable. Continuar con monitoreo periódico.');
     }
 
     return recomendaciones;
   };
 
-  const identificarCasosAtencion = (resultados: ResultadoEvaluacion[]) => {
+  const identificarCasosAtencion = (estudiantes: EstudianteResultado[]) => {
     let nivel2 = 0;
     let nivel3 = 0;
 
-    // Agrupar por estudiante
-    const porEstudiante: Record<string, ResultadoEvaluacion[]> = {};
-    resultados.forEach(r => {
-      if (!porEstudiante[r.studentId]) porEstudiante[r.studentId] = [];
-      porEstudiante[r.studentId].push(r);
-    });
-
-    Object.entries(porEstudiante).forEach(([_, tests]) => {
-      const tieneAlertas = tests.some(t => t.alerts && t.alerts.length > 0);
-      const scoresAltos = tests.filter(t =>
-        (t.testType === 'GAD-7' && t.score >= 10) ||
-        (t.testType === 'PHQ-9' && t.score >= 10) ||
-        (t.testType === 'BDI-II' && t.score >= 20)
-      );
-
-      if (tieneAlertas || scoresAltos.length >= 2) {
+    estudiantes.forEach(est => {
+      const testsGraves = est.tests.filter(t => t.nivel === 'grave');
+      const testsModerados = est.tests.filter(t => t.nivel === 'moderado');
+      
+      if (testsGraves.length >= 1) {
         nivel3++;
-      } else if (scoresAltos.length === 1) {
+      } else if (testsModerados.length >= 1) {
         nivel2++;
       }
     });
@@ -345,7 +425,7 @@ export function ExpedienteGrupalCard({
             </div>
             <div className="text-right">
               <p className="text-3xl font-bold">{expediente.tasaRespuesta}%</p>
-              <p className="text-blue-200 text-sm">Tasa de respuesta</p>
+              <p className="text-blue-200 text-sm">Tasa de respuesta ({expediente.estudiantes.length}/{totalEstudiantes})</p>
             </div>
           </div>
         </CardContent>
@@ -359,10 +439,10 @@ export function ExpedienteGrupalCard({
               <AlertTriangle className="h-8 w-8 text-red-600" />
               <div>
                 <h3 className="font-bold text-red-800">
-                  ⚠️ {expediente.perfil.alertasSuicida} Alerta(s) de Riesgo Suicida
+                  ⚠️ {expediente.perfil.alertasSuicida} Alerta(s) de Riesgo
                 </h3>
                 <p className="text-red-600 text-sm">
-                  Requieren evaluación clínica inmediata y consentimiento informado específico.
+                  Requieren evaluación clínica inmediata.
                 </p>
               </div>
             </div>
@@ -443,7 +523,7 @@ export function ExpedienteGrupalCard({
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Brain className="h-5 w-5 text-orange-600" />
-              Niveles de Ansiedad (GAD-7)
+              Niveles de Ansiedad
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -473,7 +553,7 @@ export function ExpedienteGrupalCard({
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Heart className="h-5 w-5 text-purple-600" />
-              Niveles de Depresión (PHQ-9)
+              Niveles de Depresión
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -498,6 +578,54 @@ export function ExpedienteGrupalCard({
           </CardContent>
         </Card>
       </div>
+
+      {/* Lista de estudiantes evaluados */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Estudiantes Evaluados ({expediente.estudiantes.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {expediente.estudiantes.map((est, idx) => (
+              <div key={est.expedienteId || idx} className="p-4 border rounded-lg hover:bg-gray-50">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="font-semibold">{est.nombreCompleto}</p>
+                    <p className="text-xs text-gray-500">{est.matricula}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    {est.tests.some(t => t.nivel === 'grave') && (
+                      <Badge className="bg-red-500">Atención Urgente</Badge>
+                    )}
+                    {est.tests.some(t => t.nivel === 'moderado') && !est.tests.some(t => t.nivel === 'grave') && (
+                      <Badge className="bg-orange-500">Seguimiento</Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {est.tests.map((test, tIdx) => (
+                    <Badge
+                      key={tIdx}
+                      variant="outline"
+                      className={`${
+                        test.nivel === 'grave' ? 'border-red-500 text-red-700' :
+                        test.nivel === 'moderado' ? 'border-orange-500 text-orange-700' :
+                        test.nivel === 'leve' ? 'border-yellow-500 text-yellow-700' :
+                        'border-green-500 text-green-700'
+                      }`}
+                    >
+                      {test.testName}: {test.interpretacion} ({test.puntaje})
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Casos de Atención */}
       <Card>
@@ -531,7 +659,7 @@ export function ExpedienteGrupalCard({
             Recomendaciones Pedagógicas
           </CardTitle>
           <CardDescription>
-            Sugerencias basadas en el perfil del grupo para docentes
+            Sugerencias basadas en el perfil del grupo
           </CardDescription>
         </CardHeader>
         <CardContent>

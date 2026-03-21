@@ -92,10 +92,12 @@ function interpretLIRA(total: number, hasEmergency: boolean): { level: string; a
 
 interface LiraFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: { total: number; level: string; hasEmergency: boolean }) => void;
 }
 
-export default function LiraForm({ studentId, onComplete }: LiraFormProps) {
+export default function LiraForm({ studentId, grupoId, matricula, onComplete }: LiraFormProps) {
     const [checked, setChecked] = useState<Record<string, boolean>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -139,10 +141,13 @@ export default function LiraForm({ studentId, onComplete }: LiraFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
                     testType: 'LIRA',
                     date: Timestamp.now(),
                     score: total,
                     interpretation: interpretation.level,
+                    level: interpretation.level,
                     action: interpretation.action,
                     hasEmergency,
                     sections: { academicos: sA, conductuales: sB, fisicos: sC, contextuales: sD, emergencia: sE },

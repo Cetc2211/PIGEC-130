@@ -47,10 +47,12 @@ function interpretPHQ9(score: number): { level: string; color: string; descripti
 
 interface Phq9FormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: { total: number; interpretation: string; item9Alert: boolean; functionality?: string }) => void;
 }
 
-export default function Phq9Form({ studentId, onComplete }: Phq9FormProps) {
+export default function Phq9Form({ studentId, grupoId, matricula, onComplete }: Phq9FormProps) {
     const [responses, setResponses] = useState<Record<number, number>>({});
     const [functionality, setFunctionality] = useState<string>("");
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -97,10 +99,16 @@ export default function Phq9Form({ studentId, onComplete }: Phq9FormProps) {
             try {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
-                    studentId, testType: 'PHQ-9', date: Timestamp.now(),
-                    score: calculatedResult.total, interpretation: calculatedResult.interpretation.level,
+                    studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
+                    testType: 'PHQ-9',
+                    date: Timestamp.now(),
+                    score: calculatedResult.total,
+                    interpretation: calculatedResult.interpretation.level,
+                    level: calculatedResult.interpretation.level,
                     alerts: calculatedResult.item9Alert ? ['A9 - Ideación suicida'] : [],
-                    details: { item9Value: calculatedResult.item9Value, item9Alert: calculatedResult.item9Alert, functionality: calculatedResult.functionability },
+                    details: { item9Value: calculatedResult.item9Value, item9Alert: calculatedResult.item9Alert, functionality: calculatedResult.functionality },
                     responses
                 });
             } catch (error) { console.error('Error:', error); }

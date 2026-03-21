@@ -50,10 +50,12 @@ function interpretBHS(score: number): { level: string; color: string; descriptio
 
 interface BhsFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: { total: number; interpretation: string }) => void;
 }
 
-export default function BhsForm({ studentId, onComplete }: BhsFormProps) {
+export default function BhsForm({ studentId, grupoId, matricula, onComplete }: BhsFormProps) {
     const [responses, setResponses] = useState<Record<number, boolean>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -113,10 +115,13 @@ export default function BhsForm({ studentId, onComplete }: BhsFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
                     testType: 'BHS',
                     date: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
+                    level: calculatedResult.interpretation.level,
                     responses: Object.fromEntries(Object.entries(responses).map(([k, v]) => [k, v ? 'T' : 'F']))
                 });
             } catch (error) {

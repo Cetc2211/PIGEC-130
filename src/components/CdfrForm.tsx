@@ -143,6 +143,8 @@ function calculateRisk(responses: Record<string, number>): {
 
 interface CdfrFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: {
         totalRisk: number;
         riskLevel: string;
@@ -152,7 +154,7 @@ interface CdfrFormProps {
     }) => void;
 }
 
-export default function CdfrForm({ studentId, onComplete }: CdfrFormProps) {
+export default function CdfrForm({ studentId, grupoId, matricula, onComplete }: CdfrFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -192,10 +194,15 @@ export default function CdfrForm({ studentId, onComplete }: CdfrFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
                     testType: 'CDFR',
                     date: Timestamp.now(),
+                    score: calculatedResult.totalRisk,
                     totalRisk: calculatedResult.totalRisk,
                     riskLevel: calculatedResult.riskLevel,
+                    interpretation: calculatedResult.riskLevel,
+                    level: calculatedResult.riskLevel,
                     domainScores: calculatedResult.domainScores,
                     criticalFactors: calculatedResult.criticalFactors,
                     recommendation: calculatedResult.recommendation,

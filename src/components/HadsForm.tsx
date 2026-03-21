@@ -113,6 +113,8 @@ function interpretHADS(score: number): { level: string; color: string; descripti
 
 interface HadsFormProps {
     studentId?: string;
+    grupoId?: string;
+    matricula?: string;
     onComplete?: (result: {
         anxiety: number;
         depression: number;
@@ -121,7 +123,7 @@ interface HadsFormProps {
     }) => void;
 }
 
-export default function HadsForm({ studentId, onComplete }: HadsFormProps) {
+export default function HadsForm({ studentId, grupoId, matricula, onComplete }: HadsFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -188,10 +190,13 @@ export default function HadsForm({ studentId, onComplete }: HadsFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    grupoId: grupoId || null,
+                    matricula: matricula || null,
                     testType: 'HADS',
                     date: Timestamp.now(),
                     score: calculatedResult.anxiety + calculatedResult.depression,
                     interpretation: `A:${calculatedResult.anxietyInterpretation.level} D:${calculatedResult.depressionInterpretation.level}`,
+                    level: `A:${calculatedResult.anxietyInterpretation.level} D:${calculatedResult.depressionInterpretation.level}`,
                     details: {
                         anxiety: calculatedResult.anxiety,
                         depression: calculatedResult.depression,
