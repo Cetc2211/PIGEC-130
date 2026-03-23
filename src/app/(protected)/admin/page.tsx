@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { syncExampleStudentsToFirebase } from '@/lib/store';
+import { syncExampleStudentsToFirebase, limpiarYRestaurarDatosEjemplo, verificarExpedientesEjemplo } from '@/lib/store';
 
 
 // Función que guarda en Firestore
@@ -202,7 +202,19 @@ function RoleManagementCard() {
 // Componente para sincronizar datos de ejemplo
 function SyncExampleDataCard() {
     const [isSyncing, setIsSyncing] = useState(false);
-    const [syncResult, setSyncResult] = useState<{ success: boolean; message: string; count: number } | null>(null);
+    const [isRestoring, setIsRestoring] = useState(false);
+    const [syncResult, setSyncResult] = useState<{ success: boolean; message: string } | null>(null);
+    const [verificacion, setVerificacion] = useState<{ existen: boolean; cantidad: number; faltantes: string[] } | null>(null);
+
+    // Verificar estado al cargar
+    useEffect(() => {
+        verificarEstado();
+    }, []);
+
+    const verificarEstado = async () => {
+        const estado = await verificarExpedientesEjemplo();
+        setVerificacion(estado);
+    };
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -211,14 +223,36 @@ function SyncExampleDataCard() {
         try {
             const result = await syncExampleStudentsToFirebase();
             setSyncResult(result);
+            verificarEstado();
         } catch (error) {
             setSyncResult({
                 success: false,
-                message: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-                count: 0
+                message: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`
             });
         } finally {
             setIsSyncing(false);
+        }
+    };
+
+    const handleRestore = async () => {
+        if (!confirm('⚠️ ADVERTENCIA: Esta acción eliminará TODOS los datos existentes y restaurará solo los 4 expedientes de ejemplo (S001-S004).\n\n¿Está seguro de continuar?')) {
+            return;
+        }
+
+        setIsRestoring(true);
+        setSyncResult(null);
+        
+        try {
+            const result = await limpiarYRestaurarDatosEjemplo();
+            setSyncResult(result);
+            verificarEstado();
+        } catch (error) {
+            setSyncResult({
+                success: false,
+                message: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`
+            });
+        } finally {
+            setIsRestoring(false);
         }
     };
 
@@ -227,43 +261,102 @@ function SyncExampleDataCard() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Upload className="h-6 w-6" />
-                    Sincronizar Datos de Ejemplo
+                    Gestión de Expedientes de Ejemplo
                 </CardTitle>
                 <CardDescription>
-                    Migra los estudiantes de demostración (S001-S004) a Firebase para que aparezcan en Expedientes.
+                    Administra los expedientes de demostración (S001-S004) en el sistema.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
+                    {/* Estado actual */}
+                    {verificacion && (
+                        <div className={`p-4 rounded-lg border ${
+                            verificacion.existen 
+                                ? 'bg-green-50 border-green-200' 
+                                : 'bg-amber-50 border-amber-200'
+                        }`}>
+                            <div className="flex items-center gap-2 mb-2">
+                                {verificacion.existen ? (
+                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                ) : (
+                                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                                )}
+                                <span className={`font-medium ${verificacion.existen ? 'text-green-800' : 'text-amber-800'}`}>
+                                    {verificacion.existen ? 'Expedientes de ejemplo completos' : 'Faltan expedientes de ejemplo'}
+                                </span>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                                Expedientes en Firebase: <strong>{verificacion.cantidad}</strong>
+                            </p>
+                            {verificacion.faltantes.length > 0 && (
+                                <p className="text-sm text-amber-700 mt-1">
+                                    Faltantes: {verificacion.faltantes.join(', ')}
+                                </p>
+                            )}
+                        </div>
+                    )}
+                    
+                    {/* Expedientes de ejemplo */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p className="text-sm text-blue-800">
-                            <strong>Esta acción creará 4 expedientes de ejemplo en Firebase:</strong>
+                        <p className="text-sm text-blue-800 font-medium mb-2">
+                            Los 4 expedientes de ejemplo incluyen:
                         </p>
-                        <ul className="text-sm text-blue-700 mt-2 list-disc list-inside">
-                            <li>S001 - Ana M. Pérez (Riesgo Crítico)</li>
-                            <li>S002 - Carlos V. Ruiz (Riesgo Medio)</li>
-                            <li>S003 - Laura J. García (Riesgo Bajo)</li>
-                            <li>S004 - Esteban Hernandarias (Riesgo Medio)</li>
+                        <ul className="text-sm text-blue-700 space-y-1">
+                            <li>• <strong>S001</strong> - Ana M. Pérez (Riesgo Crítico) - Grupo 5A</li>
+                            <li>• <strong>S002</strong> - Carlos V. Ruiz (Riesgo Medio) - Grupo 3B</li>
+                            <li>• <strong>S003</strong> - Laura J. García (Riesgo Bajo) - Grupo 5A</li>
+                            <li>• <strong>S004</strong> - Esteban Hernandarias (Riesgo Medio) - Grupo 1C</li>
                         </ul>
+                        <p className="text-xs text-blue-600 mt-2">
+                            Cada expediente incluye: matrícula, datos clínicos y resultados de pruebas.
+                        </p>
                     </div>
                     
-                    <Button 
-                        onClick={handleSync} 
-                        disabled={isSyncing}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
-                    >
-                        {isSyncing ? (
-                            <>
-                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                Sincronizando...
-                            </>
-                        ) : (
-                            <>
-                                <Upload className="h-4 w-4 mr-2" />
-                                Sincronizar Datos de Ejemplo
-                            </>
-                        )}
-                    </Button>
+                    {/* Botones de acción */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button 
+                            onClick={handleSync} 
+                            disabled={isSyncing || isRestoring}
+                            variant="outline"
+                            className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                        >
+                            {isSyncing ? (
+                                <>
+                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                    Sincronizando...
+                                </>
+                            ) : (
+                                <>
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Agregar Ejemplos
+                                </>
+                            )}
+                        </Button>
+                        
+                        <Button 
+                            onClick={handleRestore} 
+                            disabled={isSyncing || isRestoring}
+                            variant="destructive"
+                        >
+                            {isRestoring ? (
+                                <>
+                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                    Restaurando...
+                                </>
+                            ) : (
+                                <>
+                                    <RefreshCw className="h-4 w-4 mr-2" />
+                                    Limpiar y Restaurar
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                    
+                    <p className="text-xs text-gray-500">
+                        <strong>Agregar Ejemplos:</strong> Añade los expedientes faltantes sin borrar datos existentes.<br/>
+                        <strong>Limpiar y Restaurar:</strong> Elimina TODO y restaura solo los 4 expedientes de ejemplo.
+                    </p>
                     
                     {syncResult && (
                         <div className={`p-4 rounded-lg flex items-start gap-3 ${
@@ -280,11 +373,6 @@ function SyncExampleDataCard() {
                                 <p className={`font-medium ${syncResult.success ? 'text-green-800' : 'text-red-800'}`}>
                                     {syncResult.message}
                                 </p>
-                                {syncResult.success && syncResult.count > 0 && (
-                                    <p className="text-sm text-green-700 mt-1">
-                                        Los expedientes ahora están disponibles en la sección de Expedientes.
-                                    </p>
-                                )}
                             </div>
                         </div>
                     )}

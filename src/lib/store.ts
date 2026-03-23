@@ -2,7 +2,7 @@
 // --- Tipos de Datos (Schemas de la Base de Datos) ---
 
 import { db } from './firebase';
-import { collection, doc, setDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query, where, Timestamp, deleteDoc } from 'firebase/firestore';
 
 export type SuicideRiskLevel = 'Bajo' | 'Medio' | 'Alto' | 'Crítico';
 
@@ -509,5 +509,217 @@ export async function getAllExpedientesFromFirebase(): Promise<any[]> {
     } catch (error) {
         console.error('Error obteniendo expedientes:', error);
         return [];
+    }
+}
+
+/**
+ * LIMPIA TODA la base de datos de Firebase y restaura SOLO los expedientes de ejemplo
+ * Esta es una operación destructiva - elimina todos los datos existentes
+ */
+export async function limpiarYRestaurarDatosEjemplo(): Promise<{ success: boolean; message: string }> {
+    if (!db) {
+        return { success: false, message: 'Firebase no está inicializado' };
+    }
+
+    try {
+        // 1. Eliminar TODOS los expedientes existentes
+        const expedientesSnapshot = await getDocs(collection(db, 'expedientes'));
+        for (const docSnapshot of expedientesSnapshot.docs) {
+            await deleteDoc(doc(db, 'expedientes', docSnapshot.id));
+        }
+
+        // 2. Eliminar TODAS las matrículas existentes
+        const matriculasSnapshot = await getDocs(collection(db, 'matriculas_estudiantes'));
+        for (const docSnapshot of matriculasSnapshot.docs) {
+            await deleteDoc(doc(db, 'matriculas_estudiantes', docSnapshot.id));
+        }
+
+        // 3. Eliminar TODOS los resultados de pruebas existentes
+        const resultadosSnapshot = await getDocs(collection(db, 'test_results'));
+        for (const docSnapshot of resultadosSnapshot.docs) {
+            await deleteDoc(doc(db, 'test_results', docSnapshot.id));
+        }
+
+        // 4. Crear los expedientes de ejemplo (S001-S004) con datos completos
+        const expedientesEjemplo = [
+            {
+                matricula: 'S001',
+                nombreCompleto: 'Ana M. Pérez (Caso: Riesgo Crítico)',
+                grupoId: '5a',
+                grupoNombre: 'Grupo 5A',
+                sessionId: 'demo_permanent',
+                sessionName: 'Expedientes de Demostración',
+                estado: 'completado' as const,
+                testsCompletados: 3,
+                testsTotal: 7,
+                esEjemplo: true,
+                datosClinicos: {
+                    age: 17,
+                    emergencyContact: { name: 'Mariana López', phone: '5512345678' },
+                    suicideRiskLevel: 'Crítico',
+                    gpa: 6.2,
+                    absences: 35,
+                    ansiedadScore: 21,
+                    bdi_ii_score: 35,
+                    bai_score: 28,
+                    riesgo_suicida_beck_score: 15
+                }
+            },
+            {
+                matricula: 'S002',
+                nombreCompleto: 'Carlos V. Ruiz (Riesgo Medio)',
+                grupoId: '3b',
+                grupoNombre: 'Grupo 3B',
+                sessionId: 'demo_permanent',
+                sessionName: 'Expedientes de Demostración',
+                estado: 'completado' as const,
+                testsCompletados: 2,
+                testsTotal: 7,
+                esEjemplo: true,
+                datosClinicos: {
+                    age: 16,
+                    emergencyContact: { name: 'Juan Mendoza', phone: '5587654321' },
+                    suicideRiskLevel: 'Medio',
+                    gpa: 7.8,
+                    absences: 15,
+                    ansiedadScore: 10
+                }
+            },
+            {
+                matricula: 'S003',
+                nombreCompleto: 'Laura J. García (Riesgo Bajo)',
+                grupoId: '5a',
+                grupoNombre: 'Grupo 5A',
+                sessionId: 'demo_permanent',
+                sessionName: 'Expedientes de Demostración',
+                estado: 'completado' as const,
+                testsCompletados: 2,
+                testsTotal: 7,
+                esEjemplo: true,
+                datosClinicos: {
+                    age: 18,
+                    emergencyContact: { name: 'Lucía Jiménez', phone: '5555555555' },
+                    suicideRiskLevel: 'Bajo',
+                    gpa: 9.1,
+                    absences: 5,
+                    ansiedadScore: 4
+                }
+            },
+            {
+                matricula: 'S004',
+                nombreCompleto: 'Esteban Hernandarias (Caso de Prueba)',
+                grupoId: '1c',
+                grupoNombre: 'Grupo 1C',
+                sessionId: 'demo_permanent',
+                sessionName: 'Expedientes de Demostración',
+                estado: 'completado' as const,
+                testsCompletados: 2,
+                testsTotal: 7,
+                esEjemplo: true,
+                datosClinicos: {
+                    age: 14,
+                    emergencyContact: { name: 'Susana Ramírez', phone: '5544332211' },
+                    suicideRiskLevel: 'Medio',
+                    gpa: 7.5,
+                    absences: 20,
+                    ansiedadScore: 15,
+                    dualRelationshipNote: 'Primo del orientador asignado al grupo 2B, no hay conflicto directo.'
+                }
+            }
+        ];
+
+        // 5. Crear matrículas para los expedientes de ejemplo
+        const matriculasEjemplo = expedientesEjemplo.map(exp => ({
+            matricula: exp.matricula,
+            nombreCompleto: exp.nombreCompleto,
+            grupoId: exp.grupoId,
+            grupoNombre: exp.grupoNombre,
+            semestre: parseInt(exp.grupoId.charAt(0)) || 1,
+            periodo: '2026-1',
+            expedienteId: exp.matricula,
+            evaluacionesCompletadas: exp.testsCompletados,
+            activo: true,
+            esEjemplo: true
+        }));
+
+        // 6. Crear resultados de pruebas de ejemplo
+        const resultadosEjemplo = [
+            { matricula: 'S001', testId: 'gad-7', testName: 'GAD-7 (Ansiedad)', puntaje: 21, sessionId: 'demo_permanent' },
+            { matricula: 'S001', testId: 'phq-9', testName: 'PHQ-9 (Depresión)', puntaje: 18, sessionId: 'demo_permanent' },
+            { matricula: 'S001', testId: 'bdi-ii', testName: 'BDI-II (Inventario de Depresión)', puntaje: 35, sessionId: 'demo_permanent' },
+            { matricula: 'S002', testId: 'gad-7', testName: 'GAD-7 (Ansiedad)', puntaje: 10, sessionId: 'demo_permanent' },
+            { matricula: 'S002', testId: 'phq-9', testName: 'PHQ-9 (Depresión)', puntaje: 8, sessionId: 'demo_permanent' },
+            { matricula: 'S003', testId: 'gad-7', testName: 'GAD-7 (Ansiedad)', puntaje: 4, sessionId: 'demo_permanent' },
+            { matricula: 'S003', testId: 'phq-9', testName: 'PHQ-9 (Depresión)', puntaje: 3, sessionId: 'demo_permanent' },
+            { matricula: 'S004', testId: 'gad-7', testName: 'GAD-7 (Ansiedad)', puntaje: 15, sessionId: 'demo_permanent' },
+            { matricula: 'S004', testId: 'bdi-ii', testName: 'BDI-II (Inventario de Depresión)', puntaje: 18, sessionId: 'demo_permanent' },
+        ];
+
+        // 7. Guardar expedientes
+        for (const expediente of expedientesEjemplo) {
+            await setDoc(doc(collection(db, 'expedientes')), {
+                ...expediente,
+                fechaCreacion: Timestamp.now(),
+                fechaCompletado: Timestamp.now()
+            });
+        }
+
+        // 8. Guardar matrículas
+        for (const matricula of matriculasEjemplo) {
+            await setDoc(doc(collection(db, 'matriculas_estudiantes')), {
+                ...matricula,
+                fechaAsignacion: Timestamp.now()
+            });
+        }
+
+        // 9. Guardar resultados de pruebas
+        for (const resultado of resultadosEjemplo) {
+            await setDoc(doc(collection(db, 'test_results')), {
+                ...resultado,
+                respuestas: {},
+                fechaCompletado: Timestamp.now()
+            });
+        }
+
+        return { 
+            success: true, 
+            message: `Base de datos limpiada y restaurada con 4 expedientes de ejemplo (S001-S004)` 
+        };
+    } catch (error) {
+        console.error('Error limpiando y restaurando datos:', error);
+        return { 
+            success: false, 
+            message: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}` 
+        };
+    }
+}
+
+/**
+ * Verifica si existen los expedientes de ejemplo en Firebase
+ */
+export async function verificarExpedientesEjemplo(): Promise<{ existen: boolean; cantidad: number; faltantes: string[] }> {
+    if (!db) {
+        return { existen: false, cantidad: 0, faltantes: ['S001', 'S002', 'S003', 'S004'] };
+    }
+
+    try {
+        const expedientesSnapshot = await getDocs(collection(db, 'expedientes'));
+        const matriculasExistentes = new Set(
+            expedientesSnapshot.docs
+                .map(doc => doc.data().matricula)
+                .filter(m => m)
+        );
+
+        const esperados = ['S001', 'S002', 'S003', 'S004'];
+        const faltantes = esperados.filter(m => !matriculasExistentes.has(m));
+
+        return {
+            existen: faltantes.length === 0,
+            cantidad: expedientesSnapshot.size,
+            faltantes
+        };
+    } catch (error) {
+        console.error('Error verificando expedientes:', error);
+        return { existen: false, cantidad: 0, faltantes: ['S001', 'S002', 'S003', 'S004'] };
     }
 }
