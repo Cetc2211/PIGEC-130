@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isClinico() {
+      return request.auth != null && request.auth.token.role == 'clinico';
+    }
+    
+    function isOrientador() {
+      return request.auth != null && request.auth.token.role == 'orientador';
+    }
+    
+    function isAdmin() {
+      return request.auth != null && request.auth.token.role == 'admin';
+    }
+
+    // ============================================
+    // COLECCIÓN DE ADMINS (Academic Tracker)
+    // Determina quién ve el menú de Admin
+    // ============================================
+    match /admins/{email} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE GRUPOS OFICIALES (Academic Tracker)
+    // Fuente única de verdad para los grupos
+    // ============================================
+    match /official_groups/{groupId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ============================================
+    // COLECCIONES DE ESTUDIANTES
+    // ============================================
+    match /students/{studentId} {
+      allow read: if true;
+      allow write: if true;
+
+      match /clinical_records/{recordId} {
+        allow read, write: if true;
+      }
+    }
+
+    // ============================================
+    // COLECCIÓN DE GRUPOS (Legacy/Alternativo)
+    // ============================================
+    match /groups/{groupId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE MATRÍCULAS GENERADAS (PIGEC)
+    // ============================================
+    match /matriculas_estudiantes/{matriculaId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE SESIONES DE EVALUACIÓN (PIGEC)
+    // ============================================
+    match /evaluation_sessions/{sessionId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE RESULTADOS DE PRUEBAS (PIGEC)
+    // ============================================
+    match /test_results/{resultId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE CONFIGURACIÓN DE PRUEBAS
+    // ============================================
+    match /configuracion_pruebas/{testId} {
+      allow read: if true; 
+      allow write: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE ANUNCIOS (Academic Tracker)
+    // ============================================
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE JUSTIFICACIONES (Academic Tracker)
+    // ============================================
+    match /justifications/{justificationId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE CONFIGURACIÓN DE APP
+    // ============================================
+    match /app_config/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ============================================
+    // COLECCIÓN DE EXPEDIENTES DE EVALUACIÓN (PIGEC)
+    // Expedientes creados por estudiantes durante evaluaciones
+    // ============================================
+    match /expedientes/{expedienteId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+    }
+  }
+}
