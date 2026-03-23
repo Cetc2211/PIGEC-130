@@ -1,6 +1,9 @@
 'use client';
 // --- Tipos de Datos (Schemas de la Base de Datos) ---
 
+import { db } from './firebase';
+import { collection, doc, setDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
+
 export type SuicideRiskLevel = 'Bajo' | 'Medio' | 'Alto' | 'Crítico';
 
 export interface Student {
@@ -379,4 +382,132 @@ export function getEducationalAssessmentByStudentId(studentId: string): Educatio
 
 export function getEvidenceRepository(): EvidenceReference[] {
     return evidenceRepositoryDB;
+}
+
+// --- FUNCIONES PARA SINCRONIZAR DATOS DE EJEMPLO CON FIREBASE ---
+
+/**
+ * Migra los estudiantes de ejemplo (S001-S004) a Firebase como expedientes
+ * Esto permite que aparezcan en la sección de Expedientes
+ */
+export async function syncExampleStudentsToFirebase(): Promise<{ success: boolean; message: string; count: number }> {
+    if (!db) {
+        return { success: false, message: 'Firebase no está inicializado', count: 0 };
+    }
+
+    try {
+        const expedientesRef = collection(db, 'expedientes');
+        let syncedCount = 0;
+
+        for (const student of studentsDB) {
+            // Crear un expediente para cada estudiante de ejemplo
+            const expedienteData = {
+                matricula: student.id,
+                nombreCompleto: student.name,
+                grupoId: student.demographics.group.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+                grupoNombre: `Grupo ${student.demographics.group}`,
+                sessionId: 'demo_session',
+                sessionName: 'Datos de Demostración',
+                estado: 'completado' as const,
+                testsCompletados: 3,
+                testsTotal: 7,
+                fechaCreacion: Timestamp.now(),
+                fechaCompletado: Timestamp.now(),
+                isExample: true // Marcar como dato de ejemplo
+            };
+
+            // Verificar si ya existe
+            const existingQuery = query(
+                collection(db, 'expedientes'),
+                where('matricula', '==', student.id),
+                where('sessionId', '==', 'demo_session')
+            );
+            const existingSnapshot = await getDocs(existingQuery);
+
+            if (existingSnapshot.empty) {
+                // Crear nuevo expediente
+                await setDoc(doc(expedientesRef), expedienteData);
+                syncedCount++;
+            }
+        }
+
+        // También sincronizar algunos resultados de prueba de ejemplo
+        await syncExampleTestResults();
+
+        return { 
+            success: true, 
+            message: `Se sincronizaron ${syncedCount} estudiantes de ejemplo`, 
+            count: syncedCount 
+        };
+    } catch (error) {
+        console.error('Error sincronizando estudiantes:', error);
+        return { 
+            success: false, 
+            message: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`, 
+            count: 0 
+        };
+    }
+}
+
+/**
+ * Sincroniza los resultados de pruebas de ejemplo a Firebase
+ */
+async function syncExampleTestResults(): Promise<void> {
+    if (!db) return;
+
+    const testResultsRef = collection(db, 'test_results');
+
+    // Crear resultados de ejemplo basados en los datos de evaluationsDB
+    const exampleResults = [
+        { matricula: 'S001', testId: 'gad-7', testName: 'GAD-7 (Ansiedad)', puntaje: 21 },
+        { matricula: 'S001', testId: 'phq-9', testName: 'PHQ-9 (Depresión)', puntaje: 18 },
+        { matricula: 'S001', testId: 'bdi-ii', testName: 'BDI-II (Inventario de Depresión)', puntaje: 35 },
+        { matricula: 'S002', testId: 'gad-7', testName: 'GAD-7 (Ansiedad)', puntaje: 10 },
+        { matricula: 'S002', testId: 'phq-9', testName: 'PHQ-9 (Depresión)', puntaje: 8 },
+        { matricula: 'S003', testId: 'gad-7', testName: 'GAD-7 (Ansiedad)', puntaje: 4 },
+        { matricula: 'S003', testId: 'phq-9', testName: 'PHQ-9 (Depresión)', puntaje: 3 },
+        { matricula: 'S004', testId: 'gad-7', testName: 'GAD-7 (Ansiedad)', puntaje: 15 },
+        { matricula: 'S004', testId: 'bdi-ii', testName: 'BDI-II (Inventario de Depresión)', puntaje: 18 },
+    ];
+
+    for (const result of exampleResults) {
+        // Verificar si ya existe
+        const existingQuery = query(
+            collection(db, 'test_results'),
+            where('matricula', '==', result.matricula),
+            where('testId', '==', result.testId),
+            where('sessionId', '==', 'demo_session')
+        );
+        const existingSnapshot = await getDocs(existingQuery);
+
+        if (existingSnapshot.empty) {
+            await setDoc(doc(testResultsRef), {
+                ...result,
+                sessionId: 'demo_session',
+                respuestas: {},
+                fechaCompletado: Timestamp.now(),
+                isExample: true
+            });
+        }
+    }
+}
+
+/**
+ * Obtiene todos los expedientes (incluyendo los de ejemplo) desde Firebase
+ */
+export async function getAllExpedientesFromFirebase(): Promise<any[]> {
+    if (!db) return [];
+
+    try {
+        const expedientesSnapshot = await getDocs(collection(db, 'expedientes'));
+        return expedientesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            fechaCreacion: doc.data().fechaCreacion?.toDate(),
+            fechaCompletado: doc.data().fechaCompletado?.toDate()
+        }));
+    } catch (error) {
+        console.error('Error obteniendo expedientes:', error);
+        return [];
+    }
 }

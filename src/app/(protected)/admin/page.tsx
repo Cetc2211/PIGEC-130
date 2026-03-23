@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { UserPlus, RefreshCw, UserCog, Terminal, Settings, Database, Shield, Bug } from 'lucide-react';
+import { UserPlus, RefreshCw, UserCog, Terminal, Settings, Database, Shield, Bug, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { syncExampleStudentsToFirebase } from '@/lib/store';
 
 
 // Función que guarda en Firestore
@@ -198,6 +199,101 @@ function RoleManagementCard() {
     );
 }
 
+// Componente para sincronizar datos de ejemplo
+function SyncExampleDataCard() {
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [syncResult, setSyncResult] = useState<{ success: boolean; message: string; count: number } | null>(null);
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        setSyncResult(null);
+        
+        try {
+            const result = await syncExampleStudentsToFirebase();
+            setSyncResult(result);
+        } catch (error) {
+            setSyncResult({
+                success: false,
+                message: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+                count: 0
+            });
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
+    return (
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Upload className="h-6 w-6" />
+                    Sincronizar Datos de Ejemplo
+                </CardTitle>
+                <CardDescription>
+                    Migra los estudiantes de demostración (S001-S004) a Firebase para que aparezcan en Expedientes.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-sm text-blue-800">
+                            <strong>Esta acción creará 4 expedientes de ejemplo en Firebase:</strong>
+                        </p>
+                        <ul className="text-sm text-blue-700 mt-2 list-disc list-inside">
+                            <li>S001 - Ana M. Pérez (Riesgo Crítico)</li>
+                            <li>S002 - Carlos V. Ruiz (Riesgo Medio)</li>
+                            <li>S003 - Laura J. García (Riesgo Bajo)</li>
+                            <li>S004 - Esteban Hernandarias (Riesgo Medio)</li>
+                        </ul>
+                    </div>
+                    
+                    <Button 
+                        onClick={handleSync} 
+                        disabled={isSyncing}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                    >
+                        {isSyncing ? (
+                            <>
+                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                Sincronizando...
+                            </>
+                        ) : (
+                            <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Sincronizar Datos de Ejemplo
+                            </>
+                        )}
+                    </Button>
+                    
+                    {syncResult && (
+                        <div className={`p-4 rounded-lg flex items-start gap-3 ${
+                            syncResult.success 
+                                ? 'bg-green-50 border border-green-200' 
+                                : 'bg-red-50 border border-red-200'
+                        }`}>
+                            {syncResult.success ? (
+                                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                            ) : (
+                                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                            )}
+                            <div>
+                                <p className={`font-medium ${syncResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                                    {syncResult.message}
+                                </p>
+                                {syncResult.success && syncResult.count > 0 && (
+                                    <p className="text-sm text-green-700 mt-1">
+                                        Los expedientes ahora están disponibles en la sección de Expedientes.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 // Componente de acceso rápido a herramientas de admin
 function AdminToolsCard() {
     const tools = [
@@ -303,8 +399,9 @@ export default function AdminPage() {
                 <AdminToolsCard />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <AddNewStudentForm />
+                <SyncExampleDataCard />
                 <RoleManagementCard />
             </div>
         </div>
