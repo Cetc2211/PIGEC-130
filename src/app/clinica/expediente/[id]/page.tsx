@@ -18,8 +18,8 @@ import SOAPNotesForm from '@/components/SOAPNotesForm';
 import WISCScoringConsole from '@/components/WISC-VScoringConsole';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen, FileText, FileDown, Activity, UserCheck, BrainCircuit } from "lucide-react";
-import ScreeningManagement from '@/components/screening-management';
+import { Terminal, ShieldAlert, Loader, ClipboardList, BookOpen, FileText, FileDown, Activity, UserCheck, BrainCircuit, TestTube2 } from "lucide-react";
+import BancoDePruebas from '@/components/BancoDePruebas';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { NeuroScreeningConsole } from '@/components/NeuroScreeningConsole';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -124,7 +124,7 @@ export default function ClinicalFilePage() {
                     <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="identificacion"><UserCheck className="mr-2"/>Ficha de Identificación</TabsTrigger>
                         <TabsTrigger value="resumen"><Activity className="mr-2"/>Resumen Ejecutivo</TabsTrigger>
-                        <TabsTrigger value="pruebas"><ClipboardList className="mr-2"/>Gestión de Pruebas</TabsTrigger>
+                        <TabsTrigger value="pruebas"><TestTube2 className="mr-2"/>Banco de Pruebas</TabsTrigger>
                         <TabsTrigger value="soap"><FileText className="mr-2"/>Evolución y Notas</TabsTrigger>
                         <TabsTrigger value="documentacion"><FileDown className="mr-2"/>Documentación Legal</TabsTrigger>
                     </TabsList>
@@ -134,7 +134,7 @@ export default function ClinicalFilePage() {
                     </TabsContent>
                     
                     <TabsContent value="resumen" className="mt-6 space-y-12">
-                        <ClinicalAssessmentForm initialData={clinicalAssessment} />
+                        <ClinicalAssessmentForm initialData={clinicalAssessment} studentId={studentId} />
                         <FunctionalAnalysisForm studentName={studentData.name} initialData={functionalAnalysis} />
                         <TreatmentPlanGenerator studentName={studentData.name} initialData={treatmentPlan} />
                         <PIEIGenerator clinicalData={clinicalAssessment} />
@@ -146,20 +146,11 @@ export default function ClinicalFilePage() {
                     </TabsContent>
                     
                     <TabsContent value="pruebas" className="mt-6 space-y-12">
-                         <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <ClipboardList />
-                                    Aplicar Instrumento de Tamizaje Individual
-                                </CardTitle>
-                                <CardDescription>
-                                    Genera un enlace para que el estudiante responda a un instrumento clínico específico.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                 <ScreeningManagement />
-                            </CardContent>
-                        </Card>
+                         <BancoDePruebas
+                            studentId={studentId}
+                            studentName={studentData.name}
+                            groupName={studentData.demographics.group}
+                        />
 
                         <Card>
                            <CardHeader>

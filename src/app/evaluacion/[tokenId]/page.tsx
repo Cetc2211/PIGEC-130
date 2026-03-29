@@ -36,7 +36,7 @@ import EbmaForm from '@/components/EbmaForm';
 import ChteForm from '@/components/ChteForm';
 
 // Catálogo de formularios
-const formComponents: Record<string, React.ComponentType<{ studentId?: string; onComplete?: (result: any) => void }>> = {
+const formComponents: Record<string, React.ComponentType<{ studentId?: string; grupoId?: string; matricula?: string; onComplete?: (result: any) => void }>> = {
     'ficha-id': FichaIdentificacionForm,
     'bdi-ii': BdiForm,
     'bai': BaiForm,
@@ -85,6 +85,10 @@ interface SessionData {
     tests: string[];
     groups: string[];
     status: string;
+    mode?: 'group' | 'individual';
+    studentId?: string;
+    studentName?: string;
+    expedienteId?: string;
     expiresAt?: Date;
 }
 
@@ -97,7 +101,10 @@ export default function EvaluacionPage() {
     const [session, setSession] = useState<SessionData | null>(null);
     const [error, setError] = useState<string | null>(null);
     
-    // Identificación
+    // Modo: individual (sin matrícula) o grupal (con matrícula)
+    const isIndividual = session?.mode === 'individual';
+    
+    // Identificación (solo modo grupal)
     const [step, setStep] = useState<'matricula' | 'consentimiento' | 'evaluacion' | 'completado'>('matricula');
     const [matriculaInput, setMatriculaInput] = useState('');
     const [validandoMatricula, setValidandoMatricula] = useState(false);
@@ -132,14 +139,25 @@ export default function EvaluacionPage() {
                     setError('Sesión de evaluación no encontrada o expirada');
                 } else {
                     const data = snapshot.docs[0].data();
+                    const sessionMode = data.mode || 'group';
+                    
                     setSession({
                         id: data.id,
                         name: data.name,
                         tests: data.tests || [],
                         groups: data.groups || [],
                         status: data.status,
+                        mode: sessionMode,
+                        studentId: data.studentId || data.expedienteId,
+                        studentName: data.studentName,
+                        expedienteId: data.expedienteId,
                         expiresAt: data.expiresAt?.toDate()
                     });
+
+                    // Si es modo individual, saltar matrícula e ir directo a consentimiento
+                    if (sessionMode === 'individual') {
+                        setStep('consentimiento');
+                    }
                 }
             } catch (err) {
                 console.error('Error cargando sesión:', err);
@@ -151,7 +169,7 @@ export default function EvaluacionPage() {
         loadSession();
     }, [tokenId]);
 
-    // Validar matrícula
+    // Validar matrícula (solo modo grupal)
     const handleValidarMatricula = async () => {
         if (!matriculaInput.trim()) {
             setMatriculaError('Ingrese su matrícula');
@@ -180,30 +198,34 @@ export default function EvaluacionPage() {
 
     // Crear expediente y comenzar evaluación
     const handleIniciarEvaluacion = async () => {
-        if (!estudiante || !session) return;
-
         try {
-            // Crear expediente en Firestore
-            const expedienteRef = await addDoc(collection(db!, 'expedientes'), {
-                matricula: estudiante.matricula,
-                nombreCompleto: estudiante.nombreCompleto,
-                grupoId: estudiante.grupoId,
-                grupoNombre: estudiante.grupoNombre,
-                sessionId: session.id,
-                sessionName: session.name,
-                fechaCreacion: Timestamp.now(),
-                consentimiento: true,
-                fechaConsentimiento: Timestamp.now()
-            });
+            if (isIndividual) {
+                // Modo individual: el expediente ya existe, usamos el expedienteId
+                setExpedienteId(session?.studentId || session?.expedienteId || null);
+                setStep('evaluacion');
+            } else if (estudiante && session) {
+                // Modo grupal: crear expediente nuevo en Firestore
+                const expedienteRef = await addDoc(collection(db!, 'expedientes'), {
+                    matricula: estudiante.matricula,
+                    nombreCompleto: estudiante.nombreCompleto,
+                    grupoId: estudiante.grupoId,
+                    grupoNombre: estudiante.grupoNombre,
+                    sessionId: session.id,
+                    sessionName: session.name,
+                    fechaCreacion: Timestamp.now(),
+                    consentimiento: true,
+                    fechaConsentimiento: Timestamp.now()
+                });
 
-            setExpedienteId(expedienteRef.id);
+                setExpedienteId(expedienteRef.id);
 
-            // Vincular expediente a la matrícula
-            await vincularExpediente(estudiante.matricula, expedienteRef.id);
+                // Vincular expediente a la matrícula
+                await vincularExpediente(estudiante.matricula, expedienteRef.id);
 
-            setStep('evaluacion');
+                setStep('evaluacion');
+            }
         } catch (err) {
-            console.error('Error creando expediente:', err);
+            console.error('Error iniciando evaluación:', err);
             alert('Error al iniciar la evaluación. Intente nuevamente.');
         }
     };
@@ -221,6 +243,15 @@ export default function EvaluacionPage() {
             setStep('completado');
         }
     };
+
+    // Nombre del estudiante según el modo
+    const displayStudentName = isIndividual
+        ? session?.studentName || 'Estudiante'
+        : estudiante?.nombreCompleto || '';
+
+    const displayStudentId = isIndividual
+        ? (session?.studentId || session?.expedienteId || undefined)
+        : (estudiante?.grupoId || undefined);
 
     // Renderizado de estados
     if (loading) {
@@ -251,7 +282,7 @@ export default function EvaluacionPage() {
         );
     }
 
-    // MATRÍCULA
+    // MATRÍCULA (solo modo grupal)
     if (step === 'matricula') {
         return (
             <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
@@ -312,7 +343,7 @@ export default function EvaluacionPage() {
     }
 
     // CONSENTIMIENTO
-    if (step === 'consentimiento' && estudiante) {
+    if (step === 'consentimiento' && (estudiante || isIndividual)) {
         return (
             <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
                 <Card className="max-w-2xl w-full">
@@ -323,8 +354,15 @@ export default function EvaluacionPage() {
                             </div>
                             <div>
                                 <CardTitle className="text-xl">Bienvenido/a</CardTitle>
-                                <p className="text-lg font-semibold text-gray-700">{estudiante.nombreCompleto}</p>
-                                <p className="text-sm text-gray-500">{estudiante.grupoNombre}</p>
+                                <p className="text-lg font-semibold text-gray-700">{displayStudentName}</p>
+                                {isIndividual && (
+                                    <p className="text-sm text-gray-500">
+                                        Evaluación individual — Expediente exclusivo
+                                    </p>
+                                )}
+                                {!isIndividual && (
+                                    <p className="text-sm text-gray-500">{estudiante?.grupoNombre}</p>
+                                )}
                             </div>
                         </div>
                         <CardDescription className="flex items-center gap-2 text-amber-700">
@@ -340,6 +378,11 @@ export default function EvaluacionPage() {
                             <p className="text-sm text-blue-700 mt-1">
                                 <strong>Pruebas a realizar:</strong> {session?.tests.length || 0}
                             </p>
+                            {isIndividual && (
+                                <p className="text-sm text-blue-700 mt-1">
+                                    <strong>Modalidad:</strong> Individual (sin matrícula)
+                                </p>
+                            )}
                         </div>
 
                         <div className="text-sm text-gray-700 space-y-3">
@@ -375,11 +418,13 @@ export default function EvaluacionPage() {
                         </div>
                     </CardContent>
                     <CardFooter className="flex justify-between">
-                        <Button variant="outline" onClick={() => setStep('matricula')}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Usar otra matrícula
-                        </Button>
-                        <Button onClick={handleIniciarEvaluacion} disabled={!isConsented}>
+                        {!isIndividual && (
+                            <Button variant="outline" onClick={() => setStep('matricula')}>
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Usar otra matrícula
+                            </Button>
+                        )}
+                        <Button onClick={handleIniciarEvaluacion} disabled={!isConsented} className={!isIndividual ? '' : 'w-full'}>
                             Iniciar Evaluación
                             <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -406,7 +451,8 @@ export default function EvaluacionPage() {
                                     {session.name}
                                 </h1>
                                 <p className="text-sm text-gray-500">
-                                    {estudiante?.nombreCompleto} • {estudiante?.matricula}
+                                    {displayStudentName}
+                                    {isIndividual && ' • Evaluación individual'}
                                 </p>
                             </div>
                             <Badge variant="secondary">
@@ -444,9 +490,9 @@ export default function EvaluacionPage() {
                         <CardContent>
                             {CurrentForm ? (
                                 <CurrentForm 
-                                    studentId={expedienteId || undefined}
-                                    grupoId={estudiante?.grupoId || undefined}
-                                    matricula={estudiante?.matricula || undefined}
+                                    studentId={expedienteId || displayStudentId}
+                                    grupoId={!isIndividual ? estudiante?.grupoId : undefined}
+                                    matricula={!isIndividual ? estudiante?.matricula : undefined}
                                     onComplete={handleTestComplete}
                                 />
                             ) : (
@@ -479,17 +525,21 @@ export default function EvaluacionPage() {
                             ¡Evaluación Completada!
                         </h2>
                         <p className="text-gray-600 mb-4">
-                            Gracias por completar todas las evaluaciones, {estudiante?.nombreCompleto?.split(' ')[0]}.
+                            Gracias por completar todas las evaluaciones, {displayStudentName.split(' ')[0]}.
                         </p>
                         <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-6">
                             <p className="text-sm text-green-800">
-                                Sus respuestas han sido enviadas de forma segura. 
-                                El equipo de orientación revisará sus resultados.
+                                {isIndividual
+                                    ? 'Sus respuestas han sido enviadas de forma segura y se integrarán automáticamente a su expediente clínico. El equipo de orientación revisará sus resultados.'
+                                    : 'Sus respuestas han sido enviadas de forma segura. El equipo de orientación revisará sus resultados.'
+                                }
                             </p>
                         </div>
                         <div className="text-sm text-gray-500">
-                            <p><strong>Matrícula:</strong> {estudiante?.matricula}</p>
                             <p><strong>Pruebas completadas:</strong> {completedTests.length}</p>
+                            {completedTests.map(tId => (
+                                <p key={tId} className="text-xs mt-1">✓ {testNames[tId] || tId}</p>
+                            ))}
                         </div>
                         <p className="mt-6 text-xs text-gray-400">
                             Ya puede cerrar esta ventana.
