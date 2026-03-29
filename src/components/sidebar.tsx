@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Scale, Home, Wrench, Settings, ClipboardList, Users, BookText, LogOut, FolderKanban } from 'lucide-react';
+import { Scale, Home, Wrench, Settings, ClipboardList, Users, BookText, LogOut, FolderKanban, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/context/SessionContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -11,6 +11,7 @@ import { Button } from './ui/button';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard de Riesgo', icon: Home, roles: ['Clinico', 'Orientador'] },
+  { href: '/expedientes', label: 'Expedientes', icon: FolderOpen, roles: ['Clinico', 'Orientador'] },
   { href: '/orientacion', label: 'Panel de Orientación', icon: BookText, roles: ['Orientador'] },
   { href: '/educativa/evaluacion', label: 'Evaluación Educativa', icon: BookText, roles: ['Orientador', 'Clinico'] },
   { href: '/screening', label: 'Gestión de Pruebas', icon: ClipboardList, roles: ['Clinico'] },
@@ -77,7 +78,9 @@ export function Sidebar() {
             href={item.href}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900',
-              pathname === item.href ? 'bg-gray-100 text-gray-900 font-semibold' : ''
+              (item.href === '/expedientes' && (pathname === '/expedientes' || pathname.startsWith('/clinica/expediente') || pathname.startsWith('/educativa/estudiante')))
+                || pathname === item.href
+                ? 'bg-gray-100 text-gray-900 font-semibold' : ''
             )}
           >
             <item.icon className="h-5 w-5" />
