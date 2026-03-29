@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSession } from '@/context/SessionContext';
 import { calculateRisk } from '@/lib/risk-analysis';
 import RiskIndicator from '@/components/RiskIndicator';
+import FichaIdentificacionForm from '@/components/FichaIdentificacionForm';
 import { useToast } from '@/hooks/use-toast';
 import {
   Card,
@@ -41,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import {
   AlertTriangle,
   FolderOpen,
@@ -51,6 +51,7 @@ import {
   FileSearch,
   UserPlus,
   Loader2,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -60,9 +61,11 @@ import {
   getNivelShort,
   getNivelColor,
   getEstadoLabel,
+  defaultFichaIdentificacion,
   type Expediente,
   type FiltroExpediente,
   type OrigenExpediente,
+  type FichaIdentificacionData,
 } from '@/lib/expediente-service';
 
 const filtros: { value: FiltroExpediente; label: string }[] = [
@@ -83,12 +86,11 @@ export default function ExpedientesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  // Formulario de nuevo expediente
-  const [newName, setNewName] = useState('');
-  const [newGroup, setNewGroup] = useState('');
-  const [newSemester, setNewSemester] = useState('');
-  const [newGpa, setNewGpa] = useState('');
-  const [newAbsences, setNewAbsences] = useState('');
+  // Formulario de Ficha de Identificación (modo controlado)
+  const [fichaData, setFichaData] = useState<FichaIdentificacionData>({
+    ...defaultFichaIdentificacion,
+  });
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FichaIdentificacionData, string>>>({});
 
   const expedientes = useMemo(() => {
     return getExpedientes(filtro);
@@ -104,12 +106,61 @@ export default function ExpedientesPage() {
     );
   }, [expedientes, busqueda]);
 
+  /** Validar campos obligatorios de la Ficha de Identificación */
+  const validateFicha = (): boolean => {
+    const errors: Partial<Record<keyof FichaIdentificacionData, string>> = {};
+
+    if (!fichaData.fullName.trim()) {
+      errors.fullName = 'El nombre del estudiante es obligatorio.';
+    }
+    if (!fichaData.birthDate) {
+      errors.birthDate = 'La fecha de nacimiento es obligatoria.';
+    }
+    if (!fichaData.sexo) {
+      errors.sexo = 'Selecciona el sexo.';
+    }
+    if (!fichaData.group.trim()) {
+      errors.group = 'El grupo es obligatorio.';
+    }
+    if (!fichaData.semester || isNaN(parseInt(fichaData.semester))) {
+      errors.semester = 'Ingresa el semestre.';
+    }
+    if (!fichaData.celular.trim()) {
+      errors.celular = 'El número celular es obligatorio.';
+    }
+    if (!fichaData.livingWith) {
+      errors.livingWith = 'Selecciona con quién vives.';
+    }
+    if (!fichaData.motherName.trim()) {
+      errors.motherName = 'El nombre de la madre o tutor(a) es obligatorio.';
+    }
+    if (!fichaData.motherPhone.trim()) {
+      errors.motherPhone = 'El teléfono de la madre o tutor(a) es obligatorio.';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  /** Calcular edad a partir de la fecha de nacimiento */
+  const calcularEdad = (fechaNacimiento: string): number => {
+    if (!fechaNacimiento) return 0;
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento + 'T00:00:00');
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const m = hoy.getMonth() - nacimiento.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) {
+      edad--;
+    }
+    return edad;
+  };
+
   const handleCrearExpediente = async () => {
-    if (!newName.trim() || !newGroup.trim()) {
+    if (!validateFicha()) {
       toast({
         variant: 'destructive',
-        title: 'Datos incompletos',
-        description: 'El nombre del estudiante y el grupo son obligatorios.',
+        title: 'Ficha incompleta',
+        description: 'Completa todos los campos obligatorios marcados con *.',
       });
       return;
     }
@@ -118,26 +169,24 @@ export default function ExpedientesPage() {
     try {
       crearExpediente({
         studentId: `manual-${Date.now()}`,
-        studentName: newName.trim(),
-        groupName: newGroup.trim(),
-        semester: parseInt(newSemester) || 1,
-        gpa: parseFloat(newGpa) || 8.0,
-        absences: parseFloat(newAbsences) || 0,
+        studentName: fichaData.fullName.trim(),
+        groupName: fichaData.group.trim(),
+        semester: parseInt(fichaData.semester) || 1,
+        gpa: 0, // Se actualiza con datos académicos después
+        absences: 0, // Se actualiza con datos académicos después
         origen: 'registro_manual' as OrigenExpediente,
         creadoPor: 'usuario@demo.com',
+        fichaIdentificacion: { ...fichaData },
       });
 
       toast({
         title: 'Expediente creado',
-        description: `Se creó el expediente de ${newName.trim()}.`,
+        description: `Se creó el expediente de ${fichaData.fullName.trim()} con la Ficha de Identificación completa.`,
       });
 
       // Limpiar formulario
-      setNewName('');
-      setNewGroup('');
-      setNewSemester('');
-      setNewGpa('');
-      setNewAbsences('');
+      setFichaData({ ...defaultFichaIdentificacion });
+      setFormErrors({});
       setIsCreateDialogOpen(false);
     } catch {
       toast({
@@ -174,93 +223,46 @@ export default function ExpedientesPage() {
           </p>
         </div>
 
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+          setIsCreateDialogOpen(open);
+          if (!open) {
+            setFormErrors({});
+          }
+        }}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
+              <UserPlus className="mr-2 h-4 w-4" />
               Nuevo Expediente
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[480px]">
+          <DialogContent className="sm:max-w-[720px] max-h-[92vh] flex flex-col">
             <DialogHeader>
-              <DialogTitle>Crear Nuevo Expediente</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <ScrollText className="h-5 w-5 text-blue-600" />
+                Nuevo Expediente — Ficha de Identificación
+              </DialogTitle>
               <DialogDescription>
-                Registro manual de un expediente para un estudiante. Los datos clínicos se agregarán
-                conforme se apliquen evaluaciones.
+                Completa la Ficha de Identificación del estudiante para crear su expediente.
+                Los datos clínicos y evaluaciones se agregarán conforme se apliquen instrumentos.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="exp-name">Nombre del Estudiante *</Label>
-                <Input
-                  id="exp-name"
-                  placeholder="Ej: Juan Pérez García"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="exp-group">Grupo *</Label>
-                  <Input
-                    id="exp-group"
-                    placeholder="Ej: 3B"
-                    value={newGroup}
-                    onChange={(e) => setNewGroup(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="exp-semester">Semestre</Label>
-                  <Select value={newSemester} onValueChange={setNewSemester}>
-                    <SelectTrigger id="exp-semester">
-                      <SelectValue placeholder="Seleccionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1</SelectItem>
-                      <SelectItem value="2">2</SelectItem>
-                      <SelectItem value="3">3</SelectItem>
-                      <SelectItem value="4">4</SelectItem>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="6">6</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="exp-gpa">Promedio (GPA)</Label>
-                  <Input
-                    id="exp-gpa"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="10"
-                    placeholder="8.0"
-                    value={newGpa}
-                    onChange={(e) => setNewGpa(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="exp-absences">% Ausencias</Label>
-                  <Input
-                    id="exp-absences"
-                    type="number"
-                    step="1"
-                    min="0"
-                    max="100"
-                    placeholder="0"
-                    value={newAbsences}
-                    onChange={(e) => setNewAbsences(e.target.value)}
-                  />
-                </div>
-              </div>
+            <div className="flex-grow overflow-y-auto pr-2">
+              <FichaIdentificacionForm
+                values={fichaData}
+                onChange={setFichaData}
+                errors={formErrors}
+                disabled={isCreating}
+              />
             </div>
-            <DialogFooter>
+            <DialogFooter className="mt-4 pt-4 border-t">
               <DialogClose asChild>
-                <Button variant="outline">Cancelar</Button>
+                <Button variant="outline" disabled={isCreating}>
+                  Cancelar
+                </Button>
               </DialogClose>
               <Button onClick={handleCrearExpediente} disabled={isCreating}>
                 {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <UserPlus className="mr-2 h-4 w-4" />
                 Crear Expediente
               </Button>
             </DialogFooter>
@@ -356,6 +358,7 @@ export default function ExpedientesPage() {
                       expediente.suicideRiskLevel === 'Alto' ||
                       expediente.suicideRiskLevel === 'Crítico';
                     const isDemo = expediente.origen === 'demo';
+                    const tieneFicha = !!expediente.fichaIdentificacion;
                     const nivelColor = getNivelColor(expediente.nivel);
 
                     // Calcular IRC si no existe
@@ -388,11 +391,18 @@ export default function ExpedientesPage() {
                           <div className="flex items-center gap-2">
                             <div>
                               <p className="font-medium text-slate-900 text-sm">{expediente.studentName}</p>
-                              {isDemo && (
-                                <Badge variant="outline" className="text-[10px] text-gray-400 mt-0.5">
-                                  Demo
-                                </Badge>
-                              )}
+                              <div className="flex items-center gap-1 mt-0.5">
+                                {isDemo && (
+                                  <Badge variant="outline" className="text-[10px] text-gray-400">
+                                    Demo
+                                  </Badge>
+                                )}
+                                {tieneFicha && (
+                                  <Badge variant="outline" className="text-[10px] text-blue-500 border-blue-200">
+                                    Ficha ✓
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </TableCell>
@@ -436,10 +446,14 @@ export default function ExpedientesPage() {
                               <RiskIndicator irc={irc!} nivel={nivelRiesgo!} color={riesgoColor} />
                             </TableCell>
                             <TableCell className="text-sm text-gray-500">
-                              {expediente.academicData.gpa.toFixed(1)}
+                              {expediente.academicData.gpa > 0
+                                ? expediente.academicData.gpa.toFixed(1)
+                                : '—'}
                             </TableCell>
                             <TableCell className="text-sm text-gray-500">
-                              {expediente.academicData.absences.toFixed(0)}%
+                              {expediente.academicData.absences > 0
+                                ? `${expediente.academicData.absences.toFixed(0)}%`
+                                : '—'}
                             </TableCell>
                           </>
                         )}

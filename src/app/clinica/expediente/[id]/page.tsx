@@ -130,7 +130,7 @@ export default function ClinicalFilePage() {
                     </TabsList>
 
                     <TabsContent value="identificacion" className="mt-6">
-                        <StudentIdentificationCard student={studentData} />
+                        <StudentIdentificationCard student={studentData} expediente={expedienteDinamico} />
                     </TabsContent>
                     
                     <TabsContent value="resumen" className="mt-6 space-y-12">

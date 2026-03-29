@@ -34,6 +34,53 @@ export type EstadoExpediente = 'abierto' | 'en_seguimiento' | 'concluido' | 'ina
 /** Origen de la creación del expediente */
 export type OrigenExpediente = 'demo' | 'tamizaje_grupal' | 'derivacion_orientacion' | 'evaluacion_clinica' | 'registro_manual';
 
+/** Datos de la Ficha de Identificación (instrumento de Gestión de Pruebas) */
+export interface FichaIdentificacionData {
+  // I. Datos del Estudiante
+  fullName: string;
+  birthDate: string;
+  sexo: 'femenino' | 'masculino' | '';
+  genderIdentity: string;
+  group: string;
+  semester: string;
+
+  // II. Datos de Contacto
+  domicilio: string;
+  celular: string;
+  whatsapp: string;
+  email: string;
+
+  // III. Datos Sociofamiliares
+  livingWith: 'ambos' | 'mama' | 'papa' | 'abuelos' | 'otro' | '';
+  motherName: string;
+  motherPhone: string;
+  fatherName: string;
+  fatherPhone: string;
+
+  // IV. Antecedentes Personales
+  backgroundInfo: string;
+}
+
+/** Valores por defecto para un nuevo formulario de Ficha de Identificación */
+export const defaultFichaIdentificacion: FichaIdentificacionData = {
+  fullName: '',
+  birthDate: '',
+  sexo: '',
+  genderIdentity: '',
+  group: '',
+  semester: '',
+  domicilio: '',
+  celular: '',
+  whatsapp: '',
+  email: '',
+  livingWith: '',
+  motherName: '',
+  motherPhone: '',
+  fatherName: '',
+  fatherPhone: '',
+  backgroundInfo: '',
+};
+
 /** Expediente completo */
 export interface Expediente {
   id: string;
@@ -55,6 +102,9 @@ export interface Expediente {
     gpa: number;
     absences: number;
   };
+
+  // Ficha de Identificación (se llena al crear expediente individual)
+  fichaIdentificacion?: FichaIdentificacionData;
 
   // Datos clínicos (se llenan progresivamente)
   ansiedadScore?: number;
@@ -250,7 +300,7 @@ export function getExpedienteById(id: string): Expediente | undefined {
 }
 
 /**
- * Crea un nuevo expediente
+ * Crea un nuevo expediente (con o sin Ficha de Identificación)
  */
 export function crearExpediente(data: {
   studentId: string;
@@ -262,6 +312,7 @@ export function crearExpediente(data: {
   origen: OrigenExpediente;
   creadoPor: string;
   nivelInicial?: NivelMTSS;
+  fichaIdentificacion?: FichaIdentificacionData;
 }): Expediente {
   const nuevo: Expediente = {
     id: `exp-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -279,6 +330,7 @@ export function crearExpediente(data: {
       gpa: data.gpa,
       absences: data.absences,
     },
+    fichaIdentificacion: data.fichaIdentificacion,
     evaluaciones: [],
     notas: [],
   };
