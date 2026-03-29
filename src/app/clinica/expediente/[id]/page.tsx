@@ -11,6 +11,7 @@ import ProgressTracker from "@/components/progress-tracker";
 import PIEIGenerator from "@/components/piei-generator";
 import ReportGenerator from "@/components/ReportGenerator";
 import { getStudentById, getClinicalAssessmentByStudentId, getFunctionalAnalysisByStudentId, getTreatmentPlanByStudentId, getProgressTrackingByStudentId, Student } from "@/lib/store";
+import { getExpedienteById as getExpedienteById_Dinamico, type Expediente as ExpedienteType } from "@/lib/expediente-service";
 import ClinicalKPILogger from '@/components/ClinicalKPILogger';
 import RiskTimelineChart from '@/components/RiskTimelineChart';
 import SOAPNotesForm from '@/components/SOAPNotesForm';
@@ -32,10 +33,31 @@ export default function ClinicalFilePage() {
     const studentId = params.id as string;
     const { role } = useSession();
     const [student, setStudent] = useState<Student | undefined>(undefined);
+    const [expedienteDinamico, setExpedienteDinamico] = useState<ExpedienteType | undefined>(undefined);
 
     useEffect(() => {
         if (studentId) {
-            setStudent(getStudentById(studentId));
+            // Primero buscar en el store demo
+            const demoStudent = getStudentById(studentId);
+            if (demoStudent) {
+                setStudent(demoStudent);
+            } else {
+                // Buscar en expedientes dinámicos
+                const exp = getExpedienteById_Dinamico(studentId);
+                if (exp) {
+                    setExpedienteDinamico(exp);
+                    // Construir un Student compatible con la interfaz del store
+                    setStudent({
+                        id: exp.studentId,
+                        name: exp.studentName,
+                        demographics: { age: 0, group: exp.groupName, semester: exp.semester },
+                        emergencyContact: { name: '', phone: '' },
+                        suicideRiskLevel: exp.suicideRiskLevel || 'Bajo',
+                        academicData: { gpa: exp.academicData.gpa, absences: exp.academicData.absences },
+                        ansiedadScore: exp.ansiedadScore,
+                    });
+                }
+            }
         }
     }, [studentId]);
 
@@ -46,7 +68,7 @@ export default function ClinicalFilePage() {
         }
     }, [role, studentId]);
     
-    if (role === 'loading' || !student) {
+    if (role === 'loading' || (!student && !expedienteDinamico)) {
         return (
             <div className="flex h-screen w-full items-center justify-center p-8">
                 <div className="flex items-center gap-2 text-xl text-gray-600">
@@ -61,29 +83,31 @@ export default function ClinicalFilePage() {
         return null;
     }
 
+    // Usar datos del estudiante encontrado (demo o dinámico)
+    const studentData = student!;
     const clinicalAssessment = getClinicalAssessmentByStudentId(studentId);
     const functionalAnalysis = getFunctionalAnalysisByStudentId(studentId);
     const treatmentPlan = getTreatmentPlanByStudentId(studentId);
     const progressTracking = getProgressTrackingByStudentId(studentId);
 
-    const isHighRisk = student.suicideRiskLevel === 'Alto' || student.suicideRiskLevel === 'Crítico';
+    const isHighRisk = studentData.suicideRiskLevel === 'Alto' || studentData.suicideRiskLevel === 'Crítico';
 
     return (
         <div className="min-h-screen bg-gray-50 p-8">
             <div className="max-w-7xl mx-auto">
                  <div className="mb-8">
                     <h1 className="text-3xl font-extrabold text-red-700">EXPEDIENTE CLÍNICO NIVEL 3 - CONFIDENCIAL</h1>
-                    <p className="text-md text-gray-500">{student.name}</p>
+                    <p className="text-md text-gray-500">{studentData.name}</p>
                 </div>
                 
                 {isHighRisk && (
                     <Alert variant="destructive" className="mb-8">
                         <ShieldAlert className="h-4 w-4" />
                         <AlertTitle>
-                            {student.suicideRiskLevel === 'Crítico' ? 'Alerta de Riesgo Crítico (Código Rojo)' : 'Alerta de Riesgo Alto'}
+                            {studentData.suicideRiskLevel === 'Crítico' ? 'Alerta de Riesgo Crítico (Código Rojo)' : 'Alerta de Riesgo Alto'}
                         </AlertTitle>
                         <AlertDescription>
-                            Este caso está marcado con Riesgo Suicida '{student.suicideRiskLevel}'. Se debe priorizar la aplicación inmediata del Plan de Seguridad y la canalización externa de emergencia (Criterio A/B).
+                            Este caso está marcado con Riesgo Suicida '{studentData.suicideRiskLevel}'. Se debe priorizar la aplicación inmediata del Plan de Seguridad y la canalización externa de emergencia (Criterio A/B).
                         </AlertDescription>
                     </Alert>
                 )}
@@ -106,13 +130,13 @@ export default function ClinicalFilePage() {
                     </TabsList>
 
                     <TabsContent value="identificacion" className="mt-6">
-                        <StudentIdentificationCard student={student} />
+                        <StudentIdentificationCard student={studentData} />
                     </TabsContent>
                     
                     <TabsContent value="resumen" className="mt-6 space-y-12">
                         <ClinicalAssessmentForm initialData={clinicalAssessment} />
-                        <FunctionalAnalysisForm studentName={student.name} initialData={functionalAnalysis} />
-                        <TreatmentPlanGenerator studentName={student.name} initialData={treatmentPlan} />
+                        <FunctionalAnalysisForm studentName={studentData.name} initialData={functionalAnalysis} />
+                        <TreatmentPlanGenerator studentName={studentData.name} initialData={treatmentPlan} />
                         <PIEIGenerator clinicalData={clinicalAssessment} />
                         <ProgressTracker initialData={progressTracking} />
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -144,13 +168,13 @@ export default function ClinicalFilePage() {
                                     Consola de Aplicación: Evaluación Psicométrica
                                 </CardTitle>
                                 <CardDescription>
-                                     El sistema seleccionará automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado, que es de <strong>{student.demographics.age} años</strong>.
+                                     El sistema seleccionará automáticamente la escala Wechsler apropiada según la edad cronológica del evaluado, que es de <strong>{studentData.demographics.age} años</strong>.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="flex flex-col items-center justify-center p-6">
                                 <Button asChild size="lg">
                                     <Link href={`/consola/${studentId}`} target="_blank">
-                                        Iniciar Aplicación Presencial ({student.demographics.age < 17 ? 'WISC-V' : 'WAIS-IV'})
+                                        Iniciar Aplicación Presencial ({studentData.demographics.age < 17 ? 'WISC-V' : 'WAIS-IV'})
                                     </Link>
                                 </Button>
                             </CardContent>
@@ -175,7 +199,7 @@ export default function ClinicalFilePage() {
                     </TabsContent>
 
                     <TabsContent value="documentacion" className="mt-6">
-                         <ReportGenerator student={student} clinicalAssessment={clinicalAssessment} />
+                         <ReportGenerator student={studentData} clinicalAssessment={clinicalAssessment} />
                     </TabsContent>
                 </Tabs>
             </div>

@@ -74,7 +74,7 @@ export default function OrientadorDashboard() {
                     </CardHeader>
                      <CardContent>
                         <Button asChild variant="outline" className="w-full">
-                            <Link href="/dashboard">Ver Todos los Expedientes</Link>
+                            <Link href="/expedientes">Ver Todos los Expedientes</Link>
                         </Button>
                     </CardContent>
                 </Card>
