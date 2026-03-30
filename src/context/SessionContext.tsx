@@ -33,8 +33,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // If not authenticated and not on the home page, redirect to home.
-    if (role === 'unauthenticated' && pathname !== '/') {
+    // Rutas públicas que NO requieren autenticación
+    const publicRoutes = ['/', '/evaluacion/'];
+    const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route === '/' ? '/' : route));
+
+    // If not authenticated and not on a public route, redirect to home.
+    if (role === 'unauthenticated' && !isPublicRoute) {
         router.replace('/');
     }
   }, [role, pathname, router]);
@@ -53,7 +57,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const value = { role, setRole: handleSetRole as (role: Role) => void };
   
   // Show a generic loader if the session is still loading on any protected page.
-  if (role === 'loading' && pathname !== '/') {
+  // Skip for public routes (/, /evaluacion/*) so students can see the evaluation page
+  const isPublicPage = pathname === '/' || pathname.startsWith('/evaluacion/');
+  if (role === 'loading' && !isPublicPage) {
     return (
         <div className="flex h-screen w-full items-center justify-center p-8">
             <div className="flex items-center gap-2 text-xl text-gray-600">
