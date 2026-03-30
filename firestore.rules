@@ -1,116 +1,116 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isClinico() {
-      return request.auth != null && request.auth.token.role == 'clinico';
-    }
-    
-    function isOrientador() {
-      return request.auth != null && request.auth.token.role == 'orientador';
-    }
-    
-    function isAdmin() {
-      return request.auth != null && request.auth.token.role == 'admin';
+
+    // ════════════════════════════════════════════════════════════════
+    // REGLAS SIMPLIFICADAS — PIGEC-130
+    // Flujo de trabajo: expedientes → evaluaciones → resultados
+    // ════════════════════════════════════════════════════════════════
+
+    // ── FLUJO DE EVALUACIÓN (crítico) ──────────────────────────────
+    // Sesiones de evaluación (links que reciben los estudiantes)
+    match /evaluation_sessions/{sessionId} {
+      allow read, write: if true;
     }
 
-    // ============================================
-    // COLECCIÓN DE ADMINS (Academic Tracker)
-    // Determina quién ve el menú de Admin
-    // ============================================
-    match /admins/{email} {
-      allow read: if true;
-      allow write: if true;
+    // Resultados de pruebas (respuestas de los estudiantes)
+    match /test_results/{resultId} {
+      allow read, write: if true;
     }
 
-    // ============================================
-    // COLECCIÓN DE GRUPOS OFICIALES (Academic Tracker)
-    // Fuente única de verdad para los grupos
-    // ============================================
+    // Expedientes clínicos/educativos creados durante la evaluación
+    match /expedientes/{expedienteId} {
+      allow read, write: if true;
+    }
+
+    // ── DATOS DE LA APLICACIÓN ────────────────────────────────────
+    // Grupos oficiales (cargados directamente en la app)
     match /official_groups/{groupId} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if true;
     }
 
-    // ============================================
-    // COLECCIONES DE ESTUDIANTES
-    // ============================================
+    // Estudiantes
     match /students/{studentId} {
-      allow read: if true;
-      allow write: if true;
-
+      allow read, write: if true;
       match /clinical_records/{recordId} {
         allow read, write: if true;
       }
     }
 
-    // ============================================
-    // COLECCIÓN DE GRUPOS (Legacy/Alternativo)
-    // ============================================
+    // Grupos (legacy / tutor)
     match /groups/{groupId} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if true;
     }
 
-    // ============================================
-    // COLECCIÓN DE MATRÍCULAS GENERADAS (PIGEC)
-    // ============================================
+    // ── MATRÍCULAS Y EVALUACIÓN GRUPAL ────────────────────────────
     match /matriculas_estudiantes/{matriculaId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read, write: if true;
     }
 
-    // ============================================
-    // COLECCIÓN DE SESIONES DE EVALUACIÓN (PIGEC)
-    // ============================================
-    match /evaluation_sessions/{sessionId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
-    }
-
-    // ============================================
-    // COLECCIÓN DE RESULTADOS DE PRUEBAS (PIGEC)
-    // ============================================
-    match /test_results/{resultId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-    }
-
-    // ============================================
-    // COLECCIÓN DE CONFIGURACIÓN DE PRUEBAS
-    // ============================================
-    match /configuracion_pruebas/{testId} {
-      allow read: if true; 
-      allow write: if true;
-    }
-
-    // ============================================
-    // COLECCIÓN DE ANUNCIOS (Academic Tracker)
-    // ============================================
+    // ── DATOS ACADÉMICOS ──────────────────────────────────────────
     match /announcements/{announcementId} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if true;
     }
 
-    // ============================================
-    // COLECCIÓN DE JUSTIFICACIONES (Academic Tracker)
-    // ============================================
     match /justifications/{justificationId} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if true;
     }
 
-    // ============================================
-    // COLECCIÓN DE CONFIGURACIÓN DE APP
-    // ============================================
-    match /app_config/{docId} {
-      allow read: if true;
-      allow write: if true;
+    match /pedagogical_strategies/{strategyId} {
+      allow read, write: if true;
+    }
+
+    match /observations/{observationId} {
+      allow read, write: if true;
+    }
+
+    match /absences/{absenceId} {
+      allow read, write: if true;
+    }
+
+    match /tracking_logs/{logId} {
+      allow read, write: if true;
+    }
+
+    match /academic_compliance/{complianceId} {
+      allow read, write: if true;
+    }
+
+    // ── TUTOR ─────────────────────────────────────────────────────
+    match /tutor_interventions/{interventionId} {
+      allow read, write: if true;
+    }
+
+    // ── ADMINISTRACIÓN Y CONFIGURACIÓN ────────────────────────────
+    match /admins/{adminId} {
+      allow read, write: if true;
+    }
+
+    match /app_config/{configId} {
+      allow read, write: if true;
+    }
+
+    // ── SERVICIOS ─────────────────────────────────────────────────
+    match /pigec_identities/{identityId} {
+      allow read, write: if true;
+    }
+
+    match /alumnos/{alumnoId} {
+      allow read, write: if true;
+    }
+
+    match /configuracion_pruebas/{testConfigId} {
+      allow read, write: if true;
+    }
+
+    // ── DATOS DE USUARIO (sync offline) ───────────────────────────
+    match /users/{uid}/userData/{key} {
+      allow read, write: if true;
+    }
+
+    // Health check
+    match /_health_check/{checkId} {
+      allow read, write: if true;
     }
   }
 }
