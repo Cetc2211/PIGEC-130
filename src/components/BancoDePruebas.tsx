@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import ScreeningInstrumentDialog from './ScreeningInstrumentDialog';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, Timestamp } from 'firebase/firestore';
 
 // ============================================================================
 // CATÁLOGO DE PRUEBAS CLÍNICAS PARA BANCO DE PRUEBAS
@@ -191,10 +191,10 @@ export default function BancoDePruebas({ studentId, studentName, groupName }: Ba
       link,
     };
 
-    // Guardar en Firestore
+    // Guardar en Firestore (usar doc ID = sessionId para lectura directa)
     if (db) {
       try {
-        await addDoc(collection(db, 'evaluation_sessions'), {
+        await setDoc(doc(db, 'evaluation_sessions', sessionId), {
           ...sessionData,
           mode: 'individual',
           expedienteId: studentId,

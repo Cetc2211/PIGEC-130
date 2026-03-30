@@ -23,7 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import ScreeningInstrumentDialog from './ScreeningInstrumentDialog';
 import { ExpedienteGrupalCard } from './ExpedienteGrupalCard';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, doc, setDoc, addDoc, Timestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { 
     generarMatriculasGrupo, 
     obtenerMatriculasGrupo,
@@ -279,10 +279,10 @@ export default function ScreeningManagement() {
             totalCount: calculateTotalStudents()
         };
 
-        // Guardar en Firestore
+        // Guardar en Firestore (usar doc ID = sessionId para lectura directa)
         if (db) {
             try {
-                await addDoc(collection(db, 'evaluation_sessions'), {
+                await setDoc(doc(db, 'evaluation_sessions', newSession.id), {
                     ...newSession,
                     createdAt: Timestamp.now(),
                     expiresAt: Timestamp.fromDate(newSession.expiresAt!)

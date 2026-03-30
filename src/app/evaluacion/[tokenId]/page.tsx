@@ -14,7 +14,7 @@ import {
     CreditCard, Loader2, LogOut, ChevronRight, CheckCircle2
 } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, Timestamp, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, Timestamp, addDoc } from 'firebase/firestore';
 import { validarMatricula, vincularExpediente, type MatriculaRegistro } from '@/lib/matricula-service';
 import FichaIdentificacionForm from '@/components/FichaIdentificacionForm';
 import BdiForm from '@/components/BdiForm';
@@ -129,16 +129,25 @@ export default function EvaluacionPage() {
             }
 
             try {
-                const q = query(
-                    collection(db, 'evaluation_sessions'),
-                    where('id', '==', tokenId)
-                );
-                const snapshot = await getDocs(q);
+                // Intentar 1: leer directamente por ID de documento (más eficiente)
+                let docSnap = await getDoc(doc(db, 'evaluation_sessions', tokenId));
+                
+                // Intentar 2: si no existe por ID, buscar por campo 'id' (compatibilidad con addDoc anterior)
+                if (!docSnap.exists()) {
+                    const q = query(
+                        collection(db, 'evaluation_sessions'),
+                        where('id', '==', tokenId)
+                    );
+                    const snapshot = await getDocs(q);
+                    if (!snapshot.empty) {
+                        docSnap = snapshot.docs[0];
+                    }
+                }
 
-                if (snapshot.empty) {
+                if (!docSnap.exists()) {
                     setError('Sesión de evaluación no encontrada o expirada');
                 } else {
-                    const data = snapshot.docs[0].data();
+                    const data = docSnap.data();
                     const sessionMode = data.mode || 'group';
                     
                     setSession({
@@ -159,9 +168,16 @@ export default function EvaluacionPage() {
                         setStep('consentimiento');
                     }
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Error cargando sesión:', err);
-                setError('Error al cargar la sesión');
+                const firebaseError = err?.message || '';
+                if (firebaseError.includes('Missing or insufficient permissions') || firebaseError.includes('PERMISSION_DENIED')) {
+                    setError('La aplicación no tiene permisos para acceder a la base de datos. Contacte al administrador para verificar las reglas de seguridad de Firestore.');
+                } else if (firebaseError.includes('network') || firebaseError.includes('fetch')) {
+                    setError('Error de conexión. Verifique su acceso a internet e intente nuevamente.');
+                } else {
+                    setError(`Error al cargar la sesión: ${firebaseError || 'Error desconocido'}`);
+                }
             }
             setLoading(false);
         };
