@@ -130,10 +130,11 @@ function interpretGOCA(scores: Record<string, number>): { nivel: string; color: 
 
 interface GocaFormProps {
     studentId?: string;
+    sessionId?: string;
     onComplete?: (result: { scores: Record<string, number>; nivel: string }) => void;
 }
 
-export default function GocaForm({ studentId, onComplete }: GocaFormProps) {
+export default function GocaForm({ studentId, sessionId, onComplete }: GocaFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -190,8 +191,10 @@ export default function GocaForm({ studentId, onComplete }: GocaFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    sessionId: sessionId || null,
                     testType: 'GOCA',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     scores,
                     totalRiesgo,
                     protectores,

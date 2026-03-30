@@ -146,6 +146,7 @@ interface EbmaFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: {
         intrinsicTotal: number;
         extrinsicTotal: number;
@@ -155,7 +156,7 @@ interface EbmaFormProps {
     }) => void;
 }
 
-export default function EbmaForm({ studentId, grupoId, matricula, onComplete }: EbmaFormProps) {
+export default function EbmaForm({ studentId, grupoId, matricula, sessionId, onComplete }: EbmaFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -195,8 +196,10 @@ export default function EbmaForm({ studentId, grupoId, matricula, onComplete }: 
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'EBMA',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.intrinsicTotal,
                     intrinsicTotal: calculatedResult.intrinsicTotal,
                     extrinsicTotal: calculatedResult.extrinsicTotal,

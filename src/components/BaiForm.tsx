@@ -38,10 +38,11 @@ interface BaiFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: { total: number; interpretation: string; factors: { cognitive: number; somatic: number; autonomic: number; panic: number } }) => void;
 }
 
-export default function BaiForm({ studentId, grupoId, matricula, onComplete }: BaiFormProps) {
+export default function BaiForm({ studentId, grupoId, matricula, sessionId, onComplete }: BaiFormProps) {
     const [responses, setResponses] = useState<Record<number, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -90,8 +91,10 @@ export default function BaiForm({ studentId, grupoId, matricula, onComplete }: B
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'BAI',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     level: calculatedResult.interpretation.level,

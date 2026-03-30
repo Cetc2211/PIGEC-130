@@ -159,6 +159,7 @@ interface AssistFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: {
         totalScore: number;
         substanceScores: { substance: string; score: number; risk: string; intervention: string }[];
@@ -167,7 +168,7 @@ interface AssistFormProps {
     }) => void;
 }
 
-export default function AssistForm({ studentId, grupoId, matricula, onComplete }: AssistFormProps) {
+export default function AssistForm({ studentId, grupoId, matricula, sessionId, onComplete }: AssistFormProps) {
     const [selectedSubstances, setSelectedSubstances] = useState<string[]>([]);
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -223,8 +224,10 @@ export default function AssistForm({ studentId, grupoId, matricula, onComplete }
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'ASSIST',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.totalScore,
                     totalScore: calculatedResult.totalScore,
                     substanceScores: calculatedResult.substanceScores,

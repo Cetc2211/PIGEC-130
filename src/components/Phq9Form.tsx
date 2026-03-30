@@ -49,10 +49,11 @@ interface Phq9FormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: { total: number; interpretation: string; item9Alert: boolean; functionality?: string }) => void;
 }
 
-export default function Phq9Form({ studentId, grupoId, matricula, onComplete }: Phq9FormProps) {
+export default function Phq9Form({ studentId, grupoId, matricula, sessionId, onComplete }: Phq9FormProps) {
     const [responses, setResponses] = useState<Record<number, number>>({});
     const [functionality, setFunctionality] = useState<string>("");
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -102,8 +103,10 @@ export default function Phq9Form({ studentId, grupoId, matricula, onComplete }: 
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'PHQ-9',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     level: calculatedResult.interpretation.level,

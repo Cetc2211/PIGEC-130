@@ -2,115 +2,182 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ════════════════════════════════════════════════════════════════
-    // REGLAS SIMPLIFICADAS — PIGEC-130
-    // Flujo de trabajo: expedientes → evaluaciones → resultados
-    // ════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
+    // FUNCIONES AUXILIARES
+    // ════════════════════════════════════════════════════════════════════
 
-    // ── FLUJO DE EVALUACIÓN (crítico) ──────────────────────────────
-    // Sesiones de evaluación (links que reciben los estudiantes)
+    /** Usuario autenticado via Firebase Auth */
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    /** La sesión de evaluación está activa y permite acceso anónimo */
+    function canReadPublicSession() {
+      return resource.data.active == true
+          && resource.data.allowAnonymous == true
+          && resource.data.expiresAt > request.time;
+    }
+
+    /** La sesión referenciada existe y sigue abierta (para validar test_results) */
+    function sessionExistsAndOpen() {
+      return exists(
+        /databases/$(database)/documents/evaluation_sessions/$(request.resource.data.sessionId)
+      ) && get(
+        /databases/$(database)/documents/evaluation_sessions/$(request.resource.data.sessionId)
+      ).data.active == true
+      && get(
+        /databases/$(database)/documents/evaluation_sessions/$(request.resource.data.sessionId)
+      ).data.allowAnonymous == true
+      && get(
+        /databases/$(database)/documents/evaluation_sessions/$(request.resource.data.sessionId)
+      ).data.expiresAt > request.time;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // FLUJO PÚBLICO DE EVALUACIÓN (sin autenticación)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * evaluation_sessions
+     * - LECTURA pública: el estudiante abre el link y lee la sesión.
+     *   Solo si está activa, permite anónimos y no ha expirado.
+     * - LECTURA autenticada: el personal puede ver todas las sesiones.
+     * - ESCRITURA: solo personal autenticado crea/edita sesiones.
+     */
     match /evaluation_sessions/{sessionId} {
-      allow read, write: if true;
+      allow read: if canReadPublicSession();
+      allow read: if signedIn();
+      allow create, update, delete: if signedIn();
     }
 
-    // Resultados de pruebas (respuestas de los estudiantes)
+    /**
+     * test_results
+     * - CREATE anónimo: el estudiante envía respuestas SIN login.
+     *   Se valida que la sesión referenciada exista y esté abierta.
+     * - CREATE autenticado: personal puede registrar resultados manualmente.
+     * - READ/UPDATE/DELETE: solo personal autenticado.
+     *
+     * Campos requeridos en el documento:
+     *   sessionId (string) — referencia a evaluation_sessions
+     *   submittedAt (timestamp) — fecha de envío
+     *   studentId (string) — identificador del estudiante
+     *   testType (string) — tipo de prueba (BDI-II, GAD-7, etc.)
+     *   score (number) — puntuación obtenida
+     *   responses (map) — respuestas del estudiante
+     */
     match /test_results/{resultId} {
+      allow create: if true
+                   && request.resource.data.sessionId is string
+                   && request.resource.data.submittedAt is timestamp
+                   && request.resource.data.studentId is string
+                   && request.resource.data.testType is string
+                   && request.resource.data.score is number
+                   && request.resource.data.responses is map
+                   && sessionExistsAndOpen();
+      allow read: if signedIn();
+      allow update, delete: if signedIn();
+    }
+
+    /**
+     * expedientes
+     * - Solo personal autenticado puede leer/crear/editar expedientes.
+     * - El estudiante anónimo NO accede aquí.
+     * - Cuando un estudiante completa evaluaciones, el resultado se
+     *   guarda en test_results y el personal lo vincula al expediente.
+     */
+    match /expedientes/{id} {
+      allow read, write: if signedIn();
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // DATOS OPERATIVOS DE LA APLICACIÓN
+    // TODO: Cuando se integre Firebase Auth, cambiar a signedIn()
+    // ════════════════════════════════════════════════════════════════════
+
+    match /official_groups/{id} {
       allow read, write: if true;
     }
 
-    // Expedientes clínicos/educativos creados durante la evaluación
-    match /expedientes/{expedienteId} {
-      allow read, write: if true;
-    }
-
-    // ── DATOS DE LA APLICACIÓN ────────────────────────────────────
-    // Grupos oficiales (cargados directamente en la app)
-    match /official_groups/{groupId} {
-      allow read, write: if true;
-    }
-
-    // Estudiantes
-    match /students/{studentId} {
+    match /students/{id} {
       allow read, write: if true;
       match /clinical_records/{recordId} {
         allow read, write: if true;
       }
     }
 
-    // Grupos (legacy / tutor)
-    match /groups/{groupId} {
+    match /groups/{id} {
       allow read, write: if true;
     }
 
-    // ── MATRÍCULAS Y EVALUACIÓN GRUPAL ────────────────────────────
-    match /matriculas_estudiantes/{matriculaId} {
+    match /matriculas_estudiantes/{id} {
       allow read, write: if true;
     }
 
-    // ── DATOS ACADÉMICOS ──────────────────────────────────────────
-    match /announcements/{announcementId} {
+    match /announcements/{id} {
       allow read, write: if true;
     }
 
-    match /justifications/{justificationId} {
+    match /justifications/{id} {
       allow read, write: if true;
     }
 
-    match /pedagogical_strategies/{strategyId} {
+    match /observations/{id} {
       allow read, write: if true;
     }
 
-    match /observations/{observationId} {
+    match /absences/{id} {
       allow read, write: if true;
     }
 
-    match /absences/{absenceId} {
+    match /tracking_logs/{id} {
       allow read, write: if true;
     }
 
-    match /tracking_logs/{logId} {
+    match /academic_compliance/{id} {
       allow read, write: if true;
     }
 
-    match /academic_compliance/{complianceId} {
+    match /pedagogical_strategies/{id} {
       allow read, write: if true;
     }
 
-    // ── TUTOR ─────────────────────────────────────────────────────
-    match /tutor_interventions/{interventionId} {
+    match /tutor_interventions/{id} {
       allow read, write: if true;
     }
 
-    // ── ADMINISTRACIÓN Y CONFIGURACIÓN ────────────────────────────
-    match /admins/{adminId} {
+    match /admins/{id} {
       allow read, write: if true;
     }
 
-    match /app_config/{configId} {
+    match /app_config/{id} {
       allow read, write: if true;
     }
 
-    // ── SERVICIOS ─────────────────────────────────────────────────
-    match /pigec_identities/{identityId} {
+    match /pigec_identities/{id} {
       allow read, write: if true;
     }
 
-    match /alumnos/{alumnoId} {
+    match /alumnos/{id} {
       allow read, write: if true;
     }
 
-    match /configuracion_pruebas/{testConfigId} {
+    match /configuracion_pruebas/{id} {
       allow read, write: if true;
     }
 
-    // ── DATOS DE USUARIO (sync offline) ───────────────────────────
     match /users/{uid}/userData/{key} {
       allow read, write: if true;
     }
 
-    // Health check
-    match /_health_check/{checkId} {
+    match /_health_check/{id} {
       allow read, write: if true;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // DENEGAR POR DEFECTO — Cualquier colección no listada arriba
+    // ════════════════════════════════════════════════════════════════════
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -52,10 +52,11 @@ interface BhsFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: { total: number; interpretation: string }) => void;
 }
 
-export default function BhsForm({ studentId, grupoId, matricula, onComplete }: BhsFormProps) {
+export default function BhsForm({ studentId, grupoId, matricula, sessionId, onComplete }: BhsFormProps) {
     const [responses, setResponses] = useState<Record<number, boolean>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -117,8 +118,10 @@ export default function BhsForm({ studentId, grupoId, matricula, onComplete }: B
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'BHS',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     level: calculatedResult.interpretation.level,

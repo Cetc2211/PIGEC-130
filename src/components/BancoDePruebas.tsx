@@ -198,6 +198,8 @@ export default function BancoDePruebas({ studentId, studentName, groupName }: Ba
           ...sessionData,
           mode: 'individual',
           expedienteId: studentId,
+          active: true,
+          allowAnonymous: true,
           createdAt: Timestamp.now(),
           expiresAt: Timestamp.fromDate(sessionData.expiresAt),
           groups: [],

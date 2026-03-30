@@ -176,10 +176,11 @@ function interpretSSI(score: number, hasFlags: boolean): { level: string; color:
 
 interface SsiFormProps {
     studentId?: string;
+    sessionId?: string;
     onComplete?: (result: { total: number; interpretation: string; flags: string[]; skipDetails: boolean }) => void;
 }
 
-export default function SsiForm({ studentId, onComplete }: SsiFormProps) {
+export default function SsiForm({ studentId, sessionId, onComplete }: SsiFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -294,8 +295,10 @@ export default function SsiForm({ studentId, onComplete }: SsiFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    sessionId: sessionId || null,
                     testType: 'SSI-Beck',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     flags: calculatedResult.flags,

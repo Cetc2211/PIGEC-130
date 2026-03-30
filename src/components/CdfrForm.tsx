@@ -145,6 +145,7 @@ interface CdfrFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: {
         totalRisk: number;
         riskLevel: string;
@@ -154,7 +155,7 @@ interface CdfrFormProps {
     }) => void;
 }
 
-export default function CdfrForm({ studentId, grupoId, matricula, onComplete }: CdfrFormProps) {
+export default function CdfrForm({ studentId, grupoId, matricula, sessionId, onComplete }: CdfrFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -196,8 +197,10 @@ export default function CdfrForm({ studentId, grupoId, matricula, onComplete }: 
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'CDFR',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.totalRisk,
                     totalRisk: calculatedResult.totalRisk,
                     riskLevel: calculatedResult.riskLevel,

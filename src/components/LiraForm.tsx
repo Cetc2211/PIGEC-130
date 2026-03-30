@@ -94,10 +94,11 @@ interface LiraFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: { total: number; level: string; hasEmergency: boolean }) => void;
 }
 
-export default function LiraForm({ studentId, grupoId, matricula, onComplete }: LiraFormProps) {
+export default function LiraForm({ studentId, grupoId, matricula, sessionId, onComplete }: LiraFormProps) {
     const [checked, setChecked] = useState<Record<string, boolean>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -143,8 +144,10 @@ export default function LiraForm({ studentId, grupoId, matricula, onComplete }: 
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'LIRA',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: total,
                     interpretation: interpretation.level,
                     level: interpretation.level,

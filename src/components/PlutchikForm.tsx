@@ -77,10 +77,11 @@ function interpretPlutchik(score: number, hasCritical: boolean): { level: string
 
 interface PlutchikFormProps {
     studentId?: string;
+    sessionId?: string;
     onComplete?: (result: { total: number; interpretation: string; criticalItems: number[] }) => void;
 }
 
-export default function PlutchikForm({ studentId, onComplete }: PlutchikFormProps) {
+export default function PlutchikForm({ studentId, sessionId, onComplete }: PlutchikFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -140,8 +141,10 @@ export default function PlutchikForm({ studentId, onComplete }: PlutchikFormProp
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    sessionId: sessionId || null,
                     testType: 'Plutchik',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     criticalItems: calculatedResult.criticalItems,

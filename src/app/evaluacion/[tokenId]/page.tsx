@@ -14,8 +14,8 @@ import {
     CreditCard, Loader2, LogOut, ChevronRight, CheckCircle2
 } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc, Timestamp, addDoc } from 'firebase/firestore';
-import { validarMatricula, vincularExpediente, type MatriculaRegistro } from '@/lib/matricula-service';
+import { collection, query, where, getDocs, doc, getDoc, Timestamp } from 'firebase/firestore';
+import { validarMatricula, type MatriculaRegistro } from '@/lib/matricula-service';
 import FichaIdentificacionForm from '@/components/FichaIdentificacionForm';
 import BdiForm from '@/components/BdiForm';
 import BaiForm from '@/components/BaiForm';
@@ -212,7 +212,7 @@ export default function EvaluacionPage() {
         setValidandoMatricula(false);
     };
 
-    // Crear expediente y comenzar evaluación
+    // Iniciar evaluación
     const handleIniciarEvaluacion = async () => {
         try {
             if (isIndividual) {
@@ -220,24 +220,10 @@ export default function EvaluacionPage() {
                 setExpedienteId(session?.studentId || session?.expedienteId || null);
                 setStep('evaluacion');
             } else if (estudiante && session) {
-                // Modo grupal: crear expediente nuevo en Firestore
-                const expedienteRef = await addDoc(collection(db!, 'expedientes'), {
-                    matricula: estudiante.matricula,
-                    nombreCompleto: estudiante.nombreCompleto,
-                    grupoId: estudiante.grupoId,
-                    grupoNombre: estudiante.grupoNombre,
-                    sessionId: session.id,
-                    sessionName: session.name,
-                    fechaCreacion: Timestamp.now(),
-                    consentimiento: true,
-                    fechaConsentimiento: Timestamp.now()
-                });
-
-                setExpedienteId(expedienteRef.id);
-
-                // Vincular expediente a la matrícula
-                await vincularExpediente(estudiante.matricula, expedienteRef.id);
-
+                // Modo grupal: NO creamos expediente desde el cliente anónimo.
+                // El expediente lo crea el personal autenticado después de recibir
+                // los resultados. Solo registramos la vinculación con la matrícula.
+                setExpedienteId(estudiante.grupoId || null);
                 setStep('evaluacion');
             }
         } catch (err) {
@@ -509,6 +495,7 @@ export default function EvaluacionPage() {
                                     studentId={expedienteId || displayStudentId}
                                     grupoId={!isIndividual ? estudiante?.grupoId : undefined}
                                     matricula={!isIndividual ? estudiante?.matricula : undefined}
+                                    sessionId={tokenId}
                                     onComplete={handleTestComplete}
                                 />
                             ) : (

@@ -73,10 +73,11 @@ interface ChteFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: { total: number; interpretation: string }) => void;
 }
 
-export default function ChteForm({ studentId, grupoId, matricula, onComplete }: ChteFormProps) {
+export default function ChteForm({ studentId, grupoId, matricula, sessionId, onComplete }: ChteFormProps) {
     const [responses, setResponses] = useState<Record<string, string>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -124,8 +125,10 @@ export default function ChteForm({ studentId, grupoId, matricula, onComplete }: 
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'CHTE',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: Math.round(calculatedResult.total),
                     interpretation: calculatedResult.nivel,
                     level: calculatedResult.nivel,

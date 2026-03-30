@@ -115,6 +115,7 @@ interface HadsFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: {
         anxiety: number;
         depression: number;
@@ -123,7 +124,7 @@ interface HadsFormProps {
     }) => void;
 }
 
-export default function HadsForm({ studentId, grupoId, matricula, onComplete }: HadsFormProps) {
+export default function HadsForm({ studentId, grupoId, matricula, sessionId, onComplete }: HadsFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -192,8 +193,10 @@ export default function HadsForm({ studentId, grupoId, matricula, onComplete }: 
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'HADS',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.anxiety + calculatedResult.depression,
                     interpretation: `A:${calculatedResult.anxietyInterpretation.level} D:${calculatedResult.depressionInterpretation.level}`,
                     level: `A:${calculatedResult.anxietyInterpretation.level} D:${calculatedResult.depressionInterpretation.level}`,

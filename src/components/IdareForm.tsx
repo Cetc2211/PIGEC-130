@@ -89,10 +89,11 @@ function interpretIDARE(score: number): { level: string; color: string; descript
 
 interface IdareFormProps {
     studentId?: string;
+    sessionId?: string;
     onComplete?: (result: { scoreEstado: number; scoreRasgo: number; interpretation: string }) => void;
 }
 
-export default function IdareForm({ studentId, onComplete }: IdareFormProps) {
+export default function IdareForm({ studentId, sessionId, onComplete }: IdareFormProps) {
     const [responsesEstado, setResponsesEstado] = useState<Record<string, number>>({});
     const [responsesRasgo, setResponsesRasgo] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -168,8 +169,10 @@ export default function IdareForm({ studentId, onComplete }: IdareFormProps) {
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    sessionId: sessionId || null,
                     testType: 'IDARE-STAI',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     scoreEstado: calculatedResult.scoreEstado,
                     scoreRasgo: calculatedResult.scoreRasgo,
                     interpretationEstado: calculatedResult.interpretationEstado.level,

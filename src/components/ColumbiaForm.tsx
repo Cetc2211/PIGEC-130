@@ -120,10 +120,11 @@ function interpretColumbia(responses: Record<string, string>): ColumbiaResult {
 
 interface ColumbiaFormProps {
     studentId?: string;
+    sessionId?: string;
     onComplete?: (result: { level: string; requiresImmediateAttention: boolean; responses: Record<string, string> }) => void;
 }
 
-export default function ColumbiaForm({ studentId, onComplete }: ColumbiaFormProps) {
+export default function ColumbiaForm({ studentId, sessionId, onComplete }: ColumbiaFormProps) {
     const [responses, setResponses] = useState<Record<string, string>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -186,8 +187,10 @@ export default function ColumbiaForm({ studentId, onComplete }: ColumbiaFormProp
                 setIsSaving(true);
                 await addDoc(collection(db, 'test_results'), {
                     studentId,
+                    sessionId: sessionId || null,
                     testType: 'Columbia-CSSRS',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     interpretation: interpretation.level,
                     urgency: interpretation.urgency,
                     requiresImmediateAttention: interpretation.requiresImmediateAttention,

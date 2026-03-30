@@ -151,10 +151,11 @@ interface BdiFormProps {
     studentId?: string;
     grupoId?: string;
     matricula?: string;
+    sessionId?: string;
     onComplete?: (result: { total: number; interpretation: string; item9Alert: boolean; alerts: string[] }) => void;
 }
 
-export default function BdiForm({ studentId, grupoId, matricula, onComplete }: BdiFormProps) {
+export default function BdiForm({ studentId, grupoId, matricula, sessionId, onComplete }: BdiFormProps) {
     const [responses, setResponses] = useState<Record<string, number>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -221,8 +222,10 @@ export default function BdiForm({ studentId, grupoId, matricula, onComplete }: B
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
+                    sessionId: sessionId || null,
                     testType: 'BDI-II',
                     date: Timestamp.now(),
+                    submittedAt: Timestamp.now(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     level: calculatedResult.interpretation.level,

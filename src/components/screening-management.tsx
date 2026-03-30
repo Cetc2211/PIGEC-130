@@ -284,6 +284,8 @@ export default function ScreeningManagement() {
             try {
                 await setDoc(doc(db, 'evaluation_sessions', newSession.id), {
                     ...newSession,
+                    active: true,
+                    allowAnonymous: true,
                     createdAt: Timestamp.now(),
                     expiresAt: Timestamp.fromDate(newSession.expiresAt!)
                 });
