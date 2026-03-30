@@ -116,8 +116,16 @@ export async function POST(request: NextRequest) {
     const rules = body.rules || DEFAULT_RULES;
 
     // Usar la Firebase REST API para obtener el token de la app actual
-    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyBliGErw1WiGhY6lZeCSh6WU0Kg2ZK7oao';
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'academic-tracker-qeoxi';
+
+    if (!apiKey) {
+      return NextResponse.json({
+        success: false,
+        error: 'No se encontró NEXT_PUBLIC_FIREBASE_API_KEY en las variables de entorno.',
+        hint: 'Agrega NEXT_PUBLIC_FIREBASE_API_KEY en Vercel → Settings → Environment Variables.'
+      }, { status: 500 });
+    }
 
     // Obtener un token anónimo para autenticar la petición de Firestore
     const authResponse = await fetch(
