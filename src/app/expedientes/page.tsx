@@ -85,6 +85,8 @@ export default function ExpedientesPage() {
   const [busqueda, setBusqueda] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  // Counter para forzar recálculo de la lista al crear/borrar expedientes
+  const [listVersion, setListVersion] = useState(0);
 
   // Formulario de Ficha de Identificación (modo controlado)
   const [fichaData, setFichaData] = useState<FichaIdentificacionData>({
@@ -94,7 +96,8 @@ export default function ExpedientesPage() {
 
   const expedientes = useMemo(() => {
     return getExpedientes(filtro);
-  }, [filtro]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtro, listVersion]);
 
   const expedientesFiltrados = useMemo(() => {
     if (!busqueda.trim()) return expedientes;
@@ -184,10 +187,11 @@ export default function ExpedientesPage() {
         description: `Se creó el expediente de ${fichaData.fullName.trim()} con la Ficha de Identificación completa.`,
       });
 
-      // Limpiar formulario
+      // Limpiar formulario y forzar recarga de la lista
       setFichaData({ ...defaultFichaIdentificacion });
       setFormErrors({});
       setIsCreateDialogOpen(false);
+      setListVersion((v) => v + 1);
     } catch {
       toast({
         variant: 'destructive',
