@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Sidebar } from "@/components/sidebar";
 import { SessionProvider } from "@/context/SessionContext";
 import { Toaster } from "@/components/ui/toaster";
+import { LayoutShell } from "@/components/layout-shell";
 
 export const metadata: Metadata = {
   title: "Suite Integral - Sistema de Soporte a la Decisión",
@@ -23,13 +23,10 @@ export default function RootLayout({
       </head>
       <body className="font-sans bg-gray-50 text-gray-900">
         <SessionProvider>
-            <div className="flex">
-              <Sidebar />
-              <main className="flex-1 h-screen overflow-y-auto">
-                {children}
-              </main>
-            </div>
-            <Toaster />
+          <LayoutShell>
+            {children}
+          </LayoutShell>
+          <Toaster />
         </SessionProvider>
       </body>
     </html>

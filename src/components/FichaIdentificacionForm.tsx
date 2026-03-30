@@ -1,13 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "./ui/textarea";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { CheckCircle2 } from 'lucide-react';
 import {
   FichaIdentificacionData,
+  defaultFichaIdentificacion,
 } from "@/lib/expediente-service";
 
 /**
@@ -29,6 +33,14 @@ interface FichaIdentificacionFormProps {
   errors?: Partial<Record<keyof FichaIdentificacionData, string>>;
   /** Deshabilitar todos los campos */
   disabled?: boolean;
+  /** Callback al finalizar (modo evaluación — avanza a la siguiente prueba) */
+  onComplete?: (result: any) => void;
+  /** ID del estudiante (modo evaluación) */
+  studentId?: string;
+  /** ID del grupo (modo evaluación) */
+  grupoId?: string;
+  /** Matrícula (modo evaluación) */
+  matricula?: string;
 }
 
 /** Helper: actualiza un campo del objeto FichaIdentificacionData */
@@ -45,15 +57,28 @@ export default function FichaIdentificacionForm({
   onChange,
   errors,
   disabled,
+  onComplete,
 }: FichaIdentificacionFormProps) {
   const isControlled = !!values && !!onChange;
+  const isEvaluationMode = !!onComplete && !isControlled;
 
-  // En modo no controlado, usamos placeholder values para el UI
-  const v = values;
+  // Estado local para modo evaluación (no controlado con botón Finalizar)
+  const [localData, setLocalData] = useState<FichaIdentificacionData>({ ...defaultFichaIdentificacion });
+
+  // En modo no controlado para evaluación, usar estado local
+  const v = isControlled ? values : isEvaluationMode ? localData : values;
 
   const handleChange = (field: keyof FichaIdentificacionData, value: string) => {
-    if (isControlled) {
+    if (isControlled && onChange) {
       onChange(updateField(v!, field, value));
+    } else if (isEvaluationMode) {
+      setLocalData(prev => updateField(prev, field, value));
+    }
+  };
+
+  const handleComplete = () => {
+    if (onComplete) {
+      onComplete(isEvaluationMode ? localData : v);
     }
   };
 
@@ -68,6 +93,7 @@ export default function FichaIdentificacionForm({
   };
 
   return (
+    <>
     <form className="space-y-8 p-1" onSubmit={(e) => e.preventDefault()}>
       {/* SECCIÓN I: DATOS DEL ESTUDIANTE */}
       <div>
@@ -361,5 +387,15 @@ export default function FichaIdentificacionForm({
         </div>
       </div>
     </form>
+    {/* Botón Finalizar — solo visible en modo evaluación */}
+    {isEvaluationMode && (
+      <div className="mt-6 pt-4 border-t flex justify-end">
+        <Button onClick={handleComplete} className="gap-2">
+          <CheckCircle2 className="h-4 w-4" />
+          Finalizar Ficha de Identificación
+        </Button>
+      </div>
+    )}
+    </>
   );
 }
