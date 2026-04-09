@@ -54,6 +54,8 @@ import {
   ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import {
   getExpedientes,
   crearExpediente,
@@ -87,6 +89,7 @@ export default function ExpedientesPage() {
   const [isCreating, setIsCreating] = useState(false);
   // Counter para forzar recálculo de la lista al crear/borrar expedientes
   const [listVersion, setListVersion] = useState(0);
+  const [evaluacionesFirestore, setEvaluacionesFirestore] = useState<Record<string, number>>({});
 
   // Formulario de Ficha de Identificación (modo controlado)
   const [fichaData, setFichaData] = useState<FichaIdentificacionData>({
@@ -108,6 +111,34 @@ export default function ExpedientesPage() {
         exp.groupName.toLowerCase().includes(term)
     );
   }, [expedientes, busqueda]);
+
+  React.useEffect(() => {
+    const syncEvaluaciones = async () => {
+      if (!db || expedientes.length === 0) {
+        setEvaluacionesFirestore({});
+        return;
+      }
+
+      const idsUnicos = Array.from(new Set(expedientes.map((e) => e.studentId).filter(Boolean)));
+      const conteos: Record<string, number> = {};
+
+      await Promise.all(
+        idsUnicos.map(async (studentId) => {
+          try {
+            const q = query(collection(db, 'test_results'), where('studentId', '==', studentId));
+            const snap = await getDocs(q);
+            conteos[studentId] = snap.size;
+          } catch (err) {
+            console.error(`Error sincronizando evaluaciones de ${studentId}:`, err);
+          }
+        })
+      );
+
+      setEvaluacionesFirestore(conteos);
+    };
+
+    syncEvaluaciones();
+  }, [expedientes]);
 
   /** Validar campos obligatorios de la Ficha de Identificación */
   const validateFicha = (): boolean => {
@@ -383,6 +414,8 @@ export default function ExpedientesPage() {
                         expediente.nivelRiesgo?.includes('Amarillo') ? 'yellow' : 'green';
                     }
 
+                    const evaluacionesReales = evaluacionesFirestore[expediente.studentId] ?? expediente.evaluaciones.length;
+
                     const linkHref =
                       role === 'Clinico'
                         ? `/clinica/expediente/${expediente.studentId}`
@@ -440,8 +473,8 @@ export default function ExpedientesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs text-gray-500">
-                          {expediente.evaluaciones.length > 0
-                            ? `${expediente.evaluaciones.length} aplicada${expediente.evaluaciones.length !== 1 ? 's' : ''}`
+                          {evaluacionesReales > 0
+                            ? `${evaluacionesReales} aplicada${evaluacionesReales !== 1 ? 's' : ''}`
                             : 'Sin evaluaciones'}
                         </TableCell>
                         {role === 'Clinico' && (
