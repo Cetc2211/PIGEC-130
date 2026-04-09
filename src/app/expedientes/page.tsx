@@ -57,7 +57,6 @@ import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import {
-  getExpedientes,
   crearExpediente,
   getNivelLabel,
   getNivelShort,
@@ -99,24 +98,14 @@ export default function ExpedientesPage() {
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof FichaIdentificacionData, string>>>({});
 
   const expedientes = useMemo(() => {
-    const locales = getExpedientes(filtro);
-
-    const remotosFiltrados = expedientesRemotos.filter((exp) => {
+    return expedientesRemotos.filter((exp) => {
       if (!filtro || filtro === 'todos') return true;
       if (filtro === 'nivel_1' || filtro === 'nivel_2' || filtro === 'nivel_3') {
         return exp.nivel === filtro;
       }
       return exp.estado === filtro;
     });
-
-    // Evita duplicados por studentId, priorizando versión remota cuando existe.
-    const byStudentId = new Map<string, Expediente>();
-    locales.forEach((exp) => byStudentId.set(exp.studentId, exp));
-    remotosFiltrados.forEach((exp) => byStudentId.set(exp.studentId, exp));
-
-    return Array.from(byStudentId.values());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtro, listVersion, expedientesRemotos]);
+  }, [filtro, expedientesRemotos]);
 
   const expedientesFiltrados = useMemo(() => {
     if (!busqueda.trim()) return expedientes;
@@ -136,37 +125,49 @@ export default function ExpedientesPage() {
       }
 
       try {
-        const snap = await getDocs(collection(db, 'expedientes'));
-        const remotos: Expediente[] = snap.docs.map((docSnap) => {
-          const data = docSnap.data() as Partial<Expediente> & Record<string, any>;
+        const coleccionesCandidatas = ['expedientes', 'alumnos', 'students'];
+        const remotosNormalizados: Expediente[] = [];
 
-          return {
-            id: data.id || docSnap.id,
-            studentId: data.studentId || data.expedienteId || docSnap.id,
-            studentName: data.studentName || data.nombreCompleto || 'Sin nombre',
-            groupName: data.groupName || data.grupoNombre || 'Sin grupo',
-            semester: Number(data.semester || data.semestre || 1),
-            nivel: (data.nivel as any) || 'nivel_1',
-            estado: (data.estado as any) || 'abierto',
-            origen: (data.origen as any) || 'evaluacion_clinica',
-            fechaCreacion: data.fechaCreacion || new Date().toISOString(),
-            fechaActualizacion: data.fechaActualizacion || new Date().toISOString(),
-            creadoPor: data.creadoPor || 'sistema',
-            academicData: {
-              gpa: Number(data.academicData?.gpa || data.gpa || 0),
-              absences: Number(data.academicData?.absences || data.absences || 0),
-            },
-            fichaIdentificacion: data.fichaIdentificacion,
-            ansiedadScore: typeof data.ansiedadScore === 'number' ? data.ansiedadScore : undefined,
-            suicideRiskLevel: data.suicideRiskLevel,
-            irc: typeof data.irc === 'number' ? data.irc : undefined,
-            nivelRiesgo: data.nivelRiesgo,
-            evaluaciones: Array.isArray(data.evaluaciones) ? data.evaluaciones : [],
-            notas: Array.isArray(data.notas) ? data.notas : [],
-          };
-        });
+        for (const nombreColeccion of coleccionesCandidatas) {
+          const snap = await getDocs(collection(db, nombreColeccion));
 
-        setExpedientesRemotos(remotos);
+          const remotosColeccion: Expediente[] = snap.docs.map((docSnap) => {
+            const data = docSnap.data() as Partial<Expediente> & Record<string, any>;
+
+            return {
+              id: data.id || docSnap.id,
+              studentId: data.studentId || data.expedienteId || docSnap.id,
+              studentName: data.studentName || data.nombreCompleto || data.name || 'Sin nombre',
+              groupName: data.groupName || data.grupoNombre || data.group || 'Sin grupo',
+              semester: Number(data.semester || data.semestre || 1),
+              nivel: (data.nivel as any) || 'nivel_1',
+              estado: (data.estado as any) || 'abierto',
+              origen: (data.origen as any) || 'evaluacion_clinica',
+              fechaCreacion: data.fechaCreacion || new Date().toISOString(),
+              fechaActualizacion: data.fechaActualizacion || new Date().toISOString(),
+              creadoPor: data.creadoPor || 'sistema',
+              academicData: {
+                gpa: Number(data.academicData?.gpa || data.gpa || 0),
+                absences: Number(data.academicData?.absences || data.absences || 0),
+              },
+              fichaIdentificacion: data.fichaIdentificacion,
+              ansiedadScore: typeof data.ansiedadScore === 'number' ? data.ansiedadScore : undefined,
+              suicideRiskLevel: data.suicideRiskLevel,
+              irc: typeof data.irc === 'number' ? data.irc : undefined,
+              nivelRiesgo: data.nivelRiesgo,
+              evaluaciones: Array.isArray(data.evaluaciones) ? data.evaluaciones : [],
+              notas: Array.isArray(data.notas) ? data.notas : [],
+            };
+          });
+
+          remotosNormalizados.push(...remotosColeccion);
+        }
+
+        // Elimina duplicados entre colecciones candidatas.
+        const byStudentId = new Map<string, Expediente>();
+        remotosNormalizados.forEach((exp) => byStudentId.set(exp.studentId, exp));
+
+        setExpedientesRemotos(Array.from(byStudentId.values()));
       } catch (err) {
         console.error('Error cargando expedientes remotos:', err);
       }
