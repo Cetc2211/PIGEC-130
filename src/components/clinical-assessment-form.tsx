@@ -9,7 +9,7 @@ import { Textarea } from "./ui/textarea";
 import { ClinicalAssessment } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, orderBy, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { AlertTriangle, CheckCircle2, Clock, FileText, Loader2 } from "lucide-react";
 
 interface ClinicalAssessmentFormProps {
@@ -49,34 +49,52 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
     // Cargar resultados de pruebas desde Firestore
     const [testResults, setTestResults] = useState<TestResult[]>([]);
     const [loadingResults, setLoadingResults] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadTestResults() {
             if (!db || !studentId) return;
             setLoadingResults(true);
+            setLoadError(null);
 
             try {
+                // Evita depender de índice compuesto (where + orderBy en campos distintos)
+                // y ordena en memoria por fecha de envío.
                 const q = query(
                     collection(db, 'test_results'),
-                    where('studentId', '==', studentId),
-                    orderBy('date', 'desc')
+                    where('studentId', '==', studentId)
                 );
                 const snapshot = await getDocs(q);
                 const results: TestResult[] = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    const sortDate = data.submittedAt?.toDate?.() || data.date?.toDate?.() || new Date(0);
                     results.push({
                         id: doc.id,
                         testType: data.testType || data.type || 'Desconocida',
                         score: data.score || 0,
                         interpretation: data.interpretation || data.level || '',
-                        date: data.date?.toDate?.()?.toLocaleDateString('es-MX') || data.date || '',
+                        date: sortDate.toLocaleDateString('es-MX'),
                         alerts: data.alerts || [],
+                        sortDate,
                     });
                 });
-                setTestResults(results);
+
+                results.sort((a, b) => {
+                    const da = (a as any).sortDate as Date;
+                    const db = (b as any).sortDate as Date;
+                    return db.getTime() - da.getTime();
+                });
+
+                setTestResults(results.map(({ sortDate, ...rest }: any) => rest));
             } catch (err) {
                 console.error('Error cargando resultados de pruebas:', err);
+                const errorMessage = (err as any)?.message || '';
+                if (errorMessage.includes('Missing or insufficient permissions') || errorMessage.includes('PERMISSION_DENIED')) {
+                    setLoadError('Sin permisos para leer resultados de pruebas. Verifique autenticación del personal o reglas Firestore de lectura para test_results.');
+                } else {
+                    setLoadError(`No se pudieron cargar resultados: ${errorMessage || 'Error desconocido'}`);
+                }
             }
 
             setLoadingResults(false);
@@ -139,6 +157,12 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                             <p className="text-xs text-gray-400 mt-1">
                                 Cuando se apliquen pruebas desde el Banco de Pruebas, los resultados aparecerán aquí automáticamente.
                             </p>
+                        </div>
+                    )}
+
+                    {loadError && (
+                        <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                            {loadError}
                         </div>
                     )}
 
