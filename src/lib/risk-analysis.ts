@@ -70,3 +70,20 @@ export function calculateRisk(data: RiskData) {
         color,
     };
 }
+
+/**
+ * Analiza una lista de resultados de pruebas para estimar riesgo agregado.
+ */
+export function analyzeStudentRisk(testResults: Array<{ score?: number }>) {
+    if (!testResults || testResults.length === 0) {
+        return { level: 'bajo', totalScore: 0, count: 0 };
+    }
+
+    const totalScore = testResults.reduce((acc, res) => acc + (res.score || 0), 0);
+    let level: 'bajo' | 'medio' | 'alto' = 'bajo';
+
+    if (totalScore > 50) level = 'alto';
+    else if (totalScore > 20) level = 'medio';
+
+    return { level, totalScore, count: testResults.length };
+}
