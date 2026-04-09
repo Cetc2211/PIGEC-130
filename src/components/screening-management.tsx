@@ -129,6 +129,7 @@ export default function ScreeningManagement() {
     const [expirationDays, setExpirationDays] = useState('7');
     const [generatedLink, setGeneratedLink] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [createSessionError, setCreateSessionError] = useState<string | null>(null);
 
     // ============================================
     // CARGA DE GRUPOS DESDE FIRESTORE
@@ -257,6 +258,7 @@ export default function ScreeningManagement() {
             return;
         }
 
+        setCreateSessionError(null);
         setIsCreating(true);
         
         // Generar ID único
@@ -291,7 +293,14 @@ export default function ScreeningManagement() {
                 });
             } catch (error) {
                 console.error('Error guardando sesión:', error);
+                setCreateSessionError('No se pudo crear la sesión en Firestore. No comparta este enlace e intente nuevamente.');
+                setIsCreating(false);
+                return;
             }
+        } else {
+            setCreateSessionError('Base de datos no disponible. No se pudo generar el enlace.');
+            setIsCreating(false);
+            return;
         }
 
         setGeneratedLink(link);
@@ -335,6 +344,14 @@ export default function ScreeningManagement() {
     
     return (
         <div className="space-y-6">
+            {createSessionError && (
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Error al generar sesión</AlertTitle>
+                    <AlertDescription>{createSessionError}</AlertDescription>
+                </Alert>
+            )}
+
             {/* Header con resumen rápido */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <Card className="bg-blue-50 border-blue-200">

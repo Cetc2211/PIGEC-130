@@ -18,6 +18,186 @@ service cloud.firestore {
           && resource.data.expiresAt > request.time;
     }
 
+    /** Estructura mínima esperada para crear una sesión pública válida */
+    function validPublicSessionKeys() {
+      return request.resource.data.keys().hasOnly([
+        'id',
+        'name',
+        'tests',
+        'groups',
+        'status',
+        'createdAt',
+        'link',
+        'expiresAt',
+        'completedCount',
+        'totalCount',
+        'active',
+        'allowAnonymous',
+        'mode',
+        'studentId',
+        'studentName',
+        'expedienteId'
+      ]);
+    }
+
+    function validPublicSessionCreate(sessionId) {
+      return validPublicSessionKeys()
+          && request.resource.data.keys().hasAll([
+            'id',
+            'name',
+            'tests',
+            'groups',
+            'status',
+            'createdAt',
+            'link',
+            'expiresAt',
+            'completedCount',
+            'totalCount',
+            'active',
+            'allowAnonymous'
+          ])
+          && request.resource.data.id is string
+          && request.resource.data.id == sessionId
+          && request.resource.data.name is string
+          && request.resource.data.tests is list
+          && request.resource.data.groups is list
+          && request.resource.data.status is string
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.link is string
+          && request.resource.data.completedCount is number
+          && request.resource.data.totalCount is number
+          && request.resource.data.active == true
+          && request.resource.data.allowAnonymous == true
+          && request.resource.data.expiresAt is timestamp
+          && request.resource.data.expiresAt > request.time
+          && (!('mode' in request.resource.data) || request.resource.data.mode is string)
+          && (!('studentId' in request.resource.data) || request.resource.data.studentId is string)
+          && (!('studentName' in request.resource.data) || request.resource.data.studentName is string)
+          && (!('expedienteId' in request.resource.data) || request.resource.data.expedienteId is string);
+    }
+
+    /** Validación estricta del payload real enviado por formularios públicos */
+    function validTestResultCreatePayload() {
+      return request.resource.data.keys().hasOnly([
+        'studentId',
+        'grupoId',
+        'matricula',
+        'sessionId',
+        'testType',
+        'date',
+        'submittedAt',
+        'score',
+        'totalScore',
+        'interpretation',
+        'level',
+        'alerts',
+        'details',
+        'responses',
+        'substanceScores',
+        'highRiskSubstances',
+        'recommendation',
+        'selectedSubstances',
+        'urgency',
+        'requiresImmediateAttention',
+        'flags',
+        'skipDetails',
+        'criticalItems',
+        'action',
+        'hasEmergency',
+        'sections',
+        'checked',
+        'intrinsicTotal',
+        'extrinsicTotal',
+        'amotivationScore',
+        'motivationProfile',
+        'subscaleScores',
+        'scores',
+        'totalRiesgo',
+        'protectores',
+        'interpretacion',
+        'planificacion',
+        'concentracion',
+        'estrategias',
+        'totalRisk',
+        'riskLevel',
+        'domainScores',
+        'criticalFactors',
+        'scoreEstado',
+        'scoreRasgo',
+        'interpretationEstado',
+        'interpretationRasgo',
+        'responsesEstado',
+        'responsesRasgo'
+      ])
+      && request.resource.data.keys().hasAll([
+        'sessionId',
+        'submittedAt',
+        'studentId',
+        'testType'
+      ])
+      && request.resource.data.sessionId is string
+      && request.resource.data.sessionId.size() > 0
+      && request.resource.data.submittedAt is timestamp
+      && request.resource.data.studentId is string
+      && request.resource.data.studentId.size() > 0
+      && request.resource.data.testType is string
+      && request.resource.data.testType.size() > 0
+      && (
+        (request.resource.data.keys().hasAll(['responses'])
+          && request.resource.data.responses is map)
+        ||
+        (request.resource.data.keys().hasAll(['responsesEstado', 'responsesRasgo'])
+          && request.resource.data.responsesEstado is map
+          && request.resource.data.responsesRasgo is map)
+      )
+      && (!('date' in request.resource.data) || request.resource.data.date is timestamp)
+      && (!('score' in request.resource.data) || request.resource.data.score is number)
+      && (!('totalScore' in request.resource.data) || request.resource.data.totalScore is number)
+      && (!('interpretation' in request.resource.data) || request.resource.data.interpretation is string)
+      && (!('level' in request.resource.data) || request.resource.data.level is string)
+      && (!('alerts' in request.resource.data) || request.resource.data.alerts is list)
+      && (!('details' in request.resource.data) || request.resource.data.details is map)
+      && (!('substanceScores' in request.resource.data) || request.resource.data.substanceScores is map)
+      && (!('highRiskSubstances' in request.resource.data) || request.resource.data.highRiskSubstances is list)
+      && (!('recommendation' in request.resource.data) || request.resource.data.recommendation is string)
+      && (!('selectedSubstances' in request.resource.data) || request.resource.data.selectedSubstances is list)
+      && (!('urgency' in request.resource.data) || request.resource.data.urgency is string)
+      && (!('requiresImmediateAttention' in request.resource.data) || request.resource.data.requiresImmediateAttention is bool)
+      && (!('flags' in request.resource.data) || request.resource.data.flags is list)
+      && (!('skipDetails' in request.resource.data) || request.resource.data.skipDetails is bool)
+      && (!('criticalItems' in request.resource.data) || request.resource.data.criticalItems is list)
+      && (!('action' in request.resource.data) || request.resource.data.action is string)
+      && (!('hasEmergency' in request.resource.data) || request.resource.data.hasEmergency is bool)
+      && (!('sections' in request.resource.data) || request.resource.data.sections is map)
+      && (!('checked' in request.resource.data) || request.resource.data.checked is map)
+      && (!('intrinsicTotal' in request.resource.data) || request.resource.data.intrinsicTotal is number)
+      && (!('extrinsicTotal' in request.resource.data) || request.resource.data.extrinsicTotal is number)
+      && (!('amotivationScore' in request.resource.data) || request.resource.data.amotivationScore is number)
+      && (!('motivationProfile' in request.resource.data) || request.resource.data.motivationProfile is string)
+      && (!('subscaleScores' in request.resource.data) || request.resource.data.subscaleScores is map)
+      && (!('scores' in request.resource.data) || request.resource.data.scores is map)
+      && (!('totalRiesgo' in request.resource.data) || request.resource.data.totalRiesgo is number)
+      && (!('protectores' in request.resource.data) || request.resource.data.protectores is number)
+      && (!('interpretacion' in request.resource.data) || request.resource.data.interpretacion is string)
+      && (!('planificacion' in request.resource.data) || request.resource.data.planificacion is number)
+      && (!('concentracion' in request.resource.data) || request.resource.data.concentracion is number)
+      && (!('estrategias' in request.resource.data) || request.resource.data.estrategias is number)
+      && (!('totalRisk' in request.resource.data) || request.resource.data.totalRisk is number)
+      && (!('riskLevel' in request.resource.data) || request.resource.data.riskLevel is string)
+      && (!('domainScores' in request.resource.data) || request.resource.data.domainScores is map)
+      && (!('criticalFactors' in request.resource.data) || request.resource.data.criticalFactors is list)
+      && (!('scoreEstado' in request.resource.data) || request.resource.data.scoreEstado is number)
+      && (!('scoreRasgo' in request.resource.data) || request.resource.data.scoreRasgo is number)
+      && (!('interpretationEstado' in request.resource.data) || request.resource.data.interpretationEstado is string)
+      && (!('interpretationRasgo' in request.resource.data) || request.resource.data.interpretationRasgo is string)
+      && (!('grupoId' in request.resource.data)
+        || request.resource.data.grupoId == null
+        || request.resource.data.grupoId is string)
+      && (!('matricula' in request.resource.data)
+        || request.resource.data.matricula == null
+        || request.resource.data.matricula is string);
+    }
+
     /** La sesión referenciada existe y sigue abierta (para validar test_results) */
     function sessionExistsAndOpen() {
       return exists(
@@ -42,12 +222,14 @@ service cloud.firestore {
      * - LECTURA pública: el estudiante abre el link y lee la sesión.
      *   Solo si está activa, permite anónimos y no ha expirado.
      * - LECTURA autenticada: el personal puede ver todas las sesiones.
-     * - ESCRITURA: solo personal autenticado crea/edita sesiones.
+     * - CREATE público restringido: permite crear sesión válida para link público.
+     * - UPDATE/DELETE: solo personal autenticado.
      */
     match /evaluation_sessions/{sessionId} {
       allow read: if canReadPublicSession();
       allow read: if signedIn();
-      allow create, update, delete: if signedIn();
+      allow create: if validPublicSessionCreate(sessionId);
+      allow update, delete: if signedIn();
     }
 
     /**
@@ -66,14 +248,8 @@ service cloud.firestore {
      *   responses (map) — respuestas del estudiante
      */
     match /test_results/{resultId} {
-      allow create: if true
-                   && request.resource.data.sessionId is string
-                   && request.resource.data.submittedAt is timestamp
-                   && request.resource.data.studentId is string
-                   && request.resource.data.testType is string
-                   && request.resource.data.score is number
-                   && request.resource.data.responses is map
-                   && sessionExistsAndOpen();
+      allow create: if sessionExistsAndOpen()
+                   && validTestResultCreatePayload();
       allow read: if signedIn();
       allow update, delete: if signedIn();
     }

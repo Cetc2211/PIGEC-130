@@ -128,6 +128,7 @@ export default function BancoDePruebas({ studentId, studentName, groupName }: Ba
   const [currentSession, setCurrentSession] = useState<IndividualSession | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   // Pruebas organizadas por categoría
   const categorizedTests = useMemo(() => {
@@ -173,6 +174,7 @@ export default function BancoDePruebas({ studentId, studentName, groupName }: Ba
   const handleCreateLink = async () => {
     if (selectedTests.length === 0) return;
 
+    setCreateError(null);
     setIsCreating(true);
 
     const sessionId = `ind_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -209,7 +211,14 @@ export default function BancoDePruebas({ studentId, studentName, groupName }: Ba
         });
       } catch (error) {
         console.error('Error guardando sesión individual:', error);
+        setCreateError('No se pudo crear la sesión en Firestore. No comparta este enlace e intente nuevamente.');
+        setIsCreating(false);
+        return;
       }
+    } else {
+      setCreateError('Base de datos no disponible. No se pudo generar el enlace.');
+      setIsCreating(false);
+      return;
     }
 
     setGeneratedLink(link);
@@ -273,6 +282,14 @@ Departamento de Orientación - CBTa 130`;
           Los resultados se integrarán automáticamente al Resumen Ejecutivo de este expediente.
         </AlertDescription>
       </Alert>
+
+      {createError && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error al generar enlace</AlertTitle>
+          <AlertDescription>{createError}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Resumen de selección */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

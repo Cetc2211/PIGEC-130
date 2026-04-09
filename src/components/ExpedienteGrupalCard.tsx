@@ -39,10 +39,10 @@ interface ResultadoEvaluacion {
   testId: string;
   testName: string;
   puntaje: number;
-  matricula: string;
+  matricula?: string;
   nombreCompleto: string;
   grupoId: string;
-  grupoNombre: string;
+  grupoNombre?: string;
   fechaCompletado: Date;
   respuestas?: Record<string, any>;
   sessionId?: string;
@@ -196,11 +196,35 @@ export function ExpedienteGrupalCard({
       );
 
       const snapshot = await getDocs(q);
-      const resultados: ResultadoEvaluacion[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        fechaCompletado: doc.data().fechaCompletado?.toDate() || new Date()
-      })) as ResultadoEvaluacion[];
+      const resultados: ResultadoEvaluacion[] = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data() as Record<string, any>;
+        const testId = data.testId || data.testType || '';
+        const puntaje =
+          typeof data.puntaje === 'number' ? data.puntaje
+          : typeof data.score === 'number' ? data.score
+          : typeof data.totalScore === 'number' ? data.totalScore
+          : typeof data.totalRisk === 'number' ? data.totalRisk
+          : 0;
+
+        return {
+          id: docSnap.id,
+          expedienteId: data.expedienteId || data.studentId || data.matricula || docSnap.id,
+          testId,
+          testName: data.testName || data.testType || testId || 'Desconocida',
+          puntaje,
+          matricula: data.matricula,
+          nombreCompleto: data.nombreCompleto || data.studentName || 'Sin nombre',
+          grupoId: data.grupoId || grupoId,
+          grupoNombre: data.grupoNombre,
+          fechaCompletado:
+            data.fechaCompletado?.toDate?.()
+            || data.submittedAt?.toDate?.()
+            || data.date?.toDate?.()
+            || new Date(),
+          respuestas: data.responses || data.respuestas,
+          sessionId: data.sessionId,
+        };
+      });
 
       if (resultados.length === 0) {
         setLoading(false);
