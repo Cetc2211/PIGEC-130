@@ -29,6 +29,8 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000', 'localhost:3001', '*.app.github.dev'],
     },
+    workerThreads: false,
+    cpus: 1,
   },
   // Configuración para evitar timeout en Vercel
   // Aumentar el timeout de generación de páginas estáticas a 180 segundos
