@@ -90,6 +90,7 @@ export default function ExpedientesPage() {
   // Counter para forzar recálculo de la lista al crear/borrar expedientes
   const [listVersion, setListVersion] = useState(0);
   const [evaluacionesFirestore, setEvaluacionesFirestore] = useState<Record<string, number>>({});
+  const [expedientesRemotos, setExpedientesRemotos] = useState<Expediente[]>([]);
 
   // Formulario de Ficha de Identificación (modo controlado)
   const [fichaData, setFichaData] = useState<FichaIdentificacionData>({
@@ -98,9 +99,24 @@ export default function ExpedientesPage() {
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof FichaIdentificacionData, string>>>({});
 
   const expedientes = useMemo(() => {
-    return getExpedientes(filtro);
+    const locales = getExpedientes(filtro);
+
+    const remotosFiltrados = expedientesRemotos.filter((exp) => {
+      if (!filtro || filtro === 'todos') return true;
+      if (filtro === 'nivel_1' || filtro === 'nivel_2' || filtro === 'nivel_3') {
+        return exp.nivel === filtro;
+      }
+      return exp.estado === filtro;
+    });
+
+    // Evita duplicados por studentId, priorizando versión remota cuando existe.
+    const byStudentId = new Map<string, Expediente>();
+    locales.forEach((exp) => byStudentId.set(exp.studentId, exp));
+    remotosFiltrados.forEach((exp) => byStudentId.set(exp.studentId, exp));
+
+    return Array.from(byStudentId.values());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtro, listVersion]);
+  }, [filtro, listVersion, expedientesRemotos]);
 
   const expedientesFiltrados = useMemo(() => {
     if (!busqueda.trim()) return expedientes;
@@ -111,6 +127,53 @@ export default function ExpedientesPage() {
         exp.groupName.toLowerCase().includes(term)
     );
   }, [expedientes, busqueda]);
+
+  React.useEffect(() => {
+    const syncExpedientesRemotos = async () => {
+      if (!db) {
+        setExpedientesRemotos([]);
+        return;
+      }
+
+      try {
+        const snap = await getDocs(collection(db, 'expedientes'));
+        const remotos: Expediente[] = snap.docs.map((docSnap) => {
+          const data = docSnap.data() as Partial<Expediente> & Record<string, any>;
+
+          return {
+            id: data.id || docSnap.id,
+            studentId: data.studentId || data.expedienteId || docSnap.id,
+            studentName: data.studentName || data.nombreCompleto || 'Sin nombre',
+            groupName: data.groupName || data.grupoNombre || 'Sin grupo',
+            semester: Number(data.semester || data.semestre || 1),
+            nivel: (data.nivel as any) || 'nivel_1',
+            estado: (data.estado as any) || 'abierto',
+            origen: (data.origen as any) || 'evaluacion_clinica',
+            fechaCreacion: data.fechaCreacion || new Date().toISOString(),
+            fechaActualizacion: data.fechaActualizacion || new Date().toISOString(),
+            creadoPor: data.creadoPor || 'sistema',
+            academicData: {
+              gpa: Number(data.academicData?.gpa || data.gpa || 0),
+              absences: Number(data.academicData?.absences || data.absences || 0),
+            },
+            fichaIdentificacion: data.fichaIdentificacion,
+            ansiedadScore: typeof data.ansiedadScore === 'number' ? data.ansiedadScore : undefined,
+            suicideRiskLevel: data.suicideRiskLevel,
+            irc: typeof data.irc === 'number' ? data.irc : undefined,
+            nivelRiesgo: data.nivelRiesgo,
+            evaluaciones: Array.isArray(data.evaluaciones) ? data.evaluaciones : [],
+            notas: Array.isArray(data.notas) ? data.notas : [],
+          };
+        });
+
+        setExpedientesRemotos(remotos);
+      } catch (err) {
+        console.error('Error cargando expedientes remotos:', err);
+      }
+    };
+
+    syncExpedientesRemotos();
+  }, [listVersion]);
 
   React.useEffect(() => {
     const syncEvaluaciones = async () => {
