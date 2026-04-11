@@ -55,9 +55,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import {
   crearExpediente,
+  getExpedientes,
   getNivelLabel,
   getNivelShort,
   getNivelColor,
@@ -98,14 +99,26 @@ export default function ExpedientesPage() {
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof FichaIdentificacionData, string>>>({});
 
   const expedientes = useMemo(() => {
-    return expedientesRemotos.filter((exp) => {
+    // Unifica expedientes demo/dinámicos del servicio con los remotos de Firestore.
+    const base = getExpedientes();
+    const byStudentId = new Map<string, Expediente>();
+
+    [...base, ...expedientesRemotos].forEach((exp) => {
+      if (exp?.studentId) {
+        byStudentId.set(exp.studentId, exp);
+      }
+    });
+
+    const todos = Array.from(byStudentId.values());
+
+    return todos.filter((exp) => {
       if (!filtro || filtro === 'todos') return true;
       if (filtro === 'nivel_1' || filtro === 'nivel_2' || filtro === 'nivel_3') {
         return exp.nivel === filtro;
       }
       return exp.estado === filtro;
     });
-  }, [filtro, expedientesRemotos]);
+  }, [filtro, expedientesRemotos, listVersion]);
 
   const expedientesFiltrados = useMemo(() => {
     if (!busqueda.trim()) return expedientes;
@@ -265,7 +278,7 @@ export default function ExpedientesPage() {
 
     setIsCreating(true);
     try {
-      crearExpediente({
+      const nuevoExpediente = crearExpediente({
         studentId: `manual-${Date.now()}`,
         studentName: fichaData.fullName.trim(),
         groupName: fichaData.group.trim(),
@@ -276,6 +289,18 @@ export default function ExpedientesPage() {
         creadoPor: 'usuario@demo.com',
         fichaIdentificacion: { ...fichaData },
       });
+
+      // Persistir en Firestore para que el expediente sobreviva recargas de página.
+      if (db) {
+        try {
+          await setDoc(doc(db, 'expedientes', nuevoExpediente.studentId), {
+            ...nuevoExpediente,
+            expedienteId: nuevoExpediente.studentId,
+          });
+        } catch (persistErr) {
+          console.error('No se pudo persistir el expediente en Firestore:', persistErr);
+        }
+      }
 
       toast({
         title: 'Expediente creado',
