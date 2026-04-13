@@ -34,6 +34,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [authErrorCode, setAuthErrorCode] = useState<string | null>(null);
   const [sendPasswordResetEmail, sending, resetError] = useSendPasswordResetEmail(auth);
   const { toast } = useToast();
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function LoginPage() {
     }
 
     setIsSigningIn(true);
+    setAuthErrorCode(null);
 
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -61,6 +63,7 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (e: any) {
       const code = e?.code as string | undefined;
+      setAuthErrorCode(code || 'unknown');
       let errorMessage = 'No fue posible iniciar sesión. Inténtalo nuevamente.';
 
       switch (code) {
@@ -69,7 +72,11 @@ export default function LoginPage() {
           break;
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
+        case 'auth/invalid-login-credentials':
           errorMessage = 'Correo o contraseña incorrectos.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'La cuenta está deshabilitada. Solicita reactivación al administrador de Firebase.';
           break;
         case 'auth/invalid-email':
           errorMessage = 'El formato del correo electrónico no es válido.';
@@ -164,6 +171,18 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
+          {authErrorCode && (
+            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+              <p className="font-semibold">Diagnóstico de acceso</p>
+              <p className="mt-1">Código Firebase: {authErrorCode}</p>
+              {authErrorCode === 'auth/operation-not-allowed' && (
+                <p className="mt-1">Activa Email/Password en Firebase Console > Authentication > Sign-in method.</p>
+              )}
+              {(authErrorCode === 'auth/user-not-found' || authErrorCode === 'auth/invalid-credential' || authErrorCode === 'auth/invalid-login-credentials') && (
+                <p className="mt-1">Si eres administrador y no recuerdas la contraseña, usa "¿Olvidaste tu contraseña?" para recuperar acceso.</p>
+              )}
+            </div>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="email">Correo Electrónico</Label>
             <Input
