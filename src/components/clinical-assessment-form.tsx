@@ -8,8 +8,9 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "./ui/textarea";
 import { ClinicalAssessment } from "@/lib/store";
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { AlertTriangle, CheckCircle2, Clock, FileText, Loader2 } from "lucide-react";
 
 interface ClinicalAssessmentFormProps {
@@ -45,6 +46,7 @@ interface TestResult {
 }
 
 export default function ClinicalAssessmentForm({ initialData, studentId }: ClinicalAssessmentFormProps) {
+    const [user, authLoading] = useAuthState(auth);
 
     // Cargar resultados de pruebas desde Firestore
     const [testResults, setTestResults] = useState<TestResult[]>([]);
@@ -53,7 +55,15 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
 
     useEffect(() => {
         async function loadTestResults() {
-            if (!db || !studentId) return;
+            if (!studentId || authLoading) return;
+
+            if (!db || !user) {
+                setTestResults([]);
+                setLoadError('Debe iniciar sesión con una cuenta autorizada para leer las evaluaciones del expediente.');
+                setLoadingResults(false);
+                return;
+            }
+
             setLoadingResults(true);
             setLoadError(null);
 
@@ -72,8 +82,8 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                     results.push({
                         id: doc.id,
                         testType: data.testType || data.type || 'Desconocida',
-                        score: data.score || 0,
-                        interpretation: data.interpretation || data.level || '',
+                        score: data.score || data.totalScore || data.totalRisk || data.totalRiesgo || 0,
+                        interpretation: data.interpretation || data.interpretacion || data.level || data.riskLevel || '',
                         date: sortDate.toLocaleDateString('es-MX'),
                         alerts: data.alerts || [],
                         sortDate,
@@ -101,7 +111,7 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
         }
 
         loadTestResults();
-    }, [studentId]);
+    }, [authLoading, studentId, user]);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();

@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { useSession } from '@/context/SessionContext';
+import { auth } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, User, Shield } from 'lucide-react';
@@ -30,8 +32,14 @@ function RoleSelectionCard({ title, description, role, onSelectRole }: { title: 
 export default function InstitutionalLandingPage() {
     const router = useRouter();
     const { setRole } = useSession();
+    const [user] = useAuthState(auth);
 
     const handleRoleSelection = (role: 'Orientador' | 'Clinico') => {
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+
         setRole(role);
         // La lógica de redirección se manejará en el contexto o en un paso posterior de autenticación.
         // Por ahora, solo se establece el rol.

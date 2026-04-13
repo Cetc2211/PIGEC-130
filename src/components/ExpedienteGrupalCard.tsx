@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,17 +17,14 @@ import {
   TrendingDown,
   Target,
   Brain,
-  Heart,
-  BookOpen,
-  BarChart3
+  Heart
 } from 'lucide-react';
-import { db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import {
   collection,
   query,
   where,
-  getDocs,
-  Timestamp
+  getDocs
 } from 'firebase/firestore';
 
 // ============================================
@@ -171,19 +169,21 @@ export function ExpedienteGrupalCard({
   grupoNombre,
   totalEstudiantes
 }: ExpedienteGrupalCardProps) {
+  const [user, authLoading] = useAuthState(auth);
   const [expediente, setExpediente] = useState<ExpedienteGrupal | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (grupoId) {
+    if (grupoId && !authLoading) {
       calcularExpediente();
     }
-  }, [grupoId]);
+  }, [authLoading, grupoId, user]);
 
   const calcularExpediente = async () => {
     setLoading(true);
 
-    if (!db) {
+    if (!db || !user) {
+      setExpediente(null);
       setLoading(false);
       return;
     }

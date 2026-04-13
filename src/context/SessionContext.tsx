@@ -1,7 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { usePathname, useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
 
 type Role = 'Clinico' | 'Orientador' | 'loading' | 'unauthenticated' | null;
 
@@ -14,32 +16,48 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<Role>('loading');
+  const [firebaseUser, authLoading] = useAuthState(auth);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
+    if (authLoading) {
+      setRole('loading');
+      return;
+    }
+
+    if (!firebaseUser) {
+      localStorage.removeItem('userRole');
+      setRole('unauthenticated');
+      return;
+    }
+
     try {
       const storedRole = localStorage.getItem('userRole') as Role;
       if (storedRole && (storedRole === 'Clinico' || storedRole === 'Orientador')) {
         setRole(storedRole);
       } else {
-        setRole('unauthenticated');
+        // Si hay sesión Firebase pero no rol guardado, usar clínico por defecto.
+        setRole('Clinico');
       }
-    } catch (error) {
+    } catch {
       // If localStorage is not available (e.g., in SSR),
-      // it remains 'unauthenticated' or 'loading'.
-      setRole('unauthenticated');
+      // usar un rol por defecto cuando existe sesión Firebase.
+      setRole('Clinico');
     }
-  }, []);
+  }, [authLoading, firebaseUser]);
 
   useEffect(() => {
     // Rutas públicas que NO requieren autenticación
-    const publicRoutes = ['/', '/evaluacion/'];
-    const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route === '/' ? '/' : route));
+    const isPublicRoute =
+      pathname === '/' ||
+      pathname === '/login' ||
+      pathname === '/signup' ||
+      pathname.startsWith('/evaluacion/');
 
     // If not authenticated and not on a public route, redirect to home.
     if (role === 'unauthenticated' && !isPublicRoute) {
-        router.replace('/');
+        router.replace('/login');
     }
   }, [role, pathname, router]);
 
@@ -58,7 +76,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   
   // Show a generic loader if the session is still loading on any protected page.
   // Skip for public routes (/, /evaluacion/*) so students can see the evaluation page
-  const isPublicPage = pathname === '/' || pathname.startsWith('/evaluacion/');
+  const isPublicPage =
+    pathname === '/' ||
+    pathname === '/login' ||
+    pathname === '/signup' ||
+    pathname.startsWith('/evaluacion/');
   if (role === 'loading' && !isPublicPage) {
     return (
         <div className="flex h-screen w-full items-center justify-center p-8">

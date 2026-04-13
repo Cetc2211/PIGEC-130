@@ -2,10 +2,6 @@ import { db } from '@/lib/firebase';
 import {
   collection,
   getDocs,
-  query,
-  where,
-  orderBy,
-  Timestamp,
   onSnapshot
 } from 'firebase/firestore';
 
@@ -54,8 +50,8 @@ export interface EstudiantesGrupoResult {
 // CONFIGURACIÓN
 // ============================================
 
-const COLECCION_GRUPOS_OFICIALES = 'official_groups';
-const COLECCION_ESTUDIANTES = 'students';
+const COLECCIONES_GRUPOS = ['official_groups', 'groups'];
+const COLECCIONES_ESTUDIANTES = ['students', 'alumnos'];
 const PERIODO_ACTUAL = '2026-1';
 
 // ============================================
@@ -92,11 +88,31 @@ export async function obtenerGrupos(): Promise<GruposResult> {
   }
 
   try {
-    const gruposRef = collection(db, COLECCION_GRUPOS_OFICIALES);
-    const gruposSnapshot = await getDocs(gruposRef);
+    let gruposSnapshot = null as Awaited<ReturnType<typeof getDocs>> | null;
+    let coleccionUsada = '';
+
+    for (const nombreColeccion of COLECCIONES_GRUPOS) {
+      try {
+        const gruposRef = collection(db, nombreColeccion);
+        const snapshot = await getDocs(gruposRef);
+        gruposSnapshot = snapshot;
+        coleccionUsada = nombreColeccion;
+        break;
+      } catch (error) {
+        console.warn(`[grupos-service] No se pudo leer ${nombreColeccion}:`, error);
+      }
+    }
+
+    if (!gruposSnapshot) {
+      return {
+        success: false,
+        grupos: [],
+        error: 'No se pudo leer ninguna colección de grupos (official_groups/groups).'
+      };
+    }
 
     if (gruposSnapshot.empty) {
-      console.log('No se encontraron grupos en official_groups');
+      console.log(`[grupos-service] No se encontraron grupos en ${coleccionUsada}`);
       return { success: true, grupos: [] };
     }
 
@@ -119,7 +135,12 @@ export async function obtenerGrupos(): Promise<GruposResult> {
     });
 
     // Obtener conteo de estudiantes por grupo
-    const conteoPorGrupo = await obtenerConteoEstudiantesPorGrupo();
+    let conteoPorGrupo = new Map<string, number>();
+    try {
+      conteoPorGrupo = await obtenerConteoEstudiantesPorGrupo();
+    } catch (error) {
+      console.warn('[grupos-service] Sin conteo de estudiantes por permisos o conectividad:', error);
+    }
     
     grupos.forEach(grupo => {
       grupo.totalEstudiantes = conteoPorGrupo.get(grupo.id) || 0;
@@ -130,7 +151,7 @@ export async function obtenerGrupos(): Promise<GruposResult> {
       return a.nombre.localeCompare(b.nombre);
     });
 
-    console.log(`[grupos-service] Cargados ${grupos.length} grupos desde official_groups`);
+    console.log(`[grupos-service] Cargados ${grupos.length} grupos desde ${coleccionUsada}`);
     return { success: true, grupos };
 
   } catch (error) {
@@ -158,8 +179,26 @@ export async function obtenerEstudiantesGrupo(grupoId: string): Promise<Estudian
     console.log(`[grupos-service] Tipo de grupoId: ${typeof grupoId}`);
     
     // Obtener TODOS los estudiantes y filtrar en memoria (evita problemas de índices)
-    const estudiantesRef = collection(db, COLECCION_ESTUDIANTES);
-    const estudiantesSnapshot = await getDocs(estudiantesRef);
+    let estudiantesSnapshot = null as Awaited<ReturnType<typeof getDocs>> | null;
+
+    for (const nombreColeccion of COLECCIONES_ESTUDIANTES) {
+      try {
+        const estudiantesRef = collection(db, nombreColeccion);
+        const snapshot = await getDocs(estudiantesRef);
+        estudiantesSnapshot = snapshot;
+        break;
+      } catch (error) {
+        console.warn(`[grupos-service] No se pudo leer ${nombreColeccion}:`, error);
+      }
+    }
+
+    if (!estudiantesSnapshot) {
+      return {
+        success: false,
+        estudiantes: [],
+        error: 'No se pudo leer ninguna colección de estudiantes (students/alumnos).'
+      };
+    }
 
     console.log(`[grupos-service] Total documentos en 'students': ${estudiantesSnapshot.docs.length}`);
 
@@ -172,7 +211,7 @@ export async function obtenerEstudiantesGrupo(grupoId: string): Promise<Estudian
     const gruposEncontrados = new Set<string>();
     estudiantesSnapshot.docs.forEach(doc => {
       const data = doc.data();
-      const gid = data.official_group_id;
+      const gid = data.official_group_id || data.groupId || data.grupoId;
       if (gid) {
         gruposEncontrados.add(gid);
       }
@@ -182,7 +221,7 @@ export async function obtenerEstudiantesGrupo(grupoId: string): Promise<Estudian
     // Filtrar manualmente por official_group_id
     const estudiantesFiltrados = estudiantesSnapshot.docs.filter(doc => {
       const data = doc.data();
-      const estudianteGrupoId = data.official_group_id;
+      const estudianteGrupoId = data.official_group_id || data.groupId || data.grupoId;
       const coincide = estudianteGrupoId === grupoId;
       return coincide;
     });
@@ -237,14 +276,28 @@ export async function obtenerConteoEstudiantesPorGrupo(): Promise<Map<string, nu
   }
 
   try {
-    const estudiantesRef = collection(db, COLECCION_ESTUDIANTES);
-    const estudiantesSnapshot = await getDocs(estudiantesRef);
+    let estudiantesSnapshot = null as Awaited<ReturnType<typeof getDocs>> | null;
+
+    for (const nombreColeccion of COLECCIONES_ESTUDIANTES) {
+      try {
+        const estudiantesRef = collection(db, nombreColeccion);
+        const snapshot = await getDocs(estudiantesRef);
+        estudiantesSnapshot = snapshot;
+        break;
+      } catch (error) {
+        console.warn(`[grupos-service] No se pudo leer ${nombreColeccion} para conteo:`, error);
+      }
+    }
+
+    if (!estudiantesSnapshot) {
+      return new Map();
+    }
 
     const conteo = new Map<string, number>();
 
     estudiantesSnapshot.docs.forEach(doc => {
       const data = doc.data();
-      const grupoId = data.official_group_id;
+      const grupoId = data.official_group_id || data.groupId || data.grupoId;
       
       if (grupoId) {
         conteo.set(grupoId, (conteo.get(grupoId) || 0) + 1);
@@ -269,7 +322,7 @@ export function subscribeToGrupos(callback: (grupos: Grupo[]) => void): () => vo
     return () => {};
   }
 
-  const gruposRef = collection(db, COLECCION_GRUPOS_OFICIALES);
+  const gruposRef = collection(db, COLECCIONES_GRUPOS[0]);
   
   const unsubscribe = onSnapshot(gruposRef, async (snapshot) => {
     const grupos: Grupo[] = snapshot.docs.map(doc => {
