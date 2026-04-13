@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSignInWithEmailAndPassword, useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
+import { useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,12 +28,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { AuthError } from 'firebase/auth';
+  import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [signInWithEmailAndPassword, user, loading, error] = useSignInWithEmailAndPassword(auth);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const [sendPasswordResetEmail, sending, resetError] = useSendPasswordResetEmail(auth);
   const { toast } = useToast();
   const router = useRouter();
@@ -41,46 +41,56 @@ export default function LoginPage() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const handleSignIn = async () => {
-    try {
-      const result = await signInWithEmailAndPassword(email, password);
-      if (result) {
-        toast({
-          title: 'Inicio de sesión exitoso',
-          description: 'Bienvenido de nuevo.',
-        });
-        router.push('/dashboard');
-      } else if (error) {
-        let errorMessage = 'Las credenciales proporcionadas no son válidas. Por favor, inténtalo de nuevo.';
-        // Check if the error object has a 'code' property, which is typical for Firebase Auth errors.
-        if (typeof error === 'object' && error !== null && 'code' in error) {
-          const authError = error as { code: string };
-          switch (authError.code) {
-            case 'auth/user-not-found':
-              errorMessage = 'Este correo electrónico no está registrado. Por favor, crea una cuenta.';
-              break;
-            case 'auth/wrong-password':
-            case 'auth/invalid-credential':
-               errorMessage = 'Contraseña incorrecta. Por favor, inténtalo de nuevo.';
-               break;
-            case 'auth/invalid-email':
-              errorMessage = 'El formato del correo electrónico no es válido.';
-              break;
-            default:
-              console.error('Firebase Auth Error:', error);
-          }
-        }
-         toast({
-          variant: 'destructive',
-          title: 'Error al iniciar sesión',
-          description: errorMessage,
-        });
-      }
-    } catch (e: any) {
-       toast({
+    if (!email.trim() || !password.trim()) {
+      toast({
         variant: 'destructive',
-        title: 'Error inesperado',
-        description: 'Ocurrió un error al intentar iniciar sesión. Por favor, revisa la consola para más detalles.',
+        title: 'Datos incompletos',
+        description: 'Ingresa correo y contraseña para iniciar sesión.',
       });
+      return;
+    }
+
+    setIsSigningIn(true);
+
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      toast({
+        title: 'Inicio de sesión exitoso',
+        description: 'Bienvenido de nuevo.',
+      });
+      router.push('/dashboard');
+    } catch (e: any) {
+      const code = e?.code as string | undefined;
+      let errorMessage = 'No fue posible iniciar sesión. Inténtalo nuevamente.';
+
+      switch (code) {
+        case 'auth/user-not-found':
+          errorMessage = 'Este correo no está registrado. Puedes crear una cuenta en Regístrate.';
+          break;
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          errorMessage = 'Correo o contraseña incorrectos.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'El formato del correo electrónico no es válido.';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Email/Password no está habilitado en Firebase Authentication para este proyecto.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Demasiados intentos fallidos. Espera unos minutos y vuelve a intentar.';
+          break;
+        default:
+          console.error('Firebase Auth Error:', e);
+      }
+
+      toast({
+        variant: 'destructive',
+        title: 'Error al iniciar sesión',
+        description: errorMessage,
+      });
+    } finally {
+      setIsSigningIn(false);
     }
   };
   
@@ -184,8 +194,8 @@ export default function LoginPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full" onClick={handleSignIn} disabled={loading}>
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
+          <Button className="w-full" onClick={handleSignIn} disabled={isSigningIn}>
+            {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
             Iniciar Sesión
           </Button>
           <div className="text-center text-sm">
