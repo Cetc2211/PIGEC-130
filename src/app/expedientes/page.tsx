@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { useSession } from '@/context/SessionContext';
 import { calculateRisk } from '@/lib/risk-analysis';
 import RiskIndicator from '@/components/RiskIndicator';
@@ -54,11 +55,9 @@ import {
   ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import {
-  crearExpediente,
-  getExpedientes,
   getNivelLabel,
   getNivelShort,
   getNivelColor,
@@ -82,6 +81,7 @@ const filtros: { value: FiltroExpediente; label: string }[] = [
 
 export default function ExpedientesPage() {
   const { role } = useSession();
+  const [user, authLoading] = useAuthState(auth);
   const { toast } = useToast();
   const [filtro, setFiltro] = useState<FiltroExpediente>('todos');
   const [busqueda, setBusqueda] = useState('');
@@ -99,26 +99,14 @@ export default function ExpedientesPage() {
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof FichaIdentificacionData, string>>>({});
 
   const expedientes = useMemo(() => {
-    // Unifica expedientes demo/dinámicos del servicio con los remotos de Firestore.
-    const base = getExpedientes();
-    const byStudentId = new Map<string, Expediente>();
-
-    [...base, ...expedientesRemotos].forEach((exp) => {
-      if (exp?.studentId) {
-        byStudentId.set(exp.studentId, exp);
-      }
-    });
-
-    const todos = Array.from(byStudentId.values());
-
-    return todos.filter((exp) => {
+    return expedientesRemotos.filter((exp) => {
       if (!filtro || filtro === 'todos') return true;
       if (filtro === 'nivel_1' || filtro === 'nivel_2' || filtro === 'nivel_3') {
         return exp.nivel === filtro;
       }
       return exp.estado === filtro;
     });
-  }, [filtro, expedientesRemotos, listVersion]);
+  }, [filtro, expedientesRemotos]);
 
   const expedientesFiltrados = useMemo(() => {
     if (!busqueda.trim()) return expedientes;
@@ -132,7 +120,11 @@ export default function ExpedientesPage() {
 
   React.useEffect(() => {
     const syncExpedientesRemotos = async () => {
-      if (!db) {
+      if (authLoading) {
+        return;
+      }
+
+      if (!db || !user) {
         setExpedientesRemotos([]);
         return;
       }
@@ -187,11 +179,15 @@ export default function ExpedientesPage() {
     };
 
     syncExpedientesRemotos();
-  }, [listVersion]);
+  }, [authLoading, listVersion, user]);
 
   React.useEffect(() => {
     const syncEvaluaciones = async () => {
-      if (!db || expedientes.length === 0) {
+      if (authLoading) {
+        return;
+      }
+
+      if (!db || !user || expedientes.length === 0) {
         setEvaluacionesFirestore({});
         return;
       }
@@ -215,7 +211,7 @@ export default function ExpedientesPage() {
     };
 
     syncEvaluaciones();
-  }, [expedientes]);
+  }, [authLoading, expedientes, user]);
 
   /** Validar campos obligatorios de la Ficha de Identificación */
   const validateFicha = (): boolean => {
@@ -278,29 +274,34 @@ export default function ExpedientesPage() {
 
     setIsCreating(true);
     try {
-      const nuevoExpediente = crearExpediente({
-        studentId: `manual-${Date.now()}`,
+      if (!db || !user) {
+        throw new Error('Debe iniciar sesión con Firebase para crear expedientes.');
+      }
+
+      const studentId = `manual-${Date.now()}`;
+      const ahora = new Date().toISOString();
+      const nuevoExpediente: Expediente = {
+        id: studentId,
+        studentId,
         studentName: fichaData.fullName.trim(),
         groupName: fichaData.group.trim(),
         semester: parseInt(fichaData.semester) || 1,
-        gpa: 0, // Se actualiza con datos académicos después
-        absences: 0, // Se actualiza con datos académicos después
+        nivel: 'nivel_1',
+        estado: 'abierto',
         origen: 'registro_manual' as OrigenExpediente,
-        creadoPor: 'usuario@demo.com',
+        fechaCreacion: ahora,
+        fechaActualizacion: ahora,
+        creadoPor: user.email || 'usuario@firebase',
+        academicData: {
+          gpa: 0,
+          absences: 0,
+        },
         fichaIdentificacion: { ...fichaData },
-      });
+        evaluaciones: [],
+        notas: [],
+      };
 
-      // Persistir en Firestore para que el expediente sobreviva recargas de página.
-      if (db) {
-        try {
-          await setDoc(doc(db, 'expedientes', nuevoExpediente.studentId), {
-            ...nuevoExpediente,
-            expedienteId: nuevoExpediente.studentId,
-          });
-        } catch (persistErr) {
-          console.error('No se pudo persistir el expediente en Firestore:', persistErr);
-        }
-      }
+      await setDoc(doc(db, 'expedientes', studentId), nuevoExpediente);
 
       toast({
         title: 'Expediente creado',
@@ -313,10 +314,14 @@ export default function ExpedientesPage() {
       setIsCreateDialogOpen(false);
       setListVersion((v) => v + 1);
     } catch {
+      const description =
+        user
+          ? 'No se pudo crear el expediente en Firestore.'
+          : 'Debe iniciar sesión correctamente antes de crear expedientes.';
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'No se pudo crear el expediente.',
+        description,
       });
     } finally {
       setIsCreating(false);
