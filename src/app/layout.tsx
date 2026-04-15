@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Plataforma para el análisis de riesgo y gestión de expedientes del protocolo MTSS-CBTA 130.",
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: Readonly<{
