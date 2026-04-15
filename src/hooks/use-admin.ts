@@ -8,6 +8,14 @@ import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
 let adminCache: { email: string; isAdmin: boolean; timestamp: number } | null = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+function syncAdminRoleInLocalSession(isAdmin: boolean) {
+  if (typeof window === 'undefined') return;
+  if (!isAdmin) return;
+
+  // For compatibility with current role model, admin maps to Clinico access.
+  localStorage.setItem('userRole', 'Clinico');
+}
+
 export function useAdmin() {
   const [user, loadingAuth] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -30,29 +38,31 @@ export function useAdmin() {
         return;
       }
 
-      const emailLower = user.email.toLowerCase();
-      console.log('[useAdmin] Checking admin status for:', emailLower);
+      const emailExact = user.email;
+      console.log('[useAdmin] Checking admin status for:', emailExact);
       
       // Check cache first
       if (adminCache && 
-          adminCache.email === emailLower && 
+          adminCache.email === emailExact && 
           Date.now() - adminCache.timestamp < CACHE_DURATION) {
         console.log('[useAdmin] Using cached admin status:', adminCache.isAdmin);
         setIsAdmin(adminCache.isAdmin);
+        syncAdminRoleInLocalSession(adminCache.isAdmin);
         setLoadingAdmin(false);
         return;
       }
       
       try {
-        const adminDoc = await getDoc(doc(db, 'admins', emailLower));
+        const adminDoc = await getDoc(doc(db, 'admins', emailExact));
         console.log('[useAdmin] Admin doc exists:', adminDoc.exists());
         
         const adminStatus = adminDoc.exists();
         setIsAdmin(adminStatus);
+        syncAdminRoleInLocalSession(adminStatus);
         
         // Update cache
         adminCache = {
-          email: emailLower,
+          email: emailExact,
           isAdmin: adminStatus,
           timestamp: Date.now()
         };
@@ -61,9 +71,10 @@ export function useAdmin() {
         console.error("[useAdmin] Error checking admin status:", error);
         
         // On Firestore error, check if we have a cached value
-        if (adminCache && adminCache.email === emailLower) {
+        if (adminCache && adminCache.email === emailExact) {
           console.log('[useAdmin] Using cached admin status due to error:', adminCache.isAdmin);
           setIsAdmin(adminCache.isAdmin);
+          syncAdminRoleInLocalSession(adminCache.isAdmin);
         } else {
           // If no cache, assume not admin for safety
           setIsAdmin(false);
