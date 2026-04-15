@@ -29,7 +29,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-  import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -157,98 +157,100 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
       ) : (
-      <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
+        <>
+          <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
                 <AlertDialogTitle>Restablecer Contraseña</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Ingresa tu correo electrónico y te enviaremos un enlace para que puedas restablecer tu contraseña.
+                  Ingresa tu correo electrónico y te enviaremos un enlace para que puedas restablecer tu contraseña.
                 </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="py-4">
+              </AlertDialogHeader>
+              <div className="py-4">
                 <Label htmlFor="reset-email">Correo Electrónico</Label>
-                <Input 
-                    id="reset-email"
-                    type="email"
-                    placeholder="nombre@ejemplo.com"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="nombre@ejemplo.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
                 />
-            </div>
-            <AlertDialogFooter>
+              </div>
+              <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={handlePasswordReset} disabled={sending}>
-                    {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                    Enviar Correo
+                  {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Enviar Correo
                 </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-          <CardDescription>
-            Ingresa tu correo y contraseña para acceder a tu panel.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          {authErrorCode && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-              <p className="font-semibold">Diagnóstico de acceso</p>
-              <p className="mt-1">Código Firebase: {authErrorCode}</p>
-              {authErrorCode === 'auth/operation-not-allowed' && (
-                <p className="mt-1">Activa Email/Password en Firebase Console > Authentication > Sign-in method.</p>
+          <Card className="w-full max-w-sm">
+            <CardHeader>
+              <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+              <CardDescription>
+                Ingresa tu correo y contraseña para acceder a tu panel.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              {authErrorCode && (
+                <div className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                  <p className="font-semibold">Diagnóstico de acceso</p>
+                  <p className="mt-1">Código Firebase: {authErrorCode}</p>
+                  {authErrorCode === 'auth/operation-not-allowed' && (
+                    <p className="mt-1">Activa Email/Password en Firebase Console &gt; Authentication &gt; Sign-in method.</p>
+                  )}
+                  {(authErrorCode === 'auth/user-not-found' || authErrorCode === 'auth/invalid-credential' || authErrorCode === 'auth/invalid-login-credentials') && (
+                    <p className="mt-1">Si eres administrador y no recuerdas la contraseña, usa "¿Olvidaste tu contraseña?" para recuperar acceso.</p>
+                  )}
+                </div>
               )}
-              {(authErrorCode === 'auth/user-not-found' || authErrorCode === 'auth/invalid-credential' || authErrorCode === 'auth/invalid-login-credentials') && (
-                <p className="mt-1">Si eres administrador y no recuerdas la contraseña, usa "¿Olvidaste tu contraseña?" para recuperar acceso.</p>
-              )}
-            </div>
-          )}
-          <div className="grid gap-2">
-            <Label htmlFor="email">Correo Electrónico</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="nombre@ejemplo.com"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSignIn()}
-            />
-          </div>
-          <div className="grid gap-2">
-             <div className="flex items-center">
-              <Label htmlFor="password">Contraseña</Label>
-               <Button variant="link" className="ml-auto inline-block text-sm p-0 h-auto" onClick={() => { setResetEmail(email); setIsResetDialogOpen(true); }}>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Correo Electrónico</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="nombre@ejemplo.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSignIn()}
+                />
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Contraseña</Label>
+                  <Button variant="link" className="ml-auto inline-block text-sm p-0 h-auto" onClick={() => { setResetEmail(email); setIsResetDialogOpen(true); }}>
                     ¿Olvidaste tu contraseña?
-                </Button>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSignIn()}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full" onClick={handleSignIn} disabled={isSigningIn}>
-            {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
-            Iniciar Sesión
-          </Button>
-          <div className="text-center text-sm">
-            ¿No tienes una cuenta?{' '}
-            <Link href="/signup" className="underline">
-              Regístrate
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+                  </Button>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSignIn()}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button className="w-full" onClick={handleSignIn} disabled={isSigningIn}>
+                {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
+                Iniciar Sesión
+              </Button>
+              <div className="text-center text-sm">
+                ¿No tienes una cuenta?{' '}
+                <Link href="/signup" className="underline">
+                  Regístrate
+                </Link>
+              </div>
+            </CardFooter>
+          </Card>
+        </>
       )}
     </div>
   );
 }
-   
+
