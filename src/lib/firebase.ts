@@ -11,12 +11,12 @@ import { getStorage } from "firebase/storage";
 // espera para el storageBucket, aunque en la consola de GCloud aparezca como .firebasestorage.app.
 // Ambas direcciones apuntan al mismo recurso.
 const firebaseConfig = {
-  apiKey: "AIzaSyBliGErw1WiGhY6lZeCSh6WU0Kg2ZK7oao",
-  authDomain: "academic-tracker-qeoxi.firebaseapp.com",
-  projectId: "academic-tracker-qeoxi",
-  storageBucket: "academic-tracker-qeoxi.appspot.com",
-  messagingSenderId: "263108580734",
-  appId: "1:263108580734:web:316c14f8e71c20aa038f2f"
+  apiKey: "AIzaSyCDy-W8_3sB3WS8gVKZuzV_P6PdG1tBOUc",
+  authDomain: "actracker-master.firebaseapp.com",
+  projectId: "actracker-master",
+  storageBucket: "actracker-master.appspot.com",
+  messagingSenderId: "660718374201",
+  appId: "1:660718374201:web:4889a6d15d8aee23ddace8"
 };
 
 
