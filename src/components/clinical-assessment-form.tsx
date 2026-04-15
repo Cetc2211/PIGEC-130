@@ -75,28 +75,25 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                     where('studentId', '==', studentId)
                 );
                 const snapshot = await getDocs(q);
-                const results: TestResult[] = [];
+                type SortableResult = TestResult & { _sortDate: Date };
+                const rawResults: SortableResult[] = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const sortDate = data.submittedAt?.toDate?.() || data.date?.toDate?.() || new Date(0);
-                    results.push({
+                    rawResults.push({
                         id: doc.id,
                         testType: data.testType || data.type || 'Desconocida',
                         score: data.score || data.totalScore || data.totalRisk || data.totalRiesgo || 0,
                         interpretation: data.interpretation || data.interpretacion || data.level || data.riskLevel || '',
                         date: sortDate.toLocaleDateString('es-MX'),
                         alerts: data.alerts || [],
-                        sortDate,
+                        _sortDate: sortDate,
                     });
                 });
 
-                results.sort((a, b) => {
-                    const da = (a as any).sortDate as Date;
-                    const db = (b as any).sortDate as Date;
-                    return db.getTime() - da.getTime();
-                });
+                rawResults.sort((a, b) => b._sortDate.getTime() - a._sortDate.getTime());
 
-                setTestResults(results.map(({ sortDate, ...rest }: any) => rest));
+                setTestResults(rawResults.map(({ _sortDate, ...rest }) => rest));
             } catch (err) {
                 console.error('Error cargando resultados de pruebas:', err);
                 const errorMessage = (err as any)?.message || '';
