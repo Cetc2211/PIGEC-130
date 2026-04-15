@@ -3,6 +3,7 @@ import "./globals.css";
 import { SessionProvider } from "@/context/SessionContext";
 import { Toaster } from "@/components/ui/toaster";
 import { LayoutShell } from "@/components/layout-shell";
+import { DataProvider } from "@/hooks/use-data";
 
 export const metadata: Metadata = {
   title: "Suite Integral - Sistema de Soporte a la Decisión",
@@ -22,12 +23,14 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet" />
       </head>
       <body className="font-sans bg-gray-50 text-gray-900">
-        <SessionProvider>
-          <LayoutShell>
-            {children}
-          </LayoutShell>
-          <Toaster />
-        </SessionProvider>
+        <DataProvider>
+          <SessionProvider>
+            <LayoutShell>
+              {children}
+            </LayoutShell>
+            <Toaster />
+          </SessionProvider>
+        </DataProvider>
       </body>
     </html>
   );

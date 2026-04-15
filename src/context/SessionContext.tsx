@@ -15,19 +15,8 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
-function getInitialRole(): Role {
-  if (TEMPORARY_AUTH_BYPASS && typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('userRole') as Role;
-      if (stored === 'Clinico' || stored === 'Orientador') return stored;
-    } catch {}
-    return TEMPORARY_ACCESS_ROLE;
-  }
-  return 'loading';
-}
-
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>(getInitialRole);
+  const [role, setRole] = useState<Role>('loading');
   const [firebaseUser, authLoading] = useAuthState(auth);
   const pathname = usePathname();
   const router = useRouter();
