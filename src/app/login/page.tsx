@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
+import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -40,6 +41,12 @@ export default function LoginPage() {
   const router = useRouter();
   const [resetEmail, setResetEmail] = useState('');
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
 
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
@@ -135,6 +142,21 @@ export default function LoginPage() {
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-background px-4">
+      {TEMPORARY_AUTH_BYPASS ? (
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">Acceso temporal habilitado</CardTitle>
+            <CardDescription>
+              El inicio de sesión está desactivado temporalmente mientras se reconfigura Firebase Authentication.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button className="w-full" onClick={() => router.push('/dashboard')}>
+              Continuar al panel
+            </Button>
+          </CardFooter>
+        </Card>
+      ) : (
       <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -225,6 +247,7 @@ export default function LoginPage() {
           </div>
         </CardFooter>
       </Card>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
 
 // Cache admin status to avoid repeated Firestore calls during connection issues
 let adminCache: { email: string; isAdmin: boolean; timestamp: number } | null = null;
@@ -13,6 +14,12 @@ export function useAdmin() {
   const [loadingAdmin, setLoadingAdmin] = useState(true);
 
   useEffect(() => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      setIsAdmin(true);
+      setLoadingAdmin(false);
+      return;
+    }
+
     const checkAdminStatus = async () => {
       if (loadingAuth) return;
 
@@ -69,5 +76,5 @@ export function useAdmin() {
     checkAdminStatus();
   }, [user, loadingAuth]);
 
-  return { isAdmin, loading: loadingAuth || loadingAdmin, user };
+  return { isAdmin, loading: TEMPORARY_AUTH_BYPASS ? false : loadingAuth || loadingAdmin, user };
 }

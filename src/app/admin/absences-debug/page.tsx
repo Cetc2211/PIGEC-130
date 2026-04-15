@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, AlertTriangle, CheckCircle, XCircle, Users, Shield, Database, Send, RefreshCw, Smartphone, Monitor } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
 
 export default function AbsencesDebugPage() {
   const { isAdmin, loading: loadingAdmin } = useAdmin();
@@ -73,6 +74,11 @@ export default function AbsencesDebugPage() {
   });
 
   useEffect(() => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      runDiagnostics();
+      return;
+    }
+
     if (loadingAuth || loadingAdmin) return;
     
     if (!user) {
@@ -86,7 +92,7 @@ export default function AbsencesDebugPage() {
     }
     
     runDiagnostics();
-  }, [user, loadingAuth, loadingAdmin, isAdmin]);
+  }, [user, loadingAuth, loadingAdmin, isAdmin, router]);
 
   const runDiagnostics = async () => {
     setIsLoading(true);

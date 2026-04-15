@@ -67,6 +67,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
 import { ConnectionStatus } from '@/components/connection-status';
+import { TEMPORARY_AUTH_BYPASS, TEMPORARY_ACCESS_EMAIL } from '@/lib/auth-bypass';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -102,9 +103,17 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
   const router = useRouter();
   const [isTrackingManager, setIsTrackingManager] = useState(false);
   const [isTutor, setIsTutor] = useState(false);
+  const effectiveEmail = user?.email || TEMPORARY_ACCESS_EMAIL;
+  const effectivePhoto = settings.teacherPhoto || user?.photoURL || '';
 
   useEffect(() => {
     const checkRole = async () => {
+        if (TEMPORARY_AUTH_BYPASS) {
+            setIsTrackingManager(true);
+            setIsTutor(true);
+            return;
+        }
+
         if (!user || !user.email || loadingAdmin) return;
         
         // Admin siempre tiene acceso
@@ -142,10 +151,15 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
         }
     }
     
+    if (TEMPORARY_AUTH_BYPASS) {
+        checkRole();
+        return;
+    }
+
     if (!isAuthLoading) {
         checkRole();
     }
-  }, [user, isAuthLoading, officialGroups]);
+  }, [user, isAuthLoading, officialGroups, loadingAdmin, isAdmin]);
 
   const filteredNavItems = navItems.filter(item => {
     // Seguimiento visible para todos (docentes ven sus reportes, encargados ven todo)
@@ -160,6 +174,13 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
 
 
   useEffect(() => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      if (pathname === '/login' || pathname === '/signup') {
+        router.replace('/dashboard');
+      }
+      return;
+    }
+
     if (!isAuthLoading) {
         if (user) {
             // Si el usuario está autenticado y está en login o signup, redirige a dashboard
@@ -180,7 +201,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
     document.body.className = theme;
   }, [settings?.theme]);
   
-  if (isDataLoading || isAuthLoading) {
+  if (isDataLoading || (!TEMPORARY_AUTH_BYPASS && isAuthLoading)) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -190,12 +211,17 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
   }
 
   // Para las rutas de login/signup, o si el usuario no está autenticado, no se muestra el layout principal
-  if (!user || pathname === '/login' || pathname === '/signup') {
+  if ((!user && !TEMPORARY_AUTH_BYPASS) || pathname === '/login' || pathname === '/signup') {
     return <>{children}</>;
   }
 
 
   const handleSignOut = async () => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      router.push('/');
+      return;
+    }
+
     if (syncStatus === 'pending') {
       toast({
         title: "Cambios pendientes",
@@ -323,8 +349,8 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={settings.teacherPhoto || user.photoURL || ''} alt="Avatar" />
-                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={effectivePhoto} alt="Avatar" />
+                    <AvatarFallback>{effectiveEmail[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -333,7 +359,7 @@ export default function MainLayoutClient({ children }: { children: React.ReactNo
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">Mi Cuenta</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {effectiveEmail}
                     </p>
                   </div>
                 </DropdownMenuLabel>

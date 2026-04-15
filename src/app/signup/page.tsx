@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
+import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -46,6 +47,12 @@ export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  useEffect(() => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
+
   const form = useForm<z.infer<typeof SignupFormSchema>>({
     resolver: zodResolver(SignupFormSchema),
     defaultValues: {
@@ -82,6 +89,21 @@ export default function SignupPage() {
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-background px-4">
+      {TEMPORARY_AUTH_BYPASS ? (
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">Registro desactivado temporalmente</CardTitle>
+            <CardDescription>
+              El registro se deshabilitó mientras se corrige la configuración del proveedor de autenticación.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button className="w-full" onClick={() => router.push('/dashboard')}>
+              Continuar al panel
+            </Button>
+          </CardFooter>
+        </Card>
+      ) : (
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Crear Cuenta</CardTitle>
@@ -160,6 +182,7 @@ export default function SignupPage() {
             </form>
         </Form>
       </Card>
+      )}
     </div>
   );
 }

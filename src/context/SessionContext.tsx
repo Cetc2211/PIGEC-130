@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
+import { TEMPORARY_AUTH_BYPASS, TEMPORARY_ACCESS_ROLE } from '@/lib/auth-bypass';
 
 type Role = 'Clinico' | 'Orientador' | 'loading' | 'unauthenticated' | null;
 
@@ -21,6 +22,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      try {
+        const storedRole = localStorage.getItem('userRole') as Role;
+        if (storedRole && (storedRole === 'Clinico' || storedRole === 'Orientador')) {
+          setRole(storedRole);
+        } else {
+          setRole(TEMPORARY_ACCESS_ROLE);
+        }
+      } catch {
+        setRole(TEMPORARY_ACCESS_ROLE);
+      }
+      return;
+    }
+
     if (authLoading) {
       setRole('loading');
       return;
@@ -48,6 +63,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [authLoading, firebaseUser]);
 
   useEffect(() => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      return;
+    }
+
     // Rutas públicas que NO requieren autenticación
     const isPublicRoute =
       pathname === '/' ||
@@ -81,7 +100,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     pathname === '/login' ||
     pathname === '/signup' ||
     pathname.startsWith('/evaluacion/');
-  if (role === 'loading' && !isPublicPage) {
+  if (role === 'loading' && !isPublicPage && !TEMPORARY_AUTH_BYPASS) {
     return (
         <div className="flex h-screen w-full items-center justify-center p-8">
             <div className="flex items-center gap-2 text-xl text-gray-600">

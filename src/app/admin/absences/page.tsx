@@ -25,6 +25,7 @@ import { TrackingSettingsDialog, DEFAULT_TUTOR_MESSAGE, TrackingSettings } from 
 import { StudentTrackingDialog } from '@/components/student-tracking-dialog';
 import { ExecutiveReportDialog } from '@/components/executive-report-dialog';
 import jsPDF from 'jspdf';
+import { TEMPORARY_AUTH_BYPASS, TEMPORARY_ACCESS_EMAIL } from '@/lib/auth-bypass';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,6 +87,8 @@ export default function AbsencesPage() {
   const [newTutorPhone, setNewTutorPhone] = useState('');
   const [newStudentPhone, setNewStudentPhone] = useState(''); // New state
   const [isUpdatingContact, setIsUpdatingContact] = useState(false);
+  const effectiveUserId = user?.uid || 'temporary-admin';
+  const effectiveUserEmail = user?.email || TEMPORARY_ACCESS_EMAIL;
 
   // --- ANALYTICS & ALERTS ---
   const riskAlerts = React.useMemo(() => {
@@ -141,6 +144,12 @@ export default function AbsencesPage() {
   // Verify access
   useEffect(() => {
     const verifyAccess = async () => {
+      if (TEMPORARY_AUTH_BYPASS) {
+        setHasAccess(true);
+        setIsManager(true);
+        return;
+      }
+
         if (loadingAuth || loadingAdmin) return;
         
         if (!user) {
@@ -204,7 +213,7 @@ export default function AbsencesPage() {
 
   // Fetch data when date changes
   const fetchAbsences = useCallback(async (selectedDate: Date) => {
-    if (!hasAccess || !user) return; // Don't fetch if no access
+    if (!hasAccess) return; // Don't fetch if no access
 
     setIsLoading(true);
     try {
@@ -221,7 +230,7 @@ export default function AbsencesPage() {
         q = query(
             collection(db, 'absences'),
             where('date', '==', formattedDate),
-            where('teacherId', '==', user.uid)
+            where('teacherId', '==', effectiveUserId)
         );
       }
 
@@ -237,7 +246,7 @@ export default function AbsencesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [hasAccess, isManager, user]);
+  }, [hasAccess, isManager, effectiveUserId]);
 
   useEffect(() => {
     if (hasAccess) {

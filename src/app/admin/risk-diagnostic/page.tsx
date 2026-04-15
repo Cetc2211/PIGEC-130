@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, AlertTriangle, CheckCircle, XCircle, Info, Calculator, Brain, Users, TrendingUp } from 'lucide-react';
 import { getPartialLabel } from '@/lib/utils';
+import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
 
 type RiskDiscrepancy = {
   studentId: string;
@@ -55,6 +56,10 @@ export default function RiskDiagnosticPage() {
   });
 
   useEffect(() => {
+    if (TEMPORARY_AUTH_BYPASS) {
+      return;
+    }
+
     if (loadingAuth || loadingAdmin) return;
     if (!user) {
       router.push('/login');
@@ -64,7 +69,7 @@ export default function RiskDiagnosticPage() {
       router.push('/dashboard');
       return;
     }
-  }, [user, loadingAuth, loadingAdmin, isAdmin]);
+  }, [user, loadingAuth, loadingAdmin, isAdmin, router]);
 
   useEffect(() => {
     if (isDataLoading || groups.length === 0) return;

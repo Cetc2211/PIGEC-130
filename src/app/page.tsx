@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useSession } from '@/context/SessionContext';
 import { auth } from '@/lib/firebase';
+import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, User, Shield } from 'lucide-react';
@@ -35,7 +36,7 @@ export default function InstitutionalLandingPage() {
     const [user] = useAuthState(auth);
 
     const handleRoleSelection = (role: 'Orientador' | 'Clinico') => {
-        if (!user) {
+        if (!user && !TEMPORARY_AUTH_BYPASS) {
             router.push('/login');
             return;
         }
@@ -56,6 +57,11 @@ export default function InstitutionalLandingPage() {
                 <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">PIGEC-130</h1>
                 <p className="mt-2 text-xl text-gray-600">Centro de Bachillerato Tecnológico Agropecuario No. 130</p>
                 <p className='text-lg text-gray-500'>"Eutimio Plantillas Avelar"</p>
+                {TEMPORARY_AUTH_BYPASS && (
+                    <p className="mt-4 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-800">
+                        Acceso temporal sin autenticación habilitado para configuración.
+                    </p>
+                )}
             </header>
 
             <main className="w-full max-w-4xl mx-auto">
