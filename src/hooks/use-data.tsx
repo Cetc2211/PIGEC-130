@@ -1957,6 +1957,92 @@ const checkAndInjectStrategies = async (studentId: string, addObs: Function) => 
 export const useData = (): DataContextType => {
     const context = useContext(DataContext);
     if (context === undefined) {
+        if (typeof window === 'undefined') {
+            const noopAsync = async (..._args: any[]) => {};
+            const noopSync = (..._args: any[]) => {};
+
+            return {
+                isLoading: false,
+                error: null,
+                groups: [],
+                allStudents: [],
+                activeStudentsInGroups: [],
+                allObservations: {},
+                specialNotes: [],
+                settings: defaultSettings,
+                activeGroup: null,
+                activeGroupId: null,
+                activePartialId: 'p1',
+                partialData: defaultPartialData,
+                allPartialsDataForActiveGroup: {},
+                groupAverages: {},
+                atRiskStudents: [],
+                groupRisks: {},
+                overallAverageAttendance: 0,
+                officialGroups: [],
+                announcements: [],
+                justifications: [],
+                unreadAnnouncementsCount: 0,
+                markAnnouncementsAsRead: noopSync,
+
+                setGroups: noopAsync,
+                setAllStudents: noopAsync,
+                setAllObservations: noopAsync,
+                setAllPartialsData: noopAsync,
+                setSpecialNotes: noopAsync,
+                setSettings: noopAsync,
+                setActiveGroupId: noopSync,
+                setActivePartialId: noopSync,
+                setGrades: noopAsync,
+                setAttendance: noopAsync,
+                setParticipations: noopAsync,
+                setActivities: noopAsync,
+                setActivityRecords: noopAsync,
+                setRecoveryGrades: noopAsync,
+                setMeritGrades: noopAsync,
+                setStudentFeedback: noopAsync,
+                setGroupAnalysis: noopAsync,
+
+                addStudentsToGroup: noopAsync,
+                removeStudentFromGroup: noopAsync,
+                updateGroup: noopAsync,
+                updateStudent: noopAsync,
+                updateGroupCriteria: noopAsync,
+                deleteGroup: noopAsync,
+                addStudentObservation: noopAsync,
+                updateStudentObservation: noopAsync,
+                takeAttendanceForDate: noopAsync,
+                deleteAttendanceDate: noopAsync,
+                resetAllData: noopAsync,
+                importAllData: noopAsync,
+                addSpecialNote: noopAsync,
+                updateSpecialNote: noopAsync,
+                deleteSpecialNote: noopAsync,
+
+                createOfficialGroup: async () => '',
+                updateOfficialGroupTutor: noopAsync,
+                deleteOfficialGroup: noopAsync,
+                addStudentsToOfficialGroup: noopAsync,
+                getOfficialGroupStudents: async () => [],
+
+                createAnnouncement: noopAsync,
+                createJustification: noopAsync,
+                deleteAnnouncement: noopAsync,
+                deleteJustification: noopAsync,
+
+                calculateFinalGrade: () => 0,
+                calculateDetailedFinalGrade: () => ({ finalGrade: 0, criteriaDetails: [], isRecovery: false }),
+                getStudentRiskLevel: () => ({ level: 'low', score: 0, reasons: [] }),
+                fetchPartialData: async () => null,
+                triggerPedagogicalCheck: noopSync,
+                syncPublicData: noopAsync,
+                forceCloudSync: noopAsync,
+                uploadLocalToCloud: noopAsync,
+                syncStatus: 'synced',
+                syncProgress: null,
+            } as DataContextType;
+        }
+
         throw new Error('useData debe ser usado dentro de un DataProvider');
     }
     return context;
