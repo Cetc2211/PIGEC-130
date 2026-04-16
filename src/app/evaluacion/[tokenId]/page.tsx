@@ -178,6 +178,12 @@ export default function EvaluacionPage() {
                 setLoading(false);
             };
 
+            const hasSessionDataInLink = !!searchParams.get('tests');
+            if (hasSessionDataInLink) {
+                fallbackFromQueryParams();
+                return;
+            }
+
             const localSession = getEvaluationSessionById<any>(tokenId);
             if (localSession) {
                 const sessionMode = localSession.mode || 'group';
@@ -258,7 +264,13 @@ export default function EvaluacionPage() {
                 if (firebaseError.includes('Missing or insufficient permissions') || firebaseError.includes('PERMISSION_DENIED')) {
                     fallbackFromQueryParams();
                     return;
-                } else if (firebaseError.includes('network') || firebaseError.includes('fetch')) {
+                } else if (
+                    firebaseError.includes('network') ||
+                    firebaseError.includes('fetch') ||
+                    firebaseError.includes('offline') ||
+                    firebaseError.includes('client is offline') ||
+                    firebaseError.includes('Failed to get document because the client is offline')
+                ) {
                     fallbackFromQueryParams();
                     return;
                 } else {
