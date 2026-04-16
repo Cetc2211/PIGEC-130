@@ -56,7 +56,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase';
-import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { getExpedientes as getExpedientesLocal, getOfficialGroupStructures, saveExpedienteLocal } from '@/lib/storage-local';
 import {
   getNivelLabel,
@@ -311,15 +311,11 @@ export default function ExpedientesPage() {
         notas: [],
       };
 
-      if (db && user) {
-        await setDoc(doc(db, 'expedientes', studentId), nuevoExpediente);
-      }
-
       saveExpedienteLocal(nuevoExpediente);
 
       toast({
-        title: 'Expediente creado',
-        description: `Se creó el expediente de ${fichaData.fullName.trim()} con la Ficha de Identificación completa.`,
+        title: 'Expediente guardado localmente',
+        description: 'Expediente guardado localmente',
       });
 
       // Limpiar formulario y forzar recarga de la lista
