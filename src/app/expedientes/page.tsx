@@ -301,7 +301,7 @@ export default function ExpedientesPage() {
         origen: 'registro_manual' as OrigenExpediente,
         fechaCreacion: ahora,
         fechaActualizacion: ahora,
-        creadoPor: user.email || 'usuario@firebase',
+        creadoPor: user?.email || 'usuario@local',
         academicData: {
           gpa: 0,
           absences: 0,

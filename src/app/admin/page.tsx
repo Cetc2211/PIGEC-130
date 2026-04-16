@@ -9,52 +9,40 @@ import { UserPlus, RefreshCw, UserCog } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { doc, setDoc, writeBatch } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { saveExpedienteLocal } from '@/lib/storage-local';
 
 
-// Función que guarda en Firestore
+// Función que guarda localmente en localStorage
 async function addNewStudent(data: { studentId: string; studentName: string; group: string; dualRelationship: string; }) {
-    console.log("Iniciando guardado de nuevo estudiante en Firestore...");
-    
-    const batch = writeBatch(db);
+    const ahora = new Date().toISOString();
 
-    // 1. Referencia a la colección de estudiantes (datos generales)
-    const studentRef = doc(db, 'students', data.studentId);
-    batch.set(studentRef, {
+    saveExpedienteLocal({
         id: data.studentId,
-        name: data.studentName,
-        demographics: {
-            group: data.group,
-            age: 0, 
-            semester: 0,
-        },
+        studentId: data.studentId,
+        studentName: data.studentName,
+        groupName: data.group,
+        semester: 1,
+        nivel: 'nivel_1',
+        estado: 'abierto',
+        origen: 'registro_manual',
+        fechaCreacion: ahora,
+        fechaActualizacion: ahora,
+        creadoPor: 'usuario@local',
         academicData: {
             gpa: 0,
             absences: 0,
         },
-        suicideRiskLevel: 'Bajo', // Valor por defecto
-        dualRelationshipNote: data.dualRelationship, 
+        evaluaciones: [],
+        notas: [
+            {
+                id: `nota-${Date.now()}`,
+                fecha: ahora,
+                autor: 'Sistema',
+                contenido: data.dualRelationship || 'Expediente creado localmente desde Administración.',
+            },
+        ],
     });
 
-    // 2. Referencia a la subcolección clínica (datos sensibles)
-    const clinicalRecordRef = doc(db, 'students', data.studentId, 'clinical_records', 'initial_assessment');
-    batch.set(clinicalRecordRef, {
-        studentId: data.studentId,
-        createdAt: new Date().toISOString(),
-        emergencyContact: {
-            name: '',
-            phone: '',
-        },
-        // Aquí se inicializan los campos clínicos que se llenarán después
-        bdi_ii_score: null,
-        bai_score: null,
-        impresion_diagnostica: 'Expediente recién creado, pendiente de evaluación inicial.',
-    });
-    
-    await batch.commit();
-    
-    console.log("Datos guardados en Firestore para el estudiante:", data.studentId);
     return { success: true, studentId: data.studentId };
 }
 
@@ -81,7 +69,7 @@ function AddNewStudentForm() {
         try {
             const result = await addNewStudent({ studentId, studentName, group, dualRelationship });
             if (result.success) {
-                setFeedback({ type: 'success', message: `Estudiante "${studentName}" ingresado con éxito. ID: ${result.studentId}` });
+                setFeedback({ type: 'success', message: 'Expediente guardado localmente' });
                 setStudentId('');
                 setStudentName('');
                 setGroup('');
@@ -90,8 +78,8 @@ function AddNewStudentForm() {
                  setFeedback({ type: 'error', message: 'Ocurrió un error al guardar el estudiante.' });
             }
         } catch (error) {
-             setFeedback({ type: 'error', message: 'Ocurrió un error inesperado al conectar con la base de datos.' });
-             console.error("Error al guardar en Firestore:", error);
+             setFeedback({ type: 'error', message: 'No se pudo crear el expediente local.' });
+             console.error('Error al guardar expediente local:', error);
         } finally {
             setIsLoading(false);
         }
@@ -105,7 +93,7 @@ function AddNewStudentForm() {
                     Ingresar Nuevo Estudiante
                 </CardTitle>
                 <CardDescription>
-                    Crea un nuevo expediente digital en la base de datos (Firestore).
+                    Crea un nuevo expediente digital en almacenamiento local.
                 </CardDescription>
             </CardHeader>
             <CardContent>
