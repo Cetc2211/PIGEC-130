@@ -412,12 +412,28 @@ export default function EvaluacionPage() {
 
             setGeneratedBridgeCode(prefixedCode);
 
+            let copied = false;
+            try {
+                await navigator.clipboard.writeText(prefixedCode);
+                copied = true;
+            } catch {
+                copied = false;
+            }
+
             const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
             const popup = window.open(waUrl, '_blank', 'noopener,noreferrer');
             if (!popup) {
-                setGenerationMessage('Codigo generado. No se pudo abrir WhatsApp automaticamente; copie el codigo y envielo manualmente.');
+                setGenerationMessage(
+                    copied
+                        ? 'Codigo generado y copiado. Abra el chat de WhatsApp del evaluador, pegue el codigo y envielo.'
+                        : 'Codigo generado. Abra el chat de WhatsApp del evaluador, copie el codigo, peguelo y envielo.'
+                );
             } else {
-                setGenerationMessage('Codigo generado correctamente.');
+                setGenerationMessage(
+                    copied
+                        ? 'Codigo generado y copiado. Si WhatsApp no se completa solo, pegue el codigo en el chat del evaluador y envielo.'
+                        : 'Codigo generado correctamente. Copie el codigo y peguelo en el chat de WhatsApp del evaluador.'
+                );
             }
         } catch (error) {
             console.error('Error generando enlace de WhatsApp:', error);
@@ -714,11 +730,17 @@ export default function EvaluacionPage() {
                         </p>
                         <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-6">
                             <p className="text-sm text-green-800">
-                                {isIndividual
-                                    ? 'Sus respuestas han sido enviadas de forma segura y se integrarán automáticamente a su expediente clínico. El equipo de orientación revisará sus resultados.'
-                                    : 'Sus respuestas han sido enviadas de forma segura. El equipo de orientación revisará sus resultados.'
-                                }
+                                Sus respuestas se codificaran en un codigo seguro para que usted lo envie por WhatsApp al evaluador que le compartio este enlace.
                             </p>
+                        </div>
+                        <div className="bg-sky-50 p-4 rounded-lg border border-sky-200 mb-4 text-left">
+                            <p className="text-xs font-semibold text-sky-800 mb-2">Siguiente paso obligatorio</p>
+                            <ol className="text-xs text-sky-700 space-y-1 list-decimal pl-4">
+                                <li>De clic en "Generar Codigo de Resultados".</li>
+                                <li>Copie el codigo (se intentara copiar automaticamente).</li>
+                                <li>Pegue el codigo en el chat de WhatsApp del evaluador.</li>
+                                <li>Envie el mensaje para que puedan registrar sus resultados.</li>
+                            </ol>
                         </div>
                         <div className="text-sm text-gray-500">
                             <p><strong>Pruebas completadas:</strong> {completedTests.length}</p>
