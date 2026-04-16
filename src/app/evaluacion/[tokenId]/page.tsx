@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -105,6 +105,7 @@ interface SessionData {
 
 export default function EvaluacionPage() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const tokenId = params.tokenId as string;
 
     // Estados
@@ -135,9 +136,49 @@ export default function EvaluacionPage() {
     // Cargar datos de la sesión
     useEffect(() => {
         const loadSession = async () => {
-            if (!db) {
-                setError('Base de datos no disponible');
+            const fallbackFromQueryParams = () => {
+                const testsParam = searchParams.get('tests') || '';
+                const tests = testsParam
+                    .split(',')
+                    .map((value) => value.trim())
+                    .filter(Boolean);
+
+                if (tests.length === 0) {
+                    setError('Sesion de evaluacion no encontrada o expirada');
+                    setLoading(false);
+                    return;
+                }
+
+                const modeParam = searchParams.get('mode');
+                const forcedMode: 'group' | 'individual' = modeParam === 'individual' ? 'individual' : 'group';
+                const studentNameFromLink = searchParams.get('studentName') || 'Consultante';
+                const studentIdFromLink = searchParams.get('studentId') || searchParams.get('expedienteId') || undefined;
+                const matriculaFromLink = searchParams.get('matricula') || '';
+
+                setSession({
+                    id: tokenId,
+                    name: searchParams.get('sessionName') || 'Evaluacion Offline',
+                    tests,
+                    groups: [],
+                    status: 'active',
+                    mode: forcedMode,
+                    studentId: studentIdFromLink,
+                    studentName: studentNameFromLink,
+                    expedienteId: studentIdFromLink,
+                });
+
+                if (forcedMode === 'individual') {
+                    setStep('consentimiento');
+                } else if (matriculaFromLink) {
+                    setMatriculaInput(matriculaFromLink.toUpperCase());
+                }
+
+                setError(null);
                 setLoading(false);
+            };
+
+            if (!db) {
+                fallbackFromQueryParams();
                 return;
             }
 
@@ -158,7 +199,8 @@ export default function EvaluacionPage() {
                 }
 
                 if (!docSnap.exists()) {
-                    setError('Sesión de evaluación no encontrada o expirada');
+                    fallbackFromQueryParams();
+                    return;
                 } else {
                     const data = docSnap.data();
                     const sessionMode = data.mode || 'group';
@@ -185,9 +227,11 @@ export default function EvaluacionPage() {
                 console.error('Error cargando sesión:', err);
                 const firebaseError = err?.message || '';
                 if (firebaseError.includes('Missing or insufficient permissions') || firebaseError.includes('PERMISSION_DENIED')) {
-                    setError('La aplicación no tiene permisos para acceder a la base de datos. Contacte al administrador para verificar las reglas de seguridad de Firestore.');
+                    fallbackFromQueryParams();
+                    return;
                 } else if (firebaseError.includes('network') || firebaseError.includes('fetch')) {
-                    setError('Error de conexión. Verifique su acceso a internet e intente nuevamente.');
+                    fallbackFromQueryParams();
+                    return;
                 } else {
                     setError(`Error al cargar la sesión: ${firebaseError || 'Error desconocido'}`);
                 }
@@ -196,7 +240,7 @@ export default function EvaluacionPage() {
         };
 
         loadSession();
-    }, [tokenId]);
+    }, [tokenId, searchParams]);
 
     // Validar matrícula (solo modo grupal)
     const handleValidarMatricula = async () => {
@@ -613,7 +657,7 @@ export default function EvaluacionPage() {
                                     Generando codigo...
                                 </>
                             ) : (
-                                'Enviar a mi Especialista via WhatsApp'
+                                'Generar Codigo de Resultados'
                             )}
                         </Button>
                         <p className="mt-6 text-xs text-gray-400">

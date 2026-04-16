@@ -103,6 +103,8 @@ interface BancoDePruebasProps {
   studentName: string;
   /** Grupo del estudiante */
   groupName?: string;
+  /** Matricula del estudiante (opcional) */
+  studentMatricula?: string;
 }
 
 interface IndividualSession {
@@ -117,7 +119,7 @@ interface IndividualSession {
   link: string;
 }
 
-export default function BancoDePruebas({ studentId, studentName, groupName }: BancoDePruebasProps) {
+export default function BancoDePruebas({ studentId, studentName, groupName, studentMatricula }: BancoDePruebasProps) {
   // Estado de selección
   const [selectedTests, setSelectedTests] = useState<string[]>([]);
 
@@ -179,7 +181,18 @@ export default function BancoDePruebas({ studentId, studentName, groupName }: Ba
 
     const sessionId = `ind_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const baseUrl = window.location.origin;
-    const link = `${baseUrl}/evaluacion/${sessionId}`;
+    const testsParam = selectedTests.join(',');
+    const testType = selectedTests[0] || 'bateria';
+    const params = new URLSearchParams({
+      mode: 'individual',
+      studentId,
+      studentName,
+      matricula: studentMatricula || '',
+      tests: testsParam,
+      testType,
+      sessionName: sessionName || `Pruebas individuales - ${studentName}`,
+    });
+    const link = `${baseUrl}/evaluacion/${sessionId}?${params.toString()}`;
 
     const sessionData: IndividualSession = {
       id: sessionId,

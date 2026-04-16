@@ -16,7 +16,7 @@ import type { OfficialGroup, Student, JustificationCategory } from '@/lib/placeh
 import { format, addHours, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { decodeEvaluationPayload } from '@/lib/data-utils';
-import { saveOfficialGroupStructure, saveImportedWhatsAppEvaluation } from '@/lib/storage-local';
+import { saveOfficialGroupStructure, saveImportedWhatsAppEvaluation, saveExpedienteLocal } from '@/lib/storage-local';
 
 export default function OfficialGroupsPage() {
     const { 
@@ -277,6 +277,16 @@ export default function OfficialGroupsPage() {
         try {
             const code = extractWhatsAppBridgeCode(whatsAppCodeInput);
             const payload = await decodeEvaluationPayload(code);
+            saveExpedienteLocal({
+                id: `exp-wa-direct-${Date.now()}`,
+                studentId: payload.student?.id,
+                studentName: payload.student?.name || 'Consultante WhatsApp',
+                groupName: payload.student?.grupoNombre || 'Sin grupo',
+                officialGroupId: payload.student?.grupoId || null,
+                origen: 'whatsapp_bridge',
+                fechaActualizacion: new Date().toISOString(),
+                whatsappBridgeData: payload,
+            });
             const importId = saveImportedWhatsAppEvaluation(payload);
 
             const studentName = payload.student?.name || 'Consultante sin nombre';

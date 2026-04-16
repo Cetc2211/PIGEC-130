@@ -57,6 +57,7 @@ import {
 import { cn } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase';
 import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { getExpedientes as getExpedientesLocal, getOfficialGroupStructures, saveExpedienteLocal } from '@/lib/storage-local';
 import {
   getNivelLabel,
   getNivelShort,
@@ -91,6 +92,8 @@ export default function ExpedientesPage() {
   const [listVersion, setListVersion] = useState(0);
   const [evaluacionesFirestore, setEvaluacionesFirestore] = useState<Record<string, number>>({});
   const [expedientesRemotos, setExpedientesRemotos] = useState<Expediente[]>([]);
+  const [filtroGrupoOficial, setFiltroGrupoOficial] = useState<string>('todos');
+  const [gruposOficiales, setGruposOficiales] = useState<Array<{ id: string; name: string }>>([]);
 
   // Formulario de Ficha de Identificación (modo controlado)
   const [fichaData, setFichaData] = useState<FichaIdentificacionData>({
@@ -109,14 +112,24 @@ export default function ExpedientesPage() {
   }, [filtro, expedientesRemotos]);
 
   const expedientesFiltrados = useMemo(() => {
-    if (!busqueda.trim()) return expedientes;
+    const byOfficialGroup = filtroGrupoOficial === 'todos'
+      ? expedientes
+      : expedientes.filter((exp) =>
+          exp.groupName?.toLowerCase().includes(filtroGrupoOficial.toLowerCase())
+        );
+
+    if (!busqueda.trim()) return byOfficialGroup;
     const term = busqueda.toLowerCase();
-    return expedientes.filter(
+    return byOfficialGroup.filter(
       (exp) =>
         exp.studentName.toLowerCase().includes(term) ||
         exp.groupName.toLowerCase().includes(term)
     );
-  }, [expedientes, busqueda]);
+  }, [expedientes, busqueda, filtroGrupoOficial]);
+
+  React.useEffect(() => {
+    setGruposOficiales(getOfficialGroupStructures());
+  }, []);
 
   React.useEffect(() => {
     const syncExpedientesRemotos = async () => {
@@ -125,7 +138,8 @@ export default function ExpedientesPage() {
       }
 
       if (!db || !user) {
-        setExpedientesRemotos([]);
+        const locales = getExpedientesLocal<Expediente>();
+        setExpedientesRemotos(locales);
         return;
       }
 
@@ -274,10 +288,6 @@ export default function ExpedientesPage() {
 
     setIsCreating(true);
     try {
-      if (!db || !user) {
-        throw new Error('Debe iniciar sesión con Firebase para crear expedientes.');
-      }
-
       const studentId = `manual-${Date.now()}`;
       const ahora = new Date().toISOString();
       const nuevoExpediente: Expediente = {
@@ -301,7 +311,11 @@ export default function ExpedientesPage() {
         notas: [],
       };
 
-      await setDoc(doc(db, 'expedientes', studentId), nuevoExpediente);
+      if (db && user) {
+        await setDoc(doc(db, 'expedientes', studentId), nuevoExpediente);
+      }
+
+      saveExpedienteLocal(nuevoExpediente);
 
       toast({
         title: 'Expediente creado',
@@ -314,10 +328,7 @@ export default function ExpedientesPage() {
       setIsCreateDialogOpen(false);
       setListVersion((v) => v + 1);
     } catch {
-      const description =
-        user
-          ? 'No se pudo crear el expediente en Firestore.'
-          : 'Debe iniciar sesión correctamente antes de crear expedientes.';
+      const description = 'No se pudo crear el expediente.';
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -425,6 +436,21 @@ export default function ExpedientesPage() {
             </SelectContent>
           </Select>
         </div>
+        <div className="flex items-center gap-2">
+          <Select value={filtroGrupoOficial} onValueChange={setFiltroGrupoOficial}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Grupo Oficial" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Grupo Oficial: Todos</SelectItem>
+              {gruposOficiales.map((g) => (
+                <SelectItem key={g.id} value={g.name}>
+                  {g.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Resumen de filtros */}
@@ -440,6 +466,11 @@ export default function ExpedientesPage() {
         {busqueda && (
           <Badge variant="secondary" className="text-xs">
             Búsqueda: &quot;{busqueda}&quot;
+          </Badge>
+        )}
+        {filtroGrupoOficial !== 'todos' && (
+          <Badge variant="secondary" className="text-xs">
+            Grupo Oficial: {filtroGrupoOficial}
           </Badge>
         )}
       </div>

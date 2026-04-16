@@ -1,70 +1,53 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { usePathname, useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
-import { TEMPORARY_AUTH_BYPASS, TEMPORARY_ACCESS_ROLE } from '@/lib/auth-bypass';
+import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
 
-type Role = 'Clinico' | 'Orientador' | 'loading' | 'unauthenticated' | null;
+type Role = 'Admin' | 'Clinico' | 'Orientador' | 'loading' | 'unauthenticated' | null;
+
+type LocalSessionUser = {
+  email: string;
+  role: 'Admin';
+  name: string;
+};
+
+const LOCAL_ADMIN_USER: LocalSessionUser = {
+  email: 'mpcecil...@gmail.com',
+  role: 'Admin',
+  name: 'Administrador Local',
+};
 
 interface SessionContextType {
   role: Role;
   setRole: (role: Role) => void;
+  user: LocalSessionUser;
+  loading: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>('loading');
-  const [firebaseUser, authLoading] = useAuthState(auth);
+  const [role, setRole] = useState<Role>('Admin');
+  const [loading, setLoading] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (TEMPORARY_AUTH_BYPASS) {
-      // Role already set in initial state; keep in sync if localStorage changes
-      try {
-        const storedRole = localStorage.getItem('userRole') as Role;
-        if (storedRole === 'Clinico' || storedRole === 'Orientador') {
-          setRole(storedRole);
-        } else {
-          setRole(TEMPORARY_ACCESS_ROLE);
-        }
-      } catch {
-        setRole(TEMPORARY_ACCESS_ROLE);
-      }
-      return;
-    }
-
-    if (authLoading) {
-      setRole('loading');
-      return;
-    }
-
-    if (!firebaseUser) {
-      localStorage.removeItem('userRole');
-      setRole('unauthenticated');
-      return;
-    }
+    // Bypass local total: siempre iniciar como Admin local sin esperar Firebase.
+    setRole('Admin');
+    setLoading(false);
 
     try {
-      const storedRole = localStorage.getItem('userRole') as Role;
-      if (storedRole && (storedRole === 'Clinico' || storedRole === 'Orientador')) {
-        setRole(storedRole);
-      } else {
-        // Si hay sesión Firebase pero no rol guardado, usar clínico por defecto.
-        setRole('Clinico');
-      }
+      localStorage.setItem('userRole', 'Admin');
+      localStorage.setItem('localAdminEmail', LOCAL_ADMIN_USER.email);
     } catch {
-      // If localStorage is not available (e.g., in SSR),
-      // usar un rol por defecto cuando existe sesión Firebase.
-      setRole('Clinico');
+      // No-op cuando localStorage no esta disponible.
     }
-  }, [authLoading, firebaseUser]);
+  }, []);
 
   useEffect(() => {
-    if (TEMPORARY_AUTH_BYPASS) {
+    if (TEMPORARY_AUTH_BYPASS || role === 'Admin') {
       return;
     }
 
@@ -92,7 +75,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setRole(newRole);
   };
 
-  const value = { role, setRole: handleSetRole as (role: Role) => void };
+  const value = {
+    role,
+    setRole: handleSetRole as (role: Role) => void,
+    user: LOCAL_ADMIN_USER,
+    loading,
+  };
   
   // Show a generic loader if the session is still loading on any protected page.
   // Skip for public routes (/, /evaluacion/*) so students can see the evaluation page
@@ -101,7 +89,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     pathname === '/login' ||
     pathname === '/signup' ||
     pathname.startsWith('/evaluacion/');
-  if (role === 'loading' && !isPublicPage && !TEMPORARY_AUTH_BYPASS) {
+  if (loading && role === 'loading' && !isPublicPage && !TEMPORARY_AUTH_BYPASS) {
     return (
         <div className="flex h-screen w-full items-center justify-center p-8">
             <div className="flex items-center gap-2 text-xl text-gray-600">

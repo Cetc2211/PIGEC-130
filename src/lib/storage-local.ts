@@ -53,6 +53,10 @@ export function saveExpediente(expediente: StoredExpediente): void {
   localStorage.setItem(EXPEDIENTES_KEY, JSON.stringify(current));
 }
 
+export function saveExpedienteLocal(expediente: StoredExpediente): void {
+  saveExpediente(expediente);
+}
+
 export function saveOfficialGroupStructure(group: OfficialGroup): void {
   if (!isBrowser()) return;
   const current = safeParseArray<OfficialGroup>(localStorage.getItem(OFFICIAL_GROUPS_KEY));
@@ -89,7 +93,7 @@ export function saveImportedWhatsAppEvaluation(payload: WhatsAppBridgePayload): 
   const studentId = payload.student?.id ?? undefined;
   const studentName = payload.student?.name ?? 'Consultante (WhatsApp)';
 
-  saveExpediente({
+  saveExpedienteLocal({
     id: `exp-wa-${importId}`,
     studentId,
     studentName,

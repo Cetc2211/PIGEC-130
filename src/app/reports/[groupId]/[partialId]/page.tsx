@@ -26,8 +26,7 @@ import type { PartialId, StudentObservation, Group, StudentWithRisk, RecoveryGra
 import { getPartialLabel } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { generateGroupReportAnalysis } from '@/ai';
-import { testApiKeyAction } from '@/app/settings/actions';
+import { AI_KEY_MISSING_MESSAGE, generateTextWithUserKey, hasUserGeminiApiKey } from '@/lib/ai-service';
 import { normalizeModel, describeModel } from '@/lib/ai-models';
 
 
@@ -73,7 +72,7 @@ export default function GroupReportPage() {
 
   const [narrativeAnalysis, setNarrativeAnalysis] = useState('');
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
-  const [isApiKeyValid, setIsApiKeyValid] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastUsedModel, setLastUsedModel] = useState<string | null>(null);
   const friendlyModelName = useMemo(() => lastUsedModel ? describeModel(lastUsedModel) : null, [lastUsedModel]);
@@ -81,6 +80,10 @@ export default function GroupReportPage() {
   useEffect(() => {
     setNarrativeAnalysis(groupAnalysis || '');
   }, [groupAnalysis]);
+
+  useEffect(() => {
+    setAiEnabled(hasUserGeminiApiKey());
+  }, []);
 
 
   useEffect(() => {
@@ -272,22 +275,42 @@ export default function GroupReportPage() {
         return;
     }
 
+    if (!hasUserGeminiApiKey()) {
+      setAiEnabled(false);
+      toast({ variant: 'destructive', title: 'IA no disponible', description: AI_KEY_MISSING_MESSAGE });
+      return;
+    }
+
     setIsGeneratingAnalysis(true);
     toast({ title: 'Generando análisis con IA...', description: 'Esto puede tomar unos segundos.' });
 
     try {
-      // Call the server action which uses Google Cloud Service Account authentication
-      const analysisText = await generateGroupReportAnalysis({
-        groupName: group.subject,
-        partial: getPartialLabel(partialId),
-        totalStudents: summary.totalStudents,
-        approvedCount: summary.approvedCount,
-        failedCount: summary.failedCount,
-        groupAverage: summary.groupAverage,
-        attendanceRate: summary.attendanceRate,
-        atRiskStudentCount: atRiskStudentsForGroup.length,
-        aiModel: settings.aiModel
-      });
+      const observationsText = recentObservations.length > 0
+        ? recentObservations.map((obs) => `- ${obs.studentName} (${obs.type}): ${obs.details}`).join('\n')
+        : '- Sin observaciones recientes';
+
+      const prompt = [
+        'Eres un orientador academico del CBTa 130 y elaboras informes grupales.',
+        'Redacta un analisis claro, tecnico y accionable en espanol.',
+        `Grupo: ${group.subject}`,
+        `Parcial: ${getPartialLabel(partialId)}`,
+        `Total estudiantes: ${summary.totalStudents}`,
+        `Aprobados: ${summary.approvedCount}`,
+        `Reprobados: ${summary.failedCount}`,
+        `Promedio grupal: ${summary.groupAverage.toFixed(1)}`,
+        `Asistencia promedio: ${summary.attendanceRate.toFixed(1)}%`,
+        `Participacion promedio: ${summary.participationRate.toFixed(1)}%`,
+        `Estudiantes en riesgo: ${atRiskStudentsForGroup.length}`,
+        'Observaciones recientes de bitacora:',
+        observationsText,
+        'Instrucciones de salida:',
+        '1) Hallazgos clave.',
+        '2) Factores de riesgo y proteccion.',
+        '3) Recomendaciones practicas para docente y tutor.',
+        '4) Plan breve de seguimiento para el siguiente parcial.',
+      ].join('\n');
+
+      const analysisText = await generateTextWithUserKey(prompt);
 
       console.log('Analysis response received:', {
         length: analysisText ? analysisText.length : 0,
@@ -308,7 +331,7 @@ export default function GroupReportPage() {
       setNarrativeAnalysis(analysisText || '');
       // Note: The server action returns just the text string, so we don't get the model name back directly 
       // unless we change the return type. For now, we assume the requested model was used.
-      setLastUsedModel(settings.aiModel || null);
+      setLastUsedModel('gemini-1.5-flash');
       
       toast({ title: '¡Análisis generado!', description: `La IA ha completado el análisis del grupo.` });
     } catch(e: any) {
@@ -416,12 +439,15 @@ export default function GroupReportPage() {
                                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
                                 Guardar Análisis
                             </Button>
-                             <Button size="sm" onClick={handleGenerateAnalysis} disabled={isGeneratingAnalysis}>
+                             <Button size="sm" onClick={handleGenerateAnalysis} disabled={isGeneratingAnalysis || !aiEnabled}>
                                 {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
                                 Generar con IA
                             </Button>
                         </div>
                     </div>
+                    {!aiEnabled && (
+                      <p className="text-xs text-amber-700">{AI_KEY_MISSING_MESSAGE}</p>
+                    )}
                     <Textarea 
                         placeholder="Análisis cualitativo del rendimiento general del grupo..."
                         value={narrativeAnalysis}

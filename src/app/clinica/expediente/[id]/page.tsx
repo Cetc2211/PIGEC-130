@@ -277,6 +277,7 @@ export default function ClinicalFilePage() {
                             studentId={studentId}
                             studentName={studentData.name}
                             groupName={studentData.demographics.group}
+                                     studentMatricula={(studentData as any).demographics?.matricula || studentId}
                         />
 
                         <Card>

@@ -28,7 +28,7 @@ import { StudentObservationLogDialog } from '@/components/student-observation-lo
 import { WhatsAppDialog } from '@/components/whatsapp-dialog';
 import { ClinicalScreeningDialog } from '@/components/clinical-screening-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { generateStudentFeedback } from '@/ai';
+import { AI_KEY_MISSING_MESSAGE, generateTextWithUserKey, hasUserGeminiApiKey } from '@/lib/ai-service';
 
 export default function StudentProfilePage() {
   const params = useParams();
@@ -59,6 +59,7 @@ export default function StudentProfilePage() {
   const [isEditingFeedback, setIsEditingFeedback] = useState(false);
   const [currentFeedback, setCurrentFeedback] = useState('');
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
 
   const student = useMemo(() => {
     return allStudents.find((s) => s.id === studentId) || activeStudentsInGroups.find((s) => s.id === studentId);
@@ -93,6 +94,10 @@ export default function StudentProfilePage() {
         setCurrentFeedback(savedFeedback);
     }
   }, [savedFeedback, isEditingFeedback, isGeneratingFeedback]);
+
+  useEffect(() => {
+    setAiEnabled(hasUserGeminiApiKey());
+  }, []);
 
 
   useEffect(() => {
@@ -273,6 +278,12 @@ export default function StudentProfilePage() {
   const handleGenerateFeedback = async () => {
     if (!student) return;
 
+    if (!hasUserGeminiApiKey()) {
+      setAiEnabled(false);
+      toast({ variant: 'destructive', title: 'IA no disponible', description: AI_KEY_MISSING_MESSAGE });
+      return;
+    }
+
     const activePartialStats = studentStatsByPartial.find(s => s.partialId === activePartialId);
     if (!activePartialStats) {
       toast({ variant: 'destructive', title: 'Faltan Datos', description: `No hay datos de calificación para el ${getPartialLabel(activePartialId)}.` });
@@ -283,14 +294,32 @@ export default function StudentProfilePage() {
     toast({ title: 'Generando retroalimentación con IA...', description: 'Esto puede tomar unos segundos.' });
 
     try {
-        const result = await generateStudentFeedback({
-            studentName: student.name,
-            partial: getPartialLabel(activePartialId),
-            finalGrade: activePartialStats.finalGrade,
-            attendanceRate: activePartialStats.attendance.rate,
-            criteria: activePartialStats.criteriaDetails.map(c => ({ name: c.name, earnedPercentage: c.earned })),
-            observations: activePartialStats.observations.map(o => o.details),
-        });
+        const criteriaText = activePartialStats.criteriaDetails
+          .map((c) => `- ${c.name}: ${c.earned.toFixed(1)}/${c.weight}`)
+          .join('\n');
+        const observationsText = activePartialStats.observations.length > 0
+          ? activePartialStats.observations.map((o) => `- ${o.type}: ${o.details}`).join('\n')
+          : '- Sin observaciones registradas';
+
+        const prompt = [
+          'Eres orientador academico del CBTa 130.',
+          'Redacta retroalimentacion breve, profesional, empatica y accionable para estudiante.',
+          `Estudiante: ${student.name}`,
+          `Parcial: ${getPartialLabel(activePartialId)}`,
+          `Calificacion final: ${activePartialStats.finalGrade.toFixed(1)}/100`,
+          `Asistencia: ${activePartialStats.attendance.rate.toFixed(1)}%`,
+          'Criterios:',
+          criteriaText || '- Sin criterios',
+          'Observaciones:',
+          observationsText,
+          'Instrucciones de salida:',
+          '1) Fortalezas.',
+          '2) Riesgos principales.',
+          '3) Plan de accion en 3 pasos.',
+          '4) Mensaje motivacional final en tono respetuoso.',
+        ].join('\n');
+
+        const result = await generateTextWithUserKey(prompt);
         setCurrentFeedback(result);
         setIsEditingFeedback(true); // Open editor with generated text automatically
         toast({ title: '¡Retroalimentación generada!', description: 'Revisa y guarda el análisis.' });
@@ -525,12 +554,15 @@ export default function StudentProfilePage() {
                           <Edit className="mr-2" /> Editar
                       </Button>
                   )}
-                  <Button variant="outline" size="sm" onClick={handleGenerateFeedback} disabled={isGeneratingFeedback || !studentStatsByPartial.some(s => s.partialId === activePartialId)}>
+                  <Button variant="outline" size="sm" onClick={handleGenerateFeedback} disabled={isGeneratingFeedback || !aiEnabled || !studentStatsByPartial.some(s => s.partialId === activePartialId)}>
                       {isGeneratingFeedback ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
                       Generar con IA
                   </Button>
                 </div>
               </div>
+              {!aiEnabled && (
+                <p className="text-xs text-amber-700 mt-2">{AI_KEY_MISSING_MESSAGE}</p>
+              )}
             </CardHeader>
              <CardContent>
                 {isEditingFeedback ? (

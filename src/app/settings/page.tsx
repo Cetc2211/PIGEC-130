@@ -36,6 +36,7 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { NoteDialog } from '@/components/note-dialog';
 import { MODEL_OPTIONS, DEFAULT_MODEL, normalizeModel, describeModel } from '@/lib/ai-models';
+import { USER_GEMINI_API_KEY_STORAGE_KEY } from '@/lib/ai-service';
 
 
 type ExportData = {
@@ -64,6 +65,8 @@ export default function SettingsPage() {
     const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
     const [isTestingKey, setIsTestingKey] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [userGeminiApiKey, setUserGeminiApiKey] = useState('');
+    const [hasUserGeminiApiKey, setHasUserGeminiApiKey] = useState(false);
     
     const getModelLabel = useMemo(() => {
         return (value: string) => MODEL_OPTIONS.find(opt => opt.value === value)?.label || describeModel(value);
@@ -79,6 +82,26 @@ export default function SettingsPage() {
             setTeacherPhotoPreview(settings.teacherPhoto);
         }
     }, [settings, isLoading]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const saved = localStorage.getItem(USER_GEMINI_API_KEY_STORAGE_KEY) || '';
+        setUserGeminiApiKey(saved);
+        setHasUserGeminiApiKey(saved.trim().length > 0);
+    }, []);
+
+    const handleSaveUserGeminiApiKey = () => {
+        if (typeof window === 'undefined') return;
+        const value = userGeminiApiKey.trim();
+        localStorage.setItem(USER_GEMINI_API_KEY_STORAGE_KEY, value);
+        setHasUserGeminiApiKey(value.length > 0);
+        toast({
+            title: 'API Key guardada',
+            description: value.length > 0
+                ? 'La IA client-side quedó activada con tu llave local.'
+                : 'La llave se vació. La IA quedará desactivada hasta configurar una nueva.',
+        });
+    };
     
     const handleSave = async () => {
         setIsSaving(true);
@@ -287,7 +310,7 @@ export default function SettingsPage() {
             <CardHeader>
                 <CardTitle>Integración con Inteligencia Artificial</CardTitle>
                 <CardDescription>
-                    El sistema utiliza Google Cloud y Vertex AI para generar informes automáticos.
+                    Configura tu llave personal para ejecutar Gemini directamente en tu navegador.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -332,8 +355,30 @@ export default function SettingsPage() {
                         */}
                         
                         <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                            <p className="text-sm font-medium text-blue-900">🤖 Inteligencia Artificial</p>
-                            <p className="text-xs text-blue-800">El sistema utiliza <strong>Gemini 1.0 Pro</strong> para generar análisis académicos automáticamente. No requiere configuración.</p>
+                            <p className="text-sm font-medium text-blue-900">🤖 Inteligencia Artificial (Local)</p>
+                            <p className="text-xs text-blue-800">La app usa <strong>Gemini 1.5 Flash</strong> en el cliente con tu <strong>USER_GEMINI_API_KEY</strong>.</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="userGeminiApiKey">USER_GEMINI_API_KEY</Label>
+                            <Input
+                                id="userGeminiApiKey"
+                                type="password"
+                                value={userGeminiApiKey}
+                                onChange={(e) => setUserGeminiApiKey(e.target.value)}
+                                placeholder="Pega tu API Key de Gemini"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Esta llave se guarda en localStorage del dispositivo actual y se usa para todas las funciones de IA.
+                            </p>
+                            <div className="flex items-center gap-3">
+                                <Button type="button" variant="outline" onClick={handleSaveUserGeminiApiKey}>
+                                    Guardar API Key Local
+                                </Button>
+                                <Badge variant={hasUserGeminiApiKey ? 'default' : 'secondary'}>
+                                    {hasUserGeminiApiKey ? 'IA Activada' : 'IA Desactivada'}
+                                </Badge>
+                            </div>
                         </div>
                 </div>
             </CardContent>

@@ -168,7 +168,9 @@ export default function ScreeningManagement() {
     }, []);
 
     // Filtrar pruebas por rol
-    const availableScreenings = allScreenings.filter(s => s.roles.includes(role as string));
+    const availableScreenings = role === 'Admin'
+        ? allScreenings
+        : allScreenings.filter(s => s.roles.includes(role as string));
     const categorizedTests = categories.map(category => ({
         name: category,
         tests: availableScreenings.filter(test => test.category === category)
@@ -266,7 +268,17 @@ export default function ScreeningManagement() {
         
         // Crear enlace
         const baseUrl = window.location.origin;
-        const link = `${baseUrl}/evaluacion/${sessionId}`;
+        const testsParam = selectedTests.join(',');
+        const testType = selectedTests[0] || 'bateria';
+        const params = new URLSearchParams({
+            mode: 'group',
+            studentName: 'Consultante',
+            matricula: '',
+            tests: testsParam,
+            testType,
+            sessionName: sessionName || 'Evaluacion Grupal',
+        });
+        const link = `${baseUrl}/evaluacion/${sessionId}?${params.toString()}`;
         
         const newSession: EvaluationSession = {
             id: sessionId,

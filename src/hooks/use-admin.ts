@@ -1,3 +1,20 @@
+import { useMemo } from 'react';
+
+type LocalAdminUser = {
+  email: string;
+};
+
+const LOCAL_ADMIN_EMAIL = 'mpcecil...@gmail.com';
+
+export function useAdmin() {
+  const user = useMemo<LocalAdminUser>(() => ({ email: LOCAL_ADMIN_EMAIL }), []);
+
+  return {
+    isAdmin: true,
+    loading: false,
+    user,
+  };
+}
 import { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
