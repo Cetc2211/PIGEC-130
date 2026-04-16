@@ -362,6 +362,10 @@ export default function EvaluacionPage() {
         : (estudiante?.grupoId || undefined);
 
     const handleEnviarPorWhatsApp = async () => {
+        const failsafe = setTimeout(() => {
+            setIsGeneratingWhatsAppLink(false);
+        }, 8000);
+
         try {
             setIsGeneratingWhatsAppLink(true);
             setGenerationMessage(null);
@@ -414,8 +418,11 @@ export default function EvaluacionPage() {
 
             let copied = false;
             try {
-                await navigator.clipboard.writeText(prefixedCode);
-                copied = true;
+                const copyResult = await Promise.race<boolean | null>([
+                    navigator.clipboard.writeText(prefixedCode).then(() => true),
+                    new Promise<null>((resolve) => setTimeout(() => resolve(null), 900)),
+                ]);
+                copied = copyResult === true;
             } catch {
                 copied = false;
             }
@@ -439,6 +446,7 @@ export default function EvaluacionPage() {
             console.error('Error generando enlace de WhatsApp:', error);
             setGenerationMessage('No se pudo generar el codigo para WhatsApp.');
         } finally {
+            clearTimeout(failsafe);
             setIsGeneratingWhatsAppLink(false);
         }
     };
