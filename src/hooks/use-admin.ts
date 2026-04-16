@@ -1,14 +1,21 @@
+import { useMemo } from 'react';
+import { getLocalSpecialistProfile, isLocalAdminEmail } from '@/lib/local-access';
+
 type LocalAdminUser = {
   email: string;
+  name: string;
 };
 
-const LOCAL_ADMIN_EMAIL = 'mpcecil...@gmail.com';
-
 export function useAdmin() {
-  const user: LocalAdminUser = { email: LOCAL_ADMIN_EMAIL };
+  const profile = useMemo(() => getLocalSpecialistProfile(), []);
+
+  const user: LocalAdminUser = {
+    email: profile?.email || '',
+    name: profile?.fullName || '',
+  };
 
   return {
-    isAdmin: true,
+    isAdmin: isLocalAdminEmail(profile?.email),
     loading: false,
     user,
   };

@@ -2,20 +2,20 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { TEMPORARY_AUTH_BYPASS } from '@/lib/auth-bypass';
+import { getLocalSpecialistProfile, hasLocalAccessProfile, isLocalAdminEmail, type LocalSpecialistProfile } from '@/lib/local-access';
 
-type Role = 'Admin' | 'Clinico' | 'Orientador' | 'loading' | 'unauthenticated' | null;
+type Role = 'Clinico' | 'Orientador' | 'loading' | 'unauthenticated' | null;
 
 type LocalSessionUser = {
   email: string;
-  role: 'Admin';
   name: string;
+  isAdmin: boolean;
 };
 
-const LOCAL_ADMIN_USER: LocalSessionUser = {
-  email: 'mpcecil...@gmail.com',
-  role: 'Admin',
-  name: 'Administrador Local',
+const EMPTY_USER: LocalSessionUser = {
+  email: '',
+  name: '',
+  isAdmin: false,
 };
 
 interface SessionContextType {
@@ -28,29 +28,45 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>('Admin');
-  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<Role>('loading');
+  const [user, setUser] = useState<LocalSessionUser>(EMPTY_USER);
+  const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    // Bypass local total: siempre iniciar como Admin local sin esperar Firebase.
-    setRole('Admin');
-    setLoading(false);
+    const profile = getLocalSpecialistProfile();
+    const hasAccess = hasLocalAccessProfile();
 
-    try {
-      localStorage.setItem('userRole', 'Admin');
-      localStorage.setItem('localAdminEmail', LOCAL_ADMIN_USER.email);
-    } catch {
-      // No-op cuando localStorage no esta disponible.
-    }
-  }, []);
-
-  useEffect(() => {
-    if (TEMPORARY_AUTH_BYPASS || role === 'Admin') {
+    if (!profile || !hasAccess) {
+      setUser(EMPTY_USER);
+      setRole('unauthenticated');
+      setLoading(false);
       return;
     }
 
+    setUser({
+      email: profile.email,
+      name: profile.fullName,
+      isAdmin: isLocalAdminEmail(profile.email),
+    });
+
+    try {
+      const storedRole = localStorage.getItem('userRole') as Role;
+      if (storedRole === 'Orientador' || storedRole === 'Clinico') {
+        setRole(storedRole);
+      } else {
+        setRole('Clinico');
+        localStorage.setItem('userRole', 'Clinico');
+      }
+    } catch {
+      setRole('Clinico');
+    }
+
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
     // Rutas públicas que NO requieren autenticación
     const isPublicRoute =
       pathname === '/' ||
@@ -60,7 +76,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
     // If not authenticated and not on a public route, redirect to home.
     if (role === 'unauthenticated' && !isPublicRoute) {
-        router.replace('/login');
+        router.replace('/');
     }
   }, [role, pathname, router]);
 
@@ -78,7 +94,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const value = {
     role,
     setRole: handleSetRole as (role: Role) => void,
-    user: LOCAL_ADMIN_USER,
+    user,
     loading,
   };
   
@@ -89,7 +105,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     pathname === '/login' ||
     pathname === '/signup' ||
     pathname.startsWith('/evaluacion/');
-  if (loading && role === 'loading' && !isPublicPage && !TEMPORARY_AUTH_BYPASS) {
+  if (loading && role === 'loading' && !isPublicPage) {
     return (
         <div className="flex h-screen w-full items-center justify-center p-8">
             <div className="flex items-center gap-2 text-xl text-gray-600">

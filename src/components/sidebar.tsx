@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Scale, Home, Wrench, Settings, ClipboardList, Users, BookText, LogOut, FolderKanban, FolderOpen } from 'lucide-react';
+import { Scale, Home, Settings, ClipboardList, BookText, LogOut, FolderKanban, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/context/SessionContext';
+import { clearLocalSpecialistProfile } from '@/lib/local-access';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
@@ -54,6 +55,7 @@ export function Sidebar() {
   const filteredNavItems = navItems.filter(item => item.roles.includes(role as string));
 
   const handleLogout = () => {
+    clearLocalSpecialistProfile();
     setRole('unauthenticated');
     router.push('/');
   }

@@ -4,6 +4,7 @@ import { SessionProvider } from "@/context/SessionContext";
 import { Toaster } from "@/components/ui/toaster";
 import { LayoutShell } from "@/components/layout-shell";
 import { DataProvider } from "@/hooks/use-data";
+import { InstitutionalAccessGate } from "@/components/institutional-access-gate";
 
 export const metadata: Metadata = {
   title: "Suite Integral - Sistema de Soporte a la Decisión",
@@ -27,9 +28,11 @@ export default function RootLayout({
       <body className="font-sans bg-gray-50 text-gray-900">
         <DataProvider>
           <SessionProvider>
-            <LayoutShell>
-              {children}
-            </LayoutShell>
+            <InstitutionalAccessGate>
+              <LayoutShell>
+                {children}
+              </LayoutShell>
+            </InstitutionalAccessGate>
             <Toaster />
           </SessionProvider>
         </DataProvider>
