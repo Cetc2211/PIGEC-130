@@ -136,7 +136,9 @@ export default function PlutchikForm({ studentId, sessionId, onComplete }: Plutc
             });
         }
 
-        if (studentId && db) {
+        if (studentId) {
+            try {
+                setIsSaving(true);
                 saveTestResultLocal({
                     studentId,
                     sessionId: sessionId || null,
@@ -147,7 +149,7 @@ export default function PlutchikForm({ studentId, sessionId, onComplete }: Plutc
                     interpretation: calculatedResult.interpretation.level,
                     criticalItems: calculatedResult.criticalItems,
                     urgency: calculatedResult.interpretation.urgency,
-                    responses
+                    responses,
                 });
             } catch (error) {
                 console.error('Error guardando:', error);

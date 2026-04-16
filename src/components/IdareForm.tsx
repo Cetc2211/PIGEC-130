@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CheckCircle2, Save, RotateCcw } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { saveTestResultLocal } from '@/lib/storage-local';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // ============================================
@@ -164,21 +163,21 @@ export default function IdareForm({ studentId, sessionId, onComplete }: IdareFor
             });
         }
 
-        if (studentId && db) {
+        if (studentId) {
             try {
                 setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     sessionId: sessionId || null,
                     testType: 'IDARE-STAI',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     scoreEstado: calculatedResult.scoreEstado,
                     scoreRasgo: calculatedResult.scoreRasgo,
                     interpretationEstado: calculatedResult.interpretationEstado.level,
                     interpretationRasgo: calculatedResult.interpretationRasgo.level,
                     responsesEstado,
-                    responsesRasgo
+                    responsesRasgo,
                 });
             } catch (error) {
                 console.error('Error guardando:', error);

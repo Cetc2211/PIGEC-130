@@ -182,7 +182,9 @@ export default function ColumbiaForm({ studentId, sessionId, onComplete }: Colum
             });
         }
 
-        if (studentId && db) {
+        if (studentId) {
+            try {
+                setIsSaving(true);
                 saveTestResultLocal({
                     studentId,
                     sessionId: sessionId || null,
@@ -193,7 +195,7 @@ export default function ColumbiaForm({ studentId, sessionId, onComplete }: Colum
                     urgency: interpretation.urgency,
                     requiresImmediateAttention: interpretation.requiresImmediateAttention,
                     responses,
-                    flags: interpretation.requiresImmediateAttention ? ['ALERTA_CRÍTICA'] : []
+                    flags: interpretation.requiresImmediateAttention ? ['ALERTA_CRÍTICA'] : [],
                 });
             } catch (error) {
                 console.error('Error guardando:', error);

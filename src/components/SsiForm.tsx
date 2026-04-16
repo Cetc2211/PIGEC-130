@@ -290,7 +290,9 @@ export default function SsiForm({ studentId, sessionId, onComplete }: SsiFormPro
             });
         }
 
-        if (studentId && db) {
+        if (studentId) {
+            try {
+                setIsSaving(true);
                 saveTestResultLocal({
                     studentId,
                     sessionId: sessionId || null,
@@ -302,7 +304,7 @@ export default function SsiForm({ studentId, sessionId, onComplete }: SsiFormPro
                     flags: calculatedResult.flags,
                     urgency: calculatedResult.interpretation.urgency,
                     skipDetails: calculatedResult.skipDetails,
-                    responses
+                    responses,
                 });
             } catch (error) {
                 console.error('Error guardando:', error);

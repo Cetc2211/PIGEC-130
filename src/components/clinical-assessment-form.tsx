@@ -12,6 +12,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { AlertTriangle, CheckCircle2, Clock, FileText, Loader2 } from "lucide-react";
+import { getTestResults } from '@/lib/storage-local';
 
 interface ClinicalAssessmentFormProps {
     initialData?: ClinicalAssessment;
@@ -57,9 +58,33 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
         async function loadTestResults() {
             if (!studentId || authLoading) return;
 
+            const localResults = getTestResults<any>()
+                .filter((item) => item.studentId === studentId)
+                .map((item) => {
+                    const sortDate = new Date(item.submittedAt || item.date || 0);
+                    return {
+                        id: item.id || `local-${Math.random().toString(36).slice(2, 8)}`,
+                        testType: item.testType || item.type || 'Desconocida',
+                        score: Number(item.score || item.totalScore || item.totalRisk || item.totalRiesgo || 0),
+                        interpretation: item.interpretation || item.interpretacion || item.level || item.riskLevel || '',
+                        date: Number.isNaN(sortDate.getTime()) ? '' : sortDate.toLocaleDateString('es-MX'),
+                        alerts: Array.isArray(item.alerts) ? item.alerts : [],
+                        _sortDate: sortDate,
+                    };
+                })
+                .sort((a, b) => b._sortDate.getTime() - a._sortDate.getTime())
+                .map(({ _sortDate, ...rest }) => rest);
+
+            if (localResults.length > 0) {
+                setTestResults(localResults);
+                setLoadError(null);
+                setLoadingResults(false);
+                return;
+            }
+
             if (!db || !user) {
                 setTestResults([]);
-                setLoadError('Debe iniciar sesión con una cuenta autorizada para leer las evaluaciones del expediente.');
+                setLoadError(null);
                 setLoadingResults(false);
                 return;
             }
@@ -98,9 +123,9 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                 console.error('Error cargando resultados de pruebas:', err);
                 const errorMessage = (err as any)?.message || '';
                 if (errorMessage.includes('Missing or insufficient permissions') || errorMessage.includes('PERMISSION_DENIED')) {
-                    setLoadError('Sin permisos para leer resultados de pruebas. Verifique autenticación del personal o reglas Firestore de lectura para test_results.');
+                    setLoadError(null);
                 } else {
-                    setLoadError(`No se pudieron cargar resultados: ${errorMessage || 'Error desconocido'}`);
+                    setLoadError(null);
                 }
             }
 

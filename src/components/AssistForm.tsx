@@ -8,8 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle2, Save, RotateCcw, AlertTriangle, Pill, Cigarette, Wine, Droplets } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { saveTestResultLocal } from '@/lib/storage-local';
 
 // Sustancias evaluadas en ASSIST
 const substances = [
@@ -217,24 +216,24 @@ export default function AssistForm({ studentId, grupoId, matricula, sessionId, o
             });
         }
 
-        if (studentId && db) {
+        if (studentId) {
             try {
                 setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
                     sessionId: sessionId || null,
                     testType: 'ASSIST',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: calculatedResult.totalScore,
                     totalScore: calculatedResult.totalScore,
                     substanceScores: calculatedResult.substanceScores,
                     highRiskSubstances: calculatedResult.highRiskSubstances,
                     recommendation: calculatedResult.recommendation,
                     selectedSubstances,
-                    responses
+                    responses,
                 });
             } catch (error) {
                 console.error('Error guardando:', error);

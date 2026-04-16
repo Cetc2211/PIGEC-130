@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CheckCircle2, Save, RotateCcw, AlertTriangle, Shield, AlertCircle } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { saveTestResultLocal } from '@/lib/storage-local';
 
 // Factores de Riesgo Psicosocial organizados por dominios
 const cdfrDomains = {
@@ -190,17 +189,17 @@ export default function CdfrForm({ studentId, grupoId, matricula, sessionId, onC
             });
         }
 
-        if (studentId && db) {
+        if (studentId) {
             try {
                 setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
                     sessionId: sessionId || null,
                     testType: 'CDFR',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: calculatedResult.totalRisk,
                     totalRisk: calculatedResult.totalRisk,
                     riskLevel: calculatedResult.riskLevel,
@@ -209,7 +208,7 @@ export default function CdfrForm({ studentId, grupoId, matricula, sessionId, onC
                     domainScores: calculatedResult.domainScores,
                     criticalFactors: calculatedResult.criticalFactors,
                     recommendation: calculatedResult.recommendation,
-                    responses
+                    responses,
                 });
             } catch (error) {
                 console.error('Error guardando:', error);

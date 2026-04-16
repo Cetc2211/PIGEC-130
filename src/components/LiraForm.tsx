@@ -137,7 +137,9 @@ export default function LiraForm({ studentId, grupoId, matricula, sessionId, onC
             onComplete({ total, level: interpretation.level, hasEmergency });
         }
 
-        if (studentId && db) {
+        if (studentId) {
+            try {
+                setIsSaving(true);
                 saveTestResultLocal({
                     studentId,
                     grupoId: grupoId || null,
@@ -152,7 +154,7 @@ export default function LiraForm({ studentId, grupoId, matricula, sessionId, onC
                     action: interpretation.action,
                     hasEmergency,
                     sections: { academicos: sA, conductuales: sB, fisicos: sC, contextuales: sD, emergencia: sE },
-                    checked
+                    checked,
                 });
             } catch (error) {
                 console.error('Error guardando:', error);

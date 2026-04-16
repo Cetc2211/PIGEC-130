@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CheckCircle2, Save, RotateCcw, TrendingUp, TrendingDown, Target } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { saveTestResultLocal } from '@/lib/storage-local';
 
 // 28 items del EBMA (Escala de Brevedad de Motivación Académica) - Vallerand
 // Organizados por subescalas
@@ -189,17 +188,17 @@ export default function EbmaForm({ studentId, grupoId, matricula, sessionId, onC
             });
         }
 
-        if (studentId && db) {
+        if (studentId) {
             try {
                 setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
                     sessionId: sessionId || null,
                     testType: 'EBMA',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: calculatedResult.intrinsicTotal,
                     intrinsicTotal: calculatedResult.intrinsicTotal,
                     extrinsicTotal: calculatedResult.extrinsicTotal,
@@ -209,7 +208,7 @@ export default function EbmaForm({ studentId, grupoId, matricula, sessionId, onC
                     level: calculatedResult.motivationProfile,
                     recommendation: calculatedResult.recommendation,
                     subscaleScores: calculatedResult.subscaleScores,
-                    responses
+                    responses,
                 });
             } catch (error) {
                 console.error('Error guardando:', error);
