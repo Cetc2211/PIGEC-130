@@ -14,6 +14,7 @@ import { smartUpload, smartDownload, uploadWithChunks, uploadMicroItems, isChunk
 import { robustUpload, batchUpload, checkFirebaseHealth } from '@/lib/sync-client';
 import { ultraUploadAll, checkUltraRestConnection, stripPhotos } from '@/lib/ultra-rest-upload';
 import { getIdToken } from 'firebase/auth';
+import { getOfficialGroupStructures, saveOfficialGroupStructure } from '@/lib/storage-local';
 
 // TYPE DEFINITIONS
 type ExportData = {
@@ -485,13 +486,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         // Load cached official groups on mount
+        const localOfficialGroups = getOfficialGroupStructures();
+        if (localOfficialGroups.length > 0) {
+            setOfficialGroups(localOfficialGroups);
+        }
+
         const cached = localStorage.getItem('cached_official_groups');
         if (cached) {
             try {
                 const { data, timestamp } = JSON.parse(cached);
                 // Cache valid for 5 minutes
                 if (Date.now() - timestamp < 5 * 60 * 1000) {
-                    setOfficialGroups(data);
+                    if (Array.isArray(data)) {
+                        const merged = [...localOfficialGroups];
+                        for (const group of data as OfficialGroup[]) {
+                            if (!merged.some((item) => item.id === group.id)) {
+                                merged.push(group);
+                            }
+                        }
+                        setOfficialGroups(merged);
+                    }
                 }
             } catch (e) {
                 console.error("Error loading cached official groups:", e);
@@ -504,6 +518,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 fetchedGroups.push({ id: doc.id, ...doc.data() } as OfficialGroup);
             });
             setOfficialGroups(fetchedGroups);
+
+            fetchedGroups.forEach((group) => {
+                saveOfficialGroupStructure(group);
+            });
             
             // Cache the data with timestamp
             localStorage.setItem('cached_official_groups', JSON.stringify({
@@ -517,6 +535,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }, (error) => {
             console.error("Error fetching official groups:", error);
+
+            const fallbackGroups = getOfficialGroupStructures();
+            if (fallbackGroups.length > 0) {
+                setOfficialGroups(fallbackGroups);
+            }
         });
 
         const unsubscribeAnn = onSnapshot(query(collection(db, 'announcements'), where('isActive', '==', true)), (snapshot) => {
@@ -1296,12 +1319,28 @@ const checkAndInjectStrategies = async (studentId: string, addObs: Function) => 
 
     // Official Groups Actions
     const createOfficialGroup = useCallback(async (name: string, tutorEmail?: string) => {
-        const docRef = await addDoc(collection(db, 'official_groups'), {
+        const groupPayload: Omit<OfficialGroup, 'id'> = {
             name,
             createdAt: new Date().toISOString(),
             tutorEmail: tutorEmail || '',
-        });
-        return docRef.id;
+        };
+
+        try {
+            const docRef = await addDoc(collection(db, 'official_groups'), groupPayload);
+            const groupToStore: OfficialGroup = { id: docRef.id, ...groupPayload };
+            saveOfficialGroupStructure(groupToStore);
+            return docRef.id;
+        } catch (error) {
+            const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const localGroup: OfficialGroup = { id: localId, ...groupPayload };
+            saveOfficialGroupStructure(localGroup);
+            setOfficialGroups((prev) => {
+                if (prev.some((group) => group.id === localGroup.id)) return prev;
+                return [...prev, localGroup];
+            });
+            console.warn('No se pudo crear grupo oficial en Firebase. Guardado localmente.', error);
+            return localId;
+        }
     }, []);
 
     const updateOfficialGroupTutor = useCallback(async (officialGroupId: string, tutorEmail: string) => {

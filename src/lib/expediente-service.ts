@@ -22,6 +22,10 @@ import {
   ProgressData,
   EducationalAssessment,
 } from './store';
+import {
+  getExpedientes as getExpedientesLocal,
+  saveExpediente as saveExpedienteLocal,
+} from './storage-local';
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
 
@@ -169,6 +173,17 @@ export type FiltroExpediente = 'todos' | 'nivel_1' | 'nivel_2' | 'nivel_3' | 'ab
 // Los expedientes dinámicos se guardan aquí y se sincronizarán con Firestore después
 
 let expedientesDinamicos: Expediente[] = [];
+let expedientesLocalHydrated = false;
+
+function hydrateExpedientesFromLocalStorage(): void {
+  if (expedientesLocalHydrated) return;
+  expedientesLocalHydrated = true;
+
+  const localExpedientes = getExpedientesLocal<Expediente>();
+  if (!localExpedientes.length) return;
+
+  expedientesDinamicos = localExpedientes;
+}
 
 // ─── FUNCIONES DE CONVERSIÓN: Demo Store → Expediente ─────────────────────────
 // Convierte los estudiantes de ejemplo del store.ts al formato Expediente
@@ -270,6 +285,8 @@ function demoToExpediente(student: Student, nivel: NivelMTSS, estado: EstadoExpe
  * Obtiene TODOS los expedientes (demo + dinámicos)
  */
 export function getExpedientes(filtro?: FiltroExpediente): Expediente[] {
+  hydrateExpedientesFromLocalStorage();
+
   // Generar expedientes demo a partir de store.ts
   const demoStudents = getStudents();
   const demoExpedientes: Expediente[] = demoStudents.map(student => {
@@ -335,7 +352,9 @@ export function crearExpediente(data: {
     notas: [],
   };
 
+  hydrateExpedientesFromLocalStorage();
   expedientesDinamicos.push(nuevo);
+  saveExpedienteLocal(nuevo);
   return nuevo;
 }
 
@@ -343,6 +362,7 @@ export function crearExpediente(data: {
  * Actualiza el nivel de un expediente
  */
 export function actualizarNivelExpediente(id: string, nuevoNivel: NivelMTSS): Expediente | undefined {
+  hydrateExpedientesFromLocalStorage();
   const expediente = getExpedienteById(id);
   if (!expediente) return undefined;
 
@@ -355,6 +375,7 @@ export function actualizarNivelExpediente(id: string, nuevoNivel: NivelMTSS): Ex
       estado: nuevoNivel === 'nivel_3' ? 'en_seguimiento' : expedientesDinamicos[idx].estado,
       fechaActualizacion: new Date().toISOString(),
     };
+    saveExpedienteLocal(expedientesDinamicos[idx]);
     return expedientesDinamicos[idx];
   }
 
@@ -369,6 +390,7 @@ export function agregarEvaluacion(
   expedienteId: string,
   evaluacion: Omit<EvaluacionRegistro, 'id'>
 ): Expediente | undefined {
+  hydrateExpedientesFromLocalStorage();
   const idx = expedientesDinamicos.findIndex(e => e.id === expedienteId);
   if (idx === -1) return undefined;
 
@@ -383,6 +405,8 @@ export function agregarEvaluacion(
     fechaActualizacion: new Date().toISOString(),
   };
 
+  saveExpedienteLocal(expedientesDinamicos[idx]);
+
   return expedientesDinamicos[idx];
 }
 
@@ -393,6 +417,7 @@ export function agregarNota(
   expedienteId: string,
   nota: Omit<NotaExpediente, 'id'>
 ): Expediente | undefined {
+  hydrateExpedientesFromLocalStorage();
   const idx = expedientesDinamicos.findIndex(e => e.id === expedienteId);
   if (idx === -1) return undefined;
 
@@ -407,6 +432,8 @@ export function agregarNota(
     fechaActualizacion: new Date().toISOString(),
   };
 
+  saveExpedienteLocal(expedientesDinamicos[idx]);
+
   return expedientesDinamicos[idx];
 }
 
@@ -414,6 +441,7 @@ export function agregarNota(
  * Cambia el estado de un expediente
  */
 export function cambiarEstadoExpediente(id: string, nuevoEstado: EstadoExpediente): Expediente | undefined {
+  hydrateExpedientesFromLocalStorage();
   const idx = expedientesDinamicos.findIndex(e => e.id === id);
   if (idx === -1) return undefined;
 
@@ -422,6 +450,8 @@ export function cambiarEstadoExpediente(id: string, nuevoEstado: EstadoExpedient
     estado: nuevoEstado,
     fechaActualizacion: new Date().toISOString(),
   };
+
+  saveExpedienteLocal(expedientesDinamicos[idx]);
 
   return expedientesDinamicos[idx];
 }

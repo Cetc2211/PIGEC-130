@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { OfficialGroup, Student, JustificationCategory } from '@/lib/placeholder-data';
 import { format, addHours, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { decodeEvaluationPayload } from '@/lib/data-utils';
+import { saveOfficialGroupStructure, saveImportedWhatsAppEvaluation } from '@/lib/storage-local';
 
 export default function OfficialGroupsPage() {
     const { 
@@ -68,7 +70,16 @@ export default function OfficialGroupsPage() {
     const [justCategory, setJustCategory] = useState<JustificationCategory>('Salud');
     const [isSubmittingJust, setIsSubmittingJust] = useState(false);
 
+    // WhatsApp Import State
+    const [whatsAppCodeInput, setWhatsAppCodeInput] = useState('');
+    const [isImportingWhatsApp, setIsImportingWhatsApp] = useState(false);
+    const [whatsAppImportSummary, setWhatsAppImportSummary] = useState<string | null>(null);
+
     // --- Handlers ---
+
+    const guardarGrupoOficialEnNavegador = (group: OfficialGroup) => {
+        saveOfficialGroupStructure(group);
+    };
 
     // Fetch students when group selected for Justification
     useEffect(() => {
@@ -108,6 +119,8 @@ export default function OfficialGroupsPage() {
                 createdAt: new Date().toISOString(),
                 tutorEmail: newGroupTutorEmail || undefined
             };
+
+            guardarGrupoOficialEnNavegador(newGroupObj);
             handleOpenAddStudents(newGroupObj);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear el grupo' });
@@ -243,6 +256,43 @@ export default function OfficialGroupsPage() {
         }
     };
 
+    const extractWhatsAppBridgeCode = (raw: string): string => {
+        const trimmed = raw.trim();
+        const prefixed = trimmed.match(/PIGEC-WA1:([A-Za-z0-9+/=._-]+)/i);
+        if (prefixed?.[1]) {
+            return prefixed[1];
+        }
+        return trimmed.replace(/^PIGEC-WA1:/i, '').trim();
+    };
+
+    const handleImportFromWhatsApp = async () => {
+        if (!whatsAppCodeInput.trim()) {
+            toast({ variant: 'destructive', title: 'Codigo vacio', description: 'Pega el codigo del mensaje de WhatsApp.' });
+            return;
+        }
+
+        setIsImportingWhatsApp(true);
+        setWhatsAppImportSummary(null);
+
+        try {
+            const code = extractWhatsAppBridgeCode(whatsAppCodeInput);
+            const payload = await decodeEvaluationPayload(code);
+            const importId = saveImportedWhatsAppEvaluation(payload);
+
+            const studentName = payload.student?.name || 'Consultante sin nombre';
+            const testsCount = payload.completedTests?.length || Object.keys(payload.results || {}).length;
+            const summary = `Importacion ${importId}: ${studentName} · ${testsCount} pruebas guardadas en modo local.`;
+
+            setWhatsAppImportSummary(summary);
+            toast({ title: 'Importacion completada', description: 'Los datos se guardaron en localStorage.' });
+        } catch (error) {
+            console.error('Error importando codigo de WhatsApp:', error);
+            toast({ variant: 'destructive', title: 'Error de importacion', description: 'No se pudo decodificar el codigo de WhatsApp.' });
+        } finally {
+            setIsImportingWhatsApp(false);
+        }
+    };
+
     return (
         <div className="container mx-auto py-8">
             <div className="flex items-center justify-between mb-8">
@@ -250,10 +300,11 @@ export default function OfficialGroupsPage() {
             </div>
             
             <Tabs defaultValue="groups" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-8">
+                <TabsList className="grid w-full grid-cols-4 mb-8">
                     <TabsTrigger value="groups">Grupos Oficiales</TabsTrigger>
                     <TabsTrigger value="justifications">Justificantes</TabsTrigger>
                     <TabsTrigger value="announcements">Anuncios Generales</TabsTrigger>
+                    <TabsTrigger value="import-whatsapp">Importar WhatsApp</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="groups">
@@ -511,6 +562,44 @@ export default function OfficialGroupsPage() {
                             </CardContent>
                         </Card>
                     </div>
+                </TabsContent>
+
+                <TabsContent value="import-whatsapp">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Importar desde WhatsApp</CardTitle>
+                            <CardDescription>
+                                Pega el codigo completo del mensaje (incluyendo o no el prefijo PIGEC-WA1:).
+                                La app lo decodifica y lo guarda automaticamente en localStorage.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="whatsappImportCode">Codigo del mensaje</Label>
+                                <Textarea
+                                    id="whatsappImportCode"
+                                    rows={8}
+                                    value={whatsAppCodeInput}
+                                    onChange={(e) => setWhatsAppCodeInput(e.target.value)}
+                                    placeholder="Pega aqui el texto con PIGEC-WA1:..."
+                                />
+                            </div>
+
+                            <Button
+                                onClick={handleImportFromWhatsApp}
+                                disabled={isImportingWhatsApp || !whatsAppCodeInput.trim()}
+                            >
+                                {isImportingWhatsApp && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Procesar e Importar
+                            </Button>
+
+                            {whatsAppImportSummary && (
+                                <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                                    {whatsAppImportSummary}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
 

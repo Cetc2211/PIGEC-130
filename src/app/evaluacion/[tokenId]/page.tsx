@@ -16,6 +16,7 @@ import {
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { validarMatricula, type MatriculaRegistro } from '@/lib/matricula-service';
+import { encodeEvaluationPayload } from '@/lib/data-utils';
 import FichaIdentificacionForm from '@/components/FichaIdentificacionForm';
 import BdiForm from '@/components/BdiForm';
 import BaiForm from '@/components/BaiForm';
@@ -56,6 +57,16 @@ const formComponents: Record<string, React.ComponentType<{ studentId?: string; g
     'ebma': EbmaForm,
     'chte': ChteForm,
 };
+
+type TestFormProps = {
+    studentId?: string;
+    grupoId?: string;
+    matricula?: string;
+    sessionId?: string;
+    onComplete?: (result: any) => void;
+};
+
+const formComponentsWithSession = formComponents as Record<string, React.ComponentType<TestFormProps>>;
 
 // Nombres amigables para las pruebas
 const testNames: Record<string, string> = {
@@ -118,6 +129,8 @@ export default function EvaluacionPage() {
     const [currentTestIndex, setCurrentTestIndex] = useState(0);
     const [completedTests, setCompletedTests] = useState<string[]>([]);
     const [expedienteId, setExpedienteId] = useState<string | null>(null);
+    const [capturedResults, setCapturedResults] = useState<Record<string, any>>({});
+    const [isGeneratingWhatsAppLink, setIsGeneratingWhatsAppLink] = useState(false);
 
     // Cargar datos de la sesión
     useEffect(() => {
@@ -233,10 +246,16 @@ export default function EvaluacionPage() {
     };
 
     // Completar prueba actual y avanzar
-    const handleTestComplete = () => {
+    const handleTestComplete = (result?: any) => {
         const currentTestId = session?.tests[currentTestIndex];
         if (currentTestId) {
             setCompletedTests(prev => [...prev, currentTestId]);
+            if (typeof result !== 'undefined') {
+                setCapturedResults(prev => ({
+                    ...prev,
+                    [currentTestId]: result,
+                }));
+            }
         }
 
         if (currentTestIndex < (session?.tests.length || 0) - 1) {
@@ -254,6 +273,45 @@ export default function EvaluacionPage() {
     const displayStudentId = isIndividual
         ? (session?.studentId || session?.expedienteId || undefined)
         : (estudiante?.grupoId || undefined);
+
+    const handleEnviarPorWhatsApp = async () => {
+        try {
+            setIsGeneratingWhatsAppLink(true);
+
+            const payload = {
+                version: 'wa-bridge-v1',
+                createdAt: new Date().toISOString(),
+                tokenId,
+                sessionId: session?.id,
+                mode: isIndividual ? 'individual' : 'group',
+                student: {
+                    id: expedienteId || displayStudentId || null,
+                    name: displayStudentName,
+                    matricula: isIndividual ? null : estudiante?.matricula || null,
+                    grupoId: isIndividual ? null : estudiante?.grupoId || null,
+                    grupoNombre: isIndividual ? null : estudiante?.grupoNombre || null,
+                },
+                tests: session?.tests || [],
+                completedTests,
+                results: capturedResults,
+            };
+
+            const code = await encodeEvaluationPayload(payload);
+            const message = [
+                'Hola, comparto mi codigo de evaluacion PIGEC para importacion offline:',
+                '',
+                `PIGEC-WA1:${code}`,
+            ].join('\n');
+
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank', 'noopener,noreferrer');
+        } catch (error) {
+            console.error('Error generando enlace de WhatsApp:', error);
+            alert('No se pudo generar el codigo para WhatsApp.');
+        } finally {
+            setIsGeneratingWhatsAppLink(false);
+        }
+    };
 
     // Renderizado de estados
     if (loading) {
@@ -439,7 +497,7 @@ export default function EvaluacionPage() {
     // EVALUACIÓN
     if (step === 'evaluacion' && session) {
         const currentTestId = session.tests[currentTestIndex];
-        const CurrentForm = currentTestId ? formComponents[currentTestId] : null;
+        const CurrentForm = currentTestId ? formComponentsWithSession[currentTestId] : null;
         const progress = ((completedTests.length) / session.tests.length) * 100;
 
         return (
@@ -544,6 +602,20 @@ export default function EvaluacionPage() {
                                 <p key={tId} className="text-xs mt-1">✓ {testNames[tId] || tId}</p>
                             ))}
                         </div>
+                        <Button
+                            className="w-full mt-6"
+                            onClick={handleEnviarPorWhatsApp}
+                            disabled={isGeneratingWhatsAppLink}
+                        >
+                            {isGeneratingWhatsAppLink ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Generando codigo...
+                                </>
+                            ) : (
+                                'Enviar a mi Especialista via WhatsApp'
+                            )}
+                        </Button>
                         <p className="mt-6 text-xs text-gray-400">
                             Ya puede cerrar esta ventana.
                         </p>
