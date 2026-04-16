@@ -45,25 +45,48 @@ function base64ToUint8(base64: string): Uint8Array {
 async function compressUtf8(data: Uint8Array): Promise<Uint8Array> {
   if (typeof CompressionStream === 'undefined') return data;
 
-  const stream = new CompressionStream('gzip');
-  const writer = stream.writable.getWriter();
-  await writer.write(data);
-  await writer.close();
+  try {
+    const stream = new CompressionStream('gzip');
+    const writer = stream.writable.getWriter();
+    await writer.write(data);
+    await writer.close();
 
-  const buffer = await new Response(stream.readable).arrayBuffer();
-  return new Uint8Array(buffer);
+    // Safari/WebView can stall indefinitely here; fallback to raw if it takes too long.
+    const compressionPromise = new Response(stream.readable).arrayBuffer();
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => resolve(null), 1500);
+    });
+
+    const result = await Promise.race([compressionPromise, timeoutPromise]);
+    if (!result) return data;
+
+    return new Uint8Array(result);
+  } catch {
+    return data;
+  }
 }
 
 async function decompressUtf8(data: Uint8Array): Promise<Uint8Array> {
   if (typeof DecompressionStream === 'undefined') return data;
 
-  const stream = new DecompressionStream('gzip');
-  const writer = stream.writable.getWriter();
-  await writer.write(data);
-  await writer.close();
+  try {
+    const stream = new DecompressionStream('gzip');
+    const writer = stream.writable.getWriter();
+    await writer.write(data);
+    await writer.close();
 
-  const buffer = await new Response(stream.readable).arrayBuffer();
-  return new Uint8Array(buffer);
+    const decompressionPromise = new Response(stream.readable).arrayBuffer();
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => resolve(null), 1500);
+    });
+
+    const result = await Promise.race([decompressionPromise, timeoutPromise]);
+    if (!result) return data;
+
+    return new Uint8Array(result);
+  } catch {
+    return data;
+  }
 }
 
 export async function encodeEvaluationPayload(payload: WhatsAppBridgePayload): Promise<string> {
