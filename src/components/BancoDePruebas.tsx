@@ -26,8 +26,7 @@ import {
   ClipboardList, Link2, Shield,
 } from 'lucide-react';
 import ScreeningInstrumentDialog from './ScreeningInstrumentDialog';
-import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, Timestamp } from 'firebase/firestore';
+import { saveEvaluationSession } from '@/lib/storage-local';
 
 // ============================================================================
 // CATÁLOGO DE PRUEBAS CLÍNICAS PARA BANCO DE PRUEBAS
@@ -206,33 +205,18 @@ export default function BancoDePruebas({ studentId, studentName, groupName, stud
       link,
     };
 
-    // Guardar en Firestore (usar doc ID = sessionId para lectura directa)
-    if (db) {
-      try {
-        await setDoc(doc(db, 'evaluation_sessions', sessionId), {
-          ...sessionData,
-          mode: 'individual',
-          expedienteId: studentId,
-          active: true,
-          allowAnonymous: true,
-          createdAt: Timestamp.now(),
-          expiresAt: Timestamp.fromDate(sessionData.expiresAt),
-          groups: [],
-          completedCount: 0,
-          totalCount: 1,
-          name: sessionName || `Pruebas individuales — ${studentName}`,
-        });
-      } catch (error) {
-        console.error('Error guardando sesión individual:', error);
-        setCreateError('No se pudo crear la sesión en Firestore. No comparta este enlace e intente nuevamente.');
-        setIsCreating(false);
-        return;
-      }
-    } else {
-      setCreateError('Base de datos no disponible. No se pudo generar el enlace.');
-      setIsCreating(false);
-      return;
-    }
+    saveEvaluationSession({
+      ...sessionData,
+      name: sessionName || `Pruebas individuales — ${studentName}`,
+      expedienteId: studentId,
+      active: true,
+      allowAnonymous: true,
+      groups: [],
+      completedCount: 0,
+      totalCount: 1,
+      createdAt: sessionData.createdAt.toISOString(),
+      expiresAt: sessionData.expiresAt.toISOString(),
+    });
 
     setGeneratedLink(link);
     setCurrentSession(sessionData);

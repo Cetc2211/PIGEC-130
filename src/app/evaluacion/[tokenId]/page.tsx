@@ -17,6 +17,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { validarMatricula, type MatriculaRegistro } from '@/lib/matricula-service';
 import { encodeEvaluationPayload } from '@/lib/data-utils';
+import { getEvaluationSessionById } from '@/lib/storage-local';
 import FichaIdentificacionForm from '@/components/FichaIdentificacionForm';
 import BdiForm from '@/components/BdiForm';
 import BaiForm from '@/components/BaiForm';
@@ -176,6 +177,34 @@ export default function EvaluacionPage() {
                 setError(null);
                 setLoading(false);
             };
+
+            const localSession = getEvaluationSessionById<any>(tokenId);
+            if (localSession) {
+                const sessionMode = localSession.mode || 'group';
+
+                setSession({
+                    id: localSession.id,
+                    name: localSession.name,
+                    tests: Array.isArray(localSession.tests) ? localSession.tests : [],
+                    groups: Array.isArray(localSession.groups) ? localSession.groups : [],
+                    status: localSession.status || 'active',
+                    mode: sessionMode,
+                    studentId: localSession.studentId || localSession.expedienteId,
+                    studentName: localSession.studentName,
+                    expedienteId: localSession.expedienteId,
+                    expiresAt: localSession.expiresAt ? new Date(localSession.expiresAt) : undefined,
+                });
+
+                if (sessionMode === 'individual') {
+                    setStep('consentimiento');
+                } else if (searchParams.get('matricula')) {
+                    setMatriculaInput((searchParams.get('matricula') || '').toUpperCase());
+                }
+
+                setError(null);
+                setLoading(false);
+                return;
+            }
 
             if (!db) {
                 fallbackFromQueryParams();

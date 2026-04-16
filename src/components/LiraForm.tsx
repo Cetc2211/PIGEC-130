@@ -138,16 +138,14 @@ export default function LiraForm({ studentId, grupoId, matricula, sessionId, onC
         }
 
         if (studentId && db) {
-            try {
-                setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
                     sessionId: sessionId || null,
                     testType: 'LIRA',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: total,
                     interpretation: interpretation.level,
                     level: interpretation.level,

@@ -291,14 +291,12 @@ export default function SsiForm({ studentId, sessionId, onComplete }: SsiFormPro
         }
 
         if (studentId && db) {
-            try {
-                setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     sessionId: sessionId || null,
                     testType: 'SSI-Beck',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     flags: calculatedResult.flags,

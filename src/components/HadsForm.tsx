@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CheckCircle2, Save, RotateCcw } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { saveTestResultLocal } from '@/lib/storage-local';
 
 // 14 ítems del HADS (7 ansiedad + 7 depresión)
 const hadsItems = [
@@ -186,17 +185,17 @@ export default function HadsForm({ studentId, grupoId, matricula, sessionId, onC
             });
         }
 
-        if (studentId && db) {
+        if (studentId) {
             try {
                 setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
                     sessionId: sessionId || null,
                     testType: 'HADS',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: calculatedResult.anxiety + calculatedResult.depression,
                     interpretation: `A:${calculatedResult.anxietyInterpretation.level} D:${calculatedResult.depressionInterpretation.level}`,
                     level: `A:${calculatedResult.anxietyInterpretation.level} D:${calculatedResult.depressionInterpretation.level}`,

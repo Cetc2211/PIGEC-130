@@ -4,6 +4,8 @@ import type { WhatsAppBridgePayload } from '@/lib/data-utils';
 const EXPEDIENTES_KEY = 'pigec_expedientes';
 const OFFICIAL_GROUPS_KEY = 'pigec_official_groups';
 const WHATSAPP_IMPORTS_KEY = 'pigec_whatsapp_imports';
+const EVALUATION_SESSIONS_KEY = 'pigec_evaluation_sessions';
+const TEST_RESULTS_KEY = 'pigec_test_results';
 
 type StoredExpediente = {
   id?: string;
@@ -15,6 +17,20 @@ type StoredWhatsAppImport = {
   id: string;
   importedAt: string;
   payload: WhatsAppBridgePayload;
+};
+
+type StoredEvaluationSession = {
+  id: string;
+  [key: string]: unknown;
+};
+
+type StoredTestResult = {
+  id?: string;
+  studentId?: string;
+  sessionId?: string | null;
+  testType?: string;
+  submittedAt?: string;
+  [key: string]: unknown;
 };
 
 const isBrowser = () => typeof window !== 'undefined' && typeof localStorage !== 'undefined';
@@ -108,4 +124,59 @@ export function saveImportedWhatsAppEvaluation(payload: WhatsAppBridgePayload): 
 export function getImportedWhatsAppEvaluations(): StoredWhatsAppImport[] {
   if (!isBrowser()) return [];
   return safeParseArray<StoredWhatsAppImport>(localStorage.getItem(WHATSAPP_IMPORTS_KEY));
+}
+
+export function getEvaluationSessions<T = StoredEvaluationSession>(): T[] {
+  if (!isBrowser()) return [];
+  return safeParseArray<T>(localStorage.getItem(EVALUATION_SESSIONS_KEY));
+}
+
+export function getEvaluationSessionById<T = StoredEvaluationSession>(sessionId: string): T | null {
+  if (!isBrowser()) return null;
+  const sessions = getEvaluationSessions<T & { id: string }>();
+  return sessions.find((session) => session.id === sessionId) || null;
+}
+
+export function saveEvaluationSession(session: StoredEvaluationSession): void {
+  if (!isBrowser()) return;
+
+  const current = getEvaluationSessions<StoredEvaluationSession>();
+  const matchIndex = current.findIndex((item) => item.id === session.id);
+
+  if (matchIndex >= 0) {
+    current[matchIndex] = { ...current[matchIndex], ...session };
+  } else {
+    current.push(session);
+  }
+
+  localStorage.setItem(EVALUATION_SESSIONS_KEY, JSON.stringify(current));
+}
+
+export function getTestResults<T = StoredTestResult>(): T[] {
+  if (!isBrowser()) return [];
+  return safeParseArray<T>(localStorage.getItem(TEST_RESULTS_KEY));
+}
+
+export function saveTestResultLocal(result: StoredTestResult): void {
+  if (!isBrowser()) return;
+
+  const current = getTestResults<StoredTestResult>();
+  const resultId =
+    result.id ||
+    `tr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  const normalized: StoredTestResult = {
+    ...result,
+    id: resultId,
+    submittedAt: result.submittedAt || new Date().toISOString(),
+  };
+
+  const matchIndex = current.findIndex((item) => item.id === resultId);
+  if (matchIndex >= 0) {
+    current[matchIndex] = { ...current[matchIndex], ...normalized };
+  } else {
+    current.push(normalized);
+  }
+
+  localStorage.setItem(TEST_RESULTS_KEY, JSON.stringify(current));
 }

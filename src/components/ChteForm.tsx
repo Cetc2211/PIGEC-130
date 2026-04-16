@@ -7,8 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CheckCircle2, Save, RotateCcw } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { saveTestResultLocal } from '@/lib/storage-local';
 
 const chteQuestions = [
     { id: 'q1', text: '1. ¿Hago un plan o un horario para mis horas de estudio?', domain: 'planificacion' },
@@ -118,17 +117,17 @@ export default function ChteForm({ studentId, grupoId, matricula, sessionId, onC
             onComplete({ total: Math.round(calculatedResult.total), interpretation: calculatedResult.nivel });
         }
 
-        if (studentId && db) {
+        if (studentId) {
             try {
                 setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
                     sessionId: sessionId || null,
                     testType: 'CHTE',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: Math.round(calculatedResult.total),
                     interpretation: calculatedResult.nivel,
                     level: calculatedResult.nivel,

@@ -58,7 +58,9 @@ import { cn } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { getExpedientes as getExpedientesLocal, getOfficialGroupStructures, saveExpedienteLocal } from '@/lib/storage-local';
+import { hasLocalAccessProfile } from '@/lib/local-access';
 import {
+  getExpedientes as getExpedientesService,
   getNivelLabel,
   getNivelShort,
   getNivelColor,
@@ -94,6 +96,7 @@ export default function ExpedientesPage() {
   const [expedientesRemotos, setExpedientesRemotos] = useState<Expediente[]>([]);
   const [filtroGrupoOficial, setFiltroGrupoOficial] = useState<string>('todos');
   const [gruposOficiales, setGruposOficiales] = useState<Array<{ id: string; name: string }>>([]);
+  const [localOnlyMode, setLocalOnlyMode] = useState(false);
 
   // Formulario de Ficha de Identificación (modo controlado)
   const [fichaData, setFichaData] = useState<FichaIdentificacionData>({
@@ -128,6 +131,11 @@ export default function ExpedientesPage() {
   }, [expedientes, busqueda, filtroGrupoOficial]);
 
   React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setLocalOnlyMode(hasLocalAccessProfile());
+  }, []);
+
+  React.useEffect(() => {
     setGruposOficiales(getOfficialGroupStructures());
   }, []);
 
@@ -137,9 +145,9 @@ export default function ExpedientesPage() {
         return;
       }
 
-      if (!db || !user) {
-        const locales = getExpedientesLocal<Expediente>();
-        setExpedientesRemotos(locales);
+      if (localOnlyMode || !db || !user) {
+        const localesConDemo = getExpedientesService('todos');
+        setExpedientesRemotos(localesConDemo);
         return;
       }
 
@@ -193,7 +201,7 @@ export default function ExpedientesPage() {
     };
 
     syncExpedientesRemotos();
-  }, [authLoading, listVersion, user]);
+  }, [authLoading, listVersion, localOnlyMode, user]);
 
   React.useEffect(() => {
     const syncEvaluaciones = async () => {
@@ -201,7 +209,7 @@ export default function ExpedientesPage() {
         return;
       }
 
-      if (!db || !user || expedientes.length === 0) {
+      if (localOnlyMode || !db || !user || expedientes.length === 0) {
         setEvaluacionesFirestore({});
         return;
       }
@@ -225,7 +233,7 @@ export default function ExpedientesPage() {
     };
 
     syncEvaluaciones();
-  }, [authLoading, expedientes, user]);
+  }, [authLoading, expedientes, localOnlyMode, user]);
 
   /** Validar campos obligatorios de la Ficha de Identificación */
   const validateFicha = (): boolean => {

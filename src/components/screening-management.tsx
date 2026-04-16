@@ -22,8 +22,7 @@ import { Progress } from './ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import ScreeningInstrumentDialog from './ScreeningInstrumentDialog';
 import { ExpedienteGrupalCard } from './ExpedienteGrupalCard';
-import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, addDoc, Timestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { saveEvaluationSession } from '@/lib/storage-local';
 import { 
     generarMatriculasGrupo, 
     obtenerMatriculasGrupo,
@@ -293,27 +292,13 @@ export default function ScreeningManagement() {
             totalCount: calculateTotalStudents()
         };
 
-        // Guardar en Firestore (usar doc ID = sessionId para lectura directa)
-        if (db) {
-            try {
-                await setDoc(doc(db, 'evaluation_sessions', newSession.id), {
-                    ...newSession,
-                    active: true,
-                    allowAnonymous: true,
-                    createdAt: Timestamp.now(),
-                    expiresAt: Timestamp.fromDate(newSession.expiresAt!)
-                });
-            } catch (error) {
-                console.error('Error guardando sesión:', error);
-                setCreateSessionError('No se pudo crear la sesión en Firestore. No comparta este enlace e intente nuevamente.');
-                setIsCreating(false);
-                return;
-            }
-        } else {
-            setCreateSessionError('Base de datos no disponible. No se pudo generar el enlace.');
-            setIsCreating(false);
-            return;
-        }
+        saveEvaluationSession({
+            ...newSession,
+            active: true,
+            allowAnonymous: true,
+            createdAt: newSession.createdAt.toISOString(),
+            expiresAt: newSession.expiresAt?.toISOString(),
+        });
 
         setGeneratedLink(link);
         setCurrentSession(newSession);

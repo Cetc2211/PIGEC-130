@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Save, RotateCcw } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { saveTestResultLocal } from '@/lib/storage-local';
 
 const gad7Items = [
     "1. Sentirse nervioso(a), ansioso(a) o con los nervios de punta",
@@ -72,17 +71,17 @@ export default function Gad7Form({ studentId, grupoId, matricula, sessionId, onC
             onComplete({ total: calculatedResult.total, interpretation: calculatedResult.interpretation.level });
         }
 
-        if (studentId && db) {
+        if (studentId) {
             try {
                 setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     grupoId: grupoId || null,
                     matricula: matricula || null,
                     sessionId: sessionId || null,
                     testType: 'GAD-7',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     level: calculatedResult.interpretation.level,

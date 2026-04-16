@@ -137,14 +137,12 @@ export default function PlutchikForm({ studentId, sessionId, onComplete }: Plutc
         }
 
         if (studentId && db) {
-            try {
-                setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     sessionId: sessionId || null,
                     testType: 'Plutchik',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     score: calculatedResult.total,
                     interpretation: calculatedResult.interpretation.level,
                     criticalItems: calculatedResult.criticalItems,

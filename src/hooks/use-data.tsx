@@ -15,6 +15,7 @@ import { robustUpload, batchUpload, checkFirebaseHealth } from '@/lib/sync-clien
 import { ultraUploadAll, checkUltraRestConnection, stripPhotos } from '@/lib/ultra-rest-upload';
 import { getIdToken } from 'firebase/auth';
 import { getOfficialGroupStructures, saveOfficialGroupStructure } from '@/lib/storage-local';
+import { hasLocalAccessProfile } from '@/lib/local-access';
 
 // TYPE DEFINITIONS
 type ExportData = {
@@ -215,11 +216,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [activePartialId, setActivePartialIdState] = useState<PartialId>('p1');
     const [syncStatus, setSyncStatus] = useState<'synced' | 'pending' | 'syncing'>('synced');
     const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
+    const [localOnlyMode, setLocalOnlyMode] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        setLocalOnlyMode(hasLocalAccessProfile());
+    }, []);
+
+    const cloudEnabled = !!user && !localOnlyMode;
 
     
     // --- SANITIZATION SCRIPT ---
     const runSanitization = async (officialGroups: OfficialGroup[]) => {
-        if (!user) return;
+        if (!cloudEnabled || !user) return;
         
         try {
             const docRef = doc(db, 'users', user.uid, 'userData', 'app_groups');
@@ -337,7 +346,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setIsLoading(false);
 
                 // Step 3: Background Cloud Sync (SLOW PHASE)
-                if (user) {
+                if (cloudEnabled && user) {
                     const syncKey = async <T,>(key: string, localWrapper: { value: T, lastUpdated: number } | undefined, setter: (val: T) => void) => {
                          try {
                             const docRef = doc(db, 'users', user.uid, 'userData', key);
@@ -482,7 +491,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         };
         hydrateData();
-    }, [user, authLoading]);
+    }, [user, authLoading, cloudEnabled]);
 
     useEffect(() => {
         // Load cached official groups on mount
@@ -512,6 +521,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }
 
+        if (localOnlyMode || !db) {
+            return;
+        }
+
         const unsubscribe = onSnapshot(collection(db, 'official_groups'), (snapshot) => {
             const fetchedGroups: OfficialGroup[] = [];
             snapshot.forEach((doc) => {
@@ -530,7 +543,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }));
 
             // Run sanitization once when official groups are loaded
-            if (user) {
+            if (cloudEnabled && user) {
                 runSanitization(fetchedGroups);
             }
         }, (error) => {
@@ -586,11 +599,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             unsubscribeAnn();
             unsubscribeJust();
         };
-    }, []);
+    }, [cloudEnabled, localOnlyMode, user]);
 
     // Real-time listeners for cross-device synchronization
     useEffect(() => {
-        if (!user) return;
+        if (!cloudEnabled || !user) return;
 
         console.log('Setting up real-time listeners for cross-device sync');
 
@@ -811,10 +824,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             unsubscribeSettings();
             console.log('Real-time listeners cleaned up');
         };
-    }, [user]);
+    }, [cloudEnabled, user]);
 
     // Monitor cloud sync status - improved to avoid flickering
     useEffect(() => {
+        if (localOnlyMode || !db) {
+            setSyncStatus('synced');
+            return;
+        }
+
         let isChecking = false;
         
         const checkSyncStatus = async () => {
@@ -846,7 +864,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             clearTimeout(timeoutId);
             clearInterval(interval);
         };
-    }, []);
+    }, [localOnlyMode]);
 
     const createSetterWithStorage = <T,>(
         setter: React.Dispatch<React.SetStateAction<T>>,
@@ -909,7 +927,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             // 4. Background Sync to Cloud
-            if (user) {
+            if (cloudEnabled && user) {
                 const docRef = doc(db, 'users', user.uid, 'userData', key);
                 // Fire and forget - let the offline persistence SDK handle the queue
                 setDoc(docRef, payload, { merge: true }).catch(err => {
@@ -939,7 +957,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
              await set('app_settings', payload);
         } catch(e) { console.error("Error saving local settings:", e); }
 
-        if (user) {
+        if (cloudEnabled && user) {
             try {
                 const docRef = doc(db, 'users', user.uid, 'userData', 'app_settings');
                 await setDoc(docRef, payload, { merge: true });

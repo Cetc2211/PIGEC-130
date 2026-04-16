@@ -183,14 +183,12 @@ export default function ColumbiaForm({ studentId, sessionId, onComplete }: Colum
         }
 
         if (studentId && db) {
-            try {
-                setIsSaving(true);
-                await addDoc(collection(db, 'test_results'), {
+                saveTestResultLocal({
                     studentId,
                     sessionId: sessionId || null,
                     testType: 'Columbia-CSSRS',
-                    date: Timestamp.now(),
-                    submittedAt: Timestamp.now(),
+                    date: new Date().toISOString(),
+                    submittedAt: new Date().toISOString(),
                     interpretation: interpretation.level,
                     urgency: interpretation.urgency,
                     requiresImmediateAttention: interpretation.requiresImmediateAttention,
