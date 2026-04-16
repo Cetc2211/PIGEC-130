@@ -133,6 +133,8 @@ export default function EvaluacionPage() {
     const [expedienteId, setExpedienteId] = useState<string | null>(null);
     const [capturedResults, setCapturedResults] = useState<Record<string, any>>({});
     const [isGeneratingWhatsAppLink, setIsGeneratingWhatsAppLink] = useState(false);
+    const [generatedBridgeCode, setGeneratedBridgeCode] = useState<string | null>(null);
+    const [generationMessage, setGenerationMessage] = useState<string | null>(null);
 
     // Cargar datos de la sesión
     useEffect(() => {
@@ -362,6 +364,8 @@ export default function EvaluacionPage() {
     const handleEnviarPorWhatsApp = async () => {
         try {
             setIsGeneratingWhatsAppLink(true);
+            setGenerationMessage(null);
+            setGeneratedBridgeCode(null);
 
             const payload = {
                 version: 'wa-bridge-v1',
@@ -381,20 +385,55 @@ export default function EvaluacionPage() {
                 results: capturedResults,
             };
 
-            const code = await encodeEvaluationPayload(payload);
+            const encoded = await Promise.race<string | null>([
+                encodeEvaluationPayload(payload),
+                new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+            ]);
+
+            let code = encoded;
+
+            if (!code) {
+                // Fallback defensivo para WebViews/iPad cuando una promesa de compresión se queda colgada.
+                const json = JSON.stringify(payload);
+                const utf8 = new TextEncoder().encode(json);
+                let binary = '';
+                for (let i = 0; i < utf8.length; i += 1) {
+                    binary += String.fromCharCode(utf8[i]);
+                }
+                code = `raw.${btoa(binary)}`;
+            }
+
+            const prefixedCode = `PIGEC-WA1:${code}`;
             const message = [
                 'Hola, comparto mi codigo de evaluacion PIGEC para importacion offline:',
                 '',
-                `PIGEC-WA1:${code}`,
+                prefixedCode,
             ].join('\n');
 
+            setGeneratedBridgeCode(prefixedCode);
+
             const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-            window.open(waUrl, '_blank', 'noopener,noreferrer');
+            const popup = window.open(waUrl, '_blank', 'noopener,noreferrer');
+            if (!popup) {
+                setGenerationMessage('Codigo generado. No se pudo abrir WhatsApp automaticamente; copie el codigo y envielo manualmente.');
+            } else {
+                setGenerationMessage('Codigo generado correctamente.');
+            }
         } catch (error) {
             console.error('Error generando enlace de WhatsApp:', error);
-            alert('No se pudo generar el codigo para WhatsApp.');
+            setGenerationMessage('No se pudo generar el codigo para WhatsApp.');
         } finally {
             setIsGeneratingWhatsAppLink(false);
+        }
+    };
+
+    const handleCopiarCodigo = async () => {
+        if (!generatedBridgeCode) return;
+        try {
+            await navigator.clipboard.writeText(generatedBridgeCode);
+            setGenerationMessage('Codigo copiado al portapapeles.');
+        } catch {
+            setGenerationMessage('No se pudo copiar automaticamente. Seleccione y copie manualmente.');
         }
     };
 
@@ -701,6 +740,25 @@ export default function EvaluacionPage() {
                                 'Generar Codigo de Resultados'
                             )}
                         </Button>
+                        {generationMessage && (
+                            <p className="mt-3 text-xs text-slate-600">{generationMessage}</p>
+                        )}
+                        {generatedBridgeCode && (
+                            <div className="mt-3 space-y-2 text-left">
+                                <Label htmlFor="codigo-resultado" className="text-xs text-slate-600">
+                                    Codigo de resultados
+                                </Label>
+                                <Input
+                                    id="codigo-resultado"
+                                    value={generatedBridgeCode}
+                                    readOnly
+                                    className="font-mono text-xs"
+                                />
+                                <Button variant="outline" className="w-full" onClick={handleCopiarCodigo}>
+                                    Copiar Codigo
+                                </Button>
+                            </div>
+                        )}
                         <p className="mt-6 text-xs text-gray-400">
                             Ya puede cerrar esta ventana.
                         </p>
