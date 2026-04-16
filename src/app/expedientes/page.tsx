@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -46,19 +47,20 @@ import {
 import {
   AlertTriangle,
   FolderOpen,
-  Plus,
   Search,
   Filter,
   FileSearch,
   UserPlus,
   Loader2,
   ScrollText,
+  MessageSquareCode,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { getExpedientes as getExpedientesLocal, getOfficialGroupStructures, saveExpedienteLocal } from '@/lib/storage-local';
+import { getOfficialGroupStructures, saveExpedienteLocal, saveImportedWhatsAppEvaluation } from '@/lib/storage-local';
 import { hasLocalAccessProfile } from '@/lib/local-access';
+import { decodeEvaluationPayload } from '@/lib/data-utils';
 import {
   getExpedientes as getExpedientesService,
   getNivelLabel,
@@ -97,6 +99,9 @@ export default function ExpedientesPage() {
   const [filtroGrupoOficial, setFiltroGrupoOficial] = useState<string>('todos');
   const [gruposOficiales, setGruposOficiales] = useState<Array<{ id: string; name: string }>>([]);
   const [localOnlyMode, setLocalOnlyMode] = useState(false);
+  const [whatsAppCodeInput, setWhatsAppCodeInput] = useState('');
+  const [isImportingWhatsApp, setIsImportingWhatsApp] = useState(false);
+  const [whatsAppImportSummary, setWhatsAppImportSummary] = useState<string | null>(null);
 
   // Formulario de Ficha de Identificación (modo controlado)
   const [fichaData, setFichaData] = useState<FichaIdentificacionData>({
@@ -343,6 +348,97 @@ export default function ExpedientesPage() {
     }
   };
 
+  const extractWhatsAppBridgeCode = (raw: string): string => {
+    const trimmed = raw.trim();
+    const prefixed = trimmed.match(/PIGEC-WA1:([A-Za-z0-9+/=._-]+)/i);
+    if (prefixed?.[1]) return prefixed[1].trim();
+    return trimmed.replace(/^PIGEC-WA1:/i, '').trim();
+  };
+
+  const handleImportFromWhatsApp = async () => {
+    if (!whatsAppCodeInput.trim()) return;
+
+    try {
+      setIsImportingWhatsApp(true);
+      setWhatsAppImportSummary(null);
+
+      const code = extractWhatsAppBridgeCode(whatsAppCodeInput);
+      const payload = await decodeEvaluationPayload(code);
+      const importId = saveImportedWhatsAppEvaluation(payload);
+
+      const studentId = payload.student?.id || undefined;
+      const studentName = payload.student?.name || 'Consultante';
+      const existing = studentId
+        ? getExpedientesService('todos').find((exp) => exp.studentId === studentId)
+        : undefined;
+
+      const completed = Array.isArray(payload.completedTests) ? payload.completedTests : [];
+      const resultsObj = (payload.results || {}) as Record<string, any>;
+      const evaluacionesNuevas = completed.map((testId: string, index: number) => {
+        const rawResult = resultsObj[testId] || {};
+        const score = Number(rawResult?.total ?? rawResult?.score ?? rawResult?.totalScore ?? 0);
+        const interpretation = String(rawResult?.interpretation ?? rawResult?.level ?? '').trim();
+
+        return {
+          id: `wa-${importId}-${testId}-${index}`,
+          tipo: testNames[testId] || testId,
+          score,
+          fecha: new Date().toISOString(),
+          aplicadaPor: 'WhatsApp Bridge',
+          observaciones: interpretation || undefined,
+        };
+      });
+
+      const notasPrevias = Array.isArray(existing?.notas) ? existing!.notas : [];
+      const evaluacionesPrevias = Array.isArray(existing?.evaluaciones) ? existing!.evaluaciones : [];
+
+      saveExpedienteLocal({
+        ...(existing || {}),
+        id: existing?.id || `exp-wa-${importId}`,
+        studentId,
+        studentName,
+        groupName: existing?.groupName || payload.student?.grupoNombre || 'Sin grupo',
+        semester: existing?.semester || 1,
+        nivel: existing?.nivel || 'nivel_1',
+        estado: existing?.estado || 'abierto',
+        origen: existing?.origen || 'registro_manual',
+        fechaCreacion: existing?.fechaCreacion || new Date().toISOString(),
+        fechaActualizacion: new Date().toISOString(),
+        creadoPor: existing?.creadoPor || 'whatsapp@local',
+        academicData: existing?.academicData || { gpa: 0, absences: 0 },
+        evaluaciones: [...evaluacionesPrevias, ...evaluacionesNuevas],
+        notas: [
+          ...notasPrevias,
+          {
+            id: `nota-wa-${importId}`,
+            fecha: new Date().toISOString(),
+            autor: 'WhatsApp Bridge',
+            tipo: 'seguimiento',
+            contenido: `Importacion de resultados via WhatsApp (${completed.length} pruebas).`,
+          },
+        ],
+      });
+
+      setListVersion((v) => v + 1);
+      setWhatsAppCodeInput('');
+      setWhatsAppImportSummary(`Importacion completada. Se vinculo al expediente de ${studentName}.`);
+
+      toast({
+        title: 'Codigo importado',
+        description: 'Resultados inyectados correctamente en el expediente local.',
+      });
+    } catch (error) {
+      console.error('Error importando codigo de WhatsApp:', error);
+      toast({
+        variant: 'destructive',
+        title: 'No se pudo importar',
+        description: 'Verifique que el codigo PIGEC-WA1 sea valido e intente de nuevo.',
+      });
+    } finally {
+      setIsImportingWhatsApp(false);
+    }
+  };
+
   if (role === 'loading') {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -413,6 +509,37 @@ export default function ExpedientesPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <Card className="mb-6 border-sky-200 bg-sky-50/40">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <MessageSquareCode className="h-4 w-4 text-sky-700" />
+            Importar Codigo de Resultados (WhatsApp)
+          </CardTitle>
+          <CardDescription>
+            Pegue aqui el codigo recibido del consultante (PIGEC-WA1). La app lo decodifica e inyecta los resultados al expediente local.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea
+            rows={4}
+            value={whatsAppCodeInput}
+            onChange={(e) => setWhatsAppCodeInput(e.target.value)}
+            placeholder="Pegue aqui el texto con PIGEC-WA1:..."
+            className="font-mono text-xs"
+          />
+          <Button
+            onClick={handleImportFromWhatsApp}
+            disabled={isImportingWhatsApp || !whatsAppCodeInput.trim()}
+          >
+            {isImportingWhatsApp && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Importar e Inyectar al Expediente
+          </Button>
+          {whatsAppImportSummary && (
+            <p className="text-sm text-green-700">{whatsAppImportSummary}</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filtros y búsqueda */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
