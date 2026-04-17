@@ -67,6 +67,17 @@ export default function SettingsPage() {
     const [isSyncing, setIsSyncing] = useState(false);
     const [userGeminiApiKey, setUserGeminiApiKey] = useState('');
     const [hasUserGeminiApiKey, setHasUserGeminiApiKey] = useState(false);
+
+    const safeFormatDate = (value?: string, pattern = 'dd MMM yyyy') => {
+        if (!value) return 'Fecha no disponible';
+        try {
+            const parsed = parseISO(value);
+            if (Number.isNaN(parsed.getTime())) return value;
+            return format(parsed, pattern, { locale: es });
+        } catch {
+            return value;
+        }
+    };
     
     const getModelLabel = useMemo(() => {
         return (value: string) => MODEL_OPTIONS.find(opt => opt.value === value)?.label || describeModel(value);
@@ -542,7 +553,7 @@ export default function SettingsPage() {
                                     <p className="font-medium">{note.text}</p>
                                     <p className="text-sm text-muted-foreground">
                                         <CalendarIcon className="inline h-4 w-4 mr-1" />
-                                        {format(parseISO(note.startDate), 'dd MMM', { locale: es })} - {format(parseISO(note.endDate), 'dd MMM yyyy', { locale: es })}
+                                        {safeFormatDate(note.startDate, 'dd MMM')} - {safeFormatDate(note.endDate, 'dd MMM yyyy')}
                                     </p>
                                 </div>
                                 <div className="flex gap-2">

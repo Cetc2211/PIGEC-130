@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Scale, Home, Settings, ClipboardList, BookText, LogOut, FolderKanban, FolderOpen } from 'lucide-react';
+import { Scale, Home, Settings, ClipboardList, BookText, LogOut, FolderKanban, FolderOpen, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/context/SessionContext';
 import { clearLocalSpecialistProfile } from '@/lib/local-access';
@@ -13,11 +13,12 @@ import { Button } from './ui/button';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard de Riesgo', icon: Home, roles: ['Clinico', 'Orientador'] },
   { href: '/expedientes', label: 'Expedientes', icon: FolderOpen, roles: ['Clinico', 'Orientador'] },
+  { href: '/settings', label: 'Ajustes', icon: Settings, roles: ['Clinico', 'Orientador'] },
   { href: '/orientacion', label: 'Panel de Orientación', icon: BookText, roles: ['Orientador'] },
   { href: '/educativa/evaluacion', label: 'Evaluación Educativa', icon: BookText, roles: ['Orientador', 'Clinico'] },
   { href: '/screening', label: 'Gestión de Pruebas', icon: ClipboardList, roles: ['Clinico'] },
   { href: '/tools', label: 'Repositorio de Recursos', icon: FolderKanban, roles: ['Clinico', 'Orientador'] },
-  { href: '/admin', label: 'Administración', icon: Settings, roles: ['Clinico'] },
+  { href: '/admin', label: 'Administración', icon: Shield, roles: ['Clinico'] },
 ];
 
 function RoleSwitcher() {
