@@ -1,6 +1,6 @@
 import { USER_GEMINI_API_KEY_STORAGE_KEY } from '@/lib/ai-service';
 
-export const LOCAL_ADMIN_EMAIL = 'mpcecil...@gmail.com';
+export const LOCAL_ADMIN_EMAIL = 'ceciliotopetecruz@gmail.com';
 export const LOCAL_INSTITUTIONAL_CODE_FALLBACK = 'PIGEC-130-2026';
 export const LOCAL_SPECIALIST_PROFILE_KEY = 'pigec_local_specialist_profile';
 export const LOCAL_ACCESS_GRANTED_KEY = 'pigec_local_access_granted';

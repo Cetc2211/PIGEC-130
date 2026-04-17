@@ -119,9 +119,9 @@ export async function decodeEvaluationPayload(code: string): Promise<WhatsAppBri
   const embeddedMatch = trimmed.match(/(?:PIGEC-WA1:\s*)?((?:raw|gz)\.[A-Za-z0-9+/_=\-.\s]+)/i);
   const normalized = (embeddedMatch?.[1] || withoutPrefix).replace(/\s+/g, '');
 
-  const [prefix, value] = normalized.includes('.')
-    ? normalized.split('.', 2)
-    : ['raw', normalized];
+  const dotIndex = normalized.indexOf('.');
+  const prefix = dotIndex >= 0 ? normalized.slice(0, dotIndex) : 'raw';
+  const value = dotIndex >= 0 ? normalized.slice(dotIndex + 1) : normalized;
 
   const bytes = base64ToUint8(value);
   const decodedBytes = prefix === 'gz' ? await decompressUtf8(bytes) : bytes;
