@@ -49,6 +49,40 @@ interface TestResult {
     alerts?: string[];
 }
 
+type TestCategory = 'Depresion' | 'Ansiedad' | 'Desesperanza y Pensamientos' | 'Ideacion y Conducta Suicida' | 'Conductas de Riesgo' | 'Psicopedagogicas';
+
+type ActiveTestDefinition = {
+    key: string;
+    label: string;
+    category: TestCategory;
+};
+
+const ACTIVE_TESTS_CATALOG: ActiveTestDefinition[] = [
+    { key: 'PHQ-9', label: 'PHQ-9 (Depresion)', category: 'Depresion' },
+    { key: 'BDI-II', label: 'BDI-II (Depresion Beck)', category: 'Depresion' },
+    { key: 'GAD-7', label: 'GAD-7 (Ansiedad)', category: 'Ansiedad' },
+    { key: 'BAI', label: 'BAI (Ansiedad Beck)', category: 'Ansiedad' },
+    { key: 'HADS', label: 'HADS (Ansiedad/Depresion)', category: 'Ansiedad' },
+    { key: 'IDARE/STAI', label: 'IDARE/STAI (Ansiedad Rasgo-Estado)', category: 'Ansiedad' },
+    { key: 'BHS', label: 'BHS (Desesperanza)', category: 'Desesperanza y Pensamientos' },
+    { key: 'IPA', label: 'IPA (Pensamientos Automaticos)', category: 'Desesperanza y Pensamientos' },
+    { key: 'SSI', label: 'SSI (Ideacion Suicida)', category: 'Ideacion y Conducta Suicida' },
+    { key: 'Columbia C-SSRS', label: 'Columbia C-SSRS', category: 'Ideacion y Conducta Suicida' },
+    { key: 'Plutchik', label: 'Plutchik (Riesgo Suicida)', category: 'Ideacion y Conducta Suicida' },
+    { key: 'CDFR', label: 'CDFR (Factores de Riesgo)', category: 'Ideacion y Conducta Suicida' },
+    { key: 'ASSIST', label: 'ASSIST (Sustancias)', category: 'Conductas de Riesgo' },
+    { key: 'CHTE', label: 'CHTE (Habitos de Estudio)', category: 'Psicopedagogicas' },
+];
+
+const ACTIVE_CATEGORY_ORDER: TestCategory[] = [
+    'Depresion',
+    'Ansiedad',
+    'Desesperanza y Pensamientos',
+    'Ideacion y Conducta Suicida',
+    'Conductas de Riesgo',
+    'Psicopedagogicas',
+];
+
 const normalizeText = (value: string): string =>
     value
         .normalize('NFD')
@@ -218,6 +252,38 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
         return testResults.filter((result) => !isPsychopedagogicalTest(result.canonicalType || result.testType));
     }, [testResults]);
 
+    const resultsByCanonicalType = useMemo(() => {
+        const map = new Map<string, TestResult>();
+        testResults.forEach((result) => {
+            const key = result.canonicalType || canonicalizeTestType(result.testType);
+            if (!map.has(key)) {
+                map.set(key, result);
+            }
+        });
+        return map;
+    }, [testResults]);
+
+    const activeSections = useMemo(() => {
+        return ACTIVE_CATEGORY_ORDER.map((category) => {
+            const items = ACTIVE_TESTS_CATALOG
+                .filter((test) => test.category === category)
+                .map((test) => {
+                    const result = resultsByCanonicalType.get(test.key);
+                    return {
+                        ...test,
+                        hasResult: !!result,
+                        score: result?.score,
+                        interpretation: result?.interpretation || '',
+                    };
+                });
+
+            return {
+                category,
+                items,
+            };
+        }).filter((section) => section.items.length > 0);
+    }, [resultsByCanonicalType]);
+
     const findScore = (candidates: string[]): number | undefined => {
         for (const candidate of candidates) {
             const found = screeningEmocionalResults.find((item) => (item.canonicalType || item.testType) === candidate);
@@ -318,7 +384,7 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
                                             </div>
                                             <div>
                                                 <p className="font-medium text-sm">
-                                                    {testLabels[result.testType] || result.testType}
+                                                    {testLabels[result.canonicalType || result.testType] || result.testType}
                                                 </p>
                                                 <p className="text-xs text-gray-500">
                                                     Aplicada: {result.date}
@@ -367,6 +433,40 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-8">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-700 mb-4">Catalogo de Pruebas Activas y Puntajes</h3>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {activeSections.map((section) => (
+                                    <div key={`active-${section.category}`} className="rounded-lg border bg-white p-4">
+                                        <p className="text-sm font-semibold text-slate-800 mb-3">{section.category}</p>
+                                        <div className="space-y-2">
+                                            {section.items.map((item) => (
+                                                <div key={`active-test-${section.category}-${item.key}`} className="rounded border px-3 py-2">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                                                        {item.hasResult ? (
+                                                            <Badge className="bg-emerald-100 text-emerald-700">Con resultado</Badge>
+                                                        ) : (
+                                                            <Badge variant="secondary">Sin resultado</Badge>
+                                                        )}
+                                                    </div>
+                                                    {item.hasResult ? (
+                                                        <p className="text-xs text-slate-600 mt-1">
+                                                            {item.score} puntos{item.interpretation ? `; ${item.interpretation}` : ''}
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-xs text-slate-400 mt-1">Aun no aplicada/respondida.</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <Separator />
+
                         {/* SECCIÓN I: SCREENING EMOCIONAL */}
                         <div>
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">I. Screening Emocional</h3>
