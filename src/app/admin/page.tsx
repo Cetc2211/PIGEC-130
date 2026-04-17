@@ -1,15 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { UserPlus, RefreshCw, UserCog } from 'lucide-react';
+import { UserPlus, RefreshCw, UserCog, Bug, Copy, Trash2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { saveExpedienteLocal } from '@/lib/storage-local';
+
+const RUNTIME_ERRORS_KEY = 'pigec_runtime_errors';
+
+type RuntimeErrorEntry = {
+    timestamp: string;
+    message: string;
+    digest?: string | null;
+    stack?: string;
+    path?: string;
+};
 
 
 // Función que guarda localmente en localStorage
@@ -186,6 +196,91 @@ function RoleManagementCard() {
     );
 }
 
+function RuntimeErrorConsoleCard() {
+    const [errors, setErrors] = useState<RuntimeErrorEntry[]>([]);
+
+    const readErrors = () => {
+        if (typeof window === 'undefined') return;
+        try {
+            const raw = localStorage.getItem(RUNTIME_ERRORS_KEY) || '[]';
+            const parsed = JSON.parse(raw);
+            setErrors(Array.isArray(parsed) ? parsed : []);
+        } catch {
+            setErrors([]);
+        }
+    };
+
+    useEffect(() => {
+        readErrors();
+    }, []);
+
+    const handleClear = () => {
+        if (typeof window === 'undefined') return;
+        localStorage.removeItem(RUNTIME_ERRORS_KEY);
+        setErrors([]);
+    };
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(errors, null, 2));
+            alert('Errores copiados al portapapeles.');
+        } catch {
+            alert('No se pudieron copiar los errores.');
+        }
+    };
+
+    return (
+        <Card className="w-full lg:col-span-2 border-red-200">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Bug className="h-5 w-5 text-red-600" />
+                    Consola Rápida de Errores Runtime
+                </CardTitle>
+                <CardDescription>
+                    Muestra errores capturados automáticamente cuando aparece “Error Inesperado”.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" onClick={readErrors}>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Recargar
+                    </Button>
+                    <Button variant="outline" onClick={handleCopy} disabled={errors.length === 0}>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copiar JSON
+                    </Button>
+                    <Button variant="destructive" onClick={handleClear} disabled={errors.length === 0}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Limpiar
+                    </Button>
+                    <Link href="/admin/debug" className="text-sm text-blue-600 hover:underline ml-auto">
+                        Abrir Consola Avanzada
+                    </Link>
+                </div>
+
+                {errors.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin errores registrados en este dispositivo.</p>
+                ) : (
+                    <div className="space-y-2 max-h-[380px] overflow-auto">
+                        {errors.map((entry, idx) => (
+                            <div key={`${entry.timestamp}-${idx}`} className="rounded border border-red-100 bg-red-50 p-3">
+                                <p className="text-xs text-red-700">{new Date(entry.timestamp).toLocaleString()}</p>
+                                <p className="text-sm font-semibold text-red-900 break-all">{entry.message || 'Sin mensaje'}</p>
+                                <p className="text-xs text-red-800">Ruta: {entry.path || 'N/D'}</p>
+                                {entry.digest ? <p className="text-xs text-red-800">Digest: {entry.digest}</p> : null}
+                                {entry.stack ? (
+                                    <pre className="mt-2 text-xs bg-white/70 border rounded p-2 overflow-x-auto">{entry.stack}</pre>
+                                ) : null}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function AdminPage() {
     return (
         <div className="p-8">
@@ -199,6 +294,7 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 <AddNewStudentForm />
                 <RoleManagementCard />
+                <RuntimeErrorConsoleCard />
             </div>
         </div>
     );

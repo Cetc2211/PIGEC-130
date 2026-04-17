@@ -108,13 +108,23 @@ export function saveImportedWhatsAppEvaluation(payload: WhatsAppBridgePayload): 
 
   const studentId = payload.student?.id ?? undefined;
   const studentName = payload.student?.name ?? 'Consultante (WhatsApp)';
+  const now = new Date().toISOString();
 
   saveExpedienteLocal({
     id: `exp-wa-${importId}`,
     studentId,
     studentName,
+    groupName: payload.student?.grupoNombre || 'Sin grupo',
+    semester: 1,
+    nivel: 'nivel_1',
+    estado: 'abierto',
     origen: 'whatsapp_bridge',
-    fechaActualizacion: new Date().toISOString(),
+    fechaCreacion: now,
+    fechaActualizacion: now,
+    creadoPor: 'whatsapp@local',
+    academicData: { gpa: 0, absences: 0 },
+    evaluaciones: [],
+    notas: [],
     whatsappBridgeData: payload,
   });
 

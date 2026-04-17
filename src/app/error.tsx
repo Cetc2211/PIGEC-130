@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
 
+const RUNTIME_ERRORS_KEY = 'pigec_runtime_errors';
+
 export default function Error({
   error,
   reset,
@@ -14,6 +16,24 @@ export default function Error({
   useEffect(() => {
     // Registrar el error en un servicio de monitoreo
     console.error(error);
+
+    if (typeof window === 'undefined') return;
+    try {
+      const current = JSON.parse(localStorage.getItem(RUNTIME_ERRORS_KEY) || '[]');
+      const normalized = Array.isArray(current) ? current : [];
+      const entry = {
+        timestamp: new Date().toISOString(),
+        message: error?.message || 'Error sin mensaje',
+        digest: error?.digest || null,
+        stack: (error?.stack || '').split('\n').slice(0, 8).join('\n'),
+        path: window.location.pathname,
+      };
+
+      const next = [entry, ...normalized].slice(0, 50);
+      localStorage.setItem(RUNTIME_ERRORS_KEY, JSON.stringify(next));
+    } catch (storageError) {
+      console.error('No se pudo guardar el error en localStorage', storageError);
+    }
   }, [error]);
 
   return (
@@ -25,6 +45,9 @@ export default function Error({
         </h2>
         <p className="text-gray-600 mb-6">
           Algo no funcionó como se esperaba. Por favor, intente recargar la página.
+        </p>
+        <p className="text-xs text-gray-500 mb-4 break-all">
+          Detalle: {error?.message || 'Sin detalle'}
         </p>
         <Button
           onClick={

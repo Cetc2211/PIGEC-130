@@ -175,14 +175,46 @@ export type FiltroExpediente = 'todos' | 'nivel_1' | 'nivel_2' | 'nivel_3' | 'ab
 let expedientesDinamicos: Expediente[] = [];
 let expedientesLocalHydrated = false;
 
+function normalizeExpediente(raw: Partial<Expediente> & Record<string, any>): Expediente {
+  const now = new Date().toISOString();
+  const studentId = String(raw.studentId || raw.id || `local-${Date.now()}`);
+
+  return {
+    id: String(raw.id || `exp-${studentId}`),
+    studentId,
+    studentName: String(raw.studentName || raw.fullName || 'Sin nombre'),
+    groupName: String(raw.groupName || raw.grupoNombre || 'Sin grupo'),
+    semester: Number(raw.semester || raw.semestre || 1),
+    nivel: (raw.nivel === 'nivel_1' || raw.nivel === 'nivel_2' || raw.nivel === 'nivel_3') ? raw.nivel : 'nivel_1',
+    estado: (raw.estado === 'abierto' || raw.estado === 'en_seguimiento' || raw.estado === 'concluido' || raw.estado === 'inactivo')
+      ? raw.estado
+      : 'abierto',
+    origen: (raw.origen as OrigenExpediente) || 'registro_manual',
+    fechaCreacion: String(raw.fechaCreacion || now),
+    fechaActualizacion: String(raw.fechaActualizacion || now),
+    creadoPor: String(raw.creadoPor || 'sistema@local'),
+    academicData: {
+      gpa: Number(raw.academicData?.gpa || raw.gpa || 0),
+      absences: Number(raw.academicData?.absences || raw.absences || 0),
+    },
+    fichaIdentificacion: raw.fichaIdentificacion,
+    ansiedadScore: typeof raw.ansiedadScore === 'number' ? raw.ansiedadScore : undefined,
+    suicideRiskLevel: raw.suicideRiskLevel,
+    irc: typeof raw.irc === 'number' ? raw.irc : undefined,
+    nivelRiesgo: raw.nivelRiesgo,
+    evaluaciones: Array.isArray(raw.evaluaciones) ? raw.evaluaciones : [],
+    notas: Array.isArray(raw.notas) ? raw.notas : [],
+  };
+}
+
 function hydrateExpedientesFromLocalStorage(): void {
   if (expedientesLocalHydrated) return;
   expedientesLocalHydrated = true;
 
-  const localExpedientes = getExpedientesLocal<Expediente>();
+  const localExpedientes = getExpedientesLocal<Partial<Expediente> & Record<string, any>>();
   if (!localExpedientes.length) return;
 
-  expedientesDinamicos = localExpedientes;
+  expedientesDinamicos = localExpedientes.map(normalizeExpediente);
 }
 
 // ─── FUNCIONES DE CONVERSIÓN: Demo Store → Expediente ─────────────────────────
@@ -296,7 +328,7 @@ export function getExpedientes(filtro?: FiltroExpediente): Expediente[] {
     return demoToExpediente(student, 'nivel_1', estado);
   });
 
-  const todos = [...demoExpedientes, ...expedientesDinamicos];
+  const todos = [...demoExpedientes, ...expedientesDinamicos.map(normalizeExpediente)];
 
   if (!filtro || filtro === 'todos') return todos;
 
@@ -474,7 +506,7 @@ export function calcularEstadisticas(): AppStatistics {
 
     // Estudiantes
     totalEstudiantes: todos.length,
-    estudiantesEvaluados: todos.filter(e => e.evaluaciones.length > 0).length,
+    estudiantesEvaluados: todos.filter(e => (Array.isArray(e.evaluaciones) ? e.evaluaciones.length : 0) > 0).length,
 
     // Necesidades de atención por nivel
     estudiantesNivel1: todos.filter(e => e.nivel === 'nivel_1').length,
@@ -491,14 +523,17 @@ export function calcularEstadisticas(): AppStatistics {
   // Calcular grupos únicos
   const gruposUnicos = new Map<string, { nivel: NivelMTSS; tieneEvaluaciones: boolean }>();
   todos.forEach(exp => {
-    if (!gruposUnicos.has(exp.groupName)) {
-      gruposUnicos.set(exp.groupName, { nivel: exp.nivel, tieneEvaluaciones: exp.evaluaciones.length > 0 });
+    const groupKey = String(exp.groupName || 'Sin grupo');
+    const evalCount = Array.isArray(exp.evaluaciones) ? exp.evaluaciones.length : 0;
+
+    if (!gruposUnicos.has(groupKey)) {
+      gruposUnicos.set(groupKey, { nivel: exp.nivel, tieneEvaluaciones: evalCount > 0 });
     }
     // Si el grupo ya existe, actualizar al nivel más alto
-    const existente = gruposUnicos.get(exp.groupName)!;
+    const existente = gruposUnicos.get(groupKey)!;
     if (exp.nivel === 'nivel_3') existente.nivel = 'nivel_3';
     else if (exp.nivel === 'nivel_2' && existente.nivel !== 'nivel_3') existente.nivel = 'nivel_2';
-    if (exp.evaluaciones.length > 0) existente.tieneEvaluaciones = true;
+    if (evalCount > 0) existente.tieneEvaluaciones = true;
   });
 
   stats.totalGrupos = gruposUnicos.size;

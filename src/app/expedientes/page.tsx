@@ -123,15 +123,15 @@ export default function ExpedientesPage() {
     const byOfficialGroup = filtroGrupoOficial === 'todos'
       ? expedientes
       : expedientes.filter((exp) =>
-          exp.groupName?.toLowerCase().includes(filtroGrupoOficial.toLowerCase())
+          String(exp.groupName || '').toLowerCase().includes(filtroGrupoOficial.toLowerCase())
         );
 
     if (!busqueda.trim()) return byOfficialGroup;
     const term = busqueda.toLowerCase();
     return byOfficialGroup.filter(
       (exp) =>
-        exp.studentName.toLowerCase().includes(term) ||
-        exp.groupName.toLowerCase().includes(term)
+        String(exp.studentName || '').toLowerCase().includes(term) ||
+        String(exp.groupName || '').toLowerCase().includes(term)
     );
   }, [expedientes, busqueda, filtroGrupoOficial]);
 
