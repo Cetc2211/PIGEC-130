@@ -6,6 +6,10 @@ const OFFICIAL_GROUPS_KEY = 'pigec_official_groups';
 const WHATSAPP_IMPORTS_KEY = 'pigec_whatsapp_imports';
 const EVALUATION_SESSIONS_KEY = 'pigec_evaluation_sessions';
 const TEST_RESULTS_KEY = 'pigec_test_results';
+const CLINICAL_ASSESSMENTS_KEY = 'pigec_clinical_assessments';
+const FUNCTIONAL_ANALYSIS_KEY = 'pigec_functional_analysis';
+const TREATMENT_PLANS_KEY = 'pigec_treatment_plans';
+const PROGRESS_TRACKING_KEY = 'pigec_progress_tracking';
 
 type StoredExpediente = {
   id?: string;
@@ -30,6 +34,12 @@ type StoredTestResult = {
   sessionId?: string | null;
   testType?: string;
   submittedAt?: string;
+  [key: string]: unknown;
+};
+
+type StudentScopedRecord = {
+  studentId: string;
+  updatedAt?: string;
   [key: string]: unknown;
 };
 
@@ -86,6 +96,23 @@ export function saveExpediente(expediente: StoredExpediente): void {
 
 export function saveExpedienteLocal(expediente: StoredExpediente): void {
   saveExpediente(expediente);
+}
+
+export function deleteExpedienteLocal(identifier: { id?: string; studentId?: string }): void {
+  if (!isBrowser()) return;
+  const current = getExpedientes<StoredExpediente>();
+
+  const next = current.filter((item) => {
+    if (identifier.studentId) {
+      return item.studentId !== identifier.studentId;
+    }
+    if (identifier.id) {
+      return item.id !== identifier.id;
+    }
+    return true;
+  });
+
+  localStorage.setItem(EXPEDIENTES_KEY, JSON.stringify(next));
 }
 
 export function saveOfficialGroupStructure(group: OfficialGroup): void {
@@ -182,4 +209,66 @@ export function saveTestResultLocal(result: StoredTestResult): void {
   }
 
   localStorage.setItem(TEST_RESULTS_KEY, JSON.stringify(current));
+}
+
+function getStudentScopedRecords<T = StudentScopedRecord>(key: string): T[] {
+  if (!isBrowser()) return [];
+  return safeParseArray<T>(localStorage.getItem(key));
+}
+
+function saveStudentScopedRecord(key: string, record: StudentScopedRecord): void {
+  if (!isBrowser()) return;
+  const current = getStudentScopedRecords<StudentScopedRecord>(key);
+  const idx = current.findIndex((item) => item.studentId === record.studentId);
+  const normalized = {
+    ...record,
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (idx >= 0) {
+    current[idx] = { ...current[idx], ...normalized };
+  } else {
+    current.push(normalized);
+  }
+
+  localStorage.setItem(key, JSON.stringify(current));
+}
+
+export function getClinicalAssessmentLocal<T = StudentScopedRecord>(studentId: string): T | null {
+  const current = getStudentScopedRecords<T & { studentId: string }>(CLINICAL_ASSESSMENTS_KEY);
+  return current.find((item) => item.studentId === studentId) || null;
+}
+
+export function saveClinicalAssessmentLocal(record: StudentScopedRecord): void {
+  saveStudentScopedRecord(CLINICAL_ASSESSMENTS_KEY, record);
+}
+
+export function getFunctionalAnalysisLocal<T = StudentScopedRecord>(studentId: string): T | null {
+  const current = getStudentScopedRecords<T & { studentId: string }>(FUNCTIONAL_ANALYSIS_KEY);
+  return current.find((item) => item.studentId === studentId) || null;
+}
+
+export function saveFunctionalAnalysisLocal(record: StudentScopedRecord): void {
+  saveStudentScopedRecord(FUNCTIONAL_ANALYSIS_KEY, record);
+}
+
+export function getTreatmentPlanLocal<T = StudentScopedRecord>(studentId: string): T | null {
+  const current = getStudentScopedRecords<T & { studentId: string }>(TREATMENT_PLANS_KEY);
+  return current.find((item) => item.studentId === studentId) || null;
+}
+
+export function saveTreatmentPlanLocal(record: StudentScopedRecord): void {
+  saveStudentScopedRecord(TREATMENT_PLANS_KEY, record);
+}
+
+export function getProgressTrackingLocal<T = { studentId: string; records: any[] }>(studentId: string): T | null {
+  const current = getStudentScopedRecords<T & { studentId: string }>(PROGRESS_TRACKING_KEY);
+  return current.find((item) => item.studentId === studentId) || null;
+}
+
+export function saveProgressTrackingLocal(studentId: string, records: any[]): void {
+  saveStudentScopedRecord(PROGRESS_TRACKING_KEY, {
+    studentId,
+    records,
+  });
 }

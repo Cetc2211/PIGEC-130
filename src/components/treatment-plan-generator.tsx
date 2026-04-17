@@ -8,22 +8,29 @@ import { Separator } from './ui/separator';
 import { TreatmentPlan } from '@/lib/store';
 import PIEIValidation from './PIEIValidation';
 import { Bot, ShieldCheck } from 'lucide-react';
+import { getTreatmentPlanLocal, saveTreatmentPlanLocal } from '@/lib/storage-local';
+import { useToast } from '@/hooks/use-toast';
 
 interface TreatmentPlanGeneratorProps {
+    studentId: string;
     studentName: string;
     initialData?: TreatmentPlan;
 }
 
-export default function TreatmentPlanGenerator({ studentName, initialData }: TreatmentPlanGeneratorProps) {
-    const [plan, setPlan] = useState(initialData?.plan_narrativo_final || '');
+export default function TreatmentPlanGenerator({ studentId, studentName, initialData }: TreatmentPlanGeneratorProps) {
+    const { toast } = useToast();
+    const persisted = getTreatmentPlanLocal<TreatmentPlan>(studentId);
+    const effectiveInitial = persisted || initialData;
+
+    const [plan, setPlan] = useState(effectiveInitial?.plan_narrativo_final || '');
     const [isLoading, setIsLoading] = useState(false);
     const [isPieiModalOpen, setIsPieiModalOpen] = useState(false);
 
     useEffect(() => {
-        if (initialData?.plan_narrativo_final) {
-            setPlan(initialData.plan_narrativo_final);
+        if (effectiveInitial?.plan_narrativo_final) {
+            setPlan(effectiveInitial.plan_narrativo_final);
         }
-    }, [initialData]);
+    }, [effectiveInitial]);
 
     const handleGeneratePlan = async () => {
         setIsLoading(true);
@@ -61,13 +68,15 @@ El progreso será monitoreado semanalmente, evaluando el cumplimiento de las met
         };
 
         const finalData = {
-            studentId: 'S001', // ID de estudiante (debe ser dinámico)
+            studentId,
             ...planData,
         };
 
-        // Simulación de actualización de documento en 'session_data'
-        console.log("Guardando en 'session_data' (actualización):", finalData);
-        alert("Plan de Tratamiento guardado con éxito en el expediente del estudiante (simulación).");
+        saveTreatmentPlanLocal(finalData as any);
+        toast({
+            title: 'Plan de tratamiento guardado',
+            description: 'El plan quedo almacenado localmente y persistente.',
+        });
         setIsPieiModalOpen(false); // Cierra el modal después de guardar
     };
 

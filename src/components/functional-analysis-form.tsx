@@ -9,30 +9,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { FunctionalAnalysis } from '@/lib/store';
+import { getFunctionalAnalysisLocal, saveFunctionalAnalysisLocal } from '@/lib/storage-local';
+import { useToast } from '@/hooks/use-toast';
 
 interface FunctionalAnalysisFormProps {
-    studentName: string;
+    studentId: string;
     initialData?: FunctionalAnalysis;
 }
 
-export default function FunctionalAnalysisForm({ studentName, initialData }: FunctionalAnalysisFormProps) {
+export default function FunctionalAnalysisForm({ studentId, initialData }: FunctionalAnalysisFormProps) {
+    const { toast } = useToast();
+
+    const persisted = getFunctionalAnalysisLocal<FunctionalAnalysis>(studentId);
+    const effectiveInitial = persisted || initialData;
+
     const [formData, setFormData] = useState({
-        antecedent: initialData?.analisis_funcional.antecedente_principal || '',
-        behavior: initialData?.analisis_funcional.conducta_problema || '',
-        consequence: initialData?.analisis_funcional.funcion_mantenimiento || '',
-        cognitiveSchema: initialData?.analisis_funcional.creencia_esquema || '',
+        antecedent: effectiveInitial?.analisis_funcional?.antecedente_principal || '',
+        behavior: effectiveInitial?.analisis_funcional?.conducta_problema || '',
+        consequence: effectiveInitial?.analisis_funcional?.funcion_mantenimiento || '',
+        cognitiveSchema: effectiveInitial?.analisis_funcional?.creencia_esquema || '',
     });
 
     useEffect(() => {
-        if (initialData) {
+        if (effectiveInitial) {
             setFormData({
-                antecedent: initialData.analisis_funcional.antecedente_principal,
-                behavior: initialData.analisis_funcional.conducta_problema,
-                consequence: initialData.analisis_funcional.funcion_mantenimiento,
-                cognitiveSchema: initialData.analisis_funcional.creencia_esquema,
+                antecedent: effectiveInitial.analisis_funcional.antecedente_principal,
+                behavior: effectiveInitial.analisis_funcional.conducta_problema,
+                consequence: effectiveInitial.analisis_funcional.funcion_mantenimiento,
+                cognitiveSchema: effectiveInitial.analisis_funcional.creencia_esquema,
             });
         }
-    }, [initialData]);
+    }, [effectiveInitial]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -47,8 +54,8 @@ export default function FunctionalAnalysisForm({ studentName, initialData }: Fun
         event.preventDefault();
 
         const analysisData = {
-            studentId: 'S001', // ID de estudiante (debe ser dinámico en una app real)
-            session_number: (initialData?.session_number || 0) + 1,
+            studentId,
+            session_number: (effectiveInitial?.session_number || 0) + 1,
             fecha_sesion: new Date().toISOString(),
             analisis_funcional: {
                 antecedente_principal: formData.antecedent,
@@ -58,8 +65,11 @@ export default function FunctionalAnalysisForm({ studentName, initialData }: Fun
             }
         };
 
-        console.log("Guardando en 'session_data':", analysisData);
-        alert("Análisis Funcional guardado (simulación). Revisa la consola para ver los datos enviados.");
+        saveFunctionalAnalysisLocal(analysisData as any);
+        toast({
+            title: 'Analisis funcional guardado',
+            description: 'La informacion quedo persistida localmente en el expediente.',
+        });
     };
 
     return (

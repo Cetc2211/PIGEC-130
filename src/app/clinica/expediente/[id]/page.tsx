@@ -262,10 +262,10 @@ export default function ClinicalFilePage() {
                     
                     <TabsContent value="resumen" className="mt-6 space-y-12">
                         <ClinicalAssessmentForm initialData={clinicalAssessment} studentId={studentId} expediente={expedienteDinamico} />
-                        <FunctionalAnalysisForm studentName={studentData.name} initialData={functionalAnalysis} />
-                        <TreatmentPlanGenerator studentName={studentData.name} initialData={treatmentPlan} />
+                        <FunctionalAnalysisForm studentId={studentId} initialData={functionalAnalysis} />
+                        <TreatmentPlanGenerator studentId={studentId} studentName={studentData.name} initialData={treatmentPlan} />
                         <PIEIGenerator clinicalData={clinicalAssessment} />
-                        <ProgressTracker initialData={progressTracking} />
+                        <ProgressTracker studentId={studentId} initialData={progressTracking} />
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <ClinicalKPILogger />
                             <RiskTimelineChart />

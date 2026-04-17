@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { ProgressData, ProgressRecord } from '@/lib/store';
+import { ProgressData } from '@/lib/store';
+import { getProgressTrackingLocal, saveProgressTrackingLocal } from '@/lib/storage-local';
+import { useToast } from '@/hooks/use-toast';
 
 const chartConfig = {
     suicidalIdeation: {
@@ -25,11 +27,16 @@ const chartConfig = {
 };
 
 interface ProgressTrackerProps {
+    studentId: string;
     initialData?: ProgressData[];
 }
 
-export default function ProgressTracker({ initialData = [] }: ProgressTrackerProps) {
-    const [progress, setProgress] = useState(initialData);
+export default function ProgressTracker({ studentId, initialData = [] }: ProgressTrackerProps) {
+    const { toast } = useToast();
+    const persisted = getProgressTrackingLocal<{ studentId: string; records: ProgressData[] }>(studentId);
+    const initialProgress = persisted?.records || initialData;
+
+    const [progress, setProgress] = useState(initialProgress);
     const [newIdeation, setNewIdeation] = useState([5]);
     const [newSuds, setNewSuds] = useState([50]);
     const [newAchievement, setNewAchievement] = useState([5]);
@@ -43,19 +50,13 @@ export default function ProgressTracker({ initialData = [] }: ProgressTrackerPro
             taskAchievement: newAchievement[0],
         };
 
-        const progressDataToSave: ProgressRecord = {
-            studentId: 'S001', // ID de estudiante (debe ser dinámico)
-            semana_numero: newWeekNumber,
-            fecha_registro: new Date().toISOString(),
-            ideacion_suicida_score: newIdeation[0],
-            suds_score: newSuds[0],
-            logro_tarea_score: newAchievement[0],
-        };
-
-        // Simulación de llamada a saveProgressTracking(progressDataToSave)
-        console.log("Guardando en 'progress_tracking':", progressDataToSave);
-        setProgress([...progress, newWeekData]);
-        alert("Progreso semanal guardado con éxito (simulación).");
+        const nextProgress = [...progress, newWeekData];
+        saveProgressTrackingLocal(studentId, nextProgress);
+        setProgress(nextProgress);
+        toast({
+            title: `Semana ${newWeekNumber} guardada`,
+            description: 'El seguimiento semanal quedo persistido en local.',
+        });
     };
 
     return (

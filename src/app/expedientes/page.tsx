@@ -54,6 +54,7 @@ import {
   Loader2,
   ScrollText,
   MessageSquareCode,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase';
@@ -63,6 +64,7 @@ import { hasLocalAccessProfile } from '@/lib/local-access';
 import { decodeEvaluationPayload } from '@/lib/data-utils';
 import {
   getExpedientes as getExpedientesService,
+  eliminarExpediente,
   getNivelLabel,
   getNivelShort,
   getNivelColor,
@@ -483,6 +485,36 @@ export default function ExpedientesPage() {
     }
   };
 
+  const handleDeleteExpediente = (expediente: Expediente) => {
+    if (expediente.origen === 'demo') {
+      toast({
+        variant: 'destructive',
+        title: 'No permitido',
+        description: 'Los expedientes demo no se pueden eliminar.',
+      });
+      return;
+    }
+
+    const confirmDelete = window.confirm(`Eliminar expediente de ${expediente.studentName}? Esta accion no se puede deshacer.`);
+    if (!confirmDelete) return;
+
+    const deleted = eliminarExpediente({ studentId: expediente.studentId, id: expediente.id });
+    if (deleted) {
+      setListVersion((v) => v + 1);
+      toast({
+        title: 'Expediente eliminado',
+        description: 'El expediente se elimino de forma permanente en almacenamiento local.',
+      });
+      return;
+    }
+
+    toast({
+      variant: 'destructive',
+      title: 'No se pudo eliminar',
+      description: 'No se encontro el expediente en almacenamiento local.',
+    });
+  };
+
   if (role === 'loading') {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -795,20 +827,33 @@ export default function ExpedientesPage() {
                           </>
                         )}
                         <TableCell className="text-center">
-                          <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className={cn(
-                              'font-semibold',
-                              isHighRisk && role === 'Clinico' && 'text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700'
-                            )}
-                          >
-                            <Link href={linkHref}>
-                              {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-1 h-3.5 w-3.5" />}
-                              {buttonText}
-                            </Link>
-                          </Button>
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                'font-semibold',
+                                isHighRisk && role === 'Clinico' && 'text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700'
+                              )}
+                            >
+                              <Link href={linkHref}>
+                                {isHighRisk && role === 'Clinico' && <AlertTriangle className="mr-1 h-3.5 w-3.5" />}
+                                {buttonText}
+                              </Link>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteExpediente(expediente)}
+                              disabled={expediente.origen === 'demo'}
+                              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                              title={expediente.origen === 'demo' ? 'No se puede eliminar expediente demo' : 'Eliminar expediente'}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );

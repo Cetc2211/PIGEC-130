@@ -11,9 +11,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { AlertTriangle, CheckCircle2, Clock, FileText, Loader2 } from "lucide-react";
-import { getTestResults } from '@/lib/storage-local';
+import { AlertTriangle, Clock, FileText, Loader2 } from "lucide-react";
+import { getClinicalAssessmentLocal, getTestResults, saveClinicalAssessmentLocal } from '@/lib/storage-local';
 import type { Expediente } from '@/lib/expediente-service';
+import { useToast } from '@/hooks/use-toast';
 
 interface ClinicalAssessmentFormProps {
     initialData?: ClinicalAssessment;
@@ -108,11 +109,6 @@ const canonicalizeTestType = (raw: string): string => {
     return String(raw || 'Desconocida');
 };
 
-const isPsychopedagogicalTest = (canonicalType: string): boolean => {
-    const psycho = ['CHTE'];
-    return psycho.includes(canonicalType);
-};
-
 const hasDomainInText = (text: string): boolean => {
     const normalized = normalizeText(text);
     return ['DEPRES', 'ANSIED', 'SUICID', 'DESESPER', 'SUSTAN', 'HABIT'].some((token) => normalized.includes(token));
@@ -173,6 +169,7 @@ function mergeByCanonicalLatest(results: TestResult[]): TestResult[] {
 
 export default function ClinicalAssessmentForm({ initialData, studentId, expediente }: ClinicalAssessmentFormProps) {
     const [user, authLoading] = useAuthState(auth);
+    const { toast } = useToast();
 
     // Cargar resultados de pruebas desde Firestore
     const [testResults, setTestResults] = useState<TestResult[]>([]);
@@ -282,10 +279,6 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
         loadTestResults();
     }, [authLoading, expedienteEvaluations, studentId, user]);
 
-    const screeningEmocionalResults = useMemo(() => {
-        return testResults.filter((result) => !isPsychopedagogicalTest(result.canonicalType || result.testType));
-    }, [testResults]);
-
     const resultsByCanonicalType = useMemo(() => {
         const map = new Map<string, TestResult>();
         testResults.forEach((result) => {
@@ -318,28 +311,45 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
         }).filter((section) => section.items.length > 0);
     }, [resultsByCanonicalType]);
 
-    const findScore = (candidates: string[]): number | undefined => {
-        for (const candidate of candidates) {
-            const found = screeningEmocionalResults.find((item) => (item.canonicalType || item.testType) === candidate);
-            if (found) return found.score;
-        }
-        return undefined;
-    };
+    const persistedClinical = useMemo(() => {
+        if (!studentId) return null;
+        return getClinicalAssessmentLocal<any>(studentId);
+    }, [studentId]);
 
-    const bdiDefault = initialData?.bdi_ii_score ?? findScore(['BDI-II', 'PHQ-9']);
-    const baiDefault = initialData?.bai_score ?? findScore(['BAI', 'GAD-7', 'IDARE/STAI']);
-    const beckSuicideDefault = initialData?.riesgo_suicida_beck_score ?? findScore(['BHS', 'SSI', 'Columbia C-SSRS', 'Plutchik']);
+    const effectiveInitialData = persistedClinical || initialData;
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         
         const formData = new FormData(event.currentTarget);
         const effectiveStudentId = studentId || 'S001';
+        const bdiScore = Number(
+            effectiveInitialData?.bdi_ii_score
+            ?? resultsByCanonicalType.get('BDI-II')?.score
+            ?? resultsByCanonicalType.get('PHQ-9')?.score
+            ?? 0
+        );
+        const baiScore = Number(
+            effectiveInitialData?.bai_score
+            ?? resultsByCanonicalType.get('BAI')?.score
+            ?? resultsByCanonicalType.get('GAD-7')?.score
+            ?? resultsByCanonicalType.get('IDARE/STAI')?.score
+            ?? 0
+        );
+        const suicidalScore = Number(
+            effectiveInitialData?.riesgo_suicida_beck_score
+            ?? resultsByCanonicalType.get('BHS')?.score
+            ?? resultsByCanonicalType.get('SSI')?.score
+            ?? resultsByCanonicalType.get('Columbia C-SSRS')?.score
+            ?? resultsByCanonicalType.get('Plutchik')?.score
+            ?? 0
+        );
+
         const data: Omit<ClinicalAssessment, 'fecha_evaluacion'> = {
             studentId: effectiveStudentId,
-            bdi_ii_score: Number(formData.get('bdi_score')),
-            bai_score: Number(formData.get('bai_score')),
-            riesgo_suicida_beck_score: Number(formData.get('beck_suicide_score')),
+            bdi_ii_score: bdiScore,
+            bai_score: baiScore,
+            riesgo_suicida_beck_score: suicidalScore,
             neuro_mt_score: Number(formData.get('mt_index')),
             neuro_as_score: Number(formData.get('as_index')),
             neuro_vp_score: Number(formData.get('vp_index')),
@@ -350,9 +360,11 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
         };
 
         const finalData = { ...data, fecha_evaluacion: new Date().toISOString() };
-
-        console.log("Guardando en 'clinical_assessments':", finalData);
-        alert("Perfil Clínico y Evaluación guardados (simulación). Revisa la consola.");
+        saveClinicalAssessmentLocal(finalData as any);
+        toast({
+            title: 'Evaluacion clinica guardada',
+            description: 'La informacion quedo almacenada localmente en el expediente.',
+        });
     };
 
     return (
@@ -502,47 +514,26 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
 
                         <Separator />
 
-                        {/* SECCIÓN I: CAMPOS EDITABLES DE SCREENING */}
-                        <div>
-                            <p className="text-sm text-gray-500 mb-4">Campos editables de referencia para consolidacion clinica.</p>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="bdi-score">Puntuación BDI-II (Depresión)</Label>
-                                    <Input id="bdi-score" name="bdi_score" type="number" placeholder="Ej. 25" defaultValue={bdiDefault} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="bai-score">Puntuación BAI (Ansiedad)</Label>
-                                    <Input id="bai-score" name="bai_score" type="number" placeholder="Ej. 21" defaultValue={baiDefault} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="beck-suicide-score">Puntaje Ideación Suicida (Beck)</Label>
-                                    <Input id="beck-suicide-score" name="beck_suicide_score" type="number" placeholder="Ej. 10" defaultValue={beckSuicideDefault} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <Separator />
-
                         {/* SECCIÓN II: TAMIZAJE NEUROPSICOLÓGICO */}
                         <div>
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">II. Tamizaje Neuropsicológico (Funciones Ejecutivas)</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="mt-index">Índice Memoria de Trabajo (MT)</Label>
-                                    <Input id="mt-index" name="mt_index" type="number" placeholder="Ej. 85" defaultValue={initialData?.neuro_mt_score} />
+                                    <Input id="mt-index" name="mt_index" type="number" placeholder="Ej. 85" defaultValue={effectiveInitialData?.neuro_mt_score} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="as-index">Índice Atención Sostenida (AS)</Label>
-                                    <Input id="as-index" name="as_index" type="number" placeholder="Ej. 90" defaultValue={initialData?.neuro_as_score} />
+                                    <Input id="as-index" name="as_index" type="number" placeholder="Ej. 90" defaultValue={effectiveInitialData?.neuro_as_score} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="vp-index">Índice Velocidad de Procesamiento (VP)</Label>
-                                    <Input id="vp-index" name="vp_index" type="number" placeholder="Ej. 80" defaultValue={initialData?.neuro_vp_score} />
+                                    <Input id="vp-index" name="vp_index" type="number" placeholder="Ej. 80" defaultValue={effectiveInitialData?.neuro_vp_score} />
                                 </div>
                             </div>
                              <div className="mt-6 space-y-2">
                                 <Label htmlFor="cognitive-load-context">Contexto de Carga Cognitiva / Estrés</Label>
-                                <Textarea id="cognitive-load-context" name="cognitive_load_context" placeholder="Describir situación actual que impacta el desempeño (ej. 'Exámenes finales', 'Conflicto familiar')." defaultValue={initialData?.contexto_carga_cognitiva} />
+                                <Textarea id="cognitive-load-context" name="cognitive_load_context" placeholder="Describir situación actual que impacta el desempeño (ej. 'Exámenes finales', 'Conflicto familiar')." defaultValue={effectiveInitialData?.contexto_carga_cognitiva} />
                             </div>
                         </div>
                         
@@ -554,11 +545,11 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                  <div className="space-y-2">
                                     <Label htmlFor="assist-result">Resultado ASSIST (Consumo de Sustancias)</Label>
-                                    <Input id="assist-result" name="assist_result" placeholder="Positivo / Negativo" defaultValue={initialData?.assist_result} />
+                                    <Input id="assist-result" name="assist_result" placeholder="Positivo / Negativo" defaultValue={effectiveInitialData?.assist_result} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="self-harm-score">Puntaje Conductas Autolesivas (Frecuencia)</Label>
-                                    <Input id="self-harm-score" name="self_harm_score" type="number" placeholder="Ej. 5" defaultValue={initialData?.conducta_autolesiva_score} />
+                                    <Input id="self-harm-score" name="self_harm_score" type="number" placeholder="Ej. 5" defaultValue={effectiveInitialData?.conducta_autolesiva_score} />
                                 </div>
                             </div>
                         </div>
@@ -570,7 +561,7 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">IV. Impresión Diagnóstica (Provisional)</h3>
                              <div className="space-y-2">
                                 <Label htmlFor="diagnostic-impression">Hipótesis Clínica Basada en la Evidencia Recopilada</Label>
-                                <Textarea id="diagnostic-impression" name="diagnostic_impression" placeholder="Ej. 'Sintomatología depresiva y ansiosa severa, posiblemente exacerbada por déficit en memoria de trabajo y estresores académicos. Riesgo suicida activo a monitorear.'" defaultValue={initialData?.impresion_diagnostica} />
+                                <Textarea id="diagnostic-impression" name="diagnostic_impression" placeholder="Ej. 'Sintomatología depresiva y ansiosa severa, posiblemente exacerbada por déficit en memoria de trabajo y estresores académicos. Riesgo suicida activo a monitorear.'" defaultValue={effectiveInitialData?.impresion_diagnostica} />
                             </div>
                         </div>
 

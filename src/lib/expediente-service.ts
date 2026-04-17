@@ -24,6 +24,7 @@ import {
 } from './store';
 import {
   getExpedientes as getExpedientesLocal,
+  deleteExpedienteLocal,
   saveExpediente as saveExpedienteLocal,
 } from './storage-local';
 
@@ -346,6 +347,20 @@ export function getExpedientes(filtro?: FiltroExpediente): Expediente[] {
 export function getExpedienteById(id: string): Expediente | undefined {
   const todos = getExpedientes();
   return todos.find(exp => exp.id === id || exp.studentId === id);
+}
+
+export function eliminarExpediente(identifier: { id?: string; studentId?: string }): boolean {
+  hydrateExpedientesFromLocalStorage();
+
+  const before = expedientesDinamicos.length;
+  expedientesDinamicos = expedientesDinamicos.filter((item) => {
+    if (identifier.studentId) return item.studentId !== identifier.studentId;
+    if (identifier.id) return item.id !== identifier.id;
+    return true;
+  });
+
+  deleteExpedienteLocal(identifier);
+  return expedientesDinamicos.length < before;
 }
 
 /**
