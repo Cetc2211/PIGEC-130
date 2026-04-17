@@ -84,6 +84,27 @@ const filtros: { value: FiltroExpediente; label: string }[] = [
   { value: 'concluido', label: 'Concluidos' },
 ];
 
+const testNames: Record<string, string> = {
+  'ficha-id': 'Ficha de Identificacion',
+  'bdi-ii': 'BDI-II (Depresion)',
+  'bai': 'BAI (Ansiedad)',
+  'phq-9': 'PHQ-9 (Depresion)',
+  'gad-7': 'GAD-7 (Ansiedad)',
+  'hads': 'HADS (Ansiedad/Depresion)',
+  'bhs': 'BHS (Desesperanza)',
+  'ssi': 'SSI (Ideacion Suicida)',
+  'columbia': 'Columbia C-SSRS',
+  'plutchik': 'Plutchik (Riesgo Suicida)',
+  'idare': 'IDARE/STAI (Ansiedad)',
+  'lira': 'LIRA (Riesgo Academico)',
+  'goca': 'GOCA (Observacion)',
+  'ipa': 'IPA (Pensamientos Automaticos)',
+  'cdfr': 'CDFR (Factores de Riesgo)',
+  'assist': 'ASSIST (Sustancias)',
+  'ebma': 'EBMA (Motivacion)',
+  'chte': 'CHTE (Habitos de Estudio)',
+};
+
 export default function ExpedientesPage() {
   const { role } = useSession();
   const [user, authLoading] = useAuthState(auth);
