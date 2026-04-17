@@ -349,10 +349,15 @@ export default function ExpedientesPage() {
   };
 
   const extractWhatsAppBridgeCode = (raw: string): string => {
-    const trimmed = raw.trim();
-    const prefixed = trimmed.match(/PIGEC-WA1:([A-Za-z0-9+/=._-]+)/i);
-    if (prefixed?.[1]) return prefixed[1].trim();
-    return trimmed.replace(/^PIGEC-WA1:/i, '').trim();
+    const compact = raw.trim().replace(/\s+/g, '');
+
+    const prefixed = compact.match(/PIGEC-WA1:((?:raw|gz)\.[A-Za-z0-9+/_=.-]+)/i);
+    if (prefixed?.[1]) return prefixed[1];
+
+    const directBridge = compact.match(/((?:raw|gz)\.[A-Za-z0-9+/_=.-]+)/i);
+    if (directBridge?.[1]) return directBridge[1];
+
+    return compact.replace(/^PIGEC-WA1:/i, '').trim();
   };
 
   const handleImportFromWhatsApp = async () => {

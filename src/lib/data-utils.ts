@@ -31,9 +31,18 @@ function uint8ToBase64(bytes: Uint8Array): string {
 }
 
 function base64ToUint8(base64: string): Uint8Array {
+  // Accept multiline and URL-safe base64 payloads copied from chat apps.
+  const compact = base64
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  const padding = compact.length % 4;
+  const normalized = padding === 0 ? compact : compact.padEnd(compact.length + (4 - padding), '=');
+
   const binary = typeof atob !== 'undefined'
-    ? atob(base64)
-    : Buffer.from(base64, 'base64').toString('binary');
+    ? atob(normalized)
+    : Buffer.from(normalized, 'base64').toString('binary');
 
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) {
@@ -104,7 +113,11 @@ export async function encodeEvaluationPayload(payload: WhatsAppBridgePayload): P
 
 export async function decodeEvaluationPayload(code: string): Promise<WhatsAppBridgePayload> {
   const trimmed = code.trim();
-  const normalized = trimmed.replace(/^PIGEC-WA1:/i, '');
+  const withoutPrefix = trimmed.replace(/^PIGEC-WA1:/i, '').trim();
+
+  // Support pasted text that includes labels/messages around the actual bridge code.
+  const embeddedMatch = trimmed.match(/(?:PIGEC-WA1:\s*)?((?:raw|gz)\.[A-Za-z0-9+/_=\-.\s]+)/i);
+  const normalized = (embeddedMatch?.[1] || withoutPrefix).replace(/\s+/g, '');
 
   const [prefix, value] = normalized.includes('.')
     ? normalized.split('.', 2)
