@@ -113,6 +113,40 @@ const isPsychopedagogicalTest = (canonicalType: string): boolean => {
     return psycho.includes(canonicalType);
 };
 
+const hasDomainInText = (text: string): boolean => {
+    const normalized = normalizeText(text);
+    return ['DEPRES', 'ANSIED', 'SUICID', 'DESESPER', 'SUSTAN', 'HABIT'].some((token) => normalized.includes(token));
+};
+
+const getDomainPrefix = (canonicalType: string): string => {
+    const dep = ['PHQ-9', 'BDI-II'];
+    const anx = ['GAD-7', 'BAI', 'HADS', 'IDARE/STAI'];
+    const despair = ['BHS', 'IPA'];
+    const suicide = ['SSI', 'Columbia C-SSRS', 'Plutchik', 'CDFR'];
+    const risk = ['ASSIST'];
+    const psycho = ['CHTE'];
+
+    if (dep.includes(canonicalType)) return 'Depresion';
+    if (anx.includes(canonicalType)) return 'Ansiedad';
+    if (despair.includes(canonicalType)) return 'Desesperanza';
+    if (suicide.includes(canonicalType)) return 'Riesgo suicida';
+    if (risk.includes(canonicalType)) return 'Consumo de sustancias';
+    if (psycho.includes(canonicalType)) return 'Habitos de estudio';
+    return '';
+};
+
+const formatInterpretation = (canonicalType: string, interpretation: string): string => {
+    const raw = String(interpretation || '').trim();
+    if (!raw) return '';
+    if (hasDomainInText(raw)) return raw;
+
+    const prefix = getDomainPrefix(canonicalType);
+    if (!prefix) return raw;
+
+    const normalizedValue = raw.charAt(0).toLowerCase() + raw.slice(1);
+    return `${prefix} ${normalizedValue}`;
+};
+
 function mergeByCanonicalLatest(results: TestResult[]): TestResult[] {
     const byType = new Map<string, TestResult & { _timestamp: number }>();
 
@@ -405,7 +439,7 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
                                                                 : 'bg-green-50 text-green-700 border-green-200'
                                                     }
                                                 >
-                                                    {result.interpretation}
+                                                    {formatInterpretation(result.canonicalType || canonicalizeTestType(result.testType), result.interpretation)}
                                                 </Badge>
                                             )}
                                             {result.alerts && result.alerts.map((alert, i) => (
@@ -434,7 +468,8 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-700 mb-4">Catalogo de Pruebas Activas y Puntajes</h3>
+                            <h3 className="text-lg font-semibold text-gray-700 mb-4">I. Screening Emocional</h3>
+                            <p className="text-sm text-gray-500 mb-4">Catalogo de pruebas activas y puntajes con su interpretacion diagnostica.</p>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {activeSections.map((section) => (
                                     <div key={`active-${section.category}`} className="rounded-lg border bg-white p-4">
@@ -452,7 +487,7 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
                                                     </div>
                                                     {item.hasResult ? (
                                                         <p className="text-xs text-slate-600 mt-1">
-                                                            {item.score} puntos{item.interpretation ? `; ${item.interpretation}` : ''}
+                                                            {item.score} puntos{item.interpretation ? `; ${formatInterpretation(item.key, item.interpretation)}` : ''}
                                                         </p>
                                                     ) : (
                                                         <p className="text-xs text-slate-400 mt-1">Aun no aplicada/respondida.</p>
@@ -467,26 +502,9 @@ export default function ClinicalAssessmentForm({ initialData, studentId, expedie
 
                         <Separator />
 
-                        {/* SECCIÓN I: SCREENING EMOCIONAL */}
+                        {/* SECCIÓN I: CAMPOS EDITABLES DE SCREENING */}
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-700 mb-4">I. Screening Emocional</h3>
-                            {screeningEmocionalResults.length > 0 && (
-                                <div className="mb-6 rounded-lg border bg-slate-50 p-4">
-                                    <p className="text-sm font-semibold text-slate-800 mb-3">Puntuacion de pruebas e interpretacion diagnostica</p>
-                                    <div className="space-y-2">
-                                        {screeningEmocionalResults.map((result) => (
-                                            <div key={`screening-${result.id}`} className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 text-sm">
-                                                <span className="font-medium text-slate-700">
-                                                    {testLabels[result.canonicalType || result.testType] || result.testType}
-                                                </span>
-                                                <span className="text-slate-600">
-                                                    {result.score} puntos{result.interpretation ? `; ${result.interpretation}` : ''}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            <p className="text-sm text-gray-500 mb-4">Campos editables de referencia para consolidacion clinica.</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="bdi-score">Puntuación BDI-II (Depresión)</Label>
