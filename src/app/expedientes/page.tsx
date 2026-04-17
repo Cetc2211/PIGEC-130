@@ -398,8 +398,10 @@ export default function ExpedientesPage() {
         ? getExpedientesService('todos').find((exp) => exp.studentId === studentId)
         : undefined;
 
-      const completed = Array.isArray(payload.completedTests) ? payload.completedTests : [];
       const resultsObj = (payload.results || {}) as Record<string, any>;
+      const completed = Array.isArray(payload.completedTests) && payload.completedTests.length > 0
+        ? payload.completedTests
+        : Object.keys(resultsObj);
       const evaluacionesNuevas = completed.map((testId: string, index: number) => {
         const rawResult = resultsObj[testId] || {};
         const score = Number(rawResult?.total ?? rawResult?.score ?? rawResult?.totalScore ?? 0);
@@ -417,6 +419,22 @@ export default function ExpedientesPage() {
 
       const notasPrevias = Array.isArray(existing?.notas) ? existing!.notas : [];
       const evaluacionesPrevias = Array.isArray(existing?.evaluaciones) ? existing!.evaluaciones : [];
+      const evaluacionesCombinadas = [...evaluacionesPrevias];
+
+      evaluacionesNuevas.forEach((nueva) => {
+        const idx = evaluacionesCombinadas.findIndex((ev: any) => String(ev?.tipo || '').trim() === nueva.tipo);
+        if (idx >= 0) {
+          evaluacionesCombinadas[idx] = {
+            ...evaluacionesCombinadas[idx],
+            score: nueva.score,
+            fecha: nueva.fecha,
+            aplicadaPor: nueva.aplicadaPor,
+            observaciones: nueva.observaciones,
+          };
+        } else {
+          evaluacionesCombinadas.push(nueva);
+        }
+      });
 
       saveExpedienteLocal({
         ...(existing || {}),
@@ -432,7 +450,7 @@ export default function ExpedientesPage() {
         fechaActualizacion: new Date().toISOString(),
         creadoPor: existing?.creadoPor || 'whatsapp@local',
         academicData: existing?.academicData || { gpa: 0, absences: 0 },
-        evaluaciones: [...evaluacionesPrevias, ...evaluacionesNuevas],
+        evaluaciones: evaluacionesCombinadas,
         notas: [
           ...notasPrevias,
           {
@@ -447,7 +465,7 @@ export default function ExpedientesPage() {
 
       setListVersion((v) => v + 1);
       setWhatsAppCodeInput('');
-      setWhatsAppImportSummary(`Importacion completada. Se vinculo al expediente de ${studentName}.`);
+      setWhatsAppImportSummary(`Importacion completada. Se vinculo al expediente de ${studentName} con ${evaluacionesNuevas.length} pruebas.`);
 
       toast({
         title: 'Codigo importado',

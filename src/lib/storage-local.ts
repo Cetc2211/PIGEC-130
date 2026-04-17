@@ -54,11 +54,9 @@ export function saveExpediente(expediente: StoredExpediente): void {
   if (!isBrowser()) return;
   const current = getExpedientes<StoredExpediente>();
 
-  const matchIndex = current.findIndex((item) => {
-    if (expediente.id && item.id) return item.id === expediente.id;
-    if (expediente.studentId && item.studentId) return item.studentId === expediente.studentId;
-    return false;
-  });
+  const matchIndex = expediente.studentId
+    ? current.findIndex((item) => item.studentId && item.studentId === expediente.studentId)
+    : current.findIndex((item) => expediente.id && item.id && item.id === expediente.id);
 
   if (matchIndex >= 0) {
     current[matchIndex] = { ...current[matchIndex], ...expediente };
@@ -66,7 +64,24 @@ export function saveExpediente(expediente: StoredExpediente): void {
     current.push(expediente);
   }
 
-  localStorage.setItem(EXPEDIENTES_KEY, JSON.stringify(current));
+  // Collapse legacy duplicates for the same studentId and keep the most recently updated record.
+  let normalized = current;
+  if (expediente.studentId) {
+    const targetStudentId = expediente.studentId;
+    let keeperIndex = -1;
+
+    normalized.forEach((item, index) => {
+      if (item.studentId === targetStudentId) {
+        keeperIndex = index;
+      }
+    });
+
+    if (keeperIndex >= 0) {
+      normalized = normalized.filter((item, index) => item.studentId !== targetStudentId || index === keeperIndex);
+    }
+  }
+
+  localStorage.setItem(EXPEDIENTES_KEY, JSON.stringify(normalized));
 }
 
 export function saveExpedienteLocal(expediente: StoredExpediente): void {
@@ -105,28 +120,6 @@ export function saveImportedWhatsAppEvaluation(payload: WhatsAppBridgePayload): 
   });
 
   localStorage.setItem(WHATSAPP_IMPORTS_KEY, JSON.stringify(imports));
-
-  const studentId = payload.student?.id ?? undefined;
-  const studentName = payload.student?.name ?? 'Consultante (WhatsApp)';
-  const now = new Date().toISOString();
-
-  saveExpedienteLocal({
-    id: `exp-wa-${importId}`,
-    studentId,
-    studentName,
-    groupName: payload.student?.grupoNombre || 'Sin grupo',
-    semester: 1,
-    nivel: 'nivel_1',
-    estado: 'abierto',
-    origen: 'whatsapp_bridge',
-    fechaCreacion: now,
-    fechaActualizacion: now,
-    creadoPor: 'whatsapp@local',
-    academicData: { gpa: 0, absences: 0 },
-    evaluaciones: [],
-    notas: [],
-    whatsappBridgeData: payload,
-  });
 
   return importId;
 }
