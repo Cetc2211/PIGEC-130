@@ -261,7 +261,7 @@ export default function ClinicalFilePage() {
                     </TabsContent>
                     
                     <TabsContent value="resumen" className="mt-6 space-y-12">
-                        <ClinicalAssessmentForm initialData={clinicalAssessment} studentId={studentId} />
+                        <ClinicalAssessmentForm initialData={clinicalAssessment} studentId={studentId} expediente={expedienteDinamico} />
                         <FunctionalAnalysisForm studentName={studentData.name} initialData={functionalAnalysis} />
                         <TreatmentPlanGenerator studentName={studentData.name} initialData={treatmentPlan} />
                         <PIEIGenerator clinicalData={clinicalAssessment} />

@@ -7,16 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "./ui/textarea";
 import { ClinicalAssessment } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { AlertTriangle, CheckCircle2, Clock, FileText, Loader2 } from "lucide-react";
 import { getTestResults } from '@/lib/storage-local';
+import type { Expediente } from '@/lib/expediente-service';
 
 interface ClinicalAssessmentFormProps {
     initialData?: ClinicalAssessment;
     studentId?: string;
+    expediente?: Expediente;
 }
 
 // Nombres amigables para las pruebas
@@ -40,19 +42,90 @@ const testLabels: Record<string, string> = {
 interface TestResult {
     id: string;
     testType: string;
+    canonicalType?: string;
     score: number;
     interpretation: string;
     date: string;
     alerts?: string[];
 }
 
-export default function ClinicalAssessmentForm({ initialData, studentId }: ClinicalAssessmentFormProps) {
+const normalizeText = (value: string): string =>
+    value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase();
+
+const canonicalizeTestType = (raw: string): string => {
+    const text = normalizeText(String(raw || ''));
+    if (text.includes('PHQ-9')) return 'PHQ-9';
+    if (text.includes('GAD-7')) return 'GAD-7';
+    if (text.includes('BDI')) return 'BDI-II';
+    if (text.includes('BAI')) return 'BAI';
+    if (text.includes('HADS')) return 'HADS';
+    if (text.includes('IDARE') || text.includes('STAI')) return 'IDARE/STAI';
+    if (text.includes('BHS')) return 'BHS';
+    if (text.includes('SSI')) return 'SSI';
+    if (text.includes('COLUMBIA')) return 'Columbia C-SSRS';
+    if (text.includes('PLUTCHIK')) return 'Plutchik';
+    if (text.includes('IPA')) return 'IPA';
+    if (text.includes('CDFR')) return 'CDFR';
+    if (text.includes('ASSIST')) return 'ASSIST';
+    if (text.includes('CHTE')) return 'CHTE';
+    return String(raw || 'Desconocida');
+};
+
+const isPsychopedagogicalTest = (canonicalType: string): boolean => {
+    const psycho = ['CHTE'];
+    return psycho.includes(canonicalType);
+};
+
+function mergeByCanonicalLatest(results: TestResult[]): TestResult[] {
+    const byType = new Map<string, TestResult & { _timestamp: number }>();
+
+    results.forEach((item) => {
+        const canonicalType = canonicalizeTestType(item.canonicalType || item.testType);
+        const parsedTime = Date.parse(item.date || '');
+        const timestamp = Number.isNaN(parsedTime) ? 0 : parsedTime;
+        const current = byType.get(canonicalType);
+        const normalized: TestResult & { _timestamp: number } = {
+            ...item,
+            canonicalType,
+            _timestamp: timestamp,
+        };
+
+        if (!current || normalized._timestamp >= current._timestamp) {
+            byType.set(canonicalType, normalized);
+        }
+    });
+
+    return Array.from(byType.values())
+        .sort((a, b) => b._timestamp - a._timestamp)
+        .map(({ _timestamp, ...rest }) => rest);
+}
+
+export default function ClinicalAssessmentForm({ initialData, studentId, expediente }: ClinicalAssessmentFormProps) {
     const [user, authLoading] = useAuthState(auth);
 
     // Cargar resultados de pruebas desde Firestore
     const [testResults, setTestResults] = useState<TestResult[]>([]);
     const [loadingResults, setLoadingResults] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
+
+    const expedienteEvaluations = useMemo(() => {
+        const source = Array.isArray(expediente?.evaluaciones) ? expediente!.evaluaciones : [];
+        return source.map((ev, index) => {
+            const parsedDate = new Date(ev.fecha || expediente?.fechaActualizacion || 0);
+            return {
+                id: ev.id || `exp-eval-${index}`,
+                testType: ev.tipo || 'Desconocida',
+                canonicalType: canonicalizeTestType(ev.tipo || ''),
+                score: Number(ev.score || 0),
+                interpretation: String(ev.observaciones || ''),
+                date: Number.isNaN(parsedDate.getTime()) ? '' : parsedDate.toLocaleDateString('es-MX'),
+                alerts: [],
+            } as TestResult;
+        });
+    }, [expediente]);
 
     useEffect(() => {
         async function loadTestResults() {
@@ -65,6 +138,7 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                     return {
                         id: item.id || `local-${Math.random().toString(36).slice(2, 8)}`,
                         testType: item.testType || item.type || 'Desconocida',
+                        canonicalType: canonicalizeTestType(item.testType || item.type || 'Desconocida'),
                         score: Number(item.score || item.totalScore || item.totalRisk || item.totalRiesgo || 0),
                         interpretation: item.interpretation || item.interpretacion || item.level || item.riskLevel || '',
                         date: Number.isNaN(sortDate.getTime()) ? '' : sortDate.toLocaleDateString('es-MX'),
@@ -75,8 +149,10 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                 .sort((a, b) => b._sortDate.getTime() - a._sortDate.getTime())
                 .map(({ _sortDate, ...rest }) => rest);
 
-            if (localResults.length > 0) {
-                setTestResults(localResults);
+            const mergedLocalAndExpediente = mergeByCanonicalLatest([...localResults, ...expedienteEvaluations]);
+
+            if (mergedLocalAndExpediente.length > 0) {
+                setTestResults(mergedLocalAndExpediente);
                 setLoadError(null);
                 setLoadingResults(false);
                 return;
@@ -108,6 +184,7 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                     rawResults.push({
                         id: doc.id,
                         testType: data.testType || data.type || 'Desconocida',
+                        canonicalType: canonicalizeTestType(data.testType || data.type || 'Desconocida'),
                         score: data.score || data.totalScore || data.totalRisk || data.totalRiesgo || 0,
                         interpretation: data.interpretation || data.interpretacion || data.level || data.riskLevel || '',
                         date: sortDate.toLocaleDateString('es-MX'),
@@ -118,7 +195,8 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
 
                 rawResults.sort((a, b) => b._sortDate.getTime() - a._sortDate.getTime());
 
-                setTestResults(rawResults.map(({ _sortDate, ...rest }) => rest));
+                const remoteResults = rawResults.map(({ _sortDate, ...rest }) => rest);
+                setTestResults(mergeByCanonicalLatest([...remoteResults, ...expedienteEvaluations]));
             } catch (err) {
                 console.error('Error cargando resultados de pruebas:', err);
                 const errorMessage = (err as any)?.message || '';
@@ -127,13 +205,30 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                 } else {
                     setLoadError(null);
                 }
+                setTestResults(mergeByCanonicalLatest([...expedienteEvaluations]));
             }
 
             setLoadingResults(false);
         }
 
         loadTestResults();
-    }, [authLoading, studentId, user]);
+    }, [authLoading, expedienteEvaluations, studentId, user]);
+
+    const screeningEmocionalResults = useMemo(() => {
+        return testResults.filter((result) => !isPsychopedagogicalTest(result.canonicalType || result.testType));
+    }, [testResults]);
+
+    const findScore = (candidates: string[]): number | undefined => {
+        for (const candidate of candidates) {
+            const found = screeningEmocionalResults.find((item) => (item.canonicalType || item.testType) === candidate);
+            if (found) return found.score;
+        }
+        return undefined;
+    };
+
+    const bdiDefault = initialData?.bdi_ii_score ?? findScore(['BDI-II', 'PHQ-9']);
+    const baiDefault = initialData?.bai_score ?? findScore(['BAI', 'GAD-7', 'IDARE/STAI']);
+    const beckSuicideDefault = initialData?.riesgo_suicida_beck_score ?? findScore(['BHS', 'SSI', 'Columbia C-SSRS', 'Plutchik']);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -275,18 +370,35 @@ export default function ClinicalAssessmentForm({ initialData, studentId }: Clini
                         {/* SECCIÓN I: SCREENING EMOCIONAL */}
                         <div>
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">I. Screening Emocional</h3>
+                            {screeningEmocionalResults.length > 0 && (
+                                <div className="mb-6 rounded-lg border bg-slate-50 p-4">
+                                    <p className="text-sm font-semibold text-slate-800 mb-3">Puntuacion de pruebas e interpretacion diagnostica</p>
+                                    <div className="space-y-2">
+                                        {screeningEmocionalResults.map((result) => (
+                                            <div key={`screening-${result.id}`} className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 text-sm">
+                                                <span className="font-medium text-slate-700">
+                                                    {testLabels[result.canonicalType || result.testType] || result.testType}
+                                                </span>
+                                                <span className="text-slate-600">
+                                                    {result.score} puntos{result.interpretation ? `; ${result.interpretation}` : ''}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="bdi-score">Puntuación BDI-II (Depresión)</Label>
-                                    <Input id="bdi-score" name="bdi_score" type="number" placeholder="Ej. 25" defaultValue={initialData?.bdi_ii_score} />
+                                    <Input id="bdi-score" name="bdi_score" type="number" placeholder="Ej. 25" defaultValue={bdiDefault} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="bai-score">Puntuación BAI (Ansiedad)</Label>
-                                    <Input id="bai-score" name="bai_score" type="number" placeholder="Ej. 21" defaultValue={initialData?.bai_score} />
+                                    <Input id="bai-score" name="bai_score" type="number" placeholder="Ej. 21" defaultValue={baiDefault} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="beck-suicide-score">Puntaje Ideación Suicida (Beck)</Label>
-                                    <Input id="beck-suicide-score" name="beck_suicide_score" type="number" placeholder="Ej. 10" defaultValue={initialData?.riesgo_suicida_beck_score} />
+                                    <Input id="beck-suicide-score" name="beck_suicide_score" type="number" placeholder="Ej. 10" defaultValue={beckSuicideDefault} />
                                 </div>
                             </div>
                         </div>
