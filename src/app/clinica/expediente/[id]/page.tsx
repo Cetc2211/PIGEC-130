@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, redirect } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useSession } from '@/context/SessionContext';
 import React, { useEffect, useState } from 'react';
@@ -46,6 +46,7 @@ function expedienteToStudent(exp: ExpedienteType): Student {
 export default function ClinicalFilePage() {
     const params = useParams();
     const studentId = params.id as string;
+    const router = useRouter();
     const { role } = useSession();
     const [user, authLoading] = useAuthState(auth);
     const [student, setStudent] = useState<Student | undefined>(undefined);
@@ -189,11 +190,11 @@ export default function ClinicalFilePage() {
     }, [authLoading, studentId, user]);
 
     useEffect(() => {
-        if (role && role !== 'loading' && role !== 'Clinico') {
+        if (role === 'Orientador') {
             console.log(`ACCESO DENEGADO: Rol '${role}' intentó acceder a ruta clínica. Redirigiendo.`);
-            redirect(`/educativa/estudiante/${studentId}`);
+            router.replace(`/educativa/estudiante/${studentId}`);
         }
-    }, [role, studentId]);
+    }, [role, router, studentId]);
     
     if (role === 'loading' || authLoading || loadingRemoteExpediente || (!student && !expedienteDinamico)) {
         return (
